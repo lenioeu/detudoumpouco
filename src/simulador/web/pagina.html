@@ -48,6 +48,8 @@
   #modo { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--linha); white-space: nowrap; }
   #modo[data-modo="claude"] { color: var(--verde); border-color: var(--verde); }
   #modo[data-modo="demo"] { color: var(--aviso-texto); background: var(--aviso); border-color: transparent; }
+  #recomecar { border: 1px solid var(--linha); background: var(--bolha-bot); color: var(--tinta); border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+  #recomecar:hover { border-color: var(--verde); }
   #aviso-modo { background: var(--aviso); color: var(--aviso-texto); padding: 8px 12px; border-radius: 8px; font-size: 13px; }
   #aviso-modo code { font-size: 12px; }
   #celulares { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
@@ -105,6 +107,7 @@
   <h1>Simulador AssinaBot</h1>
   <span id="modo">IA: conectando…</span>
   <p>Três celulares conversando com o bot de verdade. Comece pelo celular do escritório.</p>
+  <button type="button" id="recomecar">Recomeçar teste</button>
 </header>
 <div id="aviso-modo" hidden></div>
 <main id="celulares"></main>

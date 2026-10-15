@@ -57,16 +57,11 @@ const config = carregarConfig({
   WHATSAPP_VERIFY_TOKEN: "simulador",
 });
 
-const banco = new BancoMemoria();
-const whatsapp = new WhatsAppSimulado();
-const filas = new Filas();
-const avisos = new Avisador(config, banco, whatsapp);
 const assinador = new AssinadorDePdf(
   Buffer.from(__CERTIFICADO_P12__, "base64"),
   SENHA_CERTIFICADO,
   { nome: config.SENDER_DISPLAY_NAME, local: config.SENDER_LOCATION, contato: "Simulador AssinaBot" },
 );
-const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
 
 let sample: Sample | null = null;
 let ia = new IaNoNavegador(null, extrairTexto, mostrarModo);
@@ -75,7 +70,20 @@ const ponteIa = {
   analisar: (pdf: Uint8Array) => ia.analisar(pdf),
   corrigir: (...a: Parameters<IaNoNavegador["corrigir"]>) => ia.corrigir(...a),
 };
-const fluxo = new Fluxo(config, banco, whatsapp, ponteIa, coleta, avisos, filas);
+
+/** Monta um bot novo, com banco e conversas vazios. Chamado no início e em "Recomeçar teste". */
+function montarBot() {
+  const banco = new BancoMemoria();
+  const whatsapp = new WhatsAppSimulado();
+  const filas = new Filas();
+  const avisos = new Avisador(config, banco, whatsapp);
+  const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
+  const fluxo = new Fluxo(config, banco, whatsapp, ponteIa, coleta, avisos, filas);
+  return { whatsapp, fluxo };
+}
+
+let { whatsapp, fluxo } = montarBot();
+let pararDeOuvir = () => {};
 
 // ---------------------------------------------------------------- utilidades
 
@@ -122,11 +130,7 @@ function montarCelular(pessoa: (typeof PESSOAS)[number]): HTMLElement {
       <span class="cel-nome"><strong>${escapar(pessoa.nome)}</strong><small>${formatarTelefone(pessoa.telefone)}</small></span>
     </header>
     <div class="conversa" role="log" aria-live="polite">
-      <div class="vazio">${
-        pessoa.escritorio
-          ? `<p>Envie um PDF pelo 📎 ou use a procuração de exemplo.</p><button type="button" class="exemplo">Usar procuração de exemplo</button>`
-          : "<p>Quando o escritório enviar um documento para esta pessoa, ele chega aqui.</p>"
-      }</div>
+      ${vazio(pessoa)}
     </div>
     <div class="digitando" hidden>bot digitando…</div>
     <form class="barra">
@@ -153,7 +157,9 @@ function montarCelular(pessoa: (typeof PESSOAS)[number]): HTMLElement {
     if (arquivo) enviarPdf(pessoa.telefone, arquivo.name, new Uint8Array(await arquivo.arrayBuffer()));
   });
 
-  $<HTMLButtonElement>(".exemplo", el)?.addEventListener("click", async () => {
+  // O botão de exemplo é recriado a cada "Recomeçar teste", então o clique é tratado na conversa
+  $<HTMLElement>(".conversa", el).addEventListener("click", async (e) => {
+    if (!(e.target as Element).closest(".exemplo")) return;
     enviarPdf(pessoa.telefone, "Procuração - Maria da Silva.pdf", await procuracaoDeExemplo());
   });
 
@@ -185,6 +191,29 @@ function montarCelular(pessoa: (typeof PESSOAS)[number]): HTMLElement {
   });
 
   return el;
+}
+
+function vazio(pessoa: (typeof PESSOAS)[number]): string {
+  return `<div class="vazio">${
+    pessoa.escritorio
+      ? `<p>Envie um PDF pelo 📎 ou use a procuração de exemplo.</p><button type="button" class="exemplo">Usar procuração de exemplo</button>`
+      : "<p>Quando o escritório enviar um documento para esta pessoa, ele chega aqui.</p>"
+  }</div>`;
+}
+
+/** Apaga as conversas e começa de novo com um bot vazio. */
+function recomecar(): void {
+  pararDeOuvir();
+  ({ whatsapp, fluxo } = montarBot());
+  pararDeOuvir = whatsapp.aoReceber(mostrar);
+  for (const p of PESSOAS) {
+    const el = celulares.get(p.telefone)!;
+    $<HTMLElement>(".conversa", el).innerHTML = vazio(p);
+    $<HTMLElement>(".digitando", el).hidden = true;
+    window.clearTimeout(digitando.get(p.telefone));
+    $<HTMLInputElement>("input.texto", el).value = "";
+    $("ul", el)?.remove();
+  }
 }
 
 type SemRemetente<T> = T extends unknown ? Omit<T, "de" | "id"> : never;
@@ -351,7 +380,8 @@ function iniciar(): void {
     celulares.set(p.telefone, el);
     area.append(el);
   }
-  whatsapp.aoReceber(mostrar);
+  pararDeOuvir = whatsapp.aoReceber(mostrar);
+  $<HTMLButtonElement>("#recomecar").addEventListener("click", recomecar);
   $<HTMLButtonElement>("#leitor-fechar").addEventListener("click", () => $<HTMLDialogElement>("#leitor").close());
   mostrarModo("demonstracao", "Conectando ao Claude…");
   $<HTMLElement>("#aviso-modo").hidden = true;
