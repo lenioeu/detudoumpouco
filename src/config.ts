@@ -30,19 +30,19 @@ const esquema = z.object({
   WHATSAPP_API_VERSION: z.string().default("v23.0"),
   /** Template aprovado na Meta para pedir a assinatura (ver README). */
   WHATSAPP_TEMPLATE_SOLICITACAO: z.string().default("solicitacao_assinatura"),
-  /** Template para avisar o escritório quando a janela de 24h do WhatsApp já fechou. */
+  /** Template para avisos (ao escritório ou a quem assinou) quando a janela de 24h do WhatsApp já fechou. */
   WHATSAPP_TEMPLATE_AVISO: z.string().default("aviso_assinatura"),
   WHATSAPP_TEMPLATE_LANGUAGE: z.string().default("pt_BR"),
 
-  // Documenso (instalado em servidor próprio)
-  DOCUMENSO_URL: z.string().url(),
-  DOCUMENSO_API_TOKEN: z.string().min(1),
-  DOCUMENSO_WEBHOOK_SECRET: z.string().min(1),
+  /** Cidade/UF do escritório, gravada na assinatura digital do PDF final. */
+  SENDER_LOCATION: z.string().default("Brasil"),
+
   /**
-   * O Documenso exige e-mail para cada signatário, mas aqui nada é enviado por e-mail.
-   * Quando a pessoa não tem e-mail informado, geramos <telefone>@<este domínio>.
+   * Certificado .p12 que assina digitalmente o PDF final. Se o arquivo não existir,
+   * um certificado autoassinado é gerado ali na primeira execução.
    */
-  SIGNER_PLACEHOLDER_EMAIL_DOMAIN: z.string().default("whatsapp.invalid"),
+  CERTIFICATE_PATH: z.string().default("data/certificado.p12"),
+  CERTIFICATE_PASSWORD: z.string().min(8),
 
   // Claude (identificação das partes)
   ANTHROPIC_MODEL: z.string().default("claude-opus-5-5"),

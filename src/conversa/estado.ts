@@ -1,7 +1,7 @@
 import type { Analise } from "../ia/partes.js";
 
 /** Uma parte já com o WhatsApp de quem vai assinar. */
-export type ParteComContato = { papel: string; nome: string; telefone: string; email?: string };
+export type ParteComContato = { papel: string; nome: string; telefone: string };
 
 /** Etapa da conversa com o escritório. O PDF em análise fica guardado à parte, no banco. */
 export type Estado =

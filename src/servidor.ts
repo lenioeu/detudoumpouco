@@ -1,7 +1,6 @@
-import { timingSafeEqual } from "node:crypto";
 import express, { type Request } from "express";
 import type { Config } from "./config.js";
-import type { EventoDocumenso, Fluxo } from "./conversa/fluxo.js";
+import type { Fluxo } from "./conversa/fluxo.js";
 import { assinaturaValida, extrairEventos } from "./whatsapp/webhook.js";
 
 type ComCorpoBruto = Request & { corpoBruto?: Buffer };
@@ -44,20 +43,5 @@ export function criarServidor(config: Config, fluxo: Fluxo): express.Express {
     for (const s of status) void fluxo.receberStatus(s).catch((e) => console.error("Erro ao tratar status:", e));
   });
 
-  app.post("/webhook/documenso", (req, res) => {
-    if (!segredoConfere(req.header("x-documenso-secret"), config.DOCUMENSO_WEBHOOK_SECRET)) {
-      res.sendStatus(401);
-      return;
-    }
-    res.sendStatus(200);
-    void fluxo.receberEventoDocumenso(req.body as EventoDocumenso).catch((e) => console.error("Erro no webhook do Documenso:", e));
-  });
-
   return app;
-}
-
-function segredoConfere(recebido: string | undefined, esperado: string): boolean {
-  const a = Buffer.from(recebido ?? "");
-  const b = Buffer.from(esperado);
-  return a.length === b.length && timingSafeEqual(a, b);
 }

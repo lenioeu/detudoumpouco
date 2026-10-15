@@ -52,22 +52,18 @@ export class WhatsApp {
   /**
    * Template aprovado na Meta. É o único tipo de mensagem que pode iniciar conversa
    * com quem não falou com o número nas últimas 24 horas (caso de quem vai assinar).
+   * `payloadBotao` é devolvido no webhook quando a pessoa toca no botão de resposta rápida.
    */
-  async enviarTemplate(
-    para: string,
-    nome: string,
-    parametrosCorpo: string[],
-    sufixoBotaoUrl?: string,
-  ): Promise<string> {
+  async enviarTemplate(para: string, nome: string, parametrosCorpo: string[], payloadBotao?: string): Promise<string> {
     const components: unknown[] = [
       { type: "body", parameters: parametrosCorpo.map((text) => ({ type: "text", text })) },
     ];
-    if (sufixoBotaoUrl) {
+    if (payloadBotao) {
       components.push({
         type: "button",
-        sub_type: "url",
+        sub_type: "quick_reply",
         index: "0",
-        parameters: [{ type: "text", text: sufixoBotaoUrl }],
+        parameters: [{ type: "payload", payload: payloadBotao }],
       });
     }
     return this.enviar(para, {

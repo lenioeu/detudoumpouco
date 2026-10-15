@@ -1,8 +1,9 @@
 import { createHmac } from "node:crypto";
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
-import { acrescentarPaginaDeAssinaturas } from "../src/assinatura/pagina.js";
-import { contatoDoCartao, contatoDoTexto, emailsUnicos } from "../src/conversa/fluxo.js";
+import { contatoDoCartao, contatoDoTexto } from "../src/conversa/fluxo.js";
+import { lerBotao } from "../src/conversa/signatario.js";
+import { mascararCpf, validarCpf } from "../src/cpf.js";
 import { formatarTelefone, normalizarTelefone } from "../src/telefone.js";
 import { assinaturaValida, extrairEventos } from "../src/whatsapp/webhook.js";
 
@@ -50,22 +51,35 @@ describe("contatos", () => {
     expect(typeof contatoDoTexto(semNome, "51 98888-7777")).toBe("string");
   });
 
-  it("lê cartão de contato com e-mail", () => {
-    expect(contatoDoCartao(semNome, [{ nome: "Ana Souza", telefones: ["5551977776666"], email: "ana@ex.com" }])).toEqual({
+  it("lê cartão de contato", () => {
+    expect(contatoDoCartao(semNome, [{ nome: "Ana Souza", telefones: ["5551977776666"] }])).toEqual({
       papel: "outorgado",
       nome: "Ana Souza",
       telefone: "5551977776666",
-      email: "ana@ex.com",
     });
   });
+});
 
-  it("gera e-mails únicos para o Documenso", () => {
-    const c = { papel: "p", nome: "n", telefone: "5551999998888" };
-    expect(emailsUnicos([c, c, { ...c, email: "X@Ex.com" }], "whatsapp.invalid")).toEqual([
-      "5551999998888@whatsapp.invalid",
-      "5551999998888+2@whatsapp.invalid",
-      "x@ex.com",
-    ]);
+describe("CPF", () => {
+  it.each(["529.982.247-25", "52998224725", "111.444.777-35"])("aceita %s", (cpf) => {
+    expect(validarCpf(cpf)).toMatch(/^\d{11}$/);
+  });
+
+  it.each(["529.982.247-24", "111.111.111-11", "123", "5299822472a"])("recusa %s", (cpf) => {
+    expect(validarCpf(cpf)).toBeNull();
+  });
+
+  it("mascara para exibição", () => {
+    expect(mascararCpf("52998224725")).toBe("***.982.247-**");
+  });
+});
+
+describe("botões de assinatura", () => {
+  it("lê o id do botão", () => {
+    const id = "123e4567-e89b-12d3-a456-426614174000";
+    expect(lerBotao(`assinar:${id}:2`)).toEqual({ acao: "assinar", envioId: id, indice: 2 });
+    expect(lerBotao(`apagar:${id}:2`)).toBeNull();
+    expect(lerBotao("enviar")).toBeNull();
   });
 });
 
@@ -107,33 +121,5 @@ describe("webhook do WhatsApp", () => {
     expect(mensagens.map((m) => m.tipo)).toEqual(["texto", "documento", "botao", "contato"]);
     expect(mensagens[3]).toMatchObject({ contatos: [{ nome: "Ana", telefones: ["5551977776666"] }] });
     expect(status).toEqual([{ mensagemId: "w1", status: "delivered", destinatario: "5552", timestamp: "1" }]);
-  });
-});
-
-describe("página de assinaturas", () => {
-  it("acrescenta páginas e posiciona os campos dentro delas", async () => {
-    const original = await PDFDocument.create();
-    original.addPage();
-    const bytes = await original.save();
-
-    const signatarios = Array.from({ length: 6 }, (_, i) => ({
-      papel: "parte",
-      nome: `Pessoa ${i + 1} — São João`,
-      telefone: "5551999998888",
-    }));
-    const { pdf, campos, hashOriginal } = await acrescentarPaginaDeAssinaturas(bytes, "Contrato de Honorários", signatarios);
-
-    const resultado = await PDFDocument.load(pdf);
-    expect(resultado.getPageCount()).toBe(3); // original + 2 páginas (5 blocos por página)
-    expect(hashOriginal).toMatch(/^[0-9a-f]{64}$/);
-    expect(campos).toHaveLength(12);
-    expect(campos.filter((c) => c.pagina === 2)).toHaveLength(10);
-    expect(campos.filter((c) => c.pagina === 3)).toHaveLength(2);
-    for (const c of campos) {
-      expect(c.x).toBeGreaterThanOrEqual(0);
-      expect(c.y).toBeGreaterThanOrEqual(0);
-      expect(c.x + c.largura).toBeLessThanOrEqual(100);
-      expect(c.y + c.altura).toBeLessThanOrEqual(100);
-    }
   });
 });

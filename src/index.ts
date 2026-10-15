@@ -1,24 +1,29 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { AssinadorDePdf } from "./assinatura/certificado.js";
 import { Banco } from "./banco.js";
 import { carregarConfig } from "./config.js";
-import { Documenso } from "./assinatura/documenso.js";
+import { Avisador, Filas } from "./conversa/avisos.js";
 import { Fluxo } from "./conversa/fluxo.js";
+import { ColetaDeAssinaturas } from "./conversa/signatario.js";
 import { IdentificadorDePartes } from "./ia/partes.js";
 import { criarServidor } from "./servidor.js";
 import { WhatsApp } from "./whatsapp/cliente.js";
 
 const config = carregarConfig();
 const banco = new Banco(config.DATABASE_PATH);
-const fluxo = new Fluxo(
-  config,
-  banco,
-  new WhatsApp(config),
-  new IdentificadorDePartes(new Anthropic(), config.ANTHROPIC_MODEL),
-  new Documenso(config),
-);
+const whatsapp = new WhatsApp(config);
+const filas = new Filas();
+const avisos = new Avisador(config, banco, whatsapp);
+const assinador = AssinadorDePdf.carregarOuGerar(config.CERTIFICATE_PATH, config.CERTIFICATE_PASSWORD, {
+  nome: config.SENDER_DISPLAY_NAME,
+  local: config.SENDER_LOCATION,
+  contato: config.PUBLIC_URL,
+});
+const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
+const ia = new IdentificadorDePartes(new Anthropic(), config.ANTHROPIC_MODEL);
+const fluxo = new Fluxo(config, banco, whatsapp, ia, coleta, avisos, filas);
 
 criarServidor(config, fluxo).listen(config.PORT, () => {
   console.log(`AssinaBot ouvindo na porta ${config.PORT}`);
   console.log(`  Webhook do WhatsApp: ${config.PUBLIC_URL}/webhook/whatsapp`);
-  console.log(`  Webhook do Documenso: ${config.PUBLIC_URL}/webhook/documenso`);
 });

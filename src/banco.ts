@@ -1,17 +1,23 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import type { Bloco } from "./assinatura/pagina.js";
 import type { Estado } from "./conversa/estado.js";
 
 export type Envio = {
   id: string;
   remetente: string;
-  documentoId: number;
   titulo: string;
   ordem: "sequencial" | "simultanea";
   hashOriginal: string;
+  /** PDF que cada pessoa recebe para ler e assinar (original + página de assinaturas em branco). */
+  pdfApresentado: Uint8Array;
+  blocos: Bloco[];
   status: "aguardando" | "concluido" | "recusado";
+  criadoEm: string;
 };
+
+export type StatusSignatario = "pendente" | "convidado" | "visualizou" | "aguardando_cpf" | "assinado" | "recusado";
 
 export type Signatario = {
   envioId: string;
@@ -19,14 +25,15 @@ export type Signatario = {
   papel: string;
   nome: string;
   telefone: string;
-  email: string;
-  recipientId: number;
-  token: string;
+  status: StatusSignatario;
+  cpf: string | null;
   linkEnviadoEm: string | null;
+  visualizadoEm: string | null;
   assinadoEm: string | null;
+  mensagemAssinaturaId: string | null;
 };
 
-export type Pendencia = { id: number; telefone: string; texto: string; documentoId: number | null; nomeArquivo: string | null };
+export type Pendencia = { id: number; telefone: string; texto: string; pdf: Uint8Array | null; nomeArquivo: string | null };
 
 /** Persistência em SQLite (embutido no Node 22.5+). */
 export class Banco {
@@ -46,11 +53,13 @@ export class Banco {
       CREATE TABLE IF NOT EXISTS envios (
         id TEXT PRIMARY KEY,
         remetente TEXT NOT NULL,
-        documento_id INTEGER NOT NULL UNIQUE,
         titulo TEXT NOT NULL,
         ordem TEXT NOT NULL,
         hash_original TEXT NOT NULL,
+        pdf_apresentado BLOB NOT NULL,
+        blocos TEXT NOT NULL,
         status TEXT NOT NULL,
+        pdf_final BLOB,
         criado_em TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS signatarios (
@@ -59,14 +68,16 @@ export class Banco {
         papel TEXT NOT NULL,
         nome TEXT NOT NULL,
         telefone TEXT NOT NULL,
-        email TEXT NOT NULL,
-        recipient_id INTEGER NOT NULL,
-        token TEXT NOT NULL,
+        status TEXT NOT NULL,
+        cpf TEXT,
         link_enviado_em TEXT,
+        visualizado_em TEXT,
         assinado_em TEXT,
+        mensagem_assinatura_id TEXT,
         PRIMARY KEY (envio_id, indice)
       );
-      -- Registro de tudo que aconteceu com cada envio (prova complementar à do Documenso)
+      CREATE INDEX IF NOT EXISTS signatarios_telefone ON signatarios (telefone, status);
+      -- Registro de tudo que aconteceu com cada envio (vai resumido para o manifesto)
       CREATE TABLE IF NOT EXISTS eventos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         envio_id TEXT,
@@ -80,12 +91,12 @@ export class Banco {
         indice INTEGER
       );
       CREATE TABLE IF NOT EXISTS processadas (id TEXT PRIMARY KEY, em TEXT NOT NULL);
-      -- Mensagens ao escritório que esperam a janela de 24h do WhatsApp reabrir
+      -- Mensagens que esperam a janela de 24h do WhatsApp reabrir
       CREATE TABLE IF NOT EXISTS pendencias (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         telefone TEXT NOT NULL,
         texto TEXT NOT NULL,
-        documento_id INTEGER,
+        pdf BLOB,
         nome_arquivo TEXT
       );
     `);
@@ -96,6 +107,8 @@ export class Banco {
     const r = this.db.prepare("INSERT OR IGNORE INTO processadas (id, em) VALUES (?, ?)").run(id, agora());
     return r.changes > 0;
   }
+
+  // ---------------------------------------------------------------- conversa do escritório
 
   lerConversa(telefone: string): { estado: Estado; pdf: Uint8Array | null } {
     const linha = this.db.prepare("SELECT estado, pdf FROM conversas WHERE telefone = ?").get(telefone) as
@@ -123,22 +136,31 @@ export class Banco {
     }
   }
 
-  criarEnvio(envio: Envio, signatarios: Signatario[]): void {
+  // ---------------------------------------------------------------- envios
+
+  criarEnvio(envio: Envio, signatarios: Pick<Signatario, "papel" | "nome" | "telefone">[]): void {
     this.db.exec("BEGIN");
     try {
       this.db
         .prepare(
-          `INSERT INTO envios (id, remetente, documento_id, titulo, ordem, hash_original, status, criado_em)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO envios (id, remetente, titulo, ordem, hash_original, pdf_apresentado, blocos, status, criado_em)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .run(envio.id, envio.remetente, envio.documentoId, envio.titulo, envio.ordem, envio.hashOriginal, envio.status, agora());
+        .run(
+          envio.id,
+          envio.remetente,
+          envio.titulo,
+          envio.ordem,
+          envio.hashOriginal,
+          envio.pdfApresentado,
+          JSON.stringify(envio.blocos),
+          envio.status,
+          envio.criadoEm,
+        );
       const inserir = this.db.prepare(
-        `INSERT INTO signatarios (envio_id, indice, papel, nome, telefone, email, recipient_id, token)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        "INSERT INTO signatarios (envio_id, indice, papel, nome, telefone, status) VALUES (?, ?, ?, ?, ?, 'pendente')",
       );
-      for (const s of signatarios) {
-        inserir.run(s.envioId, s.indice, s.papel, s.nome, s.telefone, s.email, s.recipientId, s.token);
-      }
+      signatarios.forEach((s, i) => inserir.run(envio.id, i, s.papel, s.nome, s.telefone));
       this.db.exec("COMMIT");
     } catch (erro) {
       this.db.exec("ROLLBACK");
@@ -146,67 +168,86 @@ export class Banco {
     }
   }
 
-  envioPorDocumento(documentoId: number): Envio | null {
-    return this.lerEnvio(this.db.prepare("SELECT * FROM envios WHERE documento_id = ?").get(documentoId));
+  envio(id: string): Envio | null {
+    const l = this.db.prepare("SELECT * FROM envios WHERE id = ?").get(id) as Record<string, unknown> | undefined;
+    if (!l) return null;
+    return {
+      id: l.id as string,
+      remetente: l.remetente as string,
+      titulo: l.titulo as string,
+      ordem: l.ordem as Envio["ordem"],
+      hashOriginal: l.hash_original as string,
+      pdfApresentado: l.pdf_apresentado as Uint8Array,
+      blocos: JSON.parse(l.blocos as string) as Bloco[],
+      status: l.status as Envio["status"],
+      criadoEm: l.criado_em as string,
+    };
   }
 
-  envioPorId(id: string): Envio | null {
-    return this.lerEnvio(this.db.prepare("SELECT * FROM envios WHERE id = ?").get(id));
+  concluirEnvio(id: string, pdfFinal: Uint8Array): void {
+    this.db.prepare("UPDATE envios SET status = 'concluido', pdf_final = ? WHERE id = ?").run(pdfFinal, id);
   }
 
-  private lerEnvio(linha: unknown): Envio | null {
-    const l = linha as Record<string, unknown> | undefined;
-    return l
-      ? {
-          id: l.id as string,
-          remetente: l.remetente as string,
-          documentoId: l.documento_id as number,
-          titulo: l.titulo as string,
-          ordem: l.ordem as Envio["ordem"],
-          hashOriginal: l.hash_original as string,
-          status: l.status as Envio["status"],
-        }
-      : null;
+  marcarEnvioRecusado(id: string): void {
+    this.db.prepare("UPDATE envios SET status = 'recusado' WHERE id = ?").run(id);
   }
 
-  atualizarStatusEnvio(id: string, status: Envio["status"]): void {
-    this.db.prepare("UPDATE envios SET status = ? WHERE id = ?").run(status, id);
-  }
+  // ---------------------------------------------------------------- signatários
 
   signatarios(envioId: string): Signatario[] {
-    const linhas = this.db.prepare("SELECT * FROM signatarios WHERE envio_id = ? ORDER BY indice").all(envioId) as Record<
-      string,
-      unknown
-    >[];
-    return linhas.map((l) => ({
-      envioId: l.envio_id as string,
-      indice: l.indice as number,
-      papel: l.papel as string,
-      nome: l.nome as string,
-      telefone: l.telefone as string,
-      email: l.email as string,
-      recipientId: l.recipient_id as number,
-      token: l.token as string,
-      linkEnviadoEm: (l.link_enviado_em as string | null) ?? null,
-      assinadoEm: (l.assinado_em as string | null) ?? null,
-    }));
+    const linhas = this.db.prepare("SELECT * FROM signatarios WHERE envio_id = ? ORDER BY indice").all(envioId);
+    return linhas.map(lerSignatario);
   }
 
-  marcarLinkEnviado(envioId: string, indice: number, mensagemId: string): void {
-    this.db.prepare("UPDATE signatarios SET link_enviado_em = ? WHERE envio_id = ? AND indice = ?").run(agora(), envioId, indice);
-    if (mensagemId) {
-      this.db
-        .prepare("INSERT OR IGNORE INTO mensagens_whatsapp (mensagem_id, envio_id, indice) VALUES (?, ?, ?)")
-        .run(mensagemId, envioId, indice);
-    }
+  signatario(envioId: string, indice: number): Signatario | null {
+    const l = this.db.prepare("SELECT * FROM signatarios WHERE envio_id = ? AND indice = ?").get(envioId, indice);
+    return l ? lerSignatario(l) : null;
   }
 
-  /** Devolve true se o signatário ainda não constava como assinado. */
-  marcarAssinado(envioId: string, recipientId: number, em: string): boolean {
-    const r = this.db
-      .prepare("UPDATE signatarios SET assinado_em = ? WHERE envio_id = ? AND recipient_id = ? AND assinado_em IS NULL")
-      .run(em, envioId, recipientId);
-    return r.changes > 0;
+  /** Assinatura deste telefone que espera o CPF (a mais recente, se houver mais de uma). */
+  aguardandoCpf(telefone: string): Signatario | null {
+    const l = this.db
+      .prepare(
+        `SELECT s.* FROM signatarios s JOIN envios e ON e.id = s.envio_id
+         WHERE s.telefone = ? AND s.status = 'aguardando_cpf' AND e.status = 'aguardando'
+         ORDER BY s.visualizado_em DESC LIMIT 1`,
+      )
+      .get(telefone);
+    return l ? lerSignatario(l) : null;
+  }
+
+  ehSignatario(telefone: string): boolean {
+    return this.db.prepare("SELECT 1 FROM signatarios WHERE telefone = ? LIMIT 1").get(telefone) !== undefined;
+  }
+
+  atualizarSignatario(
+    envioId: string,
+    indice: number,
+    campos: Partial<Pick<Signatario, "status" | "cpf" | "linkEnviadoEm" | "visualizadoEm" | "assinadoEm" | "mensagemAssinaturaId">>,
+  ): void {
+    const colunas: Record<string, string> = {
+      status: "status",
+      cpf: "cpf",
+      linkEnviadoEm: "link_enviado_em",
+      visualizadoEm: "visualizado_em",
+      assinadoEm: "assinado_em",
+      mensagemAssinaturaId: "mensagem_assinatura_id",
+    };
+    const entradas = Object.entries(campos);
+    if (entradas.length === 0) return;
+    const sets = entradas.map(([k]) => `${colunas[k]} = ?`).join(", ");
+    this.db
+      .prepare(`UPDATE signatarios SET ${sets} WHERE envio_id = ? AND indice = ?`)
+      .run(...entradas.map(([, v]) => v ?? null), envioId, indice);
+  }
+
+  // ---------------------------------------------------------------- mensagens e eventos
+
+  vincularMensagem(mensagemId: string, envioId: string, indice: number | null): void {
+    if (!mensagemId) return;
+    this.db
+      .prepare("INSERT OR IGNORE INTO mensagens_whatsapp (mensagem_id, envio_id, indice) VALUES (?, ?, ?)")
+      .run(mensagemId, envioId, indice);
   }
 
   envioDaMensagem(mensagemId: string): { envioId: string; indice: number | null } | null {
@@ -222,15 +263,21 @@ export class Banco {
       .run(envioId, tipo, JSON.stringify(detalhe), agora());
   }
 
-  /** Telefones que receberam link de assinatura (para responder quem escreve ao bot). */
-  ehSignatario(telefone: string): boolean {
-    return this.db.prepare("SELECT 1 FROM signatarios WHERE telefone = ? LIMIT 1").get(telefone) !== undefined;
+  eventos(envioId: string): { tipo: string; detalhe: unknown; em: string }[] {
+    const linhas = this.db.prepare("SELECT tipo, detalhe, em FROM eventos WHERE envio_id = ? ORDER BY id").all(envioId) as {
+      tipo: string;
+      detalhe: string;
+      em: string;
+    }[];
+    return linhas.map((l) => ({ tipo: l.tipo, detalhe: JSON.parse(l.detalhe) as unknown, em: l.em }));
   }
 
-  adicionarPendencia(telefone: string, texto: string, documentoId: number | null, nomeArquivo: string | null): void {
+  // ---------------------------------------------------------------- pendências
+
+  adicionarPendencia(telefone: string, texto: string, pdf: Uint8Array | null, nomeArquivo: string | null): void {
     this.db
-      .prepare("INSERT INTO pendencias (telefone, texto, documento_id, nome_arquivo) VALUES (?, ?, ?, ?)")
-      .run(telefone, texto, documentoId, nomeArquivo);
+      .prepare("INSERT INTO pendencias (telefone, texto, pdf, nome_arquivo) VALUES (?, ?, ?, ?)")
+      .run(telefone, texto, pdf, nomeArquivo);
   }
 
   pendencias(telefone: string): Pendencia[] {
@@ -242,7 +289,7 @@ export class Banco {
       id: l.id as number,
       telefone: l.telefone as string,
       texto: l.texto as string,
-      documentoId: (l.documento_id as number | null) ?? null,
+      pdf: (l.pdf as Uint8Array | null) ?? null,
       nomeArquivo: (l.nome_arquivo as string | null) ?? null,
     }));
   }
@@ -250,6 +297,24 @@ export class Banco {
   removerPendencia(id: number): void {
     this.db.prepare("DELETE FROM pendencias WHERE id = ?").run(id);
   }
+}
+
+function lerSignatario(linha: unknown): Signatario {
+  const l = linha as Record<string, unknown>;
+  const ou = (v: unknown) => (v as string | null) ?? null;
+  return {
+    envioId: l.envio_id as string,
+    indice: l.indice as number,
+    papel: l.papel as string,
+    nome: l.nome as string,
+    telefone: l.telefone as string,
+    status: l.status as StatusSignatario,
+    cpf: ou(l.cpf),
+    linkEnviadoEm: ou(l.link_enviado_em),
+    visualizadoEm: ou(l.visualizado_em),
+    assinadoEm: ou(l.assinado_em),
+    mensagemAssinaturaId: ou(l.mensagem_assinatura_id),
+  };
 }
 
 function agora(): string {
