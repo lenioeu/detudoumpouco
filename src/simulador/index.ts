@@ -69,8 +69,8 @@ app.get("/eventos", (req, res) => {
   res.set({ "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
   res.flushHeaders();
   const enviar = (m: unknown) => res.write(`data: ${JSON.stringify(m)}\n\n`);
-  whatsapp.on("mensagem", enviar);
-  req.on("close", () => whatsapp.off("mensagem", enviar));
+  const parar = whatsapp.aoReceber(enviar);
+  req.on("close", parar);
 });
 
 app.get("/arquivo/:id", (req, res) => {

@@ -34,6 +34,10 @@ O bot também guarda no banco (tabela `eventos`) cada passo: convites, botões t
 
 ## Testar sem WhatsApp (simulador)
 
+**Versão on-line, sem instalar nada:** o mesmo simulador roda inteiro no navegador como página do claude.ai. A leitura do documento usa o Claude da conta de quem abre a página, e a via final pode ser salva pelo botão "Salvar PDF". Para gerar a página a partir do código: `npm run simulador:web` (cria `dist/simulador-web.html`).
+
+**Versão local:**
+
 O simulador roda o bot de verdade, mas no lugar do WhatsApp abre uma página no navegador com três celulares lado a lado: o **escritório** (você), **Maria da Silva** e **João Pereira**. Não precisa de conta na Meta nem de servidor.
 
 1. Instale o [Node.js](https://nodejs.org) (versão 22 ou mais nova, botão "LTS").

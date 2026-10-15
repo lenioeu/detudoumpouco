@@ -1,4 +1,3 @@
-import { EventEmitter } from "node:events";
 import type { Botao } from "../whatsapp/cliente.js";
 
 /** Uma mensagem exibida no simulador, num dos celulares. */
@@ -18,8 +17,9 @@ export type MensagemSimulada = {
  * Faz o papel da API do WhatsApp: em vez de chamar a Meta, guarda as mensagens
  * para a página do simulador mostrar.
  */
-export class WhatsAppSimulado extends EventEmitter {
+export class WhatsAppSimulado {
   readonly mensagens: MensagemSimulada[] = [];
+  private readonly ouvintes = new Set<(m: MensagemSimulada) => void>();
   private readonly arquivos = new Map<string, { nome: string; dados: Uint8Array }>();
   private n = 0;
 
@@ -69,6 +69,12 @@ export class WhatsAppSimulado extends EventEmitter {
     return this.arquivos.get(id);
   }
 
+  /** Chama `ouvinte` a cada mensagem nova; devolve a função que para de ouvir. */
+  aoReceber(ouvinte: (m: MensagemSimulada) => void): () => void {
+    this.ouvintes.add(ouvinte);
+    return () => this.ouvintes.delete(ouvinte);
+  }
+
   /** Registra o que a pessoa mandou, para aparecer no celular dela. */
   registrarDaPessoa(m: Omit<MensagemSimulada, "id" | "direcao" | "em">): string {
     return this.registrar({ ...m, direcao: "pessoa" });
@@ -77,7 +83,7 @@ export class WhatsAppSimulado extends EventEmitter {
   private registrar(m: Omit<MensagemSimulada, "id" | "em">): string {
     const mensagem: MensagemSimulada = { ...m, id: `wamid.SIM${++this.n}`, em: new Date().toISOString() };
     this.mensagens.push(mensagem);
-    this.emit("mensagem", mensagem);
+    for (const ouvinte of this.ouvintes) ouvinte(mensagem);
     return mensagem.id;
   }
 }

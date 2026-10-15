@@ -1,4 +1,4 @@
-import type { Banco, Envio, Signatario } from "../banco.js";
+import type { Envio, Repositorio, Signatario } from "../banco.js";
 import type { Config } from "../config.js";
 import { validarCpf } from "../cpf.js";
 import type { AssinadorDePdf } from "../assinatura/certificado.js";
@@ -27,7 +27,7 @@ export function lerBotao(id: string): { acao: Acao; envioId: string; indice: num
 export class ColetaDeAssinaturas {
   constructor(
     private readonly config: Config,
-    private readonly banco: Banco,
+    private readonly banco: Repositorio,
     private readonly whatsapp: Mensageiro,
     private readonly avisos: Avisador,
     private readonly assinador: Pick<AssinadorDePdf, "assinar">,

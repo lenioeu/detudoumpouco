@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Banco, Envio } from "../banco.js";
+import type { Envio, Repositorio } from "../banco.js";
 import type { Config } from "../config.js";
 import { prepararDocumento } from "../assinatura/pagina.js";
 import type { Analise, IdentificadorDePartes } from "../ia/partes.js";
@@ -19,7 +19,7 @@ const TAMANHO_MAXIMO_PDF = 30 * 1024 * 1024;
 export class Fluxo {
   constructor(
     private readonly config: Config,
-    private readonly banco: Banco,
+    private readonly banco: Repositorio,
     private readonly whatsapp: Mensageiro,
     private readonly ia: Identificador,
     private readonly coleta: ColetaDeAssinaturas,

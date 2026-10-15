@@ -1,39 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { z } from "zod";
-
-export const EsquemaAnalise = z.object({
-  titulo: z.string().describe("Título curto do documento, ex.: 'Procuração ad judicia'"),
-  tipo_documento: z.string().describe("Tipo do documento, ex.: procuração, contrato de honorários, declaração"),
-  partes: z
-    .array(
-      z.object({
-        papel: z.string().describe("Papel no documento, ex.: outorgante, contratante, declarante"),
-        nome: z.string().nullable().describe("Nome completo como aparece no documento; null se estiver em branco"),
-      }),
-    )
-    .describe("Quem precisa assinar, na ordem em que deve assinar"),
-  ordem: z
-    .enum(["sequencial", "simultanea"])
-    .describe("sequencial quando uma parte define os termos e a outra aceita; simultanea quando a ordem não importa"),
-  observacao: z
-    .string()
-    .nullable()
-    .describe("Algo que o advogado deve conferir antes de enviar (campo em branco, assinatura faltando etc.); null se nada"),
-});
-
-export type Analise = z.infer<typeof EsquemaAnalise>;
-
-const INSTRUCOES = `Você ajuda um escritório de advocacia brasileiro a enviar documentos para assinatura eletrônica pelo WhatsApp.
-
-Leia o documento e identifique quem precisa assiná-lo.
-
-Regras:
-- Liste só quem assina como parte. Testemunhas ficam de fora: elas assinam separadamente, se o escritório quiser.
-- Use o nome exatamente como está no documento. Se o nome estiver em branco ou for um campo a preencher, use null.
-- Se uma pessoa jurídica assina por representante, o papel é o da empresa e o nome é o do representante, ex.: papel "contratante (Empresa X Ltda.)".
-- Ordem de assinatura: quem define os termos assina primeiro (outorgante antes do outorgado, contratante antes do contratado, locador antes do locatário). Use "simultanea" só quando a ordem não fizer diferença, como em acordos mútuos.
-- Na observação, aponte só o que exige atenção antes do envio: campos obrigatórios em branco, documento que parece incompleto, número de partes menor que o exigido pelo tipo de documento. Não comente o mérito jurídico.`;
+import { EsquemaAnalise, INSTRUCOES, type Analise } from "./esquema.js";
 
 export class IdentificadorDePartes {
   constructor(
@@ -86,3 +53,5 @@ export class IdentificadorDePartes {
     return resposta.parsed_output;
   }
 }
+
+export { EsquemaAnalise, type Analise } from "./esquema.js";

@@ -1,0 +1,123 @@
+<title>Simulador AssinaBot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+  /* Layout: três celulares lado a lado (empilhados no celular), cada um uma conversa do WhatsApp com o bot. */
+  :root {
+    --fundo: #e7e4dc;
+    --tinta: #16201f;
+    --suave: #5d6b69;
+    --tela: #efeae2;
+    --barra: #0d5c52;
+    --barra-texto: #f4fbf9;
+    --bolha-bot: #ffffff;
+    --bolha-pessoa: #d9fdd3;
+    --botao-texto: #0a6d98;
+    --verde: #00a884;
+    --linha: #cfd6d3;
+    --aviso: #fdf2c8;
+    --aviso-texto: #4d3d05;
+    --sombra: 0 1px 0.5px rgba(11, 20, 26, 0.14);
+    --fonte: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fundo: #0b1215; --tinta: #e6ecea; --suave: #93a19e; --tela: #0f1a1f; --barra: #1d2b31;
+      --barra-texto: #e6ecea; --bolha-bot: #1f2c33; --bolha-pessoa: #075646; --botao-texto: #55bfe9;
+      --verde: #00a884; --linha: #2c3a40; --aviso: #3a3214; --aviso-texto: #f2e3a6;
+      --sombra: 0 1px 0.5px rgba(0, 0, 0, 0.4); color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --fundo: #0b1215; --tinta: #e6ecea; --suave: #93a19e; --tela: #0f1a1f; --barra: #1d2b31;
+    --barra-texto: #e6ecea; --bolha-bot: #1f2c33; --bolha-pessoa: #075646; --botao-texto: #55bfe9;
+    --verde: #00a884; --linha: #2c3a40; --aviso: #3a3214; --aviso-texto: #f2e3a6;
+    --sombra: 0 1px 0.5px rgba(0, 0, 0, 0.4); color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--fundo); color: var(--tinta); font: 14px/1.45 var(--fonte);
+    display: flex; flex-direction: column;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 12px 16px; gap: 10px;
+  }
+  .topo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+  .topo h1 { font-size: 18px; margin: 0; letter-spacing: -0.01em; }
+  .topo p { margin: 0; color: var(--suave); flex: 1 1 320px; min-width: 0; }
+  #modo { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--linha); white-space: nowrap; }
+  #modo[data-modo="claude"] { color: var(--verde); border-color: var(--verde); }
+  #modo[data-modo="demo"] { color: var(--aviso-texto); background: var(--aviso); border-color: transparent; }
+  #aviso-modo { background: var(--aviso); color: var(--aviso-texto); padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+  #aviso-modo code { font-size: 12px; }
+  #celulares { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 960px) {
+    body { height: auto; }
+    #celulares { grid-template-columns: minmax(0, 1fr); }
+    .celular { height: 78vh; }
+  }
+  .celular { display: flex; flex-direction: column; min-height: 0; background: var(--tela); border: 1px solid var(--linha); border-radius: 16px; overflow: hidden; }
+  .cel-topo { display: flex; align-items: center; gap: 10px; background: var(--barra); color: var(--barra-texto); padding: 9px 12px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; background: rgba(255,255,255,0.18); }
+  .cel-nome { display: flex; flex-direction: column; min-width: 0; }
+  .cel-nome strong { font-size: 15px; }
+  .cel-nome small { opacity: 0.8; font-variant-numeric: tabular-nums; }
+  .conversa { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .vazio { margin: auto; text-align: center; color: var(--suave); font-size: 13px; padding: 16px; max-width: 32ch; display: grid; gap: 12px; justify-items: center; }
+  .vazio p { margin: 0; }
+  .vazio .exemplo { background: var(--verde); color: #fff; border: 0; border-radius: 999px; padding: 8px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+  .msg { max-width: 88%; padding: 6px 9px 4px; border-radius: 8px; box-shadow: var(--sombra); white-space: pre-wrap; overflow-wrap: anywhere; display: grid; gap: 4px; }
+  .msg.bot { background: var(--bolha-bot); align-self: flex-start; }
+  .msg.pessoa { background: var(--bolha-pessoa); align-self: flex-end; }
+  .msg .hora { font-size: 11px; color: var(--suave); text-align: right; font-variant-numeric: tabular-nums; }
+  .msg .rotulo { font-size: 11px; color: var(--suave); }
+  .arquivo { display: flex; align-items: center; gap: 8px; padding: 8px; border: 0; border-radius: 6px; background: rgba(127,127,127,0.12); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  .arquivo:hover { background: rgba(127,127,127,0.2); }
+  .arquivo .pdf { font-size: 10px; font-weight: 700; color: #fff; background: #d6453d; border-radius: 3px; padding: 2px 4px; }
+  .botoes { display: grid; gap: 4px; align-self: flex-start; width: min(88%, 320px); }
+  .botoes button { background: var(--bolha-bot); color: var(--botao-texto); border: 0; border-radius: 8px; padding: 8px; font: inherit; font-weight: 600; cursor: pointer; box-shadow: var(--sombra); }
+  .botoes button:hover { filter: brightness(0.96); }
+  .digitando { font-size: 12px; color: var(--suave); padding: 0 14px 6px; font-style: italic; }
+  .barra { display: flex; gap: 6px; padding: 8px; background: var(--barra); }
+  .barra .texto { flex: 1; min-width: 0; border: 0; border-radius: 18px; padding: 0 12px; height: 38px; font: inherit; background: var(--bolha-bot); color: var(--tinta); }
+  .acao, .enviar { border: 0; border-radius: 18px; height: 38px; min-width: 38px; padding: 0 10px; font: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; background: var(--bolha-bot); color: var(--tinta); }
+  .enviar { background: var(--verde); color: #fff; font-weight: 600; }
+  .acao input[type=file] { display: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .menu-contato { position: relative; }
+  .menu-contato ul { position: absolute; bottom: 44px; left: 0; list-style: none; margin: 0; padding: 4px; background: var(--bolha-bot); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.25); min-width: 190px; z-index: 2; }
+  .menu-contato li button { width: 100%; text-align: left; border: 0; border-radius: 6px; background: transparent; color: var(--tinta); padding: 8px; font: inherit; cursor: pointer; }
+  .menu-contato li button:hover { background: rgba(127,127,127,0.15); }
+  button:focus-visible, input:focus-visible, label:focus-within { outline: 2px solid var(--verde); outline-offset: 2px; }
+  #leitor { width: min(900px, 100%); max-height: 92vh; padding: 0; border: 1px solid var(--linha); border-radius: 12px; background: var(--tela); color: var(--tinta); }
+  #leitor::backdrop { background: rgba(0,0,0,0.55); }
+  .leitor-topo { position: sticky; top: 0; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--barra); color: var(--barra-texto); }
+  .leitor-topo strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .leitor-topo button { border: 0; border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 600; cursor: pointer; background: var(--bolha-bot); color: var(--tinta); }
+  #leitor-salvar { background: var(--verde); color: #fff; }
+  #leitor-paginas { display: grid; gap: 12px; padding: 12px; justify-items: center; }
+  #leitor-paginas canvas { width: 100%; max-width: 760px; height: auto; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+  .carregando { color: var(--suave); }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<header class="topo">
+  <h1>Simulador AssinaBot</h1>
+  <span id="modo">IA: conectando…</span>
+  <p>Três celulares conversando com o bot de verdade. Comece pelo celular do escritório.</p>
+</header>
+<div id="aviso-modo" hidden></div>
+<main id="celulares"></main>
+
+<dialog id="leitor" aria-labelledby="leitor-titulo">
+  <div class="leitor-topo">
+    <strong id="leitor-titulo">Documento</strong>
+    <button type="button" id="leitor-salvar" hidden>Salvar PDF</button>
+    <button type="button" id="leitor-fechar">Fechar</button>
+  </div>
+  <div id="leitor-paginas"></div>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script>/*BUNDLE*/</script>

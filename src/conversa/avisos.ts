@@ -1,4 +1,4 @@
-import type { Banco } from "../banco.js";
+import type { Repositorio } from "../banco.js";
 import type { Config } from "../config.js";
 import { ErroWhatsApp, type WhatsApp } from "../whatsapp/cliente.js";
 
@@ -14,7 +14,7 @@ const JANELA_FECHADA = 131047;
 export class Avisador {
   constructor(
     private readonly config: Config,
-    private readonly banco: Banco,
+    private readonly banco: Repositorio,
     private readonly whatsapp: Mensageiro,
   ) {}
 

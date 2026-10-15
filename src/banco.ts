@@ -35,6 +35,9 @@ export type Signatario = {
 
 export type Pendencia = { id: number; telefone: string; texto: string; pdf: Uint8Array | null; nomeArquivo: string | null };
 
+/** O que o bot usa do banco; implementado em SQLite (Banco) e em memória (simulador no navegador). */
+export type Repositorio = { [K in keyof Banco]: Banco[K] };
+
 /** Persistência em SQLite (embutido no Node 22.5+). */
 export class Banco {
   private readonly db: DatabaseSync;
