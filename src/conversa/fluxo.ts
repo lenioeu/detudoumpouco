@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Envio, Repositorio } from "../banco.js";
 import type { Config } from "../config.js";
-import { encontrarLinhasDeAssinatura, type LeitorDeTexto, type LinhaDeAssinatura } from "../assinatura/linhas.js";
+import { encontrarLinhasDeAssinatura, type LeitorDeTexto, type LinhaDeAssinatura, normalizar } from "../assinatura/linhas.js";
 import { prepararDocumento } from "../assinatura/pagina.js";
 import type { Analise, IdentificadorDePartes } from "../ia/partes.js";
 import { normalizarTelefone } from "../telefone.js";
@@ -9,9 +9,9 @@ import type { MensagemRecebida, StatusMensagem } from "../whatsapp/webhook.js";
 import type { Avisador, Filas, Mensageiro } from "./avisos.js";
 import { BOTOES, type Estado, type ParteComContato } from "./estado.js";
 import { type ColetaDeAssinaturas, lerBotao } from "./signatario.js";
-import { AJUDA, listaDePartes, pedidoDeContato, resumoParaEnvio } from "./textos.js";
+import { AJUDA, listaDeDocumentos, listaDePartes, pedidoDeContatos, resumoParaEnvio } from "./textos.js";
 
-type Identificador = Pick<IdentificadorDePartes, "analisar" | "corrigir">;
+type Identificador = Pick<IdentificadorDePartes, "analisar" | "corrigir" | "ajustarSignatarios">;
 
 /** Limite de tamanho de PDF aceito pela API da Anthropic. */
 const TAMANHO_MAXIMO_PDF = 30 * 1024 * 1024;
@@ -44,11 +44,26 @@ export class Fluxo {
           return;
         }
 
-        // CPF de uma assinatura em andamento (para o escritório, só fora de outro processo)
-        const aguardando = m.tipo === "texto" ? this.banco.aguardandoCpf(m.de) : null;
-        if (aguardando && m.tipo === "texto" && (!ehEscritorio || this.banco.lerConversa(m.de).estado.etapa === "inicio")) {
-          await this.coleta.tratarCpf(aguardando, m.id, m.texto);
-          return;
+        // Etapas de uma assinatura em andamento (para o escritório, só fora de outro processo)
+        const livre = !ehEscritorio || this.banco.lerConversa(m.de).estado.etapa === "inicio";
+        if (m.tipo === "imagem") {
+          const esperandoSelfie = this.banco.aguardandoSelfie(m.de);
+          if (esperandoSelfie) {
+            await this.coleta.tratarSelfie(esperandoSelfie, m.id, m.mediaId, m.mimeType);
+            return;
+          }
+        }
+        if (m.tipo === "texto" && livre) {
+          const esperandoCpf = this.banco.aguardandoCpf(m.de);
+          if (esperandoCpf) {
+            await this.coleta.tratarCpf(esperandoCpf, m.id, m.texto);
+            return;
+          }
+          const esperandoSelfie = this.banco.aguardandoSelfie(m.de);
+          if (esperandoSelfie && !(ehEscritorio && PEDIDO_DE_STATUS.test(m.texto.trim()))) {
+            await this.coleta.lembrarSelfie(esperandoSelfie);
+            return;
+          }
         }
 
         if (ehEscritorio) await this.conversarComEscritorio(m);
@@ -93,6 +108,12 @@ export class Fluxo {
       return;
     }
 
+    // Situação dos documentos enviados, a qualquer momento
+    if ((m.tipo === "texto" && PEDIDO_DE_STATUS.test(m.texto.trim())) || (m.tipo === "botao" && m.botaoId === BOTOES.verDocumentos.id)) {
+      await this.listarDocumentos(de);
+      return;
+    }
+
     // Um PDF novo sempre recomeça o processo
     if (m.tipo === "documento") {
       await this.receberDocumento(de, m.mediaId, m.mimeType, m.nomeArquivo);
@@ -101,7 +122,7 @@ export class Fluxo {
 
     switch (estado.etapa) {
       case "inicio":
-        await this.whatsapp.enviarTexto(de, AJUDA);
+        await this.whatsapp.enviarBotoes(de, AJUDA, [BOTOES.verDocumentos]);
         return;
 
       case "confirmando_partes":
@@ -111,9 +132,7 @@ export class Fluxo {
             await this.whatsapp.enviarTexto(de, "Não encontrei ninguém para assinar. Escreva quem são as partes.");
             return;
           }
-          const proximo: Estado = { ...estado, etapa: "coletando_contatos", contatos: [] };
-          this.banco.salvarConversa(de, proximo);
-          await this.pedirProximoContato(de, proximo);
+          await this.iniciarColeta(de, estado.nomeArquivo, estado.analise, m.nomePerfil);
         } else if (m.tipo === "botao" && m.botaoId === BOTOES.corrigirPartes.id) {
           this.banco.salvarConversa(de, { ...estado, etapa: "corrigindo_partes" });
           await this.whatsapp.enviarTexto(
@@ -134,21 +153,50 @@ export class Fluxo {
         return;
 
       case "coletando_contatos":
-        await this.receberContato(de, estado, m);
+        await this.receberContatos(de, estado, m);
+        return;
+
+      case "confirmando_exclusao": {
+        const { excluir, ...resto } = estado;
+        const coleta: ColetaEmAndamento = { ...resto, etapa: "coletando_contatos" };
+        if (m.tipo === "botao" && m.botaoId === BOTOES.confirmarExclusao.id) {
+          await this.continuarColeta(de, { ...coleta, excluidas: [...coleta.excluidas, ...excluir] }, null);
+        } else if (m.tipo === "botao" && m.botaoId === BOTOES.negarExclusao.id) {
+          this.banco.salvarConversa(de, coleta);
+          await this.pedirContatos(de, coleta, null);
+        } else {
+          await this.receberContatos(de, coleta, m);
+        }
+        return;
+      }
+
+      case "escolhendo_selfie":
+        if (m.tipo === "botao" && (m.botaoId === BOTOES.pedirSelfie.id || m.botaoId === BOTOES.semSelfie.id)) {
+          const selfie = m.botaoId === BOTOES.pedirSelfie.id;
+          this.banco.salvarConversa(de, { ...estado, etapa: "confirmando_envio", selfie });
+          await this.whatsapp.enviarBotoes(de, resumoParaEnvio(estado.analise, estado.contatos, selfie), [BOTOES.enviar, BOTOES.cancelar]);
+        } else {
+          await this.perguntarSelfie(de);
+        }
         return;
 
       case "confirmando_envio":
         if (m.tipo === "botao" && m.botaoId === BOTOES.enviar.id) {
           if (!pdf) throw new Error("PDF da conversa não encontrado");
-          await this.enviarParaAssinatura(de, estado.nomeArquivo, estado.analise, estado.contatos, pdf);
+          await this.enviarParaAssinatura(de, estado.nomeArquivo, estado.analise, estado.contatos, estado.selfie ?? false, pdf);
         } else {
-          await this.whatsapp.enviarBotoes(de, resumoParaEnvio(estado.analise, estado.contatos), [
+          await this.whatsapp.enviarBotoes(de, resumoParaEnvio(estado.analise, estado.contatos, estado.selfie ?? false), [
             BOTOES.enviar,
             BOTOES.cancelar,
           ]);
         }
         return;
     }
+  }
+
+  private async listarDocumentos(de: string): Promise<void> {
+    const envios = this.banco.enviosDoRemetente(de, 10).map((envio) => ({ envio, signatarios: this.banco.signatarios(envio.id) }));
+    await this.whatsapp.enviarTexto(de, listaDeDocumentos(envios));
   }
 
   private async receberDocumento(de: string, mediaId: string, mimeType: string, nomeArquivo: string): Promise<void> {
@@ -193,48 +241,133 @@ export class Fluxo {
     await this.mostrarPartes(de, analise);
   }
 
-  private async pedirProximoContato(de: string, estado: Extract<Estado, { etapa: "coletando_contatos" }>): Promise<void> {
-    const indice = estado.contatos.length;
-    const parte = estado.analise.partes[indice]!;
-    const texto = pedidoDeContato(parte.papel, parte.nome, indice + 1, estado.analise.partes.length);
-    await this.whatsapp.enviarBotoes(de, texto, [BOTOES.euAssino, BOTOES.cancelar]);
+  // ---------------------------------------------------------------- coleta dos contatos
+
+  /** Começa a coleta; se o advogado for uma das partes, já o preenche com o próprio número. */
+  private async iniciarColeta(de: string, nomeArquivo: string, analise: Analise, nomePerfil?: string): Promise<void> {
+    const contatos: (ParteComContato | null)[] = analise.partes.map(() => null);
+    const nomeDoAdvogado = this.config.NOMES_DOS_REMETENTES[de] ?? nomePerfil;
+    const reconhecido = nomeDoAdvogado ? parteDoAdvogado(analise.partes, nomeDoAdvogado) : null;
+    if (reconhecido !== null) {
+      const parte = analise.partes[reconhecido]!;
+      contatos[reconhecido] = { papel: parte.papel, nome: parte.nome!, telefone: de };
+    }
+    await this.continuarColeta(de, { etapa: "coletando_contatos", nomeArquivo, analise, contatos, excluidas: [] }, reconhecido);
   }
 
-  private async receberContato(
-    de: string,
-    estado: Extract<Estado, { etapa: "coletando_contatos" }>,
-    m: MensagemRecebida,
-  ): Promise<void> {
-    const parte = estado.analise.partes[estado.contatos.length]!;
-    let contato: ParteComContato | string;
+  /** Pede o que falta ou, se já tem todos os contatos, segue para a pergunta da selfie. */
+  private async continuarColeta(de: string, coleta: ColetaEmAndamento, reconhecido: number | null): Promise<void> {
+    const faltando = pendentes(coleta);
+    if (faltando.length) {
+      this.banco.salvarConversa(de, coleta);
+      await this.pedirContatos(de, coleta, reconhecido);
+      return;
+    }
+    const contatos = coleta.contatos.filter((c, i): c is ParteComContato => c !== null && !coleta.excluidas.includes(i));
+    if (!contatos.length) {
+      const reinicio: ColetaEmAndamento = { ...coleta, excluidas: [] };
+      this.banco.salvarConversa(de, reinicio);
+      await this.whatsapp.enviarTexto(de, "Assim ninguém ficaria para assinar. Vamos de novo:");
+      await this.pedirContatos(de, reinicio, null);
+      return;
+    }
+    this.banco.salvarConversa(de, { etapa: "escolhendo_selfie", nomeArquivo: coleta.nomeArquivo, analise: coleta.analise, contatos });
+    await this.perguntarSelfie(de);
+  }
+
+  private async pedirContatos(de: string, coleta: ColetaEmAndamento, reconhecido: number | null): Promise<void> {
+    await this.whatsapp.enviarBotoes(de, pedidoDeContatos(coleta.analise, coleta.contatos, coleta.excluidas, reconhecido), [
+      BOTOES.euAssino,
+      BOTOES.cancelar,
+    ]);
+  }
+
+  private async perguntarSelfie(de: string): Promise<void> {
+    await this.whatsapp.enviarBotoes(
+      de,
+      "Quer pedir a quem assina uma *selfie segurando um documento de identidade* (RG ou CNH)? Ela entra no certificado como prova a mais de identidade.",
+      [BOTOES.pedirSelfie, BOTOES.semSelfie],
+    );
+  }
+
+  private async receberContatos(de: string, coleta: ColetaEmAndamento, m: MensagemRecebida): Promise<void> {
+    const contatos = [...coleta.contatos];
+    const problemas: string[] = [];
+    const livres = () => pendentes({ ...coleta, contatos });
+    const preencher = (indice: number, nomeInformado: string, telefone: string) => {
+      const parte = coleta.analise.partes[indice]!;
+      // O nome do documento prevalece sobre o digitado (que costuma vir abreviado)
+      const nome = parte.nome ?? nomeInformado.trim();
+      if (!nome) {
+        problemas.push(`Faltou o nome completo de quem assina como ${parte.papel}.`);
+        return;
+      }
+      contatos[indice] = { papel: parte.papel, nome, telefone };
+    };
 
     if (m.tipo === "botao" && m.botaoId === BOTOES.euAssino.id) {
-      contato = parte.nome
-        ? { papel: parte.papel, nome: parte.nome, telefone: de }
-        : "Como o nome desta parte está em branco no documento, digite seu nome completo e seu número.";
+      const indice = livres()[0];
+      if (indice !== undefined) preencher(indice, "", de);
     } else if (m.tipo === "contato") {
-      contato = contatoDoCartao(parte, m.contatos);
+      for (const cartao of m.contatos) {
+        const telefone = cartao.telefones.map(normalizarTelefone).find((t) => t !== null);
+        if (!telefone) {
+          problemas.push(`O contato ${cartao.nome || "sem nome"} não tem um telefone válido.`);
+          continue;
+        }
+        const indice = parteDoNome(coleta.analise.partes, livres(), cartao.nome) ?? livres()[0];
+        if (indice !== undefined) preencher(indice, cartao.nome, telefone);
+      }
     } else if (m.tipo === "texto") {
-      contato = contatoDoTexto(parte, m.texto);
+      const linhas = linhasComTelefone(m.texto);
+      if (!linhas.length) {
+        await this.interpretarPedido(de, coleta, m.texto);
+        return;
+      }
+      for (const { nome, telefone } of linhas) {
+        if (!telefone) {
+          problemas.push(`Não reconheci o número de "${nome}". Digite com DDD, ex.: 51 99999-8888.`);
+          continue;
+        }
+        const emBranco = livres().find((i) => !coleta.analise.partes[i]!.nome);
+        const indice = (nome ? parteDoNome(coleta.analise.partes, livres(), nome) : null) ?? (nome ? emBranco : undefined) ?? livres()[0];
+        if (indice !== undefined) preencher(indice, nome, telefone);
+      }
     } else {
-      contato = "Envie o contato da agenda ou digite o número com DDD.";
-    }
-
-    if (typeof contato === "string") {
-      await this.whatsapp.enviarTexto(de, contato);
+      await this.whatsapp.enviarTexto(de, "Envie os contatos da agenda ou digite nome e telefone com DDD.");
       return;
     }
 
-    const contatos = [...estado.contatos, contato];
-    if (contatos.length < estado.analise.partes.length) {
-      const proximo: Estado = { ...estado, contatos };
-      this.banco.salvarConversa(de, proximo);
-      await this.pedirProximoContato(de, proximo);
+    if (problemas.length) await this.whatsapp.enviarTexto(de, `⚠️ ${problemas.join("\n")}`);
+    await this.continuarColeta(de, { ...coleta, contatos }, null);
+  }
+
+  /** Texto sem telefone: pode ser um pedido como "só o Carlos assina". */
+  private async interpretarPedido(de: string, coleta: ColetaEmAndamento, texto: string): Promise<void> {
+    const faltando = pendentes(coleta);
+    const ajuste = await this.ia.ajustarSignatarios(
+      faltando.map((indice) => ({ indice, papel: coleta.analise.partes[indice]!.papel, nome: coleta.analise.partes[indice]!.nome })),
+      texto,
+    );
+    const excluir = ajuste.excluir.filter((i) => faltando.includes(i));
+    if (!ajuste.entendeu || !excluir.length) {
+      await this.whatsapp.enviarTexto(
+        de,
+        "Não entendi. Mande o nome e o telefone com DDD de quem assina (ex.: _Maria da Silva 51 99999-8888_), " +
+          "ou diga quem não vai assinar (ex.: _só a Maria assina_).",
+      );
       return;
     }
-
-    this.banco.salvarConversa(de, { ...estado, etapa: "confirmando_envio", contatos });
-    await this.whatsapp.enviarBotoes(de, resumoParaEnvio(estado.analise, contatos), [BOTOES.enviar, BOTOES.cancelar]);
+    this.banco.salvarConversa(de, { ...coleta, etapa: "confirmando_exclusao", excluir });
+    const nomes = excluir.map((i) => {
+      const p = coleta.analise.partes[i]!;
+      return `*${p.nome ?? "(nome em branco)"}* (${p.papel})`;
+    });
+    await this.whatsapp.enviarBotoes(
+      de,
+      `O documento menciona ${nomes.join(" e ")} como parte. Posso seguir sem ${excluir.length > 1 ? "essas assinaturas" : "essa assinatura"}?`,
+      [BOTOES.confirmarExclusao, BOTOES.negarExclusao],
+    );
   }
 
   private async enviarParaAssinatura(
@@ -242,6 +375,7 @@ export class Fluxo {
     nomeArquivo: string,
     analise: Analise,
     contatos: ParteComContato[],
+    exigeSelfie: boolean,
     original: Uint8Array,
   ): Promise<void> {
     let linhas: LinhaDeAssinatura[] = [];
@@ -270,20 +404,23 @@ export class Fluxo {
       blocos: preparado.blocos,
       status: "aguardando",
       criadoEm: new Date().toISOString(),
+      exigeSelfie,
     };
     this.banco.criarEnvio(envio, contatos);
-    this.banco.registrarEvento(envio.id, "envio_criado", { arquivo: nomeArquivo, hashOriginal: preparado.hashOriginal });
+    this.banco.registrarEvento(envio.id, "envio_criado", { arquivo: nomeArquivo, hashOriginal: preparado.hashOriginal, exigeSelfie });
     this.banco.salvarConversa(de, { etapa: "inicio" }, null);
 
     const falhas = await this.coleta.iniciar(envio);
     const aviso =
       analise.ordem === "sequencial" && contatos.length > 1
         ? `Enviei para *${contatos[0]!.nome}*. Os próximos recebem assim que o anterior assinar.`
-        : "Enviei para todos.";
+        : contatos.length > 1
+          ? "Enviei para todos."
+          : `Enviei para *${contatos[0]!.nome}*.`;
     const erro = falhas.length ? `\n\n⚠️ Não consegui enviar para: ${falhas.join(", ")}. Confira o número.` : "";
     await this.whatsapp.enviarTexto(
       de,
-      `✅ *${analise.titulo}* enviado para assinatura.\n${aviso}\n\nEu aviso aqui a cada assinatura.${erro}`,
+      `✅ *${analise.titulo}* enviado para assinatura.\n${aviso}\n\nEu aviso aqui a cada assinatura. Para acompanhar, escreva *documentos*.${erro}`,
     );
   }
 
@@ -300,26 +437,56 @@ export class Fluxo {
 // ------------------------------------------------------------------ contatos
 
 type Parte = Analise["partes"][number];
+type ColetaEmAndamento = Extract<Estado, { etapa: "coletando_contatos" }>;
 
-export function contatoDoCartao(parte: Parte, cartoes: { nome: string; telefones: string[] }[]): ParteComContato | string {
-  const cartao = cartoes[0];
-  const telefone = cartao?.telefones.map(normalizarTelefone).find((t) => t !== null);
-  if (!cartao || !telefone) return "Esse contato não tem um número de telefone válido. Envie outro ou digite o número.";
-  const nome = parte.nome ?? cartao.nome.trim();
-  if (!nome) return "O contato veio sem nome. Digite o nome completo e o número. Ex.: _Maria da Silva, 51 99999-8888_";
-  return { papel: parte.papel, nome, telefone };
+/** "documentos", "status", "situação", "quem falta", "quem ainda não assinou"... */
+const PEDIDO_DE_STATUS = /^(ver )?(documentos|status|situa[cç][aã]o)\??$|^quem (ainda )?(falta|n[aã]o assinou)/i;
+
+/** Partes que ainda não têm contato e não foram dispensadas. */
+function pendentes(coleta: Pick<ColetaEmAndamento, "contatos" | "excluidas">): number[] {
+  return coleta.contatos.map((c, i) => (c || coleta.excluidas.includes(i) ? -1 : i)).filter((i) => i >= 0);
 }
 
-export function contatoDoTexto(parte: Parte, texto: string): ParteComContato | string {
-  const numero = texto.match(/\+?[\d\s().-]{8,}/)?.[0];
-  const telefone = numero ? normalizarTelefone(numero) : null;
-  if (!telefone) return "Não reconheci o número. Digite com DDD, ex.: _51 99999-8888_, ou compartilhe o contato.";
-  const nomeDigitado = texto
-    .replace(numero!, " ")
-    .replace(/[,;:\-–]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const nome = parte.nome ?? nomeDigitado;
-  if (!nome) return "Faltou o nome completo de quem assina. Ex.: _Maria da Silva, 51 99999-8888_";
-  return { papel: parte.papel, nome, telefone };
+function palavras(nome: string): string[] {
+  return normalizar(nome)
+    .split(" ")
+    .filter((p) => p.length > 2 && !["DOS", "DAS", "DES"].includes(p));
+}
+
+/** Parte cujo nome tem mais palavras em comum com o nome informado (null se nenhuma ou empate). */
+export function parteDoNome(partes: Parte[], candidatas: number[], nome: string): number | null {
+  const procuradas = palavras(nome);
+  const pontos = candidatas
+    .map((i) => ({ i, n: partes[i]!.nome ? palavras(partes[i]!.nome!).filter((p) => procuradas.includes(p)).length : 0 }))
+    .filter((c) => c.n > 0)
+    .sort((a, b) => b.n - a.n);
+  if (!pontos.length || (pontos[1] && pontos[1].n === pontos[0]!.n)) return null;
+  return pontos[0]!.i;
+}
+
+/** O advogado é uma das partes quando todas as palavras do nome dele (ao menos duas) estão no nome da parte. */
+export function parteDoAdvogado(partes: Parte[], nomeDoAdvogado: string): number | null {
+  const dele = palavras(nomeDoAdvogado);
+  if (dele.length < 2) return null;
+  const achadas = partes
+    .map((p, i) => ({ i, nome: p.nome }))
+    .filter(({ nome }) => nome && dele.every((t) => palavras(nome).includes(t)));
+  return achadas.length === 1 ? achadas[0]!.i : null;
+}
+
+/** Linhas com telefone num texto livre: "Maria da Silva 51 99999-8888" (uma por linha ou separadas por ";"). */
+export function linhasComTelefone(texto: string): { nome: string; telefone: string | null }[] {
+  return texto
+    .split(/\n|;/)
+    .map((linha) => {
+      const numero = linha.match(/\+?\(?\d[\d\s().-]{7,}\d/)?.[0];
+      if (!numero) return null;
+      const nome = linha
+        .replace(numero, " ")
+        .replace(/[,:\-–]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      return { nome, telefone: normalizarTelefone(numero) };
+    })
+    .filter((l): l is { nome: string; telefone: string | null } => l !== null);
 }

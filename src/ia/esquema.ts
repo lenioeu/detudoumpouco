@@ -32,3 +32,25 @@ Regras:
 - Se uma pessoa jurídica assina por representante, o papel é o da empresa e o nome é o do representante, ex.: papel "contratante (Empresa X Ltda.)".
 - Ordem de assinatura: quem define os termos assina primeiro (outorgante antes do outorgado, contratante antes do contratado, locador antes do locatário). Use "simultanea" só quando a ordem não fizer diferença, como em acordos mútuos.
 - Na observação, aponte só o que exige atenção antes do envio: campos obrigatórios em branco, documento que parece incompleto, número de partes menor que o exigido pelo tipo de documento. Não comente o mérito jurídico.`;
+
+/** Resposta da IA a um pedido livre do advogado sobre quem assina ("só o Carlos assina"). */
+export const EsquemaAjuste = z.object({
+  excluir: z.array(z.number().int()).describe("Índices das partes que NÃO vão assinar, segundo o advogado"),
+  entendeu: z.boolean().describe("false se a mensagem não for um pedido sobre quem assina"),
+});
+
+export type Ajuste = z.infer<typeof EsquemaAjuste>;
+
+export type ParteParaAjuste = { indice: number; papel: string; nome: string | null };
+
+export function promptDeAjuste(partes: ParteParaAjuste[], mensagem: string): string {
+  const lista = partes.map((p) => `${p.indice}: ${p.nome ?? "(nome em branco)"}, ${p.papel}`).join("\n");
+  return `Um advogado está enviando um documento para assinatura pelo WhatsApp. Estas são as partes que ainda não têm contato informado:
+${lista}
+
+O advogado escreveu: "${mensagem}"
+
+Se a mensagem disser que alguma dessas partes não vai assinar (ex.: "só o Carlos assina", "a outra parte já assinou", "sem a Maria", "a Heloísa não precisa assinar"), devolva os índices dessas partes em "excluir" e "entendeu": true.
+Se a mensagem não for sobre quem assina, devolva "excluir": [] e "entendeu": false.
+Responda somente com um objeto JSON: {"excluir": [índices], "entendeu": true ou false}`;
+}

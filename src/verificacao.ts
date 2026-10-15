@@ -47,7 +47,7 @@ export function paginaDeVerificacao(banco: Repositorio, codigo: string, nomeDoEs
             : "Ainda não assinou";
       return `<li><strong>${esc(s.nome)}</strong> <span class="papel">${esc(s.papel)}</span>
         <div class="dados">${s.cpf ? `CPF ${esc(mascararCpf(s.cpf))} · ` : ""}WhatsApp ${esc(formatarTelefone(s.telefone))}</div>
-        <div class="estado">${estado}</div></li>`;
+        <div class="estado">${estado}${s.selfieEm ? " · selfie com documento recebida" : ""}</div></li>`;
     })
     .join("");
 

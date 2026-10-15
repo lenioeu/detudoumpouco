@@ -28,6 +28,10 @@ export type RegistroDeAssinatura = SignatarioNaPagina & {
   visualizadoEm: string | null;
   assinadoEm: string;
   mensagemId: string;
+  /** Selfie segurando documento de identidade, quando o envio pediu. */
+  selfie?: { dados: Uint8Array; tipo: string } | null;
+  /** Quantos lembretes a pessoa recebeu antes de assinar. */
+  lembretes?: number;
 };
 
 export const FUNDAMENTO_LEGAL =
@@ -169,16 +173,27 @@ export async function finalizarDocumento(
   e.espaco(8);
 
   e.titulo("Assinaturas");
-  dados.registros.forEach((r) => {
-    e.garantir(90);
+  for (const r of dados.registros) {
+    const imagem = r.selfie ? await incorporarImagem(doc, r.selfie) : null;
+    const alturaFoto = imagem ? Math.min(110, (imagem.height / imagem.width) * 82) : 0;
+    e.garantir(Math.max(90, alturaFoto + 24));
+    const topo = e.y;
+    if (imagem) {
+      e.reservaDireita = 100;
+      e.pagina.drawImage(imagem, { x: A4[0] - MARGEM - 82, y: topo - alturaFoto, width: 82, height: alturaFoto });
+      e.pagina.drawText("Selfie com documento", { x: A4[0] - MARGEM - 82, y: topo - alturaFoto - 9, size: 6.5, font: e.fonte, color: CINZA });
+    }
     e.texto(`${r.nome} (${r.papel})`, 10, undefined, true);
     e.campo("CPF", formatarCpf(r.cpf));
     e.campo("WhatsApp", formatarTelefone(r.telefone));
     e.campo("Canal", "WhatsApp (documento recebido e assinado no número do signatário)");
+    if (imagem) e.campo("Identidade", "selfie segurando documento de identidade, ao lado");
     e.campo("Data da assinatura", formatarDataHora(r.assinadoEm));
     e.campo("ID da mensagem de confirmação", r.mensagemId);
+    if (imagem) e.y = Math.min(e.y, topo - alturaFoto - 14);
+    e.reservaDireita = 0;
     e.espaco(6);
-  });
+  }
 
   e.espaco(4);
   e.titulo("Eventos do documento");
@@ -248,7 +263,12 @@ function linhaDoTempo(dados: {
     if (r.visualizadoEm) {
       eventos.push({ em: r.visualizadoEm, texto: `${r.nome} abriu o documento no próprio WhatsApp: posse do número verificada` });
     }
-    eventos.push({ em: r.assinadoEm, texto: `${r.nome} assinou o documento, confirmando o CPF ${formatarCpf(r.cpf)}` });
+    eventos.push({
+      em: r.assinadoEm,
+      texto: r.selfie
+        ? `${r.nome} assinou o documento, confirmando o CPF ${formatarCpf(r.cpf)} e enviando selfie com documento de identidade`
+        : `${r.nome} assinou o documento, confirmando o CPF ${formatarCpf(r.cpf)}`,
+    });
   }
   const ultima = dados.registros.map((r) => r.assinadoEm).sort().at(-1);
   if (ultima) eventos.push({ em: ultima, texto: "Documento concluído: todas as partes assinaram" });
@@ -295,6 +315,14 @@ function desenharQrCode(pagina: PDFPage, texto: string, x: number, y: number): v
         color: rgb(0, 0, 0),
       });
     }
+  }
+}
+
+async function incorporarImagem(doc: PDFDocument, selfie: { dados: Uint8Array; tipo: string }) {
+  try {
+    return selfie.tipo.includes("png") ? await doc.embedPng(selfie.dados) : await doc.embedJpg(selfie.dados);
+  } catch {
+    return null; // imagem corrompida: o certificado sai sem a foto
   }
 }
 

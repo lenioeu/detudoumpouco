@@ -1,13 +1,17 @@
 import { z } from "zod";
 
-const listaDeTelefones = z
+/** "5551999998888:Lenio Goularte,5551988887777" -> [{telefone, nome}] */
+const listaDeRemetentes = z
   .string()
   .min(1)
   .transform((valor) =>
     valor
       .split(",")
-      .map((t) => t.replace(/\D/g, ""))
-      .filter(Boolean),
+      .map((item) => {
+        const [telefone = "", ...nome] = item.split(":");
+        return { telefone: telefone.replace(/\D/g, ""), nome: nome.join(":").trim() || null };
+      })
+      .filter((r) => r.telefone),
   );
 
 const esquema = z.object({
@@ -17,8 +21,11 @@ const esquema = z.object({
   /** Caminho do banco SQLite onde ficam as conversas e envios. */
   DATABASE_PATH: z.string().default("data/assinabot.db"),
 
-  /** Números (só dígitos, com DDI) autorizados a enviar documentos para assinatura. */
-  AUTHORIZED_SENDERS: listaDeTelefones,
+  /**
+   * Números (com DDI) autorizados a enviar documentos, separados por vírgula. Opcionalmente com o
+   * nome completo do advogado, para o bot reconhecê-lo como parte: "5551999998888:Lenio Goularte".
+   */
+  AUTHORIZED_SENDERS: listaDeRemetentes,
   /** Nome exibido para quem vai assinar, ex.: "Escritório Goularte Advocacia". */
   SENDER_DISPLAY_NAME: z.string().min(1),
 
@@ -44,11 +51,20 @@ const esquema = z.object({
   CERTIFICATE_PATH: z.string().default("data/certificado.p12"),
   CERTIFICATE_PASSWORD: z.string().min(8),
 
+  /** Horas sem assinar até o lembrete automático, e quantos lembretes mandar no máximo. */
+  REMINDER_AFTER_HOURS: z.coerce.number().positive().default(24),
+  REMINDER_MAX: z.coerce.number().int().min(0).default(2),
+
   // Claude (identificação das partes)
   ANTHROPIC_MODEL: z.string().default("claude-opus-5-5"),
 });
 
-export type Config = z.infer<typeof esquema>;
+export type Config = Omit<z.infer<typeof esquema>, "AUTHORIZED_SENDERS"> & {
+  /** Telefones autorizados a enviar documentos. */
+  AUTHORIZED_SENDERS: string[];
+  /** Nome completo do advogado de cada telefone autorizado, quando informado. */
+  NOMES_DOS_REMETENTES: Record<string, string>;
+};
 
 export function carregarConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const resultado = esquema.safeParse(env);
@@ -56,5 +72,10 @@ export function carregarConfig(env: NodeJS.ProcessEnv = process.env): Config {
     const faltando = resultado.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(`Configuração inválida. Confira o arquivo .env:\n${faltando}`);
   }
-  return resultado.data;
+  const remetentes = resultado.data.AUTHORIZED_SENDERS;
+  return {
+    ...resultado.data,
+    AUTHORIZED_SENDERS: remetentes.map((r) => r.telefone),
+    NOMES_DOS_REMETENTES: Object.fromEntries(remetentes.filter((r) => r.nome).map((r) => [r.telefone, r.nome!])),
+  };
 }

@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { EsquemaAnalise, INSTRUCOES, type Analise } from "./esquema.js";
+import { type Ajuste, EsquemaAjuste, EsquemaAnalise, INSTRUCOES, type Analise, type ParteParaAjuste, promptDeAjuste } from "./esquema.js";
 
 export class IdentificadorDePartes {
   constructor(
@@ -31,6 +31,19 @@ export class IdentificadorDePartes {
         text: `Esta foi a sua análise anterior do documento:\n${JSON.stringify(anterior, null, 2)}\n\nO advogado pediu esta correção:\n"${correcao}"\n\nDevolva a análise completa já corrigida. A palavra do advogado prevalece sobre a sua leitura do documento.`,
       },
     ]);
+  }
+
+  /** Interpreta um pedido livre sobre quem assina ("só o Carlos assina", "a outra parte já assinou"). */
+  async ajustarSignatarios(partes: ParteParaAjuste[], mensagem: string): Promise<Ajuste> {
+    const resposta = await this.client.beta.messages.parse({
+      model: this.modelo,
+      max_tokens: 4000,
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      output_config: { effort: "low", format: betaZodOutputFormat(EsquemaAjuste) },
+      messages: [{ role: "user", content: promptDeAjuste(partes, mensagem) }],
+    });
+    return resposta.parsed_output ?? { excluir: [], entendeu: false };
   }
 
   private async chamar(conteudo: Anthropic.Beta.BetaContentBlockParam[]): Promise<Analise> {

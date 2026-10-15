@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
-import { contatoDoCartao, contatoDoTexto } from "../src/conversa/fluxo.js";
+import { linhasComTelefone, parteDoAdvogado, parteDoNome } from "../src/conversa/fluxo.js";
 import { lerBotao } from "../src/conversa/signatario.js";
 import { mascararCpf, validarCpf } from "../src/cpf.js";
 import { formatarTelefone, normalizarTelefone } from "../src/telefone.js";
@@ -28,35 +28,31 @@ describe("telefone", () => {
 });
 
 describe("contatos", () => {
-  const semNome = { papel: "outorgado", nome: null };
-  const comNome = { papel: "outorgante", nome: "Maria da Silva" };
+  const partes = [
+    { papel: "outorgante", nome: "Carlos Henrique Nunes da Costa" },
+    { papel: "outorgado", nome: "Maria Heloísa Pereira Canali" },
+    { papel: "testemunha", nome: null },
+  ];
 
-  it("usa o nome do documento e o telefone digitado", () => {
-    expect(contatoDoTexto(comNome, "51 99999-8888")).toEqual({
-      papel: "outorgante",
-      nome: "Maria da Silva",
-      telefone: "5551999998888",
-    });
+  it("lê várias linhas com nome e telefone", () => {
+    expect(linhasComTelefone("Carlos Henrique 21 98577-8890\nHeloísa: (27) 99616-8491")).toEqual([
+      { nome: "Carlos Henrique", telefone: "5521985778890" },
+      { nome: "Heloísa", telefone: "5527996168491" },
+    ]);
+    expect(linhasComTelefone("só o Carlos assina")).toEqual([]);
   });
 
-  it("pega o nome digitado quando o documento está em branco", () => {
-    expect(contatoDoTexto(semNome, "João Pereira, (51) 98888-7777")).toEqual({
-      papel: "outorgado",
-      nome: "João Pereira",
-      telefone: "5551988887777",
-    });
+  it("acha a parte pelo nome, mesmo abreviado ou sem acento", () => {
+    expect(parteDoNome(partes, [0, 1], "CARLOS HENRIQUE")).toBe(0);
+    expect(parteDoNome(partes, [0, 1], "heloisa canali")).toBe(1);
+    expect(parteDoNome(partes, [0, 1], "Fulano")).toBeNull();
   });
 
-  it("pede o nome quando falta", () => {
-    expect(typeof contatoDoTexto(semNome, "51 98888-7777")).toBe("string");
-  });
-
-  it("lê cartão de contato", () => {
-    expect(contatoDoCartao(semNome, [{ nome: "Ana Souza", telefones: ["5551977776666"] }])).toEqual({
-      papel: "outorgado",
-      nome: "Ana Souza",
-      telefone: "5551977776666",
-    });
+  it("reconhece o advogado só quando todas as palavras do nome dele batem", () => {
+    const comAdvogado = [...partes, { papel: "outorgado", nome: "LENIO FILGUEIRAS GOULARTE FILHO" }];
+    expect(parteDoAdvogado(comAdvogado, "Lenio Goularte")).toBe(3);
+    expect(parteDoAdvogado(comAdvogado, "Lenio Silva")).toBeNull();
+    expect(parteDoAdvogado(comAdvogado, "Lenio")).toBeNull();
   });
 });
 

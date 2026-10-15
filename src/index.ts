@@ -24,6 +24,9 @@ const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinado
 const ia = new IdentificadorDePartes(new Anthropic(), config.ANTHROPIC_MODEL);
 const fluxo = new Fluxo(config, banco, whatsapp, ia, coleta, avisos, filas, lerTextoDoPdf);
 
+// Lembretes para quem foi convidado e ainda não assinou
+setInterval(() => void coleta.enviarLembretes().catch((e) => console.error("Erro nos lembretes:", e)), 15 * 60_000);
+
 criarServidor(config, fluxo, banco).listen(config.PORT, () => {
   console.log(`AssinaBot ouvindo na porta ${config.PORT}`);
   console.log(`  Webhook do WhatsApp: ${config.PUBLIC_URL}/webhook/whatsapp`);

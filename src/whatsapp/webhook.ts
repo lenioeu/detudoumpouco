@@ -1,12 +1,17 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 /** Mensagem recebida, já simplificada para o que o fluxo de conversa usa. */
-export type MensagemRecebida =
+export type MensagemRecebida = (
   | { tipo: "texto"; de: string; id: string; texto: string }
   | { tipo: "documento"; de: string; id: string; mediaId: string; mimeType: string; nomeArquivo: string }
+  | { tipo: "imagem"; de: string; id: string; mediaId: string; mimeType: string }
   | { tipo: "contato"; de: string; id: string; contatos: ContatoRecebido[] }
   | { tipo: "botao"; de: string; id: string; botaoId: string }
-  | { tipo: "outro"; de: string; id: string };
+  | { tipo: "outro"; de: string; id: string }
+) & {
+  /** Nome do perfil de WhatsApp de quem mandou (vem no webhook da Meta). */
+  nomePerfil?: string;
+};
 
 export type ContatoRecebido = { nome: string; telefones: string[]; email?: string };
 
@@ -32,6 +37,7 @@ type Payload = {
     changes?: {
       value?: {
         messages?: RawMensagem[];
+        contacts?: { wa_id?: string; profile?: { name?: string } }[];
         statuses?: {
           id: string;
           status: string;
@@ -50,6 +56,7 @@ type RawMensagem = {
   type: string;
   text?: { body: string };
   document?: { id: string; mime_type: string; filename?: string };
+  image?: { id: string; mime_type: string };
   contacts?: {
     name?: { formatted_name?: string };
     phones?: { phone?: string; wa_id?: string }[];
@@ -65,7 +72,12 @@ export function extrairEventos(payload: unknown): { mensagens: MensagemRecebida[
 
   for (const entry of (payload as Payload).entry ?? []) {
     for (const change of entry.changes ?? []) {
-      for (const m of change.value?.messages ?? []) mensagens.push(converterMensagem(m));
+      const perfis = new Map((change.value?.contacts ?? []).map((c) => [c.wa_id, c.profile?.name]));
+      for (const m of change.value?.messages ?? []) {
+        const convertida = converterMensagem(m);
+        const nomePerfil = perfis.get(m.from);
+        mensagens.push(nomePerfil ? { ...convertida, nomePerfil } : convertida);
+      }
       for (const s of change.value?.statuses ?? []) {
         const erro = s.errors?.map((e) => e.message ?? e.title).join("; ");
         status.push({
@@ -96,6 +108,9 @@ function converterMensagem(m: RawMensagem): MensagemRecebida {
           nomeArquivo: m.document.filename ?? "documento.pdf",
         };
       }
+      break;
+    case "image":
+      if (m.image) return { ...base, tipo: "imagem", mediaId: m.image.id, mimeType: m.image.mime_type };
       break;
     case "contacts":
       return {

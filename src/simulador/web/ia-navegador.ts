@@ -1,4 +1,4 @@
-import { EsquemaAnalise, INSTRUCOES, type Analise } from "../../ia/esquema.js";
+import { type Ajuste, EsquemaAjuste, EsquemaAnalise, INSTRUCOES, type Analise, type ParteParaAjuste, promptDeAjuste } from "../../ia/esquema.js";
 import { IaDeDemonstracao } from "../ia-demonstracao.js";
 
 /** Função `sample` do artifact: pergunta ao Claude usando a conta de quem abriu a página. */
@@ -64,6 +64,16 @@ export class IaNoNavegador {
         `${FORMATO}\n\nDOCUMENTO:\n${texto || "(sem texto selecionável)"}`,
       () => this.demonstracao.corrigir(pdf, anterior, correcao),
     );
+  }
+
+  async ajustarSignatarios(partes: ParteParaAjuste[], mensagem: string): Promise<Ajuste> {
+    if (!this.usaClaude) return this.demonstracao.ajustarSignatarios(partes, mensagem);
+    try {
+      const resposta = EsquemaAjuste.safeParse(await this.sample!.json(promptDeAjuste(partes, mensagem), { modelTier: "quick" }));
+      return resposta.success ? resposta.data : { excluir: [], entendeu: false };
+    } catch {
+      return this.demonstracao.ajustarSignatarios(partes, mensagem);
+    }
   }
 
   private async perguntar(prompt: string, alternativa: () => Promise<Analise>): Promise<Analise> {

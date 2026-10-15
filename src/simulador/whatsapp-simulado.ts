@@ -9,6 +9,8 @@ export type MensagemSimulada = {
   texto?: string;
   botoes?: Botao[];
   arquivo?: { id: string; nome: string };
+  /** Foto enviada (o simulador mostra a miniatura). */
+  imagem?: { id: string; tipo: string };
   template?: string;
   em: string;
 };

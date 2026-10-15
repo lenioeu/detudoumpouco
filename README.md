@@ -8,16 +8,20 @@ Bot de WhatsApp para colher assinaturas eletrônicas em documentos do escritóri
 
 1. Manda o PDF para o número do bot.
 2. A IA (Claude) lê o documento e diz quem deve assinar e em que ordem. O escritório confirma ou corrige por texto ("o outorgado é João Pereira").
-3. O bot pede o contato de cada pessoa: cartão da agenda, número digitado ou "Eu mesmo assino".
-4. Depois de uma confirmação final, o bot convida quem vai assinar.
-5. O escritório é avisado a cada assinatura e, no fim, recebe a via final.
+3. O bot pede o telefone de todas as partes de uma vez. Vale mandar tudo numa mensagem (um por linha: "Maria da Silva 51 99999-8888"), compartilhar os contatos ou usar "Eu mesmo assino". Pedidos em texto livre também funcionam: "só a Maria assina" ou "o Carlos já assinou" tiram a parte da lista, depois de confirmar.
+4. Se o advogado é uma das partes, o bot o reconhece pelo nome (cadastrado em `AUTHORIZED_SENDERS` ou o do perfil do WhatsApp) e já usa o número dele.
+5. O bot pergunta se deve pedir **selfie segurando documento de identidade** a quem assina.
+6. Depois de uma confirmação final, o bot convida quem vai assinar.
+7. O escritório é avisado a cada assinatura e, no fim, recebe a via final. Escrevendo **documentos** (ou "quem ainda não assinou?"), recebe a situação de cada envio.
 
 **Para quem assina**
 
 1. Recebe: "*Olá, Maria! Escritório X enviou o documento "Procuração" para você assinar…*", com o botão **Ver documento**.
 2. Toca no botão e recebe o PDF na conversa, com os botões **Assinar** e **Recusar**.
-3. Ao tocar em **Assinar**, digita o CPF para confirmar a identidade.
+3. Ao tocar em **Assinar**, digita o CPF para confirmar a identidade e, se o escritório pediu, manda uma selfie segurando o documento de identidade.
 4. Quando todos assinam, recebe a via final ali mesmo.
+
+**Lembretes:** quem foi convidado e não assinou recebe o convite de novo depois de `REMINDER_AFTER_HOURS` horas (padrão 24), até `REMINDER_MAX` vezes (padrão 2). O escritório é avisado de cada lembrete e, no fim, de quem continua sem assinar.
 
 Na ordem **sequencial**, cada pessoa só é convidada depois que a anterior assina. Na **simultânea**, todas são convidadas de uma vez.
 
@@ -58,6 +62,7 @@ O simulador roda o bot de verdade, mas no lugar do WhatsApp abre uma página no 
 Como usar:
 
 - No celular do escritório, toque em **📎 PDF** e escolha um documento.
+- O **📷** manda uma foto (a selfie, quando o envio pede). O botão **Simular 1 dia depois** avança o relógio do bot para testar os lembretes.
 - Para informar o contato de alguém, use o botão **👤** (compartilha o contato de um dos outros celulares) ou digite o número.
 - Nos celulares de Maria e João aparecem os convites. Toque nos botões como a pessoa faria. Para o CPF, use números válidos de teste, como `529.982.247-25` e `111.444.777-35`.
 - Os PDFs (inclusive a via final assinada) abrem ao clicar no arquivo na conversa.

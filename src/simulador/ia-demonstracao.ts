@@ -1,4 +1,5 @@
-import type { Analise } from "../ia/partes.js";
+import type { Ajuste, Analise, ParteParaAjuste } from "../ia/esquema.js";
+import { normalizar } from "../assinatura/linhas.js";
 
 /**
  * Substitui a IA quando não há chave da Anthropic: não lê o documento, só propõe duas
@@ -33,5 +34,21 @@ export class IaDeDemonstracao {
       ordem: simultanea ? "simultanea" : anterior.ordem,
       observacao: partes.length ? null : anterior.observacao,
     };
+  }
+
+  /**
+   * Entende só frases simples: "só/somente/apenas FULANO assina" e
+   * "FULANO já assinou / não vai assinar / não assina", "sem FULANO".
+   */
+  async ajustarSignatarios(partes: ParteParaAjuste[], mensagem: string): Promise<Ajuste> {
+    const texto = normalizar(mensagem);
+    const citadas = partes.filter((p) => p.nome && normalizar(p.nome).split(" ").some((t) => t.length > 2 && texto.split(" ").includes(t)));
+    if (/\b(SO|SOMENTE|APENAS)\b/.test(texto) && citadas.length) {
+      return { excluir: partes.filter((p) => !citadas.includes(p)).map((p) => p.indice), entendeu: true };
+    }
+    if (/(JA ASSINOU|NAO VAI ASSINAR|NAO ASSINA|NAO PRECISA ASSINAR|\bSEM\b)/.test(texto) && citadas.length) {
+      return { excluir: citadas.map((p) => p.indice), entendeu: true };
+    }
+    return { excluir: [], entendeu: false };
   }
 }

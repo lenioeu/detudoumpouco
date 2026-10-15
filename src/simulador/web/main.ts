@@ -71,6 +71,7 @@ let ia = new IaNoNavegador(null, extrairTexto, mostrarModo);
 const ponteIa = {
   analisar: (pdf: Uint8Array) => ia.analisar(pdf),
   corrigir: (...a: Parameters<IaNoNavegador["corrigir"]>) => ia.corrigir(...a),
+  ajustarSignatarios: (...a: Parameters<IaNoNavegador["ajustarSignatarios"]>) => ia.ajustarSignatarios(...a),
 };
 
 /** Monta um bot novo, com banco e conversas vazios. Chamado no início e em "Recomeçar teste". */
@@ -81,10 +82,12 @@ function montarBot() {
   const avisos = new Avisador(config, banco, whatsapp);
   const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
   const fluxo = new Fluxo(config, banco, whatsapp, ponteIa, coleta, avisos, filas, (pdf) => criarLeitorDeTexto(pdfjsLib as unknown as PdfJs)(pdf));
-  return { whatsapp, fluxo };
+  return { whatsapp, fluxo, coleta };
 }
 
-let { whatsapp, fluxo } = montarBot();
+let { whatsapp, fluxo, coleta } = montarBot();
+/** Tempo simulado a mais, para testar os lembretes ("Simular 1 dia depois"). */
+let diasSimulados = 0;
 let pararDeOuvir = () => {};
 
 // ---------------------------------------------------------------- utilidades
@@ -136,7 +139,8 @@ function montarCelular(pessoa: (typeof PESSOAS)[number]): HTMLElement {
     </div>
     <div class="digitando" hidden>bot digitando…</div>
     <form class="barra">
-      <label class="acao" title="Enviar PDF"><span aria-hidden="true">📎</span><span class="sr">Enviar PDF</span><input type="file" accept="application/pdf" id="arquivo-${pessoa.telefone}"></label>
+      <label class="acao" title="Enviar PDF"><span aria-hidden="true">📎</span><span class="sr">Enviar PDF</span><input type="file" class="pdf" accept="application/pdf" id="arquivo-${pessoa.telefone}"></label>
+      <label class="acao" title="Enviar foto"><span aria-hidden="true">📷</span><span class="sr">Enviar foto</span><input type="file" class="foto" accept="image/jpeg,image/png" id="foto-${pessoa.telefone}"></label>
       <span class="menu-contato"><button type="button" class="acao abrir-contatos" title="Compartilhar contato"><span aria-hidden="true">👤</span><span class="sr">Compartilhar contato</span></button></span>
       <input class="texto" id="texto-${pessoa.telefone}" autocomplete="off" placeholder="Mensagem">
       <button class="enviar" type="submit">Enviar</button>
@@ -152,7 +156,17 @@ function montarCelular(pessoa: (typeof PESSOAS)[number]): HTMLElement {
     enviar(pessoa.telefone, { tipo: "texto", texto }, { texto });
   });
 
-  $<HTMLInputElement>("input[type=file]", el).addEventListener("change", async (e) => {
+  $<HTMLInputElement>("input.foto", el).addEventListener("change", async (e) => {
+    const input = e.target as HTMLInputElement;
+    const foto = input.files?.[0];
+    input.value = "";
+    if (!foto) return;
+    const tipo = foto.type === "image/png" ? "image/png" : "image/jpeg";
+    const arquivo = whatsapp.guardarArquivo(foto.name, new Uint8Array(await foto.arrayBuffer()));
+    enviar(pessoa.telefone, { tipo: "imagem", mediaId: arquivo.id, mimeType: tipo }, { imagem: { id: arquivo.id, tipo } });
+  });
+
+  $<HTMLInputElement>("input.pdf", el).addEventListener("change", async (e) => {
     const input = e.target as HTMLInputElement;
     const arquivo = input.files?.[0];
     input.value = "";
@@ -206,7 +220,9 @@ function vazio(pessoa: (typeof PESSOAS)[number]): string {
 /** Apaga as conversas e começa de novo com um bot vazio. */
 function recomecar(): void {
   pararDeOuvir();
-  ({ whatsapp, fluxo } = montarBot());
+  ({ whatsapp, fluxo, coleta } = montarBot());
+  diasSimulados = 0;
+  atualizarRelogio();
   pararDeOuvir = whatsapp.aoReceber(mostrar);
   for (const p of PESSOAS) {
     const el = celulares.get(p.telefone)!;
@@ -251,6 +267,10 @@ function mostrar(m: MensagemSimulada): void {
   let html = m.template ? `<div class="rotulo">Mensagem de modelo aprovado pela Meta</div>` : "";
   if (m.arquivo) {
     html += `<button type="button" class="arquivo" data-arquivo="${m.arquivo.id}"><span class="pdf" aria-hidden="true">PDF</span><span>${escapar(m.arquivo.nome)}</span></button>`;
+  }
+  if (m.imagem) {
+    const dados = whatsapp.arquivo(m.imagem.id)?.dados;
+    if (dados) html += `<img class="foto" alt="Foto enviada" src="${URL.createObjectURL(new Blob([dados.slice()], { type: m.imagem.tipo }))}">`;
   }
   if (m.texto) html += `<div>${formatar(m.texto)}</div>`;
   html += `<div class="hora">${new Date(m.em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>`;
@@ -307,6 +327,12 @@ async function abrirPdf(id: string): Promise<void> {
     paginas.append(canvas);
     await pagina.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
   }
+}
+
+function atualizarRelogio(): void {
+  const el = $<HTMLElement>("#relogio");
+  el.hidden = diasSimulados === 0;
+  el.textContent = `+${diasSimulados} ${diasSimulados === 1 ? "dia" : "dias"}`;
 }
 
 // ---------------------------------------------------------------- modo da IA
@@ -384,6 +410,12 @@ function iniciar(): void {
   }
   pararDeOuvir = whatsapp.aoReceber(mostrar);
   $<HTMLButtonElement>("#recomecar").addEventListener("click", recomecar);
+  $<HTMLButtonElement>("#um-dia").addEventListener("click", () => {
+    diasSimulados += 1;
+    atualizarRelogio();
+    // Um pouco mais de 24h por dia simulado, para passar do prazo do lembrete
+    void coleta.enviarLembretes(new Date(Date.now() + diasSimulados * 25 * 3600_000));
+  });
   $<HTMLButtonElement>("#leitor-fechar").addEventListener("click", () => $<HTMLDialogElement>("#leitor").close());
   mostrarModo("demonstracao", "Conectando ao Claude…");
   $<HTMLElement>("#aviso-modo").hidden = true;

@@ -86,7 +86,9 @@ app.get("/arquivo/:id", (req, res) => {
     res.sendStatus(404);
     return;
   }
-  res.type("application/pdf").set("Content-Disposition", `inline; filename="${encodeURIComponent(arquivo.nome)}"`);
+  const d = arquivo.dados;
+  const tipo = d[0] === 0x89 && d[1] === 0x50 ? "image/png" : d[0] === 0xff && d[1] === 0xd8 ? "image/jpeg" : "application/pdf";
+  res.type(tipo).set("Content-Disposition", `inline; filename="${encodeURIComponent(arquivo.nome)}"`);
   res.send(Buffer.from(arquivo.dados));
 });
 
@@ -128,6 +130,27 @@ app.post("/enviar-pdf", express.raw({ type: "application/pdf", limit: "40mb" }),
   const id = whatsapp.registrarDaPessoa({ telefone, arquivo });
   res.json({ ok: true });
   void fluxo.receberMensagem({ tipo: "documento", de: telefone, id, mediaId: arquivo.id, mimeType: "application/pdf", nomeArquivo: nome });
+});
+
+app.post("/enviar-imagem", express.raw({ type: ["image/jpeg", "image/png"], limit: "10mb" }), (req, res) => {
+  const telefone = String(req.query.telefone ?? "");
+  const tipo = req.header("content-type") === "image/png" ? "image/png" : "image/jpeg";
+  if (!PESSOAS.some((p) => p.telefone === telefone) || !Buffer.isBuffer(req.body)) {
+    res.status(400).json({ erro: "envio inválido" });
+    return;
+  }
+  const arquivo = whatsapp.guardarArquivo("foto", new Uint8Array(req.body));
+  const id = whatsapp.registrarDaPessoa({ telefone, imagem: { id: arquivo.id, tipo } });
+  res.json({ ok: true });
+  void fluxo.receberMensagem({ tipo: "imagem", de: telefone, id, mediaId: arquivo.id, mimeType: tipo });
+});
+
+// Avança o relógio do bot em um dia, para testar os lembretes sem esperar
+let diasSimulados = 0;
+app.post("/um-dia", (_req, res) => {
+  diasSimulados += 1;
+  res.json({ dias: diasSimulados });
+  void coleta.enviarLembretes(new Date(Date.now() + diasSimulados * 25 * 3600_000));
 });
 
 app.listen(porta, "127.0.0.1", () => {

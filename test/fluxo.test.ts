@@ -6,6 +6,7 @@ import { Avisador, Filas } from "../src/conversa/avisos.js";
 import { Fluxo } from "../src/conversa/fluxo.js";
 import { ColetaDeAssinaturas, lerBotao } from "../src/conversa/signatario.js";
 import type { Analise } from "../src/ia/partes.js";
+import { IaDeDemonstracao } from "../src/simulador/ia-demonstracao.js";
 import { ErroWhatsApp } from "../src/whatsapp/cliente.js";
 import { paginaDeVerificacao } from "../src/verificacao.js";
 import type { MensagemRecebida } from "../src/whatsapp/webhook.js";
@@ -16,7 +17,13 @@ const JOAO = "5551977776666";
 const CPF_MARIA = "529.982.247-25";
 const CPF_JOAO = "11144477735";
 
-const config = carregarConfig({
+// Imagem PNG mínima válida (1x1), usada como selfie
+const PNG = Uint8Array.from(
+  atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="),
+  (c) => c.charCodeAt(0),
+);
+
+const env = {
   PUBLIC_URL: "https://bot.exemplo.com.br",
   DATABASE_PATH: ":memory:",
   AUTHORIZED_SENDERS: ESCRITORIO,
@@ -26,7 +33,8 @@ const config = carregarConfig({
   WHATSAPP_APP_SECRET: "s",
   WHATSAPP_VERIFY_TOKEN: "v",
   CERTIFICATE_PASSWORD: "senha-de-teste",
-});
+};
+let config = carregarConfig(env);
 
 const analise: Analise = {
   titulo: "Procuração ad judicia",
@@ -61,7 +69,8 @@ class WhatsAppFalso {
   async enviarTemplate(para: string, nome: string, params: string[], payload?: string) {
     return this.registrar("template", para, nome, params, payload);
   }
-  async baixarMidia() {
+  async baixarMidia(mediaId: string) {
+    if (mediaId.startsWith("img")) return PNG;
     const doc = await PDFDocument.create();
     doc.addPage();
     return doc.save();
@@ -94,13 +103,14 @@ describe("assinatura pelo WhatsApp", () => {
   let whatsapp: WhatsAppFalso;
   let fluxo: Fluxo;
   let assinados: Uint8Array[];
+  let coleta: ColetaDeAssinaturas;
   let id = 0;
 
   const de = (telefone: string, m: Record<string, unknown>) =>
     fluxo.receberMensagem({ de: telefone, id: `in${++id}`, ...m } as MensagemRecebida);
   const doEscritorio = (m: Record<string, unknown>) => de(ESCRITORIO, m);
 
-  beforeEach(() => {
+  function montar() {
     banco = new Banco(":memory:");
     whatsapp = new WhatsAppFalso();
     assinados = [];
@@ -112,8 +122,10 @@ describe("assinatura pelo WhatsApp", () => {
         return pdf;
       },
     };
-    const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
+    coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
+    const demonstracao = new IaDeDemonstracao();
     const ia = {
+      ajustarSignatarios: demonstracao.ajustarSignatarios.bind(demonstracao),
       analisar: async () => analise,
       corrigir: async (_pdf: Uint8Array, anterior: Analise) => ({
         ...anterior,
@@ -121,6 +133,11 @@ describe("assinatura pelo WhatsApp", () => {
       }),
     };
     fluxo = new Fluxo(config, banco, whatsapp, ia, coleta, avisos, filas);
+  }
+
+  beforeEach(() => {
+    config = carregarConfig(env);
+    montar();
   });
 
   /** Escritório manda o PDF, corrige o outorgado, informa os contatos e confirma o envio. */
@@ -130,12 +147,20 @@ describe("assinatura pelo WhatsApp", () => {
     await doEscritorio({ tipo: "texto", texto: "o outorgado é João Pereira" });
     expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("João Pereira");
     await doEscritorio({ tipo: "botao", botaoId: "partes_ok" });
-    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("Contato 1 de 2");
-    await doEscritorio({ tipo: "texto", texto: "não sei" }); // inválido: pede de novo
-    await doEscritorio({ tipo: "texto", texto: "51 98888-7777" });
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("Envie o telefone com DDD de quem assina");
+    await doEscritorio({ tipo: "texto", texto: "não sei" }); // nem telefone nem pedido: pede de novo
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("Não entendi");
+    await doEscritorio({ tipo: "texto", texto: "51 98888-7777" }); // sem nome: vai para a primeira que falta
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("✓ *Maria da Silva*");
     await doEscritorio({ tipo: "contato", contatos: [{ nome: "Joãozinho", telefones: [JOAO] }] });
-    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("Posso enviar?");
+    await escolherSelfie(false);
     await doEscritorio({ tipo: "botao", botaoId: "enviar" });
+  }
+
+  async function escolherSelfie(pedir: boolean) {
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("selfie segurando um documento");
+    await doEscritorio({ tipo: "botao", botaoId: pedir ? "selfie_sim" : "selfie_nao" });
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("Posso enviar?");
   }
 
   /** Pessoa toca em "Ver documento", depois em "Assinar" e digita o CPF. */
@@ -232,6 +257,7 @@ describe("assinatura pelo WhatsApp", () => {
     await doEscritorio({ tipo: "botao", botaoId: "partes_ok" });
     await doEscritorio({ tipo: "botao", botaoId: "eu_assino" });
     await doEscritorio({ tipo: "texto", texto: "51 97777-6666" });
+    await escolherSelfie(false);
     await doEscritorio({ tipo: "botao", botaoId: "enviar" });
 
     expect(whatsapp.convites().map((c) => c.para)).toEqual([ESCRITORIO]);
@@ -248,5 +274,111 @@ describe("assinatura pelo WhatsApp", () => {
     await fluxo.receberMensagem({ de: ESCRITORIO, id: "dup", tipo: "texto", texto: "oi" });
     await fluxo.receberMensagem({ de: ESCRITORIO, id: "dup", tipo: "texto", texto: "oi" });
     expect(whatsapp.chamadas).toHaveLength(1);
+  });
+
+  /** Manda o PDF e corrige o outorgado, parando na coleta dos contatos. */
+  async function ateOsContatos(nomePerfil?: string) {
+    await doEscritorio({ tipo: "documento", mediaId: "m", mimeType: "application/pdf", nomeArquivo: "p.pdf" });
+    await doEscritorio({ tipo: "texto", texto: "o outorgado é João Pereira" });
+    await doEscritorio({ tipo: "botao", botaoId: "partes_ok", ...(nomePerfil ? { nomePerfil } : {}) });
+  }
+
+  it("aceita todos os contatos numa mensagem só e usa o nome do documento", async () => {
+    await ateOsContatos();
+    // Nomes digitados abreviados e fora de ordem: valem os nomes completos do documento
+    await doEscritorio({ tipo: "texto", texto: "João 51 97777-6666\nMARIA 51 98888-7777" });
+    await escolherSelfie(false);
+    const resumo = whatsapp.ultimoTexto(ESCRITORIO);
+    expect(resumo).toContain("1. Maria da Silva (outorgante): +55 (51) 98888-7777");
+    expect(resumo).toContain("2. João Pereira (outorgado): +55 (51) 97777-6666");
+  });
+
+  it("entende 'só a Maria assina' e confirma antes de tirar o João", async () => {
+    await ateOsContatos();
+    await doEscritorio({ tipo: "texto", texto: "só a Maria assina" });
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("menciona *João Pereira* (outorgado)");
+    await doEscritorio({ tipo: "botao", botaoId: "excluir_sim" });
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("*Maria da Silva* (outorgante)");
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).not.toContain("João");
+    await doEscritorio({ tipo: "texto", texto: "51 98888-7777" });
+    await escolherSelfie(false);
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).not.toContain("João");
+    await doEscritorio({ tipo: "botao", botaoId: "enviar" });
+    await assinar(MARIA, CPF_MARIA);
+    expect(assinados).toHaveLength(1); // só ela assinava: o documento já foi concluído
+  });
+
+  it("reconhece o advogado como parte pelo nome cadastrado", async () => {
+    config = carregarConfig({ ...env, AUTHORIZED_SENDERS: `${ESCRITORIO}:João Pereira` });
+    montar();
+    await ateOsContatos();
+    const pedido = whatsapp.ultimoTexto(ESCRITORIO);
+    expect(pedido).toContain("✓ *João Pereira* (outorgado) — parece ser você");
+    expect(pedido).toContain("• *Maria da Silva*");
+    await doEscritorio({ tipo: "texto", texto: "51 98888-7777" });
+    await escolherSelfie(false);
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("João Pereira (outorgado): +55 (51) 91111-2222");
+  });
+
+  it("reconhece o advogado pelo nome do perfil do WhatsApp", async () => {
+    await ateOsContatos("João Pereira");
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("parece ser você");
+  });
+
+  it("pede a selfie depois do CPF e a põe no certificado", async () => {
+    await ateOsContatos();
+    await doEscritorio({ tipo: "texto", texto: "Maria 51 98888-7777\nJoão 51 97777-6666" });
+    await escolherSelfie(true);
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("selfie segurando um documento de identidade");
+    await doEscritorio({ tipo: "botao", botaoId: "enviar" });
+
+    await assinar(MARIA, CPF_MARIA);
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("selfie segurando seu documento");
+    await de(MARIA, { tipo: "texto", texto: "como assim?" }); // texto em vez de foto: repete o pedido
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("selfie segurando seu documento");
+    expect(whatsapp.convites().map((c) => c.para)).toEqual([MARIA]); // ainda não assinou
+    await de(MARIA, { tipo: "imagem", mediaId: "img1", mimeType: "image/png" });
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("Selfie recebida");
+    expect(whatsapp.convites().map((c) => c.para)).toEqual([MARIA, JOAO]);
+
+    await assinar(JOAO, CPF_JOAO);
+    await de(JOAO, { tipo: "imagem", mediaId: "img2", mimeType: "image/png" });
+    expect(assinados).toHaveLength(1);
+    const envioId = lerBotao(String(whatsapp.convites()[0]!.args[2]))!.envioId;
+    expect(banco.selfie(envioId, 0)?.tipo).toBe("image/png");
+    // a selfie foi embutida no PDF final (há uma imagem no arquivo)
+    expect(Buffer.from(assinados[0]!).includes("/Subtype /Image")).toBe(true);
+  });
+
+  it("lista os documentos quando o escritório pede", async () => {
+    await enviarProcuracao();
+    await assinar(MARIA, CPF_MARIA);
+    await doEscritorio({ tipo: "texto", texto: "quem ainda não assinou?" });
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("⏳ *Procuração ad judicia*: 1/2 assinaram. Falta: João Pereira");
+  });
+
+  it("manda lembretes a quem não assinou e avisa o escritório", async () => {
+    await enviarProcuracao();
+    const hora = 3600_000;
+    const agora = Date.now();
+
+    await coleta.enviarLembretes(new Date(agora + 2 * hora)); // cedo demais
+    expect(whatsapp.convites()).toHaveLength(1);
+
+    await coleta.enviarLembretes(new Date(agora + 25 * hora));
+    expect(whatsapp.convites().map((c) => c.para)).toEqual([MARIA, MARIA]);
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("lembrete para *Maria da Silva*");
+
+    await coleta.enviarLembretes(new Date(agora + 50 * hora));
+    await coleta.enviarLembretes(new Date(agora + 75 * hora));
+    expect(whatsapp.convites()).toHaveLength(3); // 2 lembretes no máximo
+    expect(whatsapp.ultimoTexto(ESCRITORIO)).toContain("ainda não assinou");
+
+    await coleta.enviarLembretes(new Date(agora + 200 * hora));
+    expect(whatsapp.convites()).toHaveLength(3); // depois do aviso final, para
+
+    // o lembrete leva ao mesmo documento: ela ainda consegue assinar
+    await assinar(MARIA, CPF_MARIA);
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("Assinatura registrada");
   });
 });

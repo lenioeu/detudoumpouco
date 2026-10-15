@@ -15,9 +15,13 @@ export type Envio = {
   blocos: Bloco[];
   status: "aguardando" | "concluido" | "recusado";
   criadoEm: string;
+  /** Se cada signatário precisa mandar uma selfie segurando um documento de identidade. */
+  exigeSelfie: boolean;
 };
 
-export type StatusSignatario = "pendente" | "convidado" | "visualizou" | "aguardando_cpf" | "assinado" | "recusado";
+import { STATUS_EM_ANDAMENTO, type StatusSignatario } from "./status.js";
+
+export { STATUS_EM_ANDAMENTO, type StatusSignatario };
 
 export type Signatario = {
   envioId: string;
@@ -31,7 +35,12 @@ export type Signatario = {
   visualizadoEm: string | null;
   assinadoEm: string | null;
   mensagemAssinaturaId: string | null;
+  selfieEm: string | null;
+  lembretes: number;
+  ultimoLembreteEm: string | null;
 };
+
+export type Selfie = { dados: Uint8Array; tipo: string };
 
 export type Pendencia = { id: number; telefone: string; texto: string; pdf: Uint8Array | null; nomeArquivo: string | null };
 
@@ -63,7 +72,8 @@ export class Banco {
         blocos TEXT NOT NULL,
         status TEXT NOT NULL,
         pdf_final BLOB,
-        criado_em TEXT NOT NULL
+        criado_em TEXT NOT NULL,
+        exige_selfie INTEGER NOT NULL DEFAULT 0
       );
       CREATE TABLE IF NOT EXISTS signatarios (
         envio_id TEXT NOT NULL REFERENCES envios(id),
@@ -77,6 +87,11 @@ export class Banco {
         visualizado_em TEXT,
         assinado_em TEXT,
         mensagem_assinatura_id TEXT,
+        selfie BLOB,
+        selfie_tipo TEXT,
+        selfie_em TEXT,
+        lembretes INTEGER NOT NULL DEFAULT 0,
+        ultimo_lembrete_em TEXT,
         PRIMARY KEY (envio_id, indice)
       );
       CREATE INDEX IF NOT EXISTS signatarios_telefone ON signatarios (telefone, status);
@@ -103,6 +118,21 @@ export class Banco {
         nome_arquivo TEXT
       );
     `);
+    // Bancos criados por versões anteriores: acrescenta as colunas novas
+    for (const sql of [
+      "ALTER TABLE envios ADD COLUMN exige_selfie INTEGER NOT NULL DEFAULT 0",
+      "ALTER TABLE signatarios ADD COLUMN selfie BLOB",
+      "ALTER TABLE signatarios ADD COLUMN selfie_tipo TEXT",
+      "ALTER TABLE signatarios ADD COLUMN selfie_em TEXT",
+      "ALTER TABLE signatarios ADD COLUMN lembretes INTEGER NOT NULL DEFAULT 0",
+      "ALTER TABLE signatarios ADD COLUMN ultimo_lembrete_em TEXT",
+    ]) {
+      try {
+        this.db.exec(sql);
+      } catch {
+        // coluna já existe
+      }
+    }
   }
 
   /** Marca a mensagem como processada; devolve false se ela já tinha sido (a Meta reenvia webhooks). */
@@ -146,8 +176,8 @@ export class Banco {
     try {
       this.db
         .prepare(
-          `INSERT INTO envios (id, remetente, titulo, ordem, hash_original, pdf_apresentado, blocos, status, criado_em)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO envios (id, remetente, titulo, ordem, hash_original, pdf_apresentado, blocos, status, criado_em, exige_selfie)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           envio.id,
@@ -159,6 +189,7 @@ export class Banco {
           JSON.stringify(envio.blocos),
           envio.status,
           envio.criadoEm,
+          envio.exigeSelfie ? 1 : 0,
         );
       const inserir = this.db.prepare(
         "INSERT INTO signatarios (envio_id, indice, papel, nome, telefone, status) VALUES (?, ?, ?, ?, ?, 'pendente')",
@@ -184,6 +215,7 @@ export class Banco {
       blocos: JSON.parse(l.blocos as string) as Bloco[],
       status: l.status as Envio["status"],
       criadoEm: l.criado_em as string,
+      exigeSelfie: l.exige_selfie === 1,
     };
   }
 
@@ -225,6 +257,51 @@ export class Banco {
     return l ? lerSignatario(l) : null;
   }
 
+  /** Assinatura deste telefone que espera a selfie (a mais recente, se houver mais de uma). */
+  aguardandoSelfie(telefone: string): Signatario | null {
+    const l = this.db
+      .prepare(
+        `SELECT s.* FROM signatarios s JOIN envios e ON e.id = s.envio_id
+         WHERE s.telefone = ? AND s.status = 'aguardando_selfie' AND e.status = 'aguardando'
+         ORDER BY s.visualizado_em DESC LIMIT 1`,
+      )
+      .get(telefone);
+    return l ? lerSignatario(l) : null;
+  }
+
+  salvarSelfie(envioId: string, indice: number, selfie: Selfie, em: string): void {
+    this.db
+      .prepare("UPDATE signatarios SET selfie = ?, selfie_tipo = ?, selfie_em = ? WHERE envio_id = ? AND indice = ?")
+      .run(selfie.dados, selfie.tipo, em, envioId, indice);
+  }
+
+  selfie(envioId: string, indice: number): Selfie | null {
+    const l = this.db.prepare("SELECT selfie, selfie_tipo FROM signatarios WHERE envio_id = ? AND indice = ?").get(envioId, indice) as
+      | { selfie: Uint8Array | null; selfie_tipo: string | null }
+      | undefined;
+    return l?.selfie ? { dados: l.selfie, tipo: l.selfie_tipo ?? "image/jpeg" } : null;
+  }
+
+  /** Signatários convidados que ainda não assinaram, em envios em andamento (para os lembretes). */
+  emAndamento(): Signatario[] {
+    const marcas = STATUS_EM_ANDAMENTO.map(() => "?").join(", ");
+    const linhas = this.db
+      .prepare(
+        `SELECT s.* FROM signatarios s JOIN envios e ON e.id = s.envio_id
+         WHERE e.status = 'aguardando' AND s.status IN (${marcas}) ORDER BY s.envio_id, s.indice`,
+      )
+      .all(...STATUS_EM_ANDAMENTO);
+    return linhas.map(lerSignatario);
+  }
+
+  /** Envios mais recentes de um remetente (para o comando "documentos"). */
+  enviosDoRemetente(telefone: string, limite: number): Envio[] {
+    const ids = this.db
+      .prepare("SELECT id FROM envios WHERE remetente = ? ORDER BY criado_em DESC LIMIT ?")
+      .all(telefone, limite) as { id: string }[];
+    return ids.map((l) => this.envio(l.id)!);
+  }
+
   ehSignatario(telefone: string): boolean {
     return this.db.prepare("SELECT 1 FROM signatarios WHERE telefone = ? LIMIT 1").get(telefone) !== undefined;
   }
@@ -232,7 +309,12 @@ export class Banco {
   atualizarSignatario(
     envioId: string,
     indice: number,
-    campos: Partial<Pick<Signatario, "status" | "cpf" | "linkEnviadoEm" | "visualizadoEm" | "assinadoEm" | "mensagemAssinaturaId">>,
+    campos: Partial<
+      Pick<
+        Signatario,
+        "status" | "cpf" | "linkEnviadoEm" | "visualizadoEm" | "assinadoEm" | "mensagemAssinaturaId" | "lembretes" | "ultimoLembreteEm"
+      >
+    >,
   ): void {
     const colunas: Record<string, string> = {
       status: "status",
@@ -241,6 +323,8 @@ export class Banco {
       visualizadoEm: "visualizado_em",
       assinadoEm: "assinado_em",
       mensagemAssinaturaId: "mensagem_assinatura_id",
+      lembretes: "lembretes",
+      ultimoLembreteEm: "ultimo_lembrete_em",
     };
     const entradas = Object.entries(campos);
     if (entradas.length === 0) return;
@@ -323,6 +407,9 @@ function lerSignatario(linha: unknown): Signatario {
     visualizadoEm: ou(l.visualizado_em),
     assinadoEm: ou(l.assinado_em),
     mensagemAssinaturaId: ou(l.mensagem_assinatura_id),
+    selfieEm: ou(l.selfie_em),
+    lembretes: (l.lembretes as number | null) ?? 0,
+    ultimoLembreteEm: ou(l.ultimo_lembrete_em),
   };
 }
 

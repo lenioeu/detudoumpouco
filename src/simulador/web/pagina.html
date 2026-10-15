@@ -48,6 +48,11 @@
   #modo { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--linha); white-space: nowrap; }
   #modo[data-modo="claude"] { color: var(--verde); border-color: var(--verde); }
   #modo[data-modo="demo"] { color: var(--aviso-texto); background: var(--aviso); border-color: transparent; }
+  .acoes-topo { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  #relogio { font-size: 12px; font-weight: 600; color: var(--aviso-texto); background: var(--aviso); border-radius: 999px; padding: 3px 10px; }
+  #um-dia { border: 1px solid var(--linha); background: var(--bolha-bot); color: var(--tinta); border-radius: 999px; padding: 6px 14px; font: inherit; cursor: pointer; }
+  #um-dia:hover { border-color: var(--verde); }
+  .msg img.foto { max-width: 180px; max-height: 220px; border-radius: 6px; display: block; }
   #recomecar { border: 1px solid var(--linha); background: var(--bolha-bot); color: var(--tinta); border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 600; cursor: pointer; }
   #recomecar:hover { border-color: var(--verde); }
   #aviso-modo { background: var(--aviso); color: var(--aviso-texto); padding: 8px 12px; border-radius: 8px; font-size: 13px; }
@@ -107,7 +112,11 @@
   <h1>Simulador AssinaBot</h1>
   <span id="modo">IA: conectando…</span>
   <p>Três celulares conversando com o bot de verdade. Comece pelo celular do escritório.</p>
-  <button type="button" id="recomecar">Recomeçar teste</button>
+  <span class="acoes-topo">
+    <span id="relogio" hidden></span>
+    <button type="button" id="um-dia" title="Avança o relógio do bot em um dia: quem não assinou recebe lembrete">Simular 1 dia depois</button>
+    <button type="button" id="recomecar">Recomeçar teste</button>
+  </span>
 </header>
 <div id="aviso-modo" hidden></div>
 <main id="celulares"></main>

@@ -1,4 +1,5 @@
-import type { Envio, Pendencia, Repositorio, Signatario } from "../banco.js";
+import type { Envio, Pendencia, Repositorio, Selfie, Signatario } from "../banco.js";
+import { STATUS_EM_ANDAMENTO } from "../status.js";
 import type { Estado } from "../conversa/estado.js";
 
 /** O mesmo banco do bot, só que em memória: usado pelo simulador que roda no navegador. */
@@ -7,6 +8,7 @@ export class BancoMemoria implements Repositorio {
   private readonly conversas = new Map<string, { estado: Estado; pdf: Uint8Array | null }>();
   private readonly envios = new Map<string, Envio & { pdfFinal?: Uint8Array }>();
   private readonly lista: Signatario[] = [];
+  private readonly selfies = new Map<string, Selfie>();
   private readonly mensagens = new Map<string, { envioId: string; indice: number | null }>();
   private readonly registro: { envioId: string | null; tipo: string; detalhe: unknown; em: string }[] = [];
   private filaDePendencias: Pendencia[] = [];
@@ -42,6 +44,9 @@ export class BancoMemoria implements Repositorio {
         visualizadoEm: null,
         assinadoEm: null,
         mensagemAssinaturaId: null,
+        selfieEm: null,
+        lembretes: 0,
+        ultimoLembreteEm: null,
       }),
     );
   }
@@ -81,6 +86,37 @@ export class BancoMemoria implements Repositorio {
     return candidatos[0] ? { ...candidatos[0] } : null;
   }
 
+  aguardandoSelfie(telefone: string): Signatario | null {
+    const candidatos = this.lista
+      .filter((s) => s.telefone === telefone && s.status === "aguardando_selfie" && this.envios.get(s.envioId)?.status === "aguardando")
+      .sort((a, b) => (b.visualizadoEm ?? "").localeCompare(a.visualizadoEm ?? ""));
+    return candidatos[0] ? { ...candidatos[0] } : null;
+  }
+
+  salvarSelfie(envioId: string, indice: number, selfie: Selfie, em: string): void {
+    this.selfies.set(`${envioId}:${indice}`, selfie);
+    const s = this.lista.find((x) => x.envioId === envioId && x.indice === indice);
+    if (s) s.selfieEm = em;
+  }
+
+  selfie(envioId: string, indice: number): Selfie | null {
+    return this.selfies.get(`${envioId}:${indice}`) ?? null;
+  }
+
+  emAndamento(): Signatario[] {
+    return this.lista
+      .filter((s) => this.envios.get(s.envioId)?.status === "aguardando" && STATUS_EM_ANDAMENTO.includes(s.status))
+      .map((s) => ({ ...s }));
+  }
+
+  enviosDoRemetente(telefone: string, limite: number): Envio[] {
+    return [...this.envios.values()]
+      .filter((e) => e.remetente === telefone)
+      .sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))
+      .slice(0, limite)
+      .map((e) => ({ ...e }));
+  }
+
   ehSignatario(telefone: string): boolean {
     return this.lista.some((s) => s.telefone === telefone);
   }
@@ -88,7 +124,12 @@ export class BancoMemoria implements Repositorio {
   atualizarSignatario(
     envioId: string,
     indice: number,
-    campos: Partial<Pick<Signatario, "status" | "cpf" | "linkEnviadoEm" | "visualizadoEm" | "assinadoEm" | "mensagemAssinaturaId">>,
+    campos: Partial<
+      Pick<
+        Signatario,
+        "status" | "cpf" | "linkEnviadoEm" | "visualizadoEm" | "assinadoEm" | "mensagemAssinaturaId" | "lembretes" | "ultimoLembreteEm"
+      >
+    >,
   ): void {
     const s = this.lista.find((x) => x.envioId === envioId && x.indice === indice);
     if (s) Object.assign(s, campos);

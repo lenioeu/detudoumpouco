@@ -8,6 +8,10 @@ import { formatarTelefone } from "../telefone.js";
 import { type Avisador, type Filas, type Mensageiro, nomeDeArquivo } from "./avisos.js";
 import { primeiroNome } from "./textos.js";
 
+/** A selfie entra no PDF final, que só aceita estes formatos de imagem. */
+const TIPOS_DE_FOTO = ["image/jpeg", "image/jpg", "image/png"];
+const TAMANHO_MAXIMO_SELFIE = 8 * 1024 * 1024;
+
 /** Botões da conversa com quem assina; o id leva o envio e a posição do signatário. */
 export const ACOES = ["ver", "assinar", "recusar"] as const;
 export type Acao = (typeof ACOES)[number];
@@ -89,6 +93,12 @@ export class ColetaDeAssinaturas {
         await this.whatsapp.enviarTexto(atual.telefone, "Esse CPF não é válido. Confira os números e digite de novo.");
         return;
       }
+      if (envio.exigeSelfie) {
+        this.banco.atualizarSignatario(s.envioId, s.indice, { status: "aguardando_selfie", cpf });
+        this.banco.registrarEvento(s.envioId, "cpf_informado", { indice: s.indice, mensagemId });
+        await this.pedirSelfie(atual.telefone);
+        return;
+      }
       const assinadoEm = new Date().toISOString();
       this.banco.atualizarSignatario(s.envioId, s.indice, { status: "assinado", cpf, assinadoEm, mensagemAssinaturaId: mensagemId });
       this.banco.registrarEvento(s.envioId, "assinado", { indice: s.indice, mensagemId, assinadoEm });
@@ -100,9 +110,87 @@ export class ColetaDeAssinaturas {
     });
   }
 
+  /** Foto recebida de quem tem uma assinatura esperando a selfie: conclui a assinatura. */
+  async tratarSelfie(s: Signatario, mensagemId: string, mediaId: string, tipo: string): Promise<void> {
+    await this.filas.executar(`envio:${s.envioId}`, async () => {
+      const atual = this.banco.signatario(s.envioId, s.indice);
+      const envio = this.banco.envio(s.envioId);
+      if (!atual || !envio || atual.status !== "aguardando_selfie" || envio.status !== "aguardando") return;
+
+      if (!TIPOS_DE_FOTO.includes(tipo)) {
+        await this.whatsapp.enviarTexto(atual.telefone, "Envie a selfie como foto (JPG ou PNG), pela câmera do WhatsApp.");
+        return;
+      }
+      const dados = await this.whatsapp.baixarMidia(mediaId);
+      if (dados.byteLength > TAMANHO_MAXIMO_SELFIE) {
+        await this.whatsapp.enviarTexto(atual.telefone, "A foto ficou grande demais. Tire outra pela câmera do WhatsApp e envie de novo.");
+        return;
+      }
+      const assinadoEm = new Date().toISOString();
+      this.banco.salvarSelfie(s.envioId, s.indice, { dados, tipo }, assinadoEm);
+      this.banco.atualizarSignatario(s.envioId, s.indice, { status: "assinado", assinadoEm, mensagemAssinaturaId: mensagemId });
+      this.banco.registrarEvento(s.envioId, "assinado", { indice: s.indice, mensagemId, assinadoEm, selfie: true });
+      await this.whatsapp.enviarTexto(
+        atual.telefone,
+        "✅ Selfie recebida e assinatura registrada! Quando todos assinarem, você recebe aqui a via final do documento.",
+      );
+      await this.avancar(envio, atual);
+    });
+  }
+
+  /** Mensagem de texto de quem deveria mandar a selfie. */
+  async lembrarSelfie(s: Signatario): Promise<void> {
+    await this.pedirSelfie(s.telefone);
+  }
+
+  /**
+   * Lembra quem foi convidado e não assinou depois de REMINDER_AFTER_HOURS, até REMINDER_MAX vezes,
+   * e avisa o escritório. Roda de tempos em tempos; `agora` existe para os testes e o simulador.
+   */
+  async enviarLembretes(agora: Date = new Date()): Promise<void> {
+    const limite = this.config.REMINDER_AFTER_HOURS * 3600_000;
+    for (const s of this.banco.emAndamento()) {
+      const referencia = s.ultimoLembreteEm ?? s.linkEnviadoEm;
+      if (!referencia || agora.getTime() - new Date(referencia).getTime() < limite) continue;
+      if (s.lembretes > this.config.REMINDER_MAX) continue;
+
+      await this.filas.executar(`envio:${s.envioId}`, async () => {
+        const envio = this.banco.envio(s.envioId);
+        if (!envio || envio.status !== "aguardando") return;
+        const quando = agora.toISOString();
+        if (s.lembretes < this.config.REMINDER_MAX) {
+          if (!(await this.convidar(envio, s, true))) return;
+          this.banco.atualizarSignatario(s.envioId, s.indice, { lembretes: s.lembretes + 1, ultimoLembreteEm: quando });
+          await this.avisos.avisar(
+            envio.remetente,
+            envio.titulo,
+            `🔔 Mandei um lembrete para *${s.nome}* assinar *${envio.titulo}* (${s.lembretes + 1}º de ${this.config.REMINDER_MAX}).`,
+          );
+        } else {
+          this.banco.atualizarSignatario(s.envioId, s.indice, { lembretes: s.lembretes + 1, ultimoLembreteEm: quando });
+          await this.avisos.avisar(
+            envio.remetente,
+            envio.titulo,
+            `⏰ *${s.nome}* ainda não assinou *${envio.titulo}*, mesmo depois de ${this.config.REMINDER_MAX} lembretes. ` +
+              `Talvez valha ligar: ${formatarTelefone(s.telefone)}.`,
+          );
+        }
+      });
+    }
+  }
+
   // ---------------------------------------------------------------- etapas
 
-  private async convidar(envio: Envio, s: Signatario): Promise<boolean> {
+  private async pedirSelfie(telefone: string): Promise<void> {
+    await this.whatsapp.enviarTexto(
+      telefone,
+      "Falta só uma etapa: envie uma *selfie segurando seu documento de identidade* (RG ou CNH), " +
+        "com o rosto e o documento bem visíveis. Use a câmera do WhatsApp 📷.",
+    );
+  }
+
+  /** Manda o convite (template com o botão "Ver documento"). Como lembrete, não muda a situação da pessoa. */
+  private async convidar(envio: Envio, s: Signatario, lembrete = false): Promise<boolean> {
     try {
       const mensagemId = await this.whatsapp.enviarTemplate(
         s.telefone,
@@ -110,9 +198,11 @@ export class ColetaDeAssinaturas {
         [primeiroNome(s.nome), this.config.SENDER_DISPLAY_NAME, envio.titulo],
         idDoBotao("ver", envio.id, s.indice),
       );
-      this.banco.atualizarSignatario(envio.id, s.indice, { status: "convidado", linkEnviadoEm: new Date().toISOString() });
+      if (!lembrete) {
+        this.banco.atualizarSignatario(envio.id, s.indice, { status: "convidado", linkEnviadoEm: new Date().toISOString() });
+      }
       this.banco.vincularMensagem(mensagemId, envio.id, s.indice);
-      this.banco.registrarEvento(envio.id, "convite_enviado", { indice: s.indice, telefone: s.telefone, mensagemId });
+      this.banco.registrarEvento(envio.id, lembrete ? "lembrete_enviado" : "convite_enviado", { indice: s.indice, telefone: s.telefone, mensagemId });
       return true;
     } catch (erro) {
       console.error(`Falha ao convidar ${s.telefone}:`, erro);
@@ -200,6 +290,8 @@ export class ColetaDeAssinaturas {
       visualizadoEm: s.visualizadoEm,
       assinadoEm: s.assinadoEm!,
       mensagemId: s.mensagemAssinaturaId ?? "",
+      selfie: this.banco.selfie(envio.id, s.indice),
+      lembretes: s.lembretes,
     }));
     const preenchido = await finalizarDocumento(envio.pdfApresentado, envio.blocos, {
       titulo: envio.titulo,
