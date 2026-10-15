@@ -32,6 +32,38 @@ O PDF final tem:
 
 O bot também guarda no banco (tabela `eventos`) cada passo: convites, botões tocados, entrega e leitura das mensagens.
 
+## Testar sem WhatsApp (simulador)
+
+O simulador roda o bot de verdade, mas no lugar do WhatsApp abre uma página no navegador com três celulares lado a lado: o **escritório** (você), **Maria da Silva** e **João Pereira**. Não precisa de conta na Meta nem de servidor.
+
+1. Instale o [Node.js](https://nodejs.org) (versão 22 ou mais nova, botão "LTS").
+2. Baixe este repositório (botão verde **Code → Download ZIP** no GitHub) e descompacte.
+3. Abra o terminal na pasta descompactada e rode:
+
+   ```bash
+   npm install
+   npm run simulador
+   ```
+
+4. Abra **http://localhost:3000** no navegador.
+
+Como usar:
+
+- No celular do escritório, toque em **📎 PDF** e escolha um documento.
+- Para informar o contato de alguém, use o botão **👤** (compartilha o contato de um dos outros celulares) ou digite o número.
+- Nos celulares de Maria e João aparecem os convites. Toque nos botões como a pessoa faria. Para o CPF, use números válidos de teste, como `529.982.247-25` e `111.444.777-35`.
+- Os PDFs (inclusive a via final assinada) abrem ao clicar no arquivo na conversa.
+
+**Sem a chave da Anthropic**, o simulador funciona em *modo demonstração*: a IA não lê o PDF. Toque em **Corrigir** e escreva as partes, por exemplo `outorgante: Maria da Silva; outorgado: João Pereira`. **Para testar a leitura de verdade**, rode com a chave:
+
+```bash
+ANTHROPIC_API_KEY=sua-chave npm run simulador
+```
+
+(No Windows, no PowerShell: `$env:ANTHROPIC_API_KEY="sua-chave"; npm run simulador`.)
+
+Nada sai do seu computador, exceto o PDF enviado à Anthropic quando a chave é usada. Ao fechar o simulador, as conversas são apagadas.
+
 ## O que você precisa
 
 | Item | Para quê | Custo |

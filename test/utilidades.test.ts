@@ -123,3 +123,16 @@ describe("webhook do WhatsApp", () => {
     expect(status).toEqual([{ mensagemId: "w1", status: "delivered", destinatario: "5552", timestamp: "1" }]);
   });
 });
+
+describe("IA de demonstração do simulador", () => {
+  it("lê as partes escritas na correção", async () => {
+    const { IaDeDemonstracao } = await import("../src/simulador/ia-demonstracao.js");
+    const ia = new IaDeDemonstracao();
+    const corrigida = await ia.corrigir(new Uint8Array(), await ia.analisar(), "outorgante: Maria da Silva; outorgado: João Pereira");
+    expect(corrigida.partes).toEqual([
+      { papel: "outorgante", nome: "Maria da Silva" },
+      { papel: "outorgado", nome: "João Pereira" },
+    ]);
+    expect(corrigida.observacao).toBeNull();
+  });
+});

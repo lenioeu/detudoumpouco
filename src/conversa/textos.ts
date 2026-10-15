@@ -4,7 +4,7 @@ import type { ParteComContato } from "./estado.js";
 
 export const AJUDA =
   "Olá! Envie aqui o *PDF* que precisa ser assinado.\n\n" +
-  "Eu leio o documento, identifico quem deve assinar, peço o contato de cada pessoa e mando o link de assinatura pelo WhatsApp.\n\n" +
+  "Eu leio o documento, identifico quem deve assinar, peço o contato de cada pessoa e mando o documento para cada uma assinar aqui mesmo, pelo WhatsApp.\n\n" +
   "A qualquer momento, escreva *cancelar* para recomeçar.";
 
 export function listaDePartes(analise: Analise): string {
@@ -32,7 +32,7 @@ export function resumoParaEnvio(analise: Analise, contatos: ParteComContato[]): 
     .join("\n");
   return (
     `Confira antes de enviar:\n\n📄 *${analise.titulo}*\n\n${linhas}\n\n` +
-    `Os links vão por WhatsApp, ${ordem}. Posso enviar?`
+    `Cada pessoa recebe o documento no WhatsApp, ${ordem}. Posso enviar?`
   );
 }
 
