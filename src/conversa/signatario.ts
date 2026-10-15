@@ -3,6 +3,7 @@ import type { Config } from "../config.js";
 import { validarCpf } from "../cpf.js";
 import type { AssinadorDePdf } from "../assinatura/certificado.js";
 import { finalizarDocumento, type RegistroDeAssinatura } from "../assinatura/pagina.js";
+import { urlDeVerificacao } from "../verificacao.js";
 import { formatarTelefone } from "../telefone.js";
 import { type Avisador, type Filas, type Mensageiro, nomeDeArquivo } from "./avisos.js";
 import { primeiroNome } from "./textos.js";
@@ -206,6 +207,8 @@ export class ColetaDeAssinaturas {
       criadoEm: envio.criadoEm,
       hashOriginal: envio.hashOriginal,
       remetente: this.config.SENDER_DISPLAY_NAME,
+      remetenteTelefone: envio.remetente,
+      urlVerificacao: urlDeVerificacao(this.config.PUBLIC_URL, envio.id),
       registros,
     });
     const final = await this.assinador.assinar(preenchido, `Assinaturas eletrônicas de "${envio.titulo}"`);

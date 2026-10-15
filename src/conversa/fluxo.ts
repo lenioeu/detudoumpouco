@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Envio, Repositorio } from "../banco.js";
 import type { Config } from "../config.js";
+import { encontrarLinhasDeAssinatura, type LeitorDeTexto, type LinhaDeAssinatura } from "../assinatura/linhas.js";
 import { prepararDocumento } from "../assinatura/pagina.js";
 import type { Analise, IdentificadorDePartes } from "../ia/partes.js";
 import { normalizarTelefone } from "../telefone.js";
@@ -25,6 +26,8 @@ export class Fluxo {
     private readonly coleta: ColetaDeAssinaturas,
     private readonly avisos: Avisador,
     private readonly filas: Filas,
+    /** Lê o texto do PDF para achar as linhas de assinatura; sem ele, só a página de assinaturas é carimbada. */
+    private readonly lerTexto?: LeitorDeTexto,
   ) {}
 
   receberMensagem(m: MensagemRecebida): Promise<void> {
@@ -241,9 +244,16 @@ export class Fluxo {
     contatos: ParteComContato[],
     original: Uint8Array,
   ): Promise<void> {
+    let linhas: LinhaDeAssinatura[] = [];
+    try {
+      if (this.lerTexto) linhas = encontrarLinhasDeAssinatura(await this.lerTexto(original), contatos.map((c) => c.nome));
+    } catch (erro) {
+      console.error("Não consegui ler o texto do PDF para achar as linhas de assinatura:", erro);
+    }
+
     let preparado: Awaited<ReturnType<typeof prepararDocumento>>;
     try {
-      preparado = await prepararDocumento(original, analise.titulo, contatos);
+      preparado = await prepararDocumento(original, analise.titulo, contatos, linhas);
     } catch (erro) {
       console.error("Falha ao preparar o PDF:", erro);
       await this.whatsapp.enviarTexto(de, "Não consegui preparar este PDF (ele pode estar protegido por senha). Envie uma versão sem proteção.");

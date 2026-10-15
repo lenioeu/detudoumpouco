@@ -1,12 +1,25 @@
 import { createHash } from "node:crypto";
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
-import { mascararCpf } from "../cpf.js";
+import { PDFDocument, PDFString, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import QRCode from "qrcode";
+import { formatarCpf } from "../cpf.js";
 import { formatarTelefone } from "../telefone.js";
+import type { LinhaDeAssinatura } from "./linhas.js";
 
 export type SignatarioNaPagina = { papel: string; nome: string; telefone: string };
 
-/** Área reservada para o carimbo de assinatura de um signatário, em pontos (origem embaixo à esquerda). */
-export type Bloco = { signatario: number; pagina: number; x: number; y: number; largura: number; altura: number };
+/**
+ * Área onde vai o carimbo de assinatura de um signatário, em pontos (origem embaixo à esquerda):
+ * na página de assinaturas ou na linha de assinatura do próprio documento.
+ */
+export type Bloco = {
+  signatario: number;
+  pagina: number;
+  x: number;
+  y: number;
+  largura: number;
+  altura: number;
+  origem?: "pagina" | "documento";
+};
 
 /** O que foi registrado de cada assinatura, para o carimbo e o manifesto. */
 export type RegistroDeAssinatura = SignatarioNaPagina & {
@@ -17,45 +30,53 @@ export type RegistroDeAssinatura = SignatarioNaPagina & {
   mensagemId: string;
 };
 
+export const FUNDAMENTO_LEGAL =
+  "As assinaturas acima são assinaturas eletrônicas simples, nos termos do art. 4º, I, da Lei 14.063/2020 " +
+  "e do art. 10, § 2º, da MP 2.200-2/2001.";
+
 const A4: [number, number] = [595.28, 841.89];
 const MARGEM = 56;
 const LARGURA_UTIL = A4[0] - 2 * MARGEM;
 const ALTURA_BLOCO = 118;
 const CINZA = rgb(0.35, 0.35, 0.35);
+const AZUL = rgb(0.05, 0.25, 0.55);
+const TAMANHO_QR = 92;
 
 export function sha256(dados: Uint8Array): string {
   return createHash("sha256").update(dados).digest("hex");
 }
 
-export function formatarDataHora(iso: string): string {
+export function formatarDataHora(iso: string, comFuso = true): string {
   const texto = new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
     dateStyle: "short",
     timeStyle: "medium",
   }).format(new Date(iso));
-  return `${texto.replace(",", " às")} (horário de Brasília)`;
+  return comFuso ? `${texto.replace(",", " às")} (horário de Brasília)` : texto.replace(",", "");
 }
 
 /**
  * Acrescenta ao fim do PDF uma página de assinaturas com um bloco por signatário.
- * Esta é a versão que cada pessoa lê e assina; os blocos são preenchidos no final.
+ * Esta é a versão que cada pessoa lê e assina; os blocos (e as linhas de assinatura
+ * achadas no próprio documento) são preenchidos no final.
  */
 export async function prepararDocumento(
   original: Uint8Array,
   titulo: string,
   signatarios: SignatarioNaPagina[],
+  linhasNoDocumento: LinhaDeAssinatura[] = [],
 ): Promise<{ pdf: Uint8Array; blocos: Bloco[]; hashOriginal: string }> {
   const hashOriginal = sha256(original);
   const doc = await PDFDocument.load(original);
   const e = await Escritor.criar(doc);
-  const blocos: Bloco[] = [];
+  const blocos: Bloco[] = linhasNoDocumento.map((l) => ({ ...l, origem: "documento" }));
 
   e.titulo("PÁGINA DE ASSINATURAS");
   e.texto(titulo, 11);
   e.texto(`SHA-256 do documento original: ${hashOriginal}`, 7, CINZA);
   e.texto(
-    "As partes abaixo assinam eletronicamente este documento por meio do WhatsApp, " +
-      "nos termos do art. 10, § 2º, da MP 2.200-2/2001. O registro de cada assinatura consta no manifesto ao final.",
+    "As partes abaixo assinam eletronicamente este documento por meio do WhatsApp, nos termos do art. 4º, I, " +
+      "da Lei 14.063/2020 e do art. 10, § 2º, da MP 2.200-2/2001. O registro de cada assinatura consta no certificado ao final.",
     8,
     CINZA,
   );
@@ -84,7 +105,7 @@ export async function prepararDocumento(
       color: CINZA,
     });
     e.pagina.drawText("Assinatura eletrônica", { x: area.x, y: area.y - 10, size: 7, font: e.fonte, color: CINZA });
-    blocos.push({ signatario: i, pagina: doc.getPageCount() - 1, ...area });
+    blocos.push({ signatario: i, pagina: doc.getPageCount() - 1, ...area, origem: "pagina" });
     e.y = topo - ALTURA_BLOCO;
   });
 
@@ -92,7 +113,8 @@ export async function prepararDocumento(
 }
 
 /**
- * Preenche os blocos com o carimbo de cada assinatura e acrescenta o manifesto.
+ * Preenche os carimbos de assinatura, acrescenta o certificado de assinatura eletrônica
+ * (com QR Code e linha do tempo) e põe o rodapé de verificação em todas as páginas.
  * O resultado ainda precisa da assinatura digital do arquivo (AssinadorDePdf).
  */
 export async function finalizarDocumento(
@@ -103,7 +125,10 @@ export async function finalizarDocumento(
     codigo: string;
     criadoEm: string;
     hashOriginal: string;
+    /** Nome de quem enviou (o escritório). */
     remetente: string;
+    remetenteTelefone: string;
+    urlVerificacao: string;
     registros: RegistroDeAssinatura[];
   },
 ): Promise<Uint8Array> {
@@ -113,63 +138,186 @@ export async function finalizarDocumento(
 
   for (const b of blocos) {
     const r = dados.registros[b.signatario];
-    if (!r) continue;
-    const pagina = doc.getPage(b.pagina);
-    const linhas = [
-      { t: `Assinado eletronicamente por ${r.nome}`, negrito: true },
-      { t: `CPF ${mascararCpf(r.cpf)} - WhatsApp ${formatarTelefone(r.telefone)}`, negrito: false },
-      { t: `em ${formatarDataHora(r.assinadoEm)}`, negrito: false },
-    ];
-    linhas.forEach((l, i) => {
-      pagina.drawText(compativel(l.t, e.fonte), {
-        x: b.x + 4,
-        y: b.y + b.altura - 14 - i * 12,
-        size: 9,
-        font: l.negrito ? e.negrito : e.fonte,
-        color: rgb(0.05, 0.25, 0.55),
-      });
-    });
+    if (r) carimbar(doc.getPage(b.pagina), b, r, e);
   }
 
+  // ------------------------------------------------ certificado
   e.novaPagina();
-  e.titulo("MANIFESTO DE ASSINATURAS ELETRÔNICAS");
+  const topo = e.y;
+  desenharQrCode(e.pagina, dados.urlVerificacao, A4[0] - MARGEM - TAMANHO_QR, topo - TAMANHO_QR);
+  e.pagina.drawText("Escaneie para verificar", {
+    x: A4[0] - MARGEM - TAMANHO_QR + 6,
+    y: topo - TAMANHO_QR - 10,
+    size: 7,
+    font: e.fonte,
+    color: CINZA,
+  });
+  adicionarLink(doc, e.pagina, [A4[0] - MARGEM - TAMANHO_QR, topo - TAMANHO_QR, A4[0] - MARGEM, topo], dados.urlVerificacao);
+
+  e.reservaDireita = TAMANHO_QR + 16;
+  e.titulo("CERTIFICADO DE ASSINATURA ELETRÔNICA");
   e.texto(dados.titulo, 11);
   e.espaco(4);
   e.campo("Código do documento", dados.codigo);
-  e.campo("Enviado por", dados.remetente);
-  e.campo("Enviado para assinatura em", formatarDataHora(dados.criadoEm));
+  e.campo("Enviado por", `${dados.remetente} (WhatsApp ${formatarTelefone(dados.remetenteTelefone)})`);
   e.campo("SHA-256 do documento original", dados.hashOriginal);
   e.campo("SHA-256 da versão assinada (com página de assinaturas)", hashApresentado);
+  e.y = Math.min(e.y, topo - TAMANHO_QR - 18);
+  e.reservaDireita = 0;
+  e.texto(`Verifique a autenticidade em: ${dados.urlVerificacao}`, 8, AZUL);
+  adicionarLink(doc, e.pagina, [MARGEM, e.y, MARGEM + LARGURA_UTIL, e.y + 12], dados.urlVerificacao);
   e.espaco(8);
 
-  dados.registros.forEach((r, i) => {
-    e.garantir(110);
-    e.texto(`${i + 1}. ${r.nome} (${r.papel})`, 10, undefined, true);
-    e.campo("CPF informado", mascararCpf(r.cpf));
+  e.titulo("Assinaturas");
+  dados.registros.forEach((r) => {
+    e.garantir(90);
+    e.texto(`${r.nome} (${r.papel})`, 10, undefined, true);
+    e.campo("CPF", formatarCpf(r.cpf));
     e.campo("WhatsApp", formatarTelefone(r.telefone));
-    if (r.linkEnviadoEm) e.campo("Convite enviado", formatarDataHora(r.linkEnviadoEm));
-    if (r.visualizadoEm) e.campo("Documento recebido no WhatsApp", formatarDataHora(r.visualizadoEm));
-    e.campo("Assinatura confirmada", formatarDataHora(r.assinadoEm));
+    e.campo("Canal", "WhatsApp (documento recebido e assinado no número do signatário)");
+    e.campo("Data da assinatura", formatarDataHora(r.assinadoEm));
     e.campo("ID da mensagem de confirmação", r.mensagemId);
     e.espaco(6);
   });
 
-  e.espaco(6);
+  e.espaco(4);
+  e.titulo("Eventos do documento");
+  e.texto("Datas e horários de Brasília", 7, CINZA);
+  for (const ev of linhaDoTempo(dados)) {
+    e.garantir(14);
+    e.texto(`${formatarDataHora(ev.em, false)}   ${ev.texto}`, 8, undefined, false, 12);
+  }
+
+  e.espaco(10);
+  e.garantir(60);
+  e.texto("Documento assinado eletronicamente", 9, undefined, true);
+  e.texto(FUNDAMENTO_LEGAL, 8, CINZA);
   e.texto(
     "Cada signatário recebeu o documento no próprio WhatsApp, declarou ter lido e concordado ao tocar em \"Assinar\" " +
-      "e confirmou a identidade informando o CPF. Os códigos SHA-256 acima permitem verificar que o conteúdo não foi " +
-      "alterado. O arquivo é assinado digitalmente; alterações posteriores invalidam essa assinatura.",
+      "e confirmou a identidade informando o CPF. Os códigos SHA-256 permitem verificar que o conteúdo não foi alterado, " +
+      "e o arquivo é assinado digitalmente: alterações posteriores invalidam essa assinatura.",
     8,
     CINZA,
   );
 
+  rodape(doc, e, dados.codigo, dados.urlVerificacao);
   return doc.save();
+}
+
+/** Texto do carimbo, ajustado ao tamanho da área (menor na linha de assinatura do documento). */
+function carimbar(pagina: PDFPage, b: Bloco, r: RegistroDeAssinatura, e: Escritor): void {
+  const compacto = b.origem === "documento";
+  const tamanho = compacto ? 7.5 : 9;
+  const linhas = [
+    { t: `Assinado eletronicamente por ${r.nome}`, negrito: true },
+    { t: `CPF ${formatarCpf(r.cpf)} · WhatsApp ${formatarTelefone(r.telefone)}`, negrito: false },
+    { t: `em ${formatarDataHora(r.assinadoEm)}`, negrito: false },
+  ];
+  linhas.forEach((l, i) => {
+    const fonte = l.negrito ? e.negrito : e.fonte;
+    const texto = compativel(l.t, fonte);
+    const largura = fonte.widthOfTextAtSize(texto, tamanho);
+    // Na linha do documento o carimbo fica centralizado, como uma assinatura
+    const x = compacto ? b.x + Math.max(0, (b.largura - largura) / 2) : b.x + 4;
+    pagina.drawText(texto, {
+      x,
+      y: b.y + b.altura - tamanho - 3 - i * (tamanho * 1.35),
+      size: tamanho,
+      font: fonte,
+      color: AZUL,
+    });
+  });
+}
+
+type Evento = { em: string; texto: string };
+
+function linhaDoTempo(dados: {
+  criadoEm: string;
+  remetente: string;
+  remetenteTelefone: string;
+  registros: RegistroDeAssinatura[];
+}): Evento[] {
+  const eventos: Evento[] = [
+    {
+      em: dados.criadoEm,
+      texto: `${dados.remetente} (WhatsApp ${formatarTelefone(dados.remetenteTelefone)}) enviou o documento para assinatura`,
+    },
+  ];
+  for (const r of dados.registros) {
+    if (r.linkEnviadoEm) eventos.push({ em: r.linkEnviadoEm, texto: `Convite enviado a ${r.nome} (WhatsApp ${formatarTelefone(r.telefone)})` });
+    if (r.visualizadoEm) {
+      eventos.push({ em: r.visualizadoEm, texto: `${r.nome} abriu o documento no próprio WhatsApp: posse do número verificada` });
+    }
+    eventos.push({ em: r.assinadoEm, texto: `${r.nome} assinou o documento, confirmando o CPF ${formatarCpf(r.cpf)}` });
+  }
+  const ultima = dados.registros.map((r) => r.assinadoEm).sort().at(-1);
+  if (ultima) eventos.push({ em: ultima, texto: "Documento concluído: todas as partes assinaram" });
+  return eventos.sort((a, b) => a.em.localeCompare(b.em));
+}
+
+/** Faixa no pé de todas as páginas com o código e o endereço de verificação. */
+function rodape(doc: PDFDocument, e: Escritor, codigo: string, url: string): void {
+  const paginas = doc.getPages();
+  paginas.forEach((pagina, i) => {
+    const { width } = pagina.getSize();
+    pagina.drawRectangle({ x: 0, y: 0, width, height: 24, color: rgb(0.96, 0.97, 0.98), opacity: 0.95 });
+    pagina.drawLine({ start: { x: 0, y: 24 }, end: { x: width, y: 24 }, thickness: 0.4, color: rgb(0.8, 0.82, 0.85) });
+    const linha1 = compativel(
+      `Documento assinado eletronicamente (Lei 14.063/2020 e MP 2.200-2/2001) · Código ${codigo} · Página ${i + 1} de ${paginas.length}`,
+      e.fonte,
+    );
+    const linha2 = compativel(`Verifique a autenticidade em ${url}`, e.fonte);
+    for (const [texto, y, cor] of [
+      [linha1, 14, CINZA],
+      [linha2, 5, AZUL],
+    ] as const) {
+      const tamanho = Math.min(6.5, ((width - 24) / e.fonte.widthOfTextAtSize(texto, 6.5)) * 6.5);
+      const largura = e.fonte.widthOfTextAtSize(texto, tamanho);
+      pagina.drawText(texto, { x: (width - largura) / 2, y, size: tamanho, font: e.fonte, color: cor });
+      if (texto === linha2) adicionarLink(doc, pagina, [(width - largura) / 2, 3, (width + largura) / 2, 11], url);
+    }
+  });
+}
+
+function desenharQrCode(pagina: PDFPage, texto: string, x: number, y: number): void {
+  const { modules } = QRCode.create(texto, { errorCorrectionLevel: "M" });
+  const n = modules.size;
+  const modulo = TAMANHO_QR / (n + 2); // 1 módulo de margem em cada lado
+  pagina.drawRectangle({ x, y, width: TAMANHO_QR, height: TAMANHO_QR, color: rgb(1, 1, 1) });
+  for (let linha = 0; linha < n; linha++) {
+    for (let coluna = 0; coluna < n; coluna++) {
+      if (!modules.get(linha, coluna)) continue;
+      pagina.drawRectangle({
+        x: x + (coluna + 1) * modulo,
+        y: y + TAMANHO_QR - (linha + 2) * modulo,
+        width: modulo,
+        height: modulo,
+        color: rgb(0, 0, 0),
+      });
+    }
+  }
+}
+
+/** Área clicável que abre o endereço (anotação de link do PDF). */
+function adicionarLink(doc: PDFDocument, pagina: PDFPage, retangulo: [number, number, number, number], url: string): void {
+  const anotacao = doc.context.register(
+    doc.context.obj({
+      Type: "Annot",
+      Subtype: "Link",
+      Rect: retangulo,
+      Border: [0, 0, 0],
+      A: { Type: "Action", S: "URI", URI: PDFString.of(url) },
+    }),
+  );
+  pagina.node.addAnnot(anotacao);
 }
 
 /** Escreve texto em sequência, quebrando linhas e páginas automaticamente. */
 class Escritor {
   pagina!: PDFPage;
   y = 0;
+  /** Espaço reservado à direita (ex.: ao lado do QR Code). */
+  reservaDireita = 0;
 
   private constructor(
     private readonly doc: PDFDocument,
@@ -207,7 +355,7 @@ class Escritor {
 
   texto(t: string, tamanho: number, cor = rgb(0, 0, 0), emNegrito = false, recuo = 0): void {
     const fonte = emNegrito ? this.negrito : this.fonte;
-    const largura = LARGURA_UTIL - recuo;
+    const largura = LARGURA_UTIL - recuo - this.reservaDireita;
     const altura = tamanho * 1.35;
     let linha = "";
     const escreverLinha = () => {

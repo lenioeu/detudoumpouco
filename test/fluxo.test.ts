@@ -7,6 +7,7 @@ import { Fluxo } from "../src/conversa/fluxo.js";
 import { ColetaDeAssinaturas, lerBotao } from "../src/conversa/signatario.js";
 import type { Analise } from "../src/ia/partes.js";
 import { ErroWhatsApp } from "../src/whatsapp/cliente.js";
+import { paginaDeVerificacao } from "../src/verificacao.js";
 import type { MensagemRecebida } from "../src/whatsapp/webhook.js";
 
 const ESCRITORIO = "5551911112222";
@@ -184,6 +185,14 @@ describe("assinatura pelo WhatsApp", () => {
     const [s1, s2] = banco.signatarios(envioId);
     expect(s1).toMatchObject({ status: "assinado", cpf: "52998224725" });
     expect(s2).toMatchObject({ status: "assinado", cpf: "11144477735", nome: "João Pereira" });
+
+    // página de verificação: concluído, com o CPF parcialmente oculto na internet
+    const { status, html } = paginaDeVerificacao(banco, envioId, "Escritório Teste");
+    expect(status).toBe(200);
+    expect(html).toContain("Assinado por todos");
+    expect(html).toContain("***.982.247-**");
+    expect(html).not.toContain("529.982.247-25");
+    expect(paginaDeVerificacao(banco, "00000000-0000-0000-0000-000000000000", "x").status).toBe(404);
 
     // depois de concluído, o botão só informa
     await de(MARIA, { tipo: "botao", botaoId: whatsapp.convites()[0]!.args[2] });

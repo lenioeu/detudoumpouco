@@ -6,6 +6,7 @@
  */
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import { AssinadorDePdf } from "../../assinatura/certificado.js";
+import { criarLeitorDeTexto, type PdfJs } from "../../assinatura/linhas.js";
 import { carregarConfig } from "../../config.js";
 import { Avisador, Filas } from "../../conversa/avisos.js";
 import { Fluxo } from "../../conversa/fluxo.js";
@@ -45,7 +46,8 @@ const SENHA_CERTIFICADO = "simulador-123";
 // ---------------------------------------------------------------- montagem do bot
 
 const config = carregarConfig({
-  PUBLIC_URL: "https://claude.ai",
+  // Endereço fictício: no simulador on-line não há servidor para a página de verificação
+  PUBLIC_URL: "https://assinaturas.escritorioexemplo.adv.br",
   DATABASE_PATH: ":memory:",
   AUTHORIZED_SENDERS: PESSOAS[0]!.telefone,
   SENDER_DISPLAY_NAME: "Escritório Exemplo Advocacia",
@@ -78,7 +80,7 @@ function montarBot() {
   const filas = new Filas();
   const avisos = new Avisador(config, banco, whatsapp);
   const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
-  const fluxo = new Fluxo(config, banco, whatsapp, ponteIa, coleta, avisos, filas);
+  const fluxo = new Fluxo(config, banco, whatsapp, ponteIa, coleta, avisos, filas, (pdf) => criarLeitorDeTexto(pdfjsLib as unknown as PdfJs)(pdf));
   return { whatsapp, fluxo };
 }
 

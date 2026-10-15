@@ -1,11 +1,13 @@
 import express, { type Request } from "express";
+import type { Repositorio } from "./banco.js";
 import type { Config } from "./config.js";
 import type { Fluxo } from "./conversa/fluxo.js";
+import { paginaDeVerificacao } from "./verificacao.js";
 import { assinaturaValida, extrairEventos } from "./whatsapp/webhook.js";
 
 type ComCorpoBruto = Request & { corpoBruto?: Buffer };
 
-export function criarServidor(config: Config, fluxo: Fluxo): express.Express {
+export function criarServidor(config: Config, fluxo: Fluxo, banco: Repositorio): express.Express {
   const app = express();
   app.use(
     express.json({
@@ -18,6 +20,12 @@ export function criarServidor(config: Config, fluxo: Fluxo): express.Express {
 
   app.get("/saude", (_req, res) => {
     res.json({ ok: true });
+  });
+
+  // Página aberta pelo QR Code e pelo link do rodapé da via final
+  app.get("/verificar/:codigo", (req, res) => {
+    const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
+    res.status(status).type("html").send(html);
   });
 
   // Verificação feita pela Meta ao cadastrar a URL do webhook

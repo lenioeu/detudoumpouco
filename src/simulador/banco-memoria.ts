@@ -51,6 +51,10 @@ export class BancoMemoria implements Repositorio {
     return e ? { ...e } : null;
   }
 
+  pdfFinal(id: string): Uint8Array | null {
+    return this.envios.get(id)?.pdfFinal ?? null;
+  }
+
   concluirEnvio(id: string, pdfFinal: Uint8Array): void {
     const e = this.envios.get(id);
     if (e) Object.assign(e, { status: "concluido", pdfFinal });

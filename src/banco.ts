@@ -187,6 +187,12 @@ export class Banco {
     };
   }
 
+  /** Via final assinada, quando o envio já foi concluído. */
+  pdfFinal(id: string): Uint8Array | null {
+    const l = this.db.prepare("SELECT pdf_final FROM envios WHERE id = ?").get(id) as { pdf_final: Uint8Array | null } | undefined;
+    return l?.pdf_final ?? null;
+  }
+
   concluirEnvio(id: string, pdfFinal: Uint8Array): void {
     this.db.prepare("UPDATE envios SET status = 'concluido', pdf_final = ? WHERE id = ?").run(pdfFinal, id);
   }

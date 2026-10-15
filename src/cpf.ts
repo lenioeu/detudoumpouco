@@ -17,3 +17,8 @@ export function validarCpf(entrada: string): string | null {
 export function mascararCpf(cpf: string): string {
   return `***.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-**`;
 }
+
+/** "52998224725" -> "529.982.247-25" */
+export function formatarCpf(cpf: string): string {
+  return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+}

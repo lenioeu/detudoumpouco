@@ -25,10 +25,14 @@ Na ordem **sequencial**, cada pessoa só é convidada depois que a anterior assi
 
 O PDF final tem:
 
-- **O documento original**, sem alteração.
-- **A página de assinaturas**, com um bloco por pessoa, preenchido com "*Assinado eletronicamente por Maria da Silva, CPF \*\*\*.982.247-\*\*, WhatsApp +55 (51) 98888-7777, em 15/10/2026 às 11:11:30*".
-- **O manifesto de assinaturas**, com o código do documento, os SHA-256 do original e da versão assinada e, para cada pessoa, a data e hora do convite, do recebimento do documento e da confirmação, além do ID da mensagem de WhatsApp.
+- **O documento original**, sem alteração de conteúdo. Se o nome de quem assina aparece sozinho numa linha (o bloco de assinatura, como "MARIA DA SILVA" embaixo de "\_\_\_\_\_"), o carimbo de assinatura é posto **na própria linha de assinatura**.
+- **A página de assinaturas**, com um bloco por pessoa e o mesmo carimbo: "*Assinado eletronicamente por Maria da Silva, CPF 529.982.247-25, WhatsApp +55 (51) 98888-7777, em 15/10/2026 às 11:11:30*".
+- **O certificado de assinatura eletrônica**: código do documento, SHA-256 do original e da versão assinada, **QR Code e link para a página de verificação**, os dados de cada assinatura (CPF completo, WhatsApp, canal e data) e a **linha do tempo** (envio, convites, abertura do documento no próprio WhatsApp, que verifica a posse do número, assinaturas e conclusão).
+- **Fundamento legal**: assinaturas eletrônicas simples, art. 4º, I, da Lei 14.063/2020 e art. 10, § 2º, da MP 2.200-2/2001.
+- **Rodapé em todas as páginas**, com o código do documento e o endereço de verificação.
 - **A assinatura digital do arquivo**, feita com o certificado do escritório. Qualquer alteração posterior aparece como assinatura inválida no Adobe Reader ou no verificador do ITI.
+
+**Página de verificação** (`/verificar/<código>`): aberta pelo QR Code ou pelo rodapé. Mostra a situação do documento e de cada assinatura e permite conferir se um PDF é a via final sem alteração (o arquivo é conferido no navegador, sem envio). Na internet o CPF aparece parcialmente oculto; completo, só no documento.
 
 O bot também guarda no banco (tabela `eventos`) cada passo: convites, botões tocados, entrega e leitura das mensagens.
 

@@ -14,6 +14,8 @@ import { Avisador, Filas } from "../conversa/avisos.js";
 import { Fluxo } from "../conversa/fluxo.js";
 import { ColetaDeAssinaturas } from "../conversa/signatario.js";
 import { IdentificadorDePartes } from "../ia/partes.js";
+import { lerTextoDoPdf } from "../assinatura/texto-node.js";
+import { paginaDeVerificacao } from "../verificacao.js";
 import type { MensagemRecebida } from "../whatsapp/webhook.js";
 import { IaDeDemonstracao } from "./ia-demonstracao.js";
 import { WhatsAppSimulado } from "./whatsapp-simulado.js";
@@ -51,7 +53,7 @@ const assinador = AssinadorDePdf.carregarOuGerar(config.CERTIFICATE_PATH, config
 });
 const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
 const ia = comIa ? new IdentificadorDePartes(new Anthropic(), config.ANTHROPIC_MODEL) : new IaDeDemonstracao();
-const fluxo = new Fluxo(config, banco, whatsapp, ia, coleta, avisos, filas);
+const fluxo = new Fluxo(config, banco, whatsapp, ia, coleta, avisos, filas, lerTextoDoPdf);
 
 const app = express();
 const pagina = readFileSync(new URL("./pagina.html", import.meta.url), "utf8");
@@ -71,6 +73,11 @@ app.get("/eventos", (req, res) => {
   const enviar = (m: unknown) => res.write(`data: ${JSON.stringify(m)}\n\n`);
   const parar = whatsapp.aoReceber(enviar);
   req.on("close", parar);
+});
+
+app.get("/verificar/:codigo", (req, res) => {
+  const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
+  res.status(status).type("html").send(html);
 });
 
 app.get("/arquivo/:id", (req, res) => {
