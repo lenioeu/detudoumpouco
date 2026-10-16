@@ -60,18 +60,18 @@ import { LIMITE_NOME, LIMITE_CIDADE, LIMITE_TXID } from '../../lib/pix';
         <label for="valor">Valor (R$, opcional)</label>
         <input id="valor" type="text" inputmode="decimal" value="10,00" placeholder="Em branco: quem paga digita" />
       </div>
+      <div class="campo">
+        <label for="descricao">Mensagem (opcional)</label>
+        <input id="descricao" type="text" maxlength="72" placeholder="Ex.: Bolo de chocolate, Rifa de Natal" />
+        <small>Fica gravada no QR Code, junto com a chave. Nem todo banco mostra a mensagem para quem paga. <span id="descricao-conta">0 de 72</span></small>
+      </div>
       <details class="mais">
-        <summary>Identificador e mensagem (opcional)</summary>
+        <summary>Identificador da cobrança (opcional)</summary>
         <div class="stack mais-campos">
           <div class="campo">
             <label for="txid">Identificador</label>
             <input id="txid" type="text" maxlength={LIMITE_TXID} placeholder="Ex.: PEDIDO123" spellcheck="false" autocapitalize="characters" />
-            <small>Só letras sem acento e números, até {LIMITE_TXID}.</small>
-          </div>
-          <div class="campo">
-            <label for="descricao">Mensagem para quem paga</label>
-            <input id="descricao" type="text" maxlength="72" placeholder="Ex.: Bolo de chocolate" />
-            <small>Nem todo banco mostra a mensagem.</small>
+            <small>Ajuda a achar o pagamento no extrato. Só letras sem acento e números, até {LIMITE_TXID}.</small>
           </div>
         </div>
       </details>
@@ -207,7 +207,10 @@ import { LIMITE_NOME, LIMITE_CIDADE, LIMITE_TXID } from '../../lib/pix';
     try { await navigator.clipboard.writeText(copiaecola.value); $('aviso-copia').textContent = 'Copiado.'; }
     catch { copiaecola.select(); $('aviso-copia').textContent = 'Selecionado. Use Ctrl+C ou "Copiar" do celular.'; }
   });
-  form.addEventListener('input', () => { $('aviso-copia').textContent = ''; gerar(); });
+  const conta = document.getElementById('descricao-conta')!;
+  const contar = () => { conta.textContent = `${$('descricao').value.length} de 72`; };
+  form.addEventListener('input', () => { $('aviso-copia').textContent = ''; contar(); gerar(); });
+  contar();
   form.addEventListener('change', gerar);
   form.addEventListener('submit', (e) => e.preventDefault());
   gerar();
