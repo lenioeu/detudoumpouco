@@ -14,8 +14,10 @@ interface Props {
   jsonLd?: object[];
 }
 const { titulo, descricao, jsonLd = [] } = Astro.props;
-const tituloCompleto = Astro.url.pathname === '/' ? `${SITE.nome}: ${SITE.slogan}` : `${titulo} | ${SITE.nome}`;
-const canonica = new URL(Astro.url.pathname, SITE.url).href;
+// Com build.format 'file' o caminho vem como "/pasta/pagina.html"; a URL pública não tem ".html".
+const caminho = Astro.url.pathname.replace(/(index)?\.html$/, '') || '/';
+const tituloCompleto = caminho === '/' ? `${SITE.nome}: ${SITE.slogan}` : `${titulo} | ${SITE.nome}`;
+const canonica = new URL(caminho, SITE.url).href;
 ---
 <!doctype html>
 <html lang="pt-BR">
