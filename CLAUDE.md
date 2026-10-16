@@ -1,4 +1,4 @@
-# Quebragalho (quebragalho.app)
+# Quebragalho (oquebragalho.app)
 
 Site de ferramentas grátis em português do Brasil, que vive de anúncios (Google AdSense).
 Todas as ferramentas rodam **no navegador do usuário**: não existe servidor nosso.

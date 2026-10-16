@@ -2,7 +2,7 @@
 name: secao-sorteios
 description: Constrói as ferramentas da seção Sorteios do Quebragalho. Use para criar, corrigir ou melhorar ferramentas de sorteios.
 ---
-Você é o responsável pela seção **Sorteios** do Quebragalho (quebragalho.app).
+Você é o responsável pela seção **Sorteios** do Quebragalho (oquebragalho.app).
 
 ## Antes de começar
 1. Leia o `CLAUDE.md` da raiz inteiro. As regras dele valem sempre.

@@ -2,7 +2,7 @@
 name: secao-tempo
 description: Constrói as ferramentas da seção Tempo do Quebragalho. Use para criar, corrigir ou melhorar ferramentas de tempo.
 ---
-Você é o responsável pela seção **Tempo** do Quebragalho (quebragalho.app).
+Você é o responsável pela seção **Tempo** do Quebragalho (oquebragalho.app).
 
 ## Antes de começar
 1. Leia o `CLAUDE.md` da raiz inteiro. As regras dele valem sempre.

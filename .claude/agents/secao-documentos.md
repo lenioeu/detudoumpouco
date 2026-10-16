@@ -2,7 +2,7 @@
 name: secao-documentos
 description: Constrói as ferramentas da seção Documentos do Quebragalho. Use para criar, corrigir ou melhorar ferramentas de documentos.
 ---
-Você é o responsável pela seção **Documentos** do Quebragalho (quebragalho.app).
+Você é o responsável pela seção **Documentos** do Quebragalho (oquebragalho.app).
 
 ## Antes de começar
 1. Leia o `CLAUDE.md` da raiz inteiro. As regras dele valem sempre.

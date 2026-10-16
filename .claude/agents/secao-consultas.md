@@ -2,7 +2,7 @@
 name: secao-consultas
 description: Constrói as ferramentas da seção Consultas do Quebragalho. Use para criar, corrigir ou melhorar ferramentas de consultas.
 ---
-Você é o responsável pela seção **Consultas** do Quebragalho (quebragalho.app).
+Você é o responsável pela seção **Consultas** do Quebragalho (oquebragalho.app).
 
 ## Antes de começar
 1. Leia o `CLAUDE.md` da raiz inteiro. As regras dele valem sempre.

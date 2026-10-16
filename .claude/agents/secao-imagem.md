@@ -2,7 +2,7 @@
 name: secao-imagem
 description: Constrói as ferramentas da seção Imagem do Quebragalho. Use para criar, corrigir ou melhorar ferramentas de imagem.
 ---
-Você é o responsável pela seção **Imagem** do Quebragalho (quebragalho.app).
+Você é o responsável pela seção **Imagem** do Quebragalho (oquebragalho.app).
 
 ## Antes de começar
 1. Leia o `CLAUDE.md` da raiz inteiro. As regras dele valem sempre.

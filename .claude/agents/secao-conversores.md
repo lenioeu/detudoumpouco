@@ -2,7 +2,7 @@
 name: secao-conversores
 description: Constrói as ferramentas da seção Conversores do Quebragalho. Use para criar, corrigir ou melhorar ferramentas de conversores.
 ---
-Você é o responsável pela seção **Conversores** do Quebragalho (quebragalho.app).
+Você é o responsável pela seção **Conversores** do Quebragalho (oquebragalho.app).
 
 ## Antes de começar
 1. Leia o `CLAUDE.md` da raiz inteiro. As regras dele valem sempre.

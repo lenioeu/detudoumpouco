@@ -20,7 +20,7 @@ A configuração está em `wrangler.jsonc`. No painel do Cloudflare:
 - **Comando de build:** `npm run build`
 - **Comando de deploy:** `npx wrangler deploy`
 - **Versão do Node:** 22 (variável `NODE_VERSION=22`, se o painel pedir)
-- **Domínio:** `quebragalho.app` em *Custom domains*
+- **Domínio:** `oquebragalho.app` em *Custom domains*
 
 Cabeçalhos HTTP (cache e segurança) ficam em `public/_headers`.
 
