@@ -33,9 +33,7 @@ const canonica = new URL(Astro.url.pathname, SITE.url).href;
     <meta property="og:description" content={descricao} />
     <meta property="og:url" content={canonica} />
     <meta property="og:locale" content="pt_BR" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&display=swap" />
+    <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin />
     {SITE.adsenseClient && (
       <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE.adsenseClient}`} crossorigin="anonymous"></script>
     )}

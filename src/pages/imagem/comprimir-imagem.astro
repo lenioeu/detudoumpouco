@@ -1,6 +1,7 @@
 ---
 import Ferramenta from '../../layouts/Ferramenta.astro';
 import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import Comparar from '../../components/Comparar.astro';
 ---
 <Ferramenta
   secao="imagem"
@@ -12,6 +13,7 @@ import SoltarArquivos from '../../components/SoltarArquivos.astro';
   passos={[
     'Escolha uma ou várias imagens, ou arraste para a área indicada.',
     'Ajuste a qualidade e, se quiser, a largura máxima. 75% costuma ser o melhor equilíbrio.',
+    'Arraste o divisor sobre a imagem para comparar o original com a versão comprimida.',
     'Clique em "Baixar" ao lado de cada imagem comprimida.',
   ]}
   perguntas={[
@@ -49,6 +51,7 @@ import SoltarArquivos from '../../components/SoltarArquivos.astro';
       </div>
     </div>
 
+    <Comparar id="comparar" antes="Original" depois="Comprimida" />
     <p id="resumo" class="resultado" hidden></p>
     <ul id="lista" class="lista"></ul>
   </div>
@@ -65,8 +68,17 @@ import SoltarArquivos from '../../components/SoltarArquivos.astro';
   const lista = document.getElementById('lista')!;
   const resumo = document.getElementById('resumo')!;
 
+  const comparar = document.getElementById('comparar')!;
   let arquivos: File[] = [];
   const urls: string[] = [];
+
+  function mostrarComparacao(file: File, original: string, nova: string, tamanhoNovo: number) {
+    comparar.querySelector<HTMLImageElement>('.antes')!.src = original;
+    comparar.querySelector<HTMLImageElement>('.depois')!.src = nova;
+    comparar.querySelector('.rotulo-antes')!.textContent = `Original · ${tamanho(file.size)}`;
+    comparar.querySelector('.rotulo-depois')!.textContent = `Comprimida · ${tamanho(tamanhoNovo)}`;
+    comparar.hidden = false;
+  }
 
   async function comprimir(file: File): Promise<Blob> {
     const bitmap = await createImageBitmap(file);
@@ -86,7 +98,8 @@ import SoltarArquivos from '../../components/SoltarArquivos.astro';
   async function processar() {
     urls.splice(0).forEach(URL.revokeObjectURL);
     lista.innerHTML = '';
-    if (!arquivos.length) { resumo.hidden = true; return; }
+    if (!arquivos.length) { resumo.hidden = true; comparar.hidden = true; return; }
+    let primeira = true;
     let antes = 0, depois = 0;
     const ext = formato.value === 'image/webp' ? 'webp' : 'jpg';
     for (const file of arquivos) {
@@ -100,6 +113,8 @@ import SoltarArquivos from '../../components/SoltarArquivos.astro';
         const final = blob.size < file.size ? blob : file;
         antes += file.size; depois += final.size;
         const url = URL.createObjectURL(final); urls.push(url);
+        const urlOriginal = URL.createObjectURL(file); urls.push(urlOriginal);
+        if (primeira) { mostrarComparacao(file, urlOriginal, url, final.size); primeira = false; }
         const economia = Math.round((1 - final.size / file.size) * 100);
         li.innerHTML = '';
         const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = file.name;
@@ -107,7 +122,9 @@ import SoltarArquivos from '../../components/SoltarArquivos.astro';
         info.textContent = final === file ? `${tamanho(file.size)} · já estava otimizada` : `${tamanho(file.size)} → ${tamanho(final.size)} (−${economia}%)`;
         const a = document.createElement('a'); a.className = 'btn'; a.href = url; a.textContent = 'Baixar';
         a.download = final === file ? file.name : trocarExtensao(file.name, ext);
-        li.append(nome, info, a);
+        const ver = document.createElement('button'); ver.type = 'button'; ver.className = 'btn btn-sec'; ver.textContent = 'Comparar';
+        ver.addEventListener('click', () => { mostrarComparacao(file, urlOriginal, url, final.size); comparar.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+        li.append(nome, info, ver, a);
       } catch {
         li.querySelector('.muted')!.textContent = 'Não foi possível abrir esta imagem.';
         li.querySelector('.muted')!.className = 'erro';
@@ -128,6 +145,8 @@ import SoltarArquivos from '../../components/SoltarArquivos.astro';
 
 <style>
   .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .lista :global(li) { animation: entrar 0.3s var(--suave) both; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
   .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   .lista :global(li) { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); }
   .lista :global(.nome) { font-weight: 600; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }

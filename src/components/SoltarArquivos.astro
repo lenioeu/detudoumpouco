@@ -5,10 +5,15 @@
 //   document.getElementById('entrada')!.addEventListener('arquivos', (e) => {
 //     const files = (e as CustomEvent<File[]>).detail;
 //   });
+// Também aceita colar (Ctrl+V) uma imagem ou arquivo em qualquer lugar da página.
 interface Props { id: string; accept: string; multiple?: boolean; texto?: string; dica?: string; }
-const { id, accept, multiple = false, texto = 'Escolher arquivo', dica = 'ou arraste e solte aqui' } = Astro.props;
+const { id, accept, multiple = false, texto = 'Escolher arquivo', dica = 'ou arraste e solte aqui · Ctrl+V também funciona' } = Astro.props;
 ---
 <div class="soltar" id={id} data-soltar>
+  <svg class="seta" width="56" height="56" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+    <rect x="4" y="4" width="48" height="48" rx="16" fill="var(--brand)" stroke="var(--brand-ink)" stroke-width="2.5"/>
+    <path d="M28 38V19m0 0-8 8m8-8 8 8" stroke="var(--brand-ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
   <input type="file" id={`${id}-input`} accept={accept} multiple={multiple} />
   <label for={`${id}-input`} class="btn">{texto}</label>
   <span class="muted">{dica}</span>
@@ -18,23 +23,35 @@ const { id, accept, multiple = false, texto = 'Escolher arquivo', dica = 'ou arr
 <script>
   document.querySelectorAll<HTMLElement>('[data-soltar]').forEach((zona) => {
     const input = zona.querySelector('input')!;
-    const enviar = (lista: FileList | null) => {
+    const enviar = (lista: FileList | File[] | null) => {
       const files = Array.from(lista ?? []);
       if (files.length) zona.dispatchEvent(new CustomEvent('arquivos', { detail: files }));
     };
     input.addEventListener('change', () => { enviar(input.files); input.value = ''; });
-    zona.addEventListener('dragover', (e) => { e.preventDefault(); zona.classList.add('sobre'); });
-    zona.addEventListener('dragleave', () => zona.classList.remove('sobre'));
-    zona.addEventListener('drop', (e) => { e.preventDefault(); zona.classList.remove('sobre'); enviar(e.dataTransfer?.files ?? null); });
+    let n = 0;
+    zona.addEventListener('dragenter', (e) => { e.preventDefault(); n++; zona.classList.add('sobre'); });
+    zona.addEventListener('dragover', (e) => e.preventDefault());
+    zona.addEventListener('dragleave', () => { if (--n <= 0) { n = 0; zona.classList.remove('sobre'); } });
+    zona.addEventListener('drop', (e) => { e.preventDefault(); n = 0; zona.classList.remove('sobre'); enviar(e.dataTransfer?.files ?? null); });
+    document.addEventListener('paste', (e) => {
+      const files = Array.from(e.clipboardData?.files ?? []);
+      if (files.length) enviar(files);
+    });
   });
 </script>
 
 <style>
   .soltar {
-    display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
-    padding: 36px 16px; border: 2px dashed var(--line); border-radius: var(--radius); background: var(--surface);
+    display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+    padding: clamp(28px, 6vw, 48px) 16px; border: 2.5px dashed var(--line); border-radius: 18px; background: var(--bg);
+    transition: border-color 0.2s, background-color 0.2s, transform 0.25s var(--mola);
   }
-  .soltar.sobre { border-color: var(--brand-ink); background: var(--brand-soft); }
+  .soltar:hover { border-color: var(--brand); }
+  .soltar.sobre { border-color: var(--brand-ink); background: var(--brand-soft); transform: scale(1.01); }
+  .seta { transition: transform 0.35s var(--mola); }
+  .soltar:hover .seta { transform: translateY(-4px); }
+  .soltar.sobre .seta { transform: translateY(-6px) scale(1.08); animation: pulo 0.7s var(--suave) infinite alternate; }
+  @keyframes pulo { to { transform: translateY(-12px) scale(1.08); } }
   input { position: absolute; width: 1px; height: 1px; opacity: 0; }
   input:focus-visible + label { outline: 3px solid var(--link); outline-offset: 2px; }
   .privado { font-size: 0.85rem; color: var(--ok); font-weight: 600; }

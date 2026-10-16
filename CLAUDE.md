@@ -60,6 +60,16 @@ Exemplos completos para copiar o padrão:
 - **Visual:** use só os tokens de `src/styles/global.css` (`--bg`, `--surface`, `--fg`, `--brand`...) e as classes
   prontas (`.btn`, `.btn-sec`, `.campo`, `.resultado`, `.erro`, `.stack`). Nada de cor solta: o site tem modo escuro.
   Tem que funcionar em celular de 360px sem rolagem lateral.
+- **Movimento** (inspirado no Squoosh): use só `transform` e `opacity`, com as curvas `--mola` (elástica, para
+  botões e cartões) e `--suave` (para entradas e trocas). Durações de 0,15 s a 0,35 s. A troca entre páginas é a
+  View Transition nativa do navegador (já configurada no CSS, sem JavaScript); não instale biblioteca de animação
+  nem o `ClientRouter` do Astro. Todo movimento novo precisa respeitar `prefers-reduced-motion` (o CSS global já
+  desliga tudo nesse caso).
+- **Desempenho (o Google mede):** nada de imagem grande, fonte nova ou script de terceiros no carregamento.
+  A fonte Archivo é servida de `public/fonts/`. Reserve espaço para o que aparece depois (evita "pulos" de layout).
+- **Componentes de arquivo:** `SoltarArquivos` (arrastar, escolher ou colar) e `Comparar` (antes e depois com
+  divisor arrastável) para toda ferramenta que transforma imagem.
+- **Ícones:** `Icone.astro` tem um ícone por seção; não use emoji como ícone.
 - **Texto:** português do Brasil, frases curtas, tom de quem ajuda. Números no padrão brasileiro
   (`formatar()` e `lerNumero()` de `src/lib/numeros.ts`). Para baixar, use links `<a download>`.
 - **AdSense:** não coloque anúncio dentro da área da ferramenta nem perto de botões. O layout já posiciona

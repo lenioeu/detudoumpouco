@@ -1,16 +1,35 @@
 ---
+import Icone from './Icone.astro';
 import type { FerramentaCompleta } from '../data';
 interface Props { f: FerramentaCompleta; }
 const { f } = Astro.props;
+// Mesmo nome do H1 da ferramenta: o título "voa" do cartão para a página.
+const vt = `vt-${f.secao}-${f.slug}`;
 ---
-<a class="cartao" href={f.url}>
-  <strong>{f.nome}</strong>
-  <span>{f.resumo}</span>
+<a class="cartao" href={f.url} data-busca={`${f.nome} ${f.resumo}`.toLowerCase()}>
+  <span class="chip"><Icone nome={f.secao} tamanho={20} /></span>
+  <span class="textos">
+    <strong style={`view-transition-name:${vt}`}>{f.nome}</strong>
+    <span class="resumo">{f.resumo}</span>
+  </span>
 </a>
 
 <style>
-  .cartao { display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--fg); text-decoration: none; }
-  .cartao:hover { border-color: var(--fg); }
-  strong { font-family: var(--f-display); font-size: 1.05rem; }
-  span { color: var(--muted); font-size: 0.93rem; }
+  .cartao {
+    display: flex; align-items: flex-start; gap: 14px; height: 100%; padding: 16px 18px;
+    border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); text-decoration: none;
+    box-shadow: var(--sombra);
+    transition: transform 0.22s var(--mola), box-shadow 0.22s var(--suave), border-color 0.22s;
+  }
+  .cartao:hover { transform: translateY(-3px); box-shadow: var(--sombra-alta); border-color: var(--brand); }
+  .cartao:active { transform: translateY(-1px) scale(0.99); }
+  .chip {
+    flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
+    background: var(--brand); color: var(--brand-ink);
+    transition: transform 0.3s var(--mola);
+  }
+  .cartao:hover .chip { transform: rotate(-8deg) scale(1.06); }
+  .textos { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  strong { font-family: var(--f-display); font-size: 1.05rem; line-height: 1.25; width: fit-content; }
+  .resumo { color: var(--muted); font-size: 0.93rem; }
 </style>

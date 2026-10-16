@@ -1,0 +1,56 @@
+---
+// Comparador "antes e depois" com divisor arrastável, no estilo do Squoosh.
+// Use em ferramentas de imagem. No script da página:
+//   const c = document.getElementById('comparar')!;
+//   c.querySelector<HTMLImageElement>('.antes')!.src = urlOriginal;
+//   c.querySelector<HTMLImageElement>('.depois')!.src = urlNova;
+//   c.querySelector('.rotulo-antes')!.textContent = 'Original · 2 MB';
+//   c.querySelector('.rotulo-depois')!.textContent = 'Comprimida · 300 KB';
+//   c.hidden = false;
+interface Props { id: string; antes?: string; depois?: string; }
+const { id, antes = 'Original', depois = 'Resultado' } = Astro.props;
+---
+<div class="comparar" id={id} data-comparar hidden>
+  <div class="quadro">
+    <img class="antes" alt="Imagem original" decoding="async" />
+    <img class="depois" alt="Imagem processada" decoding="async" />
+    <div class="linha" aria-hidden="true"><span class="pegador">‹ ›</span></div>
+    <input type="range" min="0" max="100" value="50" step="0.5" aria-label="Arraste para comparar a imagem original com o resultado" />
+  </div>
+  <div class="rotulos">
+    <span class="rotulo-antes">{antes}</span>
+    <span class="rotulo-depois">{depois}</span>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-comparar]').forEach((c) => {
+    const r = c.querySelector('input')!;
+    const pos = () => c.style.setProperty('--pos', `${r.value}%`);
+    r.addEventListener('input', pos);
+    pos();
+  });
+</script>
+
+<style>
+  .comparar { display: flex; flex-direction: column; gap: 8px; --pos: 50%; }
+  .quadro {
+    position: relative; overflow: hidden; border-radius: 14px; line-height: 0;
+    background: repeating-conic-gradient(var(--line) 0 25%, var(--surface) 0 50%) 0 0 / 20px 20px;
+  }
+  img { display: block; width: 100%; height: auto; max-height: 70vh; object-fit: contain; }
+  .depois { position: absolute; inset: 0; height: 100%; clip-path: inset(0 0 0 var(--pos)); }
+  .linha { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 3px; margin-left: -1.5px; background: var(--brand); box-shadow: 0 0 0 1px var(--brand-ink); pointer-events: none; }
+  .pegador {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+    background: var(--brand); color: var(--brand-ink); border: 2px solid var(--brand-ink);
+    font: 800 15px/1 var(--f-display); letter-spacing: 2px; box-shadow: var(--sombra-alta);
+    transition: transform 0.2s var(--mola);
+  }
+  .quadro:hover .pegador { transform: translate(-50%, -50%) scale(1.1); }
+  input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+  input:focus-visible ~ .linha, .quadro:has(input:focus-visible) .linha { box-shadow: 0 0 0 3px var(--link); }
+  .rotulos { display: flex; justify-content: space-between; gap: 12px; font-size: 0.9rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .rotulo-depois { text-align: right; }
+</style>
