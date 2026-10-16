@@ -90,6 +90,13 @@ Cada seção tem um agente em `.claude/agents/secao-<nome>.md`. Para não haver 
   Adicionar uma dependência ao `package.json` é permitido.
 - Commits pequenos, um por ferramenta: `calculadoras: juros compostos`.
 
+### Ramos e publicação
+
+- **`main` é o que está no ar.** O Cloudflare publica cada push no `main` em `oquebragalho.app`.
+- **Nunca envie direto para o `main`.** Cada agente trabalha num ramo próprio (ex.: `secao/calculadoras`).
+  O Cloudflare gera um endereço de prévia para cada ramo.
+- O trabalho só entra no `main` depois de revisado e testado (build sem erro e teste no navegador).
+
 ## Testes
 
 Depois do `npm run build`, rode `npm run preview` e teste com Playwright (o Chromium já está instalado em
