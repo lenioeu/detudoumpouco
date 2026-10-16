@@ -62,11 +62,13 @@ export function desenharGrafico(alvo: HTMLElement, series: Serie[], o: OpcoesGra
 
   const L = Math.max(320, Math.round(caixa.clientWidth || alvo.clientWidth || 640));
   const H = o.altura ?? 280;
-  const m = { t: 12, r: 14, b: 28, l: 64 };
-  const w = L - m.l - m.r, h = H - m.t - m.b;
   const max = Math.max(1, ...series.flatMap((s) => s.valores));
   const passo = passoBonito(max / 4);
   const topo = Math.ceil(max / passo) * passo;
+  // Margem esquerda do tamanho do maior rótulo do eixo y (≈ 7px por caractere a 12px).
+  const maiorRotulo = Math.max(...Array.from({ length: Math.round(topo / passo) + 1 }, (_, k) => o.formatarEixo(k * passo).length));
+  const m = { t: 12, r: 14, b: 28, l: Math.max(44, maiorRotulo * 7 + 14) };
+  const w = L - m.l - m.r, h = H - m.t - m.b;
   const x = (i: number) => m.l + (i / n) * w;
   const y = (v: number) => m.t + h - (v / topo) * h;
 

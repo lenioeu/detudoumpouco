@@ -51,6 +51,12 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
     </div>
     <p id="fin-economia" class="economia"></p>
 
+    <section class="evolucao" aria-labelledby="fin-graf-titulo">
+      <h2 id="fin-graf-titulo" class="graf-titulo">Quanto você ainda deve, mês a mês</h2>
+      <p class="muted nota">O saldo devedor cai mais rápido no SAC. Passe o mouse ou o dedo no gráfico para ver os valores de cada mês.</p>
+      <div id="fin-grafico"></div>
+    </section>
+
     <div class="abas" role="group" aria-label="Qual tabela mostrar">
       <button type="button" class="btn btn-sec aba" data-sistema="price" aria-pressed="true">Tabela Price</button>
       <button type="button" class="btn btn-sec aba" data-sistema="sac" aria-pressed="false">Tabela SAC</button>
@@ -58,7 +64,7 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
     <p class="legenda" id="fin-legenda-tabela">Valores em reais. Role a tabela para ver todas as parcelas (no celular, role também para o lado).</p>
     <div class="tabela-rolagem" tabindex="0" aria-labelledby="fin-legenda-tabela">
       <table>
-        <thead><tr><th scope="col">Nº</th><th scope="col">Parcela</th><th scope="col">Juros</th><th scope="col">Amortização</th><th scope="col">Saldo</th></tr></thead>
+        <thead><tr><th scope="col">Nº</th><th scope="col">Data</th><th scope="col">Parcela</th><th scope="col">Juros</th><th scope="col">Amortização</th><th scope="col">Saldo</th></tr></thead>
         <tbody id="fin-tabela"></tbody>
       </table>
     </div>
@@ -86,6 +92,8 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
   import { lerNumero, formatar } from '../../lib/numeros';
   import { reais, centavos } from '../../lib/dinheiro';
   import { anualParaMensal, mensalParaAnual, tabelaPrice, tabelaSac, type Financiamento } from '../../lib/juros';
+  import { desenharGrafico, reaisCurto } from '../../lib/grafico';
+  import { mesAno, rotuloData, marcaCalendario } from '../../lib/datas';
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const form = $<HTMLFormElement>('fin');
@@ -94,6 +102,8 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
   const info = $('fin-info');
   const economia = $('fin-economia');
   const tabela = $('fin-tabela');
+  const grafico = $('fin-grafico');
+  const saldos = (f: Financiamento, valor: number) => [valor, ...f.parcelas.map((p) => p.saldo)];
   const abas = Array.from(document.querySelectorAll<HTMLButtonElement>('.aba'));
   let sistema: 'price' | 'sac' = 'price';
   let atual: { price: Financiamento; sac: Financiamento } | null = null;
@@ -101,7 +111,7 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
   function desenharTabela() {
     if (!atual) { tabela.innerHTML = ''; return; }
     tabela.innerHTML = atual[sistema].parcelas.map((p) =>
-      `<tr><td>${p.numero}</td><td>${centavos(p.prestacao)}</td><td>${centavos(p.juros)}</td><td>${centavos(p.amortizacao)}</td><td>${centavos(p.saldo)}</td></tr>`).join('');
+      `<tr><td>${p.numero}</td><td class="data">${mesAno(p.numero)}</td><td>${centavos(p.prestacao)}</td><td>${centavos(p.juros)}</td><td>${centavos(p.amortizacao)}</td><td>${centavos(p.saldo)}</td></tr>`).join('');
   }
 
   function calcular() {
@@ -117,6 +127,7 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
       outPrice.innerHTML = `<span class="erro">${msg}</span>`;
       outSac.innerHTML = '';
       info.textContent = ''; economia.textContent = '';
+      grafico.innerHTML = '';
       desenharTabela();
     };
     if (bem === null || taxa === null || prazo === null) return erro('Preencha valor, taxa e prazo com números.');
@@ -137,6 +148,10 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
     outSac.innerHTML = `<span class="rotulo">SAC</span><strong>${reais(sac.primeira)}</strong>1ª parcela, caindo até ${reais(sac.ultima)}<br>Juros: ${reais(sac.totalJuros)}<br>Total pago: ${reais(sac.totalPago)}`;
     const dif = price.totalJuros - sac.totalJuros;
     economia.textContent = dif > 0.005 ? `No SAC você paga ${reais(dif)} a menos de juros no total.` : 'Com juros zero, Price e SAC dão o mesmo total.';
+    desenharGrafico(grafico, [
+      { nome: 'Saldo na Price', cor: 'var(--serie-1)', valores: saldos(price, valor) },
+      { nome: 'Saldo no SAC', cor: 'var(--serie-2)', valores: saldos(sac, valor) },
+    ], { rotuloPonto: rotuloData, marcaX: marcaCalendario(grafico.clientWidth < 520), formatarEixo: reaisCurto, formatarValor: reais });
     desenharTabela();
   }
 
@@ -148,6 +163,8 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
   form.addEventListener('input', calcular);
   form.addEventListener('change', calcular);
   form.addEventListener('submit', (e) => e.preventDefault());
+  let largura = 0;
+  new ResizeObserver(() => { if (Math.abs(grafico.clientWidth - largura) > 8) { largura = grafico.clientWidth; calcular(); } }).observe(grafico);
   calcular();
 </script>
 
@@ -163,6 +180,11 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
   .aba { padding: 8px 14px; }
   .aba[aria-pressed='true'] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand-ink); }
   .legenda { font-size: 0.9rem; color: var(--muted); }
+  .evolucao { display: flex; flex-direction: column; gap: 8px; }
+  .graf-titulo { font-size: 1.15rem; }
+  .nota { font-size: 0.9rem; }
+  #fin-grafico { min-height: 320px; }
+  .tabela-rolagem :global(td.data) { color: var(--muted); }
   .tabela-rolagem { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); overscroll-behavior: contain; }
   table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.86rem; }
   th { position: sticky; top: 0; background: var(--surface); text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }

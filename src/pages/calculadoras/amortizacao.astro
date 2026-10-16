@@ -65,10 +65,16 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
       <output class="resultado neutro" id="am-com"></output>
     </div>
 
+    <section class="evolucao" aria-labelledby="am-graf-titulo">
+      <h2 id="am-graf-titulo" class="graf-titulo">Quanto você ainda deve, mês a mês</h2>
+      <p class="muted nota">Compare o saldo devedor sem amortizar e com a amortização. Passe o mouse ou o dedo no gráfico para ver os valores.</p>
+      <div id="am-grafico"></div>
+    </section>
+
     <p class="legenda" id="am-legenda">Parcelas com a amortização, em reais. Role a tabela para ver todas (no celular, role também para o lado).</p>
     <div class="tabela-rolagem" tabindex="0" aria-labelledby="am-legenda">
       <table>
-        <thead><tr><th scope="col">Nº</th><th scope="col">Parcela</th><th scope="col">Juros</th><th scope="col">Amortização</th><th scope="col">Extra</th><th scope="col">Saldo</th></tr></thead>
+        <thead><tr><th scope="col">Nº</th><th scope="col">Data</th><th scope="col">Parcela</th><th scope="col">Juros</th><th scope="col">Amortização</th><th scope="col">Extra</th><th scope="col">Saldo</th></tr></thead>
         <tbody id="am-tabela"></tbody>
       </table>
     </div>
@@ -96,10 +102,13 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
   import { reais, centavos } from '../../lib/dinheiro';
   import { anualParaMensal } from '../../lib/juros';
   import { simularAmortizacao, duracao, type Sistema, type Modo } from '../../lib/amortizacao';
+  import { desenharGrafico, reaisCurto } from '../../lib/grafico';
+  import { mesAno, rotuloData, marcaCalendario } from '../../lib/datas';
 
   const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
   const form = $<HTMLFormElement>('am');
   const info = $('am-info'), economia = $('am-economia'), outSem = $('am-sem'), outCom = $('am-com'), tabela = $('am-tabela');
+  const grafico = $('am-grafico');
 
   function calcular() {
     const saldo = lerNumero($('am-saldo').value), taxa = lerNumero($('am-taxa').value), prazo = lerNumero($('am-prazo').value);
@@ -146,13 +155,19 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
     } else {
       economia.innerHTML = `<strong>Você economiza ${reais(poupou)} em juros</strong>` + (menos > 0 ? ` e termina ${duracao(menos)} antes.` : '.');
     }
+    desenharGrafico(grafico, [
+      { nome: 'Com amortização', cor: 'var(--serie-1)', valores: [saldo, ...com.linhas.map((l) => l.saldo)] },
+      { nome: 'Sem amortizar', cor: 'var(--serie-2)', valores: [saldo, ...sem.linhas.map((l) => l.saldo)] },
+    ], { rotuloPonto: rotuloData, marcaX: marcaCalendario(grafico.clientWidth < 520), formatarEixo: reaisCurto, formatarValor: reais });
     tabela.innerHTML = com.linhas.map((l) =>
-      `<tr><td>${l.numero}</td><td>${centavos(l.prestacao)}</td><td>${centavos(l.juros)}</td><td>${centavos(l.amortizacao)}</td><td>${l.extra > 0.004 ? centavos(l.extra) : '–'}</td><td>${centavos(l.saldo)}</td></tr>`).join('');
+      `<tr><td>${l.numero}</td><td class="data">${mesAno(l.numero)}</td><td>${centavos(l.prestacao)}</td><td>${centavos(l.juros)}</td><td>${centavos(l.amortizacao)}</td><td>${l.extra > 0.004 ? centavos(l.extra) : '–'}</td><td>${centavos(l.saldo)}</td></tr>`).join('');
   }
 
   form.addEventListener('input', calcular);
   form.addEventListener('change', calcular);
   form.addEventListener('submit', (e) => e.preventDefault());
+  let largura = 0;
+  new ResizeObserver(() => { if (Math.abs(grafico.clientWidth - largura) > 8) { largura = grafico.clientWidth; calcular(); } }).observe(grafico);
   calcular();
 </script>
 
@@ -174,6 +189,11 @@ import Ferramenta from '../../layouts/Ferramenta.astro';
   .neutro { display: block; min-height: 170px; background: var(--bg); }
   .resultado :global(.rotulo) { display: block; color: var(--muted); }
   .legenda { font-size: 0.9rem; color: var(--muted); }
+  .evolucao { display: flex; flex-direction: column; gap: 8px; }
+  .graf-titulo { font-size: 1.15rem; }
+  .nota { font-size: 0.9rem; }
+  #am-grafico { min-height: 320px; }
+  .tabela-rolagem :global(td.data) { color: var(--muted); }
   .tabela-rolagem { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); overscroll-behavior: contain; }
   table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.86rem; }
   th { position: sticky; top: 0; background: var(--surface); text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
