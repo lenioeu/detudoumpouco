@@ -1,0 +1,46 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import GeradorQr from '../../components/GeradorQr.astro';
+---
+<Ferramenta
+  secao="qr-code"
+  slug="wifi"
+  titulo="QR Code de Wi-Fi"
+  subtitulo="Crie um QR Code com o nome e a senha da sua rede. As visitas apontam a câmera do celular e conectam na hora, sem digitar nada. Grátis, para imprimir em PNG ou SVG."
+  tituloSeo="QR Code de Wi-Fi: compartilhe a senha sem digitar"
+  descricao="Crie um QR Code do Wi-Fi grátis: quem aponta a câmera conecta sem digitar a senha. Funciona no Android e no iPhone. Baixe em PNG ou SVG para imprimir."
+  passos={[
+    'Digite o nome da rede exatamente como aparece na lista de Wi-Fi do celular. Maiúsculas, espaços e acentos contam.',
+    'Digite a senha da rede. O QR Code muda enquanto você digita.',
+    'Deixe a segurança em "WPA, WPA2 ou WPA3", que serve para quase todo roteador. Marque "Rede oculta" só se a rede não aparece na lista.',
+    'Teste: aponte a câmera de outro celular para a tela e veja se ele conecta.',
+    'Baixe em PNG para imprimir ou mandar, ou em SVG para uma placa ou adesivo maior.',
+  ]}
+  perguntas={[
+    { p: 'Como compartilhar o Wi-Fi por QR Code?', r: 'Preencha o nome da rede e a senha nesta página, baixe o QR Code e imprima ou mostre na tela. Quem quiser entrar abre a câmera do celular, aponta para o código e toca no aviso "Conectar à rede". Não precisa de aplicativo.' },
+    { p: 'O QR Code do Wi-Fi funciona no iPhone?', r: 'Funciona. A câmera do iPhone lê QR Code de Wi-Fi desde o iOS 11, e a do Android, na maioria dos aparelhos, desde o Android 10. Em celulares mais antigos, use o leitor de QR Code do Google Lens ou de outro aplicativo.' },
+    { p: 'Se eu trocar a senha do Wi-Fi, o QR Code continua funcionando?', r: 'Não. A senha fica gravada dentro do desenho do QR Code. Trocou a senha ou o nome da rede, gere um código novo e substitua o impresso.' },
+    { p: 'É seguro deixar o QR Code do Wi-Fi à mostra?', r: 'Qualquer pessoa que ler o código vê a senha. Em casa, isso equivale a dizer a senha para a visita. Em loja, consultório ou restaurante, o melhor é criar uma rede de visitantes no roteador, separada da rede onde ficam computadores e câmeras, e fazer o QR Code dela.' },
+    { p: 'Onde encontro o nome e a senha do meu Wi-Fi?', r: 'O nome aparece na lista de redes do celular. A senha costuma estar numa etiqueta embaixo do roteador, como "senha" ou "WPA key", se ninguém a trocou. No Android, em Configurações, Wi-Fi, toque na rede conectada e em "Compartilhar". No iPhone com iOS 16 ou mais novo, em Ajustes, Wi-Fi, toque no (i) da rede e em "Senha".' },
+    { p: 'O QR Code não conecta. O que pode ser?', r: 'Na maioria das vezes, o nome da rede foi digitado diferente: uma letra maiúscula, um espaço no fim ou um hífen. Confira também a senha e o tipo de segurança. Redes de 5 GHz com nome próprio (com "_5G" no fim) precisam ter esse final no QR Code.' },
+  ]}
+>
+  <GeradorQr tipos={['wifi']} arquivo="qrcode-wifi" />
+
+  <Fragment slot="texto">
+    <h2>Para que serve o QR Code de Wi-Fi</h2>
+    <p>Soletrar senha de Wi-Fi é chato para todo mundo, principalmente quando ela tem letras maiúsculas, números e símbolos. Com o QR Code, a visita aponta a câmera e o celular entra na rede sozinho. Ninguém precisa ler a etiqueta embaixo do roteador nem perguntar "é zero ou letra O?".</p>
+    <p>Dentro do código vai um texto curto, no padrão que Android e iPhone entendem, com o tipo de segurança, o nome da rede e a senha, por exemplo <code>WIFI:T:WPA;S:MinhaCasa;P:senha-do-wifi;;</code>. Você pode conferir esse texto embaixo do QR Code gerado.</p>
+    <h2>Onde colocar</h2>
+    <ul>
+      <li><strong>Em casa:</strong> na porta da geladeira, no quarto de hóspedes ou num porta-retrato na sala.</li>
+      <li><strong>Aluguel por temporada:</strong> um cartão no manual da casa evita mensagens dos hóspedes pedindo a senha.</li>
+      <li><strong>Comércio:</strong> no balcão, no cardápio ou na mesa de um café, restaurante ou salão de beleza.</li>
+      <li><strong>Consultório e escritório:</strong> na recepção, para quem está esperando, de preferência com a rede de visitantes.</li>
+      <li><strong>Eventos:</strong> num totem na entrada de festa, curso ou reunião.</li>
+    </ul>
+    <h2>Dicas para imprimir</h2>
+    <p>Imprima com pelo menos 3 cm de lado para leitura de perto e escreva embaixo o nome da rede e a senha, para quem usa notebook ou um celular sem leitor. Se a placa vai ficar num lugar com muita gente mexendo, plastifique ou use a correção de erros alta, em "Cores e qualidade": o código continua legível mesmo arranhado.</p>
+    <p>O nome da rede e a senha que você digita aqui não saem do seu aparelho. O QR Code é desenhado no próprio navegador e funciona para sempre, sem depender deste site, enquanto a rede e a senha forem as mesmas. Precisa de um QR Code para link, texto ou WhatsApp? Use o <a href="/qr-code/gerador">gerador de QR Code</a> completo. Para conferir um QR Code de Wi-Fi que você já tem, use o <a href="/qr-code/leitor">leitor de QR Code</a>, que mostra a senha guardada nele.</p>
+  </Fragment>
+</Ferramenta>
