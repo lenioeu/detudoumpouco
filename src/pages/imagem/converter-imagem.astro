@@ -1,0 +1,210 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import Comparar from '../../components/Comparar.astro';
+---
+<Ferramenta
+  secao="imagem"
+  slug="converter-imagem"
+  titulo="Converter imagem"
+  subtitulo="Transforme PNG em JPG, JPG em PNG, WebP em JPG e qualquer combinação entre esses formatos. Várias imagens de uma vez, sem enviar nada."
+  tituloSeo="Converter imagem online: PNG, JPG e WebP grátis"
+  descricao="Converta imagens entre PNG, JPG e WebP online e grátis: WebP para JPG, PNG para JPG, JPG para PNG. Várias de uma vez, sem enviar seus arquivos."
+  passos={[
+    'Escolha uma ou várias imagens, arraste para a área indicada ou cole com Ctrl+V.',
+    'Escolha o formato de destino: JPG, PNG ou WebP.',
+    'Para JPG e WebP, ajuste a qualidade. Para JPG, escolha a cor que vai no lugar do fundo transparente.',
+    'Compare o original com o convertido e clique em "Baixar".',
+  ]}
+  perguntas={[
+    { p: 'Como converter WebP para JPG?', r: 'Escolha a imagem .webp, deixe o formato de destino em JPG e clique em "Baixar". A conversão é feita na hora, no seu navegador, e a imagem fica com o mesmo tamanho em pixels.' },
+    { p: 'Por que o fundo transparente ficou branco?', r: 'O formato JPG não tem transparência. As partes transparentes precisam ganhar uma cor, e o padrão é branco. Você pode escolher outra cor, ou converter para PNG ou WebP, que mantêm a transparência.' },
+    { p: 'Converter JPG para PNG melhora a qualidade?', r: 'Não. O PNG guarda a imagem sem perder nada a partir daí, mas o que o JPG já perdeu não volta. Converta para PNG quando um sistema exigir esse formato ou quando você for editar a imagem várias vezes.' },
+    { p: 'Qual formato deixa o arquivo menor?', r: 'Para fotos, o WebP costuma ficar de 25% a 35% menor que o JPG com a mesma aparência. Para prints de tela, logotipos e desenhos com poucas cores, o PNG pode ser o menor e o mais nítido.' },
+    { p: 'Minhas imagens são enviadas para algum servidor?', r: 'Não. A conversão usa o próprio navegador, no seu computador ou celular. Nada é enviado pela internet.' },
+    { p: 'Dá para converter HEIC do iPhone aqui?', r: 'Fotos HEIC têm uma ferramenta própria, o HEIC para JPG, porque a maioria dos navegadores não abre esse formato sem ajuda.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/avif" multiple texto="Escolher imagens" />
+
+    <div class="destino" role="radiogroup" aria-label="Converter para">
+      <span class="rotulo">Converter para</span>
+      <div class="opcoes-destino">
+        <label><input type="radio" name="destino" value="image/jpeg" checked /> <span>JPG</span></label>
+        <label><input type="radio" name="destino" value="image/png" /> <span>PNG</span></label>
+        <label><input type="radio" name="destino" value="image/webp" /> <span>WebP</span></label>
+      </div>
+    </div>
+
+    <div class="opcoes">
+      <div class="campo" id="campo-qualidade">
+        <label for="qualidade">Qualidade: <span id="qualidade-valor">90%</span></label>
+        <input id="qualidade" type="range" min="40" max="100" step="5" value="90" />
+      </div>
+      <div class="campo" id="campo-fundo">
+        <label for="fundo">Cor no lugar da transparência</label>
+        <div class="cor">
+          <input id="fundo" type="color" value="#ffffff" />
+          <small>O JPG não tem fundo transparente.</small>
+        </div>
+      </div>
+    </div>
+
+    <Comparar id="comparar" antes="Original" depois="Convertida" />
+    <p id="resumo" class="resultado" hidden></p>
+    <ul id="lista" class="lista"></ul>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>JPG, PNG e WebP: qual a diferença</h2>
+    <p>Os três são os formatos de imagem mais usados na internet, e cada um foi feito para um tipo de imagem. Saber qual usar evita arquivos pesados demais, fotos com fundo branco onde deveria ser transparente e sistemas que recusam o arquivo.</p>
+    <ul>
+      <li><strong>JPG (ou JPEG):</strong> o formato das fotos. Abre em qualquer aparelho e programa, gera arquivos pequenos e é o que formulários de cadastro mais aceitam. Em troca, perde um pouco de qualidade a cada vez que é salvo e não tem transparência.</li>
+      <li><strong>PNG:</strong> guarda a imagem sem perda e aceita fundo transparente. É o melhor para logotipos, ícones, prints de tela e imagens com texto, que ficam com as letras nítidas. Para fotos, gera arquivos bem maiores.</li>
+      <li><strong>WebP:</strong> criado pelo Google, faz as duas coisas: tem compressão com perda, como o JPG, e transparência, como o PNG, quase sempre com arquivos menores. Funciona em todos os navegadores atuais, mas alguns programas antigos e sites ainda não aceitam.</li>
+    </ul>
+    <h2>Conversões mais comuns</h2>
+    <p><strong>WebP para JPG</strong> é a mais procurada: você salva uma imagem de um site, ela vem em WebP e o programa ou o formulário não aceita. <strong>PNG para JPG</strong> serve para diminuir o peso de fotos que vieram em PNG, como prints de tela grandes. <strong>JPG para PNG</strong> é útil quando um sistema exige PNG ou quando a imagem vai ser editada várias vezes, sem perder mais qualidade a cada salvamento.</p>
+    <h2>Dica de qualidade</h2>
+    <p>Para JPG e WebP, uma qualidade entre 80% e 90% deixa a foto praticamente igual ao original com um arquivo bem menor. Use o divisor do comparador para conferir de perto. Se for converter um logotipo com fundo transparente para JPG, escolha a cor do fundo do lugar onde ele vai ser usado.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho, trocarExtensao } from '../../lib/arquivos';
+  import { extensao, nomeFormato, type FormatoSaida } from '../../lib/imagem';
+  import { codificar, desenhar } from '../../lib/canvas';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const qualidade = $<HTMLInputElement>('qualidade');
+  const qualidadeValor = $('qualidade-valor');
+  const campoQualidade = $('campo-qualidade');
+  const fundo = $<HTMLInputElement>('fundo');
+  const campoFundo = $('campo-fundo');
+  const comparar = $('comparar');
+  const resumo = $('resumo');
+  const lista = $('lista');
+
+  const destino = () => document.querySelector<HTMLInputElement>('input[name="destino"]:checked')!.value as FormatoSaida;
+
+  interface Item { file: File; bitmap: ImageBitmap; url: string; }
+  let itens: Item[] = [];
+  let falhas: string[] = [];
+  const urls: string[] = [];
+
+  function ajustarCampos() {
+    const t = destino();
+    campoQualidade.hidden = t === 'image/png';
+    campoFundo.hidden = t !== 'image/jpeg';
+  }
+
+  let espera = 0;
+  const agendar = () => { clearTimeout(espera); espera = window.setTimeout(processar, 200); };
+
+  let rodada = 0;
+  async function processar() {
+    const minha = ++rodada;
+    urls.splice(0).forEach(URL.revokeObjectURL);
+    lista.innerHTML = '';
+    resumo.hidden = true;
+    if (!itens.length) comparar.hidden = true;
+    const tipo = destino();
+    const q = Number(qualidade.value) / 100;
+    let primeira = true, ok = 0, antes = 0, depois = 0;
+
+    for (const it of itens) {
+      const li = document.createElement('li');
+      const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = it.file.name;
+      const info = document.createElement('span'); info.className = 'muted'; info.textContent = 'Convertendo…';
+      li.append(nome, info); lista.append(li);
+      try {
+        const canvas = desenhar(it.bitmap, it.bitmap.width, it.bitmap.height, { fundo: tipo === 'image/jpeg' ? fundo.value : undefined });
+        const blob = await codificar(canvas, tipo, q);
+        if (minha !== rodada) return;
+        const url = URL.createObjectURL(blob); urls.push(url);
+        const de = nomeFormato(it.file.type || 'image/?');
+        info.textContent = `${de} ${tamanho(it.file.size)} → ${nomeFormato(tipo)} ${tamanho(blob.size)}`;
+        const mostrar = () => {
+          comparar.querySelector<HTMLImageElement>('.antes')!.src = it.url;
+          comparar.querySelector<HTMLImageElement>('.depois')!.src = url;
+          comparar.querySelector('.rotulo-antes')!.textContent = `${de} · ${tamanho(it.file.size)}`;
+          comparar.querySelector('.rotulo-depois')!.textContent = `${nomeFormato(tipo)} · ${tamanho(blob.size)}`;
+          comparar.hidden = false;
+        };
+        if (primeira) { mostrar(); primeira = false; }
+        if (itens.length > 1) {
+          const ver = document.createElement('button'); ver.type = 'button'; ver.className = 'btn btn-sec'; ver.textContent = 'Comparar';
+          ver.addEventListener('click', () => { mostrar(); comparar.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+          li.append(ver);
+        }
+        const a = document.createElement('a'); a.className = 'btn'; a.href = url; a.textContent = 'Baixar';
+        a.download = trocarExtensao(it.file.name, extensao(tipo));
+        li.append(a);
+        ok++; antes += it.file.size; depois += blob.size;
+      } catch (e) {
+        info.className = 'erro';
+        info.textContent = e instanceof Error ? e.message : 'Não foi possível converter esta imagem.';
+      }
+    }
+    for (const n of falhas) {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="nome"></span><span class="erro">Não foi possível abrir esta imagem. É uma foto HEIC do iPhone? Use o <a href="/imagem/heic-para-jpg">HEIC para JPG</a>.</span>';
+      li.querySelector('.nome')!.textContent = n;
+      lista.append(li);
+    }
+    if (ok > 1) {
+      resumo.hidden = false;
+      resumo.innerHTML = `<strong>${ok} imagens em ${nomeFormato(tipo)}</strong>${tamanho(antes)} → ${tamanho(depois)} no total.`;
+    }
+  }
+
+  entrada.addEventListener('arquivos', async (e) => {
+    const files = (e as CustomEvent<File[]>).detail;
+    itens.forEach((it) => { it.bitmap.close(); URL.revokeObjectURL(it.url); });
+    itens = []; falhas = [];
+    for (const file of files) {
+      try { itens.push({ file, bitmap: await createImageBitmap(file), url: URL.createObjectURL(file) }); }
+      catch { falhas.push(file.name); }
+    }
+    // Sugere um destino diferente do original quando todas são do mesmo formato.
+    const tipos = new Set(itens.map((it) => it.file.type));
+    const atual = destino();
+    if (tipos.size === 1 && tipos.has(atual)) {
+      const novo = atual === 'image/jpeg' ? 'image/png' : 'image/jpeg';
+      document.querySelector<HTMLInputElement>(`input[name="destino"][value="${novo}"]`)!.checked = true;
+      ajustarCampos();
+    }
+    processar();
+  });
+  document.querySelectorAll<HTMLInputElement>('input[name="destino"]').forEach((r) => r.addEventListener('change', () => { ajustarCampos(); processar(); }));
+  qualidade.addEventListener('input', () => { qualidadeValor.textContent = `${qualidade.value}%`; });
+  qualidade.addEventListener('change', processar);
+  fundo.addEventListener('input', agendar);
+  ajustarCampos();
+</script>
+
+<style>
+  [hidden], :global(.comparar[hidden]) { display: none !important; }
+  .destino { display: flex; flex-direction: column; gap: 8px; }
+  .opcoes-destino { display: flex; gap: 8px; flex-wrap: wrap; }
+  .opcoes-destino label { cursor: pointer; }
+  .opcoes-destino input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .opcoes-destino span {
+    display: inline-block; min-width: 84px; text-align: center; padding: 10px 18px; border: 2px solid var(--line); border-radius: 10px;
+    font: 700 1.05rem var(--f-display); transition: transform 0.2s var(--mola), background-color 0.2s, border-color 0.2s;
+  }
+  .opcoes-destino label:active span { transform: scale(0.95); }
+  .opcoes-destino input:checked + span { background: var(--brand); border-color: var(--brand-ink); color: var(--brand-ink); }
+  .opcoes-destino input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px; }
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .cor { display: flex; align-items: center; gap: 10px; }
+  .cor input { width: 52px; height: 40px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; flex: none; }
+  .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .lista :global(li) { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); animation: entrar 0.3s var(--suave) both; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+  .lista :global(.nome) { font-weight: 600; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+  .lista :global(.muted), .lista :global(.erro) { font-size: 0.95rem; }
+  .lista :global(.btn) { padding: 7px 14px; font-size: 0.95rem; }
+</style>

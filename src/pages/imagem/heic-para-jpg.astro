@@ -1,0 +1,192 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="imagem"
+  slug="heic-para-jpg"
+  titulo="HEIC para JPG"
+  subtitulo="Converta as fotos do iPhone (HEIC) para JPG ou PNG e abra em qualquer computador, site ou aplicativo. Várias fotos de uma vez, sem enviar nada."
+  tituloSeo="HEIC para JPG online grátis: converta fotos do iPhone"
+  descricao="Converta fotos HEIC do iPhone para JPG ou PNG online e grátis. Várias de uma vez, direto no navegador, sem instalar nada e sem enviar suas fotos."
+  passos={[
+    'Escolha as fotos .HEIC (ou .HEIF), arraste para a área indicada ou cole com Ctrl+V.',
+    'Na primeira vez, o conversor é baixado para o seu navegador. Isso leva alguns segundos.',
+    'Escolha JPG (arquivo menor) ou PNG (sem perda) e, para JPG, a qualidade.',
+    'Clique em "Baixar" ao lado de cada foto convertida.',
+  ]}
+  perguntas={[
+    { p: 'O que é um arquivo HEIC?', r: 'É o formato que o iPhone usa por padrão para fotos desde o iOS 11. Ele guarda a mesma foto em quase metade do espaço do JPG, mas o Windows, muitos sites e sistemas de cadastro ainda não abrem esse formato.' },
+    { p: 'Minhas fotos são enviadas para algum servidor?', r: 'Não. A conversão acontece dentro do seu navegador. O site só baixa o programa conversor; suas fotos nunca saem do seu celular ou computador.' },
+    { p: 'A foto perde qualidade ao converter HEIC para JPG?', r: 'Com qualidade de 90% ou mais a diferença não é visível. Se precisar de uma cópia sem nenhuma perda, escolha PNG, mas o arquivo fica bem maior.' },
+    { p: 'Como fazer o iPhone tirar fotos em JPG em vez de HEIC?', r: 'Abra Ajustes > Câmera > Formatos e escolha "Mais Compatível". As próximas fotos saem em JPG. As fotos antigas continuam em HEIC e podem ser convertidas aqui.' },
+    { p: 'Por que a conversão demora um pouco?', r: 'O HEIC é um formato complexo e o navegador precisa decodificar a foto inteira, pixel por pixel. Uma foto de 12 megapixels leva de 1 a 4 segundos, dependendo do aparelho.' },
+    { p: 'Os dados da foto (local, data) são mantidos?', r: 'Não. O arquivo convertido sai sem os metadados EXIF, como localização GPS e modelo do celular. Isso é bom para privacidade quando você vai publicar a foto.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept=".heic,.heif,image/heic,image/heif" multiple texto="Escolher fotos HEIC" />
+
+    <div class="opcoes">
+      <div class="campo">
+        <label for="formato">Converter para</label>
+        <select id="formato">
+          <option value="image/jpeg" selected>JPG (menor, abre em tudo)</option>
+          <option value="image/png">PNG (sem perda, arquivo maior)</option>
+        </select>
+      </div>
+      <div class="campo" id="campo-qualidade">
+        <label for="qualidade">Qualidade: <span id="qualidade-valor">90%</span></label>
+        <input id="qualidade" type="range" min="50" max="100" step="5" value="90" />
+      </div>
+    </div>
+
+    <p id="aviso" class="muted" role="status" aria-live="polite" hidden></p>
+    <p id="resumo" class="resultado" hidden></p>
+    <ul id="lista" class="lista"></ul>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que o iPhone salva fotos em HEIC</h2>
+    <p>HEIC é a versão da Apple do formato HEIF, criado para guardar fotos com muito menos espaço. Uma foto que ocupa 4 MB em JPG costuma ficar com 2 MB ou menos em HEIC, com a mesma qualidade. Para quem tem um iPhone com pouco armazenamento, isso faz muita diferença.</p>
+    <p>O problema aparece na hora de usar a foto fora do iPhone. O Windows só abre HEIC com uma extensão paga, muitos sites de inscrição, concursos e órgãos públicos só aceitam JPG ou PNG, e alguns aplicativos de edição simplesmente não reconhecem o arquivo. É aí que esta ferramenta ajuda.</p>
+    <h2>Quando escolher JPG e quando escolher PNG</h2>
+    <ul>
+      <li><strong>JPG:</strong> a escolha certa para quase tudo. Para enviar uma foto de documento para um cadastro, anexar em um e-mail ou postar em um site, use JPG com qualidade entre 80% e 90%.</li>
+      <li><strong>PNG:</strong> use quando for editar a foto várias vezes ou quando precisa da cópia mais fiel possível. O arquivo pode ficar de 3 a 5 vezes maior que o JPG.</li>
+    </ul>
+    <h2>Dicas para converter muitas fotos</h2>
+    <p>Você pode selecionar dezenas de fotos de uma vez. Elas são convertidas uma de cada vez para não travar o navegador, e cada uma ganha seu botão de baixar assim que fica pronta. Em celulares mais simples, prefira grupos de até 20 fotos.</p>
+    <p>Se você passou as fotos do iPhone para o computador pelo cabo e elas vieram em HEIC, vale mudar a opção do iPhone em Ajustes &gt; Fotos &gt; Transferir para Mac ou PC para "Automático". Assim o próprio iPhone converte para JPG nas próximas transferências.</p>
+    <p>Fotos ao vivo (Live Photos) e rajadas guardam várias imagens no mesmo arquivo. Aqui é convertida a imagem principal, que é a que aparece na galeria.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho, trocarExtensao } from '../../lib/arquivos';
+  import { extensao, ehHeic, type FormatoSaida } from '../../lib/imagem';
+  import { codificar, desenhar } from '../../lib/canvas';
+
+  const entrada = document.getElementById('entrada')!;
+  const formato = document.getElementById('formato') as HTMLSelectElement;
+  const qualidade = document.getElementById('qualidade') as HTMLInputElement;
+  const qualidadeValor = document.getElementById('qualidade-valor')!;
+  const campoQualidade = document.getElementById('campo-qualidade')!;
+  const aviso = document.getElementById('aviso')!;
+  const lista = document.getElementById('lista')!;
+  const resumo = document.getElementById('resumo')!;
+
+  type Heic2any = (o: { blob: Blob; toType?: string; quality?: number }) => Promise<Blob | Blob[]>;
+  let conversor: Promise<Heic2any> | null = null;
+  function carregarConversor(): Promise<Heic2any> {
+    if (!conversor) {
+      aviso.hidden = false;
+      aviso.textContent = 'Carregando o conversor de HEIC (só na primeira vez)…';
+      conversor = import('heic2any').then((m) => m.default as unknown as Heic2any);
+      conversor.catch(() => { conversor = null; });
+    }
+    return conversor;
+  }
+
+  // Cada foto é decodificada uma vez só; trocar formato ou qualidade só refaz a gravação.
+  const decodificadas = new Map<File, Promise<ImageBitmap>>();
+
+  async function decodificar(file: File): Promise<ImageBitmap> {
+    // O Safari já abre HEIC sozinho: é mais rápido e não precisa baixar nada.
+    try { return await createImageBitmap(file); } catch { /* segue para o conversor */ }
+    if (!ehHeic(file.name, file.type)) throw new Error('Este arquivo não é uma foto HEIC nem uma imagem que o navegador consiga abrir.');
+    let heic2any: Heic2any;
+    try { heic2any = await carregarConversor(); }
+    catch { throw new Error('Não foi possível carregar o conversor. Confira a internet e tente de novo.'); }
+    try {
+      const r = await heic2any({ blob: file, toType: 'image/png' });
+      return await createImageBitmap(Array.isArray(r) ? r[0] : r);
+    } catch {
+      throw new Error('Não foi possível ler esta foto. O arquivo pode estar corrompido ou não ser um HEIC de verdade.');
+    }
+  }
+
+  function obter(file: File): Promise<ImageBitmap> {
+    let p = decodificadas.get(file);
+    if (!p) { p = decodificar(file); decodificadas.set(file, p); }
+    return p;
+  }
+
+  let arquivos: File[] = [];
+  const urls: string[] = [];
+  let rodada = 0;
+
+  async function processar() {
+    const minha = ++rodada;
+    urls.splice(0).forEach(URL.revokeObjectURL);
+    lista.innerHTML = '';
+    resumo.hidden = true;
+    if (!arquivos.length) return;
+
+    const tipo = formato.value as FormatoSaida;
+    const q = Number(qualidade.value) / 100;
+    let ok = 0, total = 0;
+
+    const itens = arquivos.map((file) => {
+      const li = document.createElement('li');
+      const mini = document.createElement('span'); mini.className = 'mini';
+      const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = file.name;
+      const info = document.createElement('span'); info.className = 'muted'; info.textContent = 'Na fila…';
+      li.append(mini, nome, info);
+      lista.append(li);
+      return { file, li, mini, info };
+    });
+
+    for (const { file, li, mini, info } of itens) {
+      if (minha !== rodada) return;
+      info.textContent = 'Convertendo…';
+      try {
+        const bitmap = await obter(file);
+        const canvas = desenhar(bitmap, bitmap.width, bitmap.height, { fundo: tipo === 'image/jpeg' ? '#fff' : undefined });
+        const blob = await codificar(canvas, tipo, q);
+        if (minha !== rodada) return;
+        const url = URL.createObjectURL(blob); urls.push(url);
+        const img = document.createElement('img'); img.src = url; img.alt = ''; img.decoding = 'async';
+        mini.append(img);
+        info.textContent = `${bitmap.width} × ${bitmap.height} px · ${tamanho(file.size)} → ${tamanho(blob.size)}`;
+        const a = document.createElement('a'); a.className = 'btn'; a.href = url; a.textContent = 'Baixar';
+        a.download = trocarExtensao(file.name, extensao(tipo));
+        li.append(a);
+        ok++; total += blob.size;
+      } catch (e) {
+        decodificadas.delete(file);
+        info.className = 'erro';
+        info.textContent = e instanceof Error ? e.message : 'Não foi possível converter esta foto.';
+      }
+      if (aviso.textContent?.startsWith('Carregando')) aviso.hidden = true;
+    }
+    if (minha === rodada && ok > 0) {
+      resumo.hidden = false;
+      resumo.innerHTML = `<strong>${ok} de ${arquivos.length} ${arquivos.length === 1 ? 'foto convertida' : 'fotos convertidas'}</strong>${tamanho(total)} no total, em ${extensao(tipo).toUpperCase()}.`;
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => {
+    decodificadas.forEach((p) => p.then((b) => b.close(), () => {}));
+    decodificadas.clear();
+    arquivos = (e as CustomEvent<File[]>).detail;
+    processar();
+  });
+  formato.addEventListener('change', () => { campoQualidade.hidden = formato.value !== 'image/jpeg'; processar(); });
+  qualidade.addEventListener('input', () => { qualidadeValor.textContent = `${qualidade.value}%`; });
+  qualidade.addEventListener('change', processar);
+</script>
+
+<style>
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .campo[hidden] { display: none; }
+  .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .lista :global(li) { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); animation: entrar 0.3s var(--suave) both; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+  .lista :global(.mini) { width: 48px; height: 48px; flex: none; border-radius: 8px; overflow: hidden; background: var(--bg); }
+  .lista :global(.mini img) { width: 100%; height: 100%; object-fit: cover; display: block; animation: aparecer 0.25s var(--suave) both; }
+  @keyframes aparecer { from { opacity: 0; } }
+  .lista :global(.nome) { font-weight: 600; flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+  .lista :global(.muted), .lista :global(.erro) { flex: 1 1 200px; font-size: 0.95rem; }
+  .lista :global(.btn) { padding: 7px 14px; font-size: 0.95rem; }
+</style>

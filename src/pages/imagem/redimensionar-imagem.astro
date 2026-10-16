@@ -1,0 +1,255 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import Comparar from '../../components/Comparar.astro';
+---
+<Ferramenta
+  secao="imagem"
+  slug="redimensionar-imagem"
+  titulo="Redimensionar imagem"
+  subtitulo="Mude a largura e a altura de fotos em pixels ou em porcentagem, mantendo a proporção. Funciona com JPG, PNG e WebP, várias de uma vez."
+  tituloSeo="Redimensionar imagem online: mude o tamanho em pixels"
+  descricao="Redimensione imagens JPG, PNG e WebP online e grátis. Escolha a largura e a altura em pixels ou em porcentagem, mantendo a proporção, sem enviar arquivos."
+  passos={[
+    'Escolha uma ou várias imagens, arraste para a área indicada ou cole com Ctrl+V.',
+    'Escolha "Em pixels" para digitar a largura ou a altura, ou "Em porcentagem" para reduzir tudo na mesma medida.',
+    'Deixe "Manter proporção" marcado para a foto não ficar esticada.',
+    'Confira o resultado no comparador e clique em "Baixar".',
+  ]}
+  perguntas={[
+    { p: 'Como redimensionar uma imagem sem perder qualidade?', r: 'Diminuir uma imagem quase não perde qualidade visível, desde que a proporção seja mantida. Aqui a redução é feita em etapas, o que deixa o resultado mais nítido. Aumentar uma imagem pequena, por outro lado, sempre deixa a foto mais borrada, porque os detalhes que faltam não podem ser inventados.' },
+    { p: 'Qual a diferença entre redimensionar e comprimir?', r: 'Redimensionar muda a quantidade de pixels (por exemplo, de 4000 × 3000 para 1200 × 900). Comprimir mantém os pixels e diminui o peso do arquivo. Para enviar fotos por e-mail, normalmente vale fazer os dois.' },
+    { p: 'O que significa "manter proporção"?', r: 'É manter a relação entre largura e altura. Se você muda só a largura, a altura é calculada sozinha, e a foto não fica achatada nem esticada. Desmarque apenas quando precisar de um tamanho exato, como 800 × 800.' },
+    { p: 'Dá para redimensionar várias fotos de uma vez?', r: 'Sim. Escolha todas juntas. Com "Manter proporção", cada foto usa a largura (ou altura) que você digitou e calcula o outro lado pela proporção dela, então fotos em pé e deitadas ficam certas.' },
+    { p: 'Minhas imagens são enviadas para a internet?', r: 'Não. Tudo é feito pelo navegador, no seu próprio aparelho. As imagens não são enviadas para nenhum servidor.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/avif" multiple texto="Escolher imagens" />
+
+    <div class="modo" role="radiogroup" aria-label="Como redimensionar">
+      <label><input type="radio" name="modo" value="pixels" checked /> <span>Em pixels</span></label>
+      <label><input type="radio" name="modo" value="porcentagem" /> <span>Em porcentagem</span></label>
+    </div>
+
+    <div id="painel-pixels" class="stack">
+      <div class="medidas">
+        <div class="campo">
+          <label for="largura">Largura (px)</label>
+          <input id="largura" type="number" inputmode="numeric" min="1" max="16384" step="1" value="1920" />
+        </div>
+        <span class="vezes" aria-hidden="true">×</span>
+        <div class="campo">
+          <label for="altura">Altura (px)</label>
+          <input id="altura" type="number" inputmode="numeric" min="1" max="16384" step="1" value="1080" />
+        </div>
+      </div>
+      <label class="marcar"><input id="manter" type="checkbox" checked /> Manter proporção</label>
+      <label class="marcar" id="rotulo-nao-aumentar" hidden><input id="nao-aumentar" type="checkbox" checked /> Não aumentar as imagens que já são menores</label>
+      <div class="atalhos" aria-label="Larguras comuns">
+        <span class="muted">Larguras comuns:</span>
+        <button type="button" class="btn btn-sec" data-largura="1920">1920</button>
+        <button type="button" class="btn btn-sec" data-largura="1280">1280</button>
+        <button type="button" class="btn btn-sec" data-largura="1080">1080</button>
+        <button type="button" class="btn btn-sec" data-largura="800">800</button>
+        <button type="button" class="btn btn-sec" data-largura="500">500</button>
+      </div>
+    </div>
+
+    <div id="painel-porcentagem" class="campo" hidden>
+      <label for="porcentagem">Tamanho: <span id="porcentagem-valor">50%</span> do original</label>
+      <input id="porcentagem" type="range" min="5" max="200" step="5" value="50" />
+    </div>
+
+    <div class="campo formato">
+      <label for="formato">Salvar como</label>
+      <select id="formato">
+        <option value="mesmo" selected>Mesmo formato do original</option>
+        <option value="image/jpeg">JPG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+    </div>
+
+    <Comparar id="comparar" antes="Original" depois="Redimensionada" />
+    <ul id="lista" class="lista"></ul>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve redimensionar uma imagem</h2>
+    <p>Uma foto tirada com um celular atual tem facilmente 4000 × 3000 pixels, ou 12 megapixels. Isso é ótimo para imprimir, mas é muito mais do que uma tela precisa. Em um site, em uma apresentação ou num anexo de e-mail, essa foto pesa vários megabytes e demora para abrir. Redimensionar é diminuir essa quantidade de pixels para o tamanho que realmente vai ser usado.</p>
+    <h2>Tamanhos que costumam ser pedidos</h2>
+    <ul>
+      <li><strong>Sites e blogs:</strong> 1200 a 1920 px de largura deixam a foto nítida em telas grandes e leve para carregar.</li>
+      <li><strong>Redes sociais:</strong> 1080 px de largura é o tamanho que o Instagram usa. Fotos maiores são reduzidas pelo próprio aplicativo, às vezes com perda de nitidez.</li>
+      <li><strong>Cadastros e inscrições:</strong> muitos formulários de concurso, faculdade e órgãos públicos pedem algo como 300 × 400 px ou limitam o arquivo a poucos kilobytes. Reduza o tamanho aqui e, se ainda passar do limite, use a ferramenta de comprimir.</li>
+      <li><strong>Lojas virtuais:</strong> marketplaces costumam pedir fotos quadradas de 1000 × 1000 px ou mais. Recorte primeiro para deixar quadrada e depois redimensione.</li>
+    </ul>
+    <h2>Pixels ou porcentagem?</h2>
+    <p>Use pixels quando alguém pediu um tamanho exato, ou quando você sabe onde a imagem vai aparecer. Use porcentagem quando só quer a imagem menor, por exemplo 50% para ficar com um quarto dos pixels e um arquivo bem mais leve.</p>
+    <p>Uma dica: aumentar uma imagem acima de 100% não cria detalhes novos, só deixa os pixels maiores e a foto mais macia. Se precisar de uma versão maior, sempre comece pelo arquivo original de maior resolução que você tiver.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho, trocarExtensao } from '../../lib/arquivos';
+  import { calcularTamanho, extensao, formatoParecido, proporcional, type FormatoSaida, type OpcoesTamanho, type Tamanho } from '../../lib/imagem';
+  import { codificar, desenhar } from '../../lib/canvas';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const largura = $<HTMLInputElement>('largura');
+  const altura = $<HTMLInputElement>('altura');
+  const manter = $<HTMLInputElement>('manter');
+  const naoAumentar = $<HTMLInputElement>('nao-aumentar');
+  const rotuloNaoAumentar = $('rotulo-nao-aumentar');
+  const porcentagem = $<HTMLInputElement>('porcentagem');
+  const porcentagemValor = $('porcentagem-valor');
+  const painelPixels = $('painel-pixels');
+  const painelPorcentagem = $('painel-porcentagem');
+  const formato = $<HTMLSelectElement>('formato');
+  const comparar = $('comparar');
+  const lista = $('lista');
+
+  interface Item { file: File; bitmap: ImageBitmap; url: string; }
+  let itens: Item[] = [];
+  let base: 'largura' | 'altura' = 'largura';
+  const urls: string[] = [];
+
+  const modo = () => (document.querySelector<HTMLInputElement>('input[name="modo"]:checked')!.value as 'pixels' | 'porcentagem');
+  const referencia = (): Tamanho | null => itens[0] ? { largura: itens[0].bitmap.width, altura: itens[0].bitmap.height } : null;
+
+  function opcoes(): OpcoesTamanho {
+    return modo() === 'porcentagem'
+      ? { modo: 'porcentagem', porcentagem: Number(porcentagem.value) }
+      : { modo: 'pixels', largura: Number(largura.value) || 1, altura: Number(altura.value) || 1, manter: manter.checked, base, naoAumentar: itens.length > 1 && naoAumentar.checked };
+  }
+
+  // Com proporção travada, mexer em um lado atualiza o outro (pela primeira imagem).
+  function completarOutroLado() {
+    const ref = referencia();
+    if (!ref || !manter.checked) return;
+    const v = Number(base === 'largura' ? largura.value : altura.value);
+    if (!v) return;
+    const t = proporcional(ref, base, v);
+    if (base === 'largura') altura.value = String(t.altura); else largura.value = String(t.largura);
+  }
+
+  let espera = 0;
+  const agendar = () => { clearTimeout(espera); espera = window.setTimeout(processar, 250); };
+
+  let rodada = 0;
+  async function processar() {
+    const minha = ++rodada;
+    urls.splice(0).forEach(URL.revokeObjectURL);
+    lista.innerHTML = '';
+    if (!itens.length) { comparar.hidden = true; return; }
+    const o = opcoes();
+    let primeira = true;
+    for (const it of itens) {
+      const li = document.createElement('li');
+      const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = it.file.name;
+      const info = document.createElement('span'); info.className = 'muted'; info.textContent = 'Redimensionando…';
+      li.append(nome, info); lista.append(li);
+      try {
+        const orig = { largura: it.bitmap.width, altura: it.bitmap.height };
+        const t = calcularTamanho(orig, o);
+        const tipo: FormatoSaida = formato.value === 'mesmo' ? formatoParecido(it.file.type) : (formato.value as FormatoSaida);
+        const canvas = desenhar(it.bitmap, t.largura, t.altura, { fundo: tipo === 'image/jpeg' ? '#fff' : undefined });
+        const blob = await codificar(canvas, tipo, 0.92);
+        if (minha !== rodada) return;
+        const url = URL.createObjectURL(blob); urls.push(url);
+        const rotulo = `${t.largura} × ${t.altura} px · ${tamanho(blob.size)}`;
+        info.textContent = `${orig.largura} × ${orig.altura} → ${rotulo}`;
+        const mostrar = () => {
+          comparar.querySelector<HTMLImageElement>('.antes')!.src = it.url;
+          comparar.querySelector<HTMLImageElement>('.depois')!.src = url;
+          comparar.querySelector('.rotulo-antes')!.textContent = `Original · ${orig.largura} × ${orig.altura}`;
+          comparar.querySelector('.rotulo-depois')!.textContent = `Nova · ${t.largura} × ${t.altura}`;
+          comparar.hidden = false;
+        };
+        if (primeira) { mostrar(); primeira = false; }
+        const a = document.createElement('a'); a.className = 'btn'; a.href = url; a.textContent = 'Baixar';
+        a.download = trocarExtensao(it.file.name, `${t.largura}x${t.altura}.${extensao(tipo)}`);
+        if (itens.length > 1) {
+          const ver = document.createElement('button'); ver.type = 'button'; ver.className = 'btn btn-sec'; ver.textContent = 'Comparar';
+          ver.addEventListener('click', () => { mostrar(); comparar.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+          li.append(ver);
+        }
+        li.append(a);
+      } catch (e) {
+        info.className = 'erro';
+        info.textContent = e instanceof Error ? e.message : 'Não foi possível redimensionar esta imagem.';
+      }
+    }
+  }
+
+  entrada.addEventListener('arquivos', async (e) => {
+    const files = (e as CustomEvent<File[]>).detail;
+    itens.forEach((it) => { it.bitmap.close(); URL.revokeObjectURL(it.url); });
+    itens = [];
+    lista.innerHTML = '';
+    const falhas: string[] = [];
+    for (const file of files) {
+      try { itens.push({ file, bitmap: await createImageBitmap(file), url: URL.createObjectURL(file) }); }
+      catch { falhas.push(file.name); }
+    }
+    rotuloNaoAumentar.hidden = !manter.checked || itens.length < 2;
+    const ref = referencia();
+    if (ref) {
+      // Sugere metade do tamanho, um ponto de partida comum.
+      base = 'largura';
+      largura.value = String(Math.max(1, Math.round(ref.largura / 2)));
+      if (manter.checked) completarOutroLado(); else altura.value = String(Math.max(1, Math.round(ref.altura / 2)));
+    }
+    await processar();
+    for (const nome of falhas) {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="nome"></span><span class="erro">Não foi possível abrir esta imagem. É uma foto HEIC do iPhone? Converta antes no <a href="/imagem/heic-para-jpg">HEIC para JPG</a>.</span>';
+      li.querySelector('.nome')!.textContent = nome;
+      lista.append(li);
+    }
+  });
+
+  document.querySelectorAll<HTMLInputElement>('input[name="modo"]').forEach((r) => r.addEventListener('change', () => {
+    painelPixels.hidden = modo() !== 'pixels';
+    painelPorcentagem.hidden = modo() !== 'porcentagem';
+    processar();
+  }));
+  largura.addEventListener('input', () => { base = 'largura'; completarOutroLado(); agendar(); });
+  altura.addEventListener('input', () => { base = 'altura'; completarOutroLado(); agendar(); });
+  manter.addEventListener('change', () => { rotuloNaoAumentar.hidden = !manter.checked || itens.length < 2; completarOutroLado(); processar(); });
+  naoAumentar.addEventListener('change', processar);
+  document.querySelectorAll<HTMLButtonElement>('[data-largura]').forEach((b) => b.addEventListener('click', () => {
+    base = 'largura'; largura.value = b.dataset.largura!; completarOutroLado(); processar();
+  }));
+  porcentagem.addEventListener('input', () => { porcentagemValor.textContent = `${porcentagem.value}%`; agendar(); });
+  formato.addEventListener('change', processar);
+</script>
+
+<style>
+  [hidden], :global(.comparar[hidden]) { display: none !important; }
+  .modo { display: flex; gap: 8px; flex-wrap: wrap; }
+  .modo label { cursor: pointer; }
+  .modo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .modo span {
+    display: inline-block; padding: 8px 16px; border: 2px solid var(--line); border-radius: 999px; font-weight: 600;
+    transition: transform 0.2s var(--mola), background-color 0.2s, border-color 0.2s;
+  }
+  .modo label:active span { transform: scale(0.96); }
+  .modo input:checked + span { background: var(--brand); border-color: var(--brand-ink); color: var(--brand-ink); }
+  .modo input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px; }
+  .medidas { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 10px; }
+  .vezes { padding-bottom: 10px; color: var(--muted); font-weight: 700; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; width: fit-content; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--brand); }
+  .atalhos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .atalhos .btn { padding: 4px 12px; font-size: 0.9rem; }
+  .formato { max-width: 320px; }
+  .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .lista :global(li) { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); animation: entrar 0.3s var(--suave) both; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+  .lista :global(.nome) { font-weight: 600; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+  .lista :global(.muted), .lista :global(.erro) { font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+  .lista :global(.btn) { padding: 7px 14px; font-size: 0.95rem; }
+</style>
