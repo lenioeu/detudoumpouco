@@ -24,13 +24,16 @@ export function textoWifi({ rede, senha, seguranca, oculta }: Wifi): string {
 
 /**
  * Só os dígitos do telefone, com 55 na frente quando a pessoa digitou DDD + número
- * (10 ou 11 dígitos). Devolve null se não parecer um telefone.
+ * (10 ou 11 dígitos). Quem começa com + ou 00 já digitou o código do país
+ * (ex.: +1 415 555 0100 tem 11 dígitos e não é do Brasil). Devolve null se não parecer um telefone.
  */
 export function telefoneWhatsapp(tel: string): string | null {
+  const internacional = /^\s*(\+|00)/.test(tel);
   let d = tel.replace(/\D/g, '');
   if (d.startsWith('0')) d = d.replace(/^0+/, '');
-  if (d.length === 10 || d.length === 11) d = '55' + d;
-  return d.length >= 12 && d.length <= 15 ? d : null;
+  if (!internacional && (d.length === 10 || d.length === 11)) d = '55' + d;
+  // Com código do país explícito aceita números curtos (EUA: 11 dígitos); sem ele, exige 55 + DDD + número.
+  return d.length >= (internacional ? 8 : 12) && d.length <= 15 ? d : null;
 }
 
 /** Link wa.me que abre a conversa, com a mensagem já escrita se houver. */
