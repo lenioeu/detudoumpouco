@@ -1,0 +1,332 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+
+const proporcoes = [
+  { valor: 'livre', nome: 'Livre' },
+  { valor: '1:1', nome: '1:1' },
+  { valor: '4:3', nome: '4:3' },
+  { valor: '3:4', nome: '3:4' },
+  { valor: '16:9', nome: '16:9' },
+  { valor: '9:16', nome: '9:16' },
+  { valor: '3:2', nome: '3:2' },
+  { valor: '4:5', nome: '4:5' },
+];
+---
+<Ferramenta
+  secao="imagem"
+  slug="recortar-imagem"
+  titulo="Recortar imagem"
+  subtitulo="Corte fotos e prints no tamanho que quiser: arraste a moldura ou digite as medidas em pixels. Proporções prontas para redes sociais."
+  tituloSeo="Recortar imagem online grátis: corte fotos no navegador"
+  descricao="Recorte imagens JPG, PNG e WebP online e grátis. Arraste a moldura, escolha proporções como 1:1, 4:3 ou 16:9 e baixe na hora, sem enviar a foto."
+  passos={[
+    'Escolha uma imagem, arraste para a área indicada ou cole um print com Ctrl+V.',
+    'Escolha uma proporção pronta (1:1 para foto quadrada, 16:9 para capa de vídeo) ou deixe "Livre".',
+    'Arraste a moldura para posicionar e puxe os cantos para mudar o tamanho. Para medidas exatas, digite os valores em pixels.',
+    'Confira a prévia do recorte e clique em "Baixar".',
+  ]}
+  perguntas={[
+    { p: 'Como recortar uma foto em formato quadrado?', r: 'Escolha a proporção 1:1. A moldura fica quadrada e continua quadrada enquanto você puxa os cantos. Depois é só posicionar sobre a parte da foto que quer manter.' },
+    { p: 'Dá para recortar com medidas exatas em pixels?', r: 'Sim. Abaixo da imagem há os campos X, Y, largura e altura, todos em pixels da imagem original. Digite os valores e a moldura se ajusta sozinha.' },
+    { p: 'O recorte diminui a qualidade da foto?', r: 'Não. Os pixels que ficam dentro da moldura são copiados como estão, sem redimensionar. Em PNG o recorte é idêntico ao original; em JPG e WebP é usada qualidade alta, de 92%.' },
+    { p: 'Qual proporção usar para Instagram, WhatsApp e YouTube?', r: 'No feed do Instagram, 1:1 (quadrado) ou 4:5 (retrato). Stories, Reels e status do WhatsApp usam 9:16. Capas e miniaturas do YouTube usam 16:9.' },
+    { p: 'A imagem é enviada para algum site?', r: 'Não. O recorte é feito pelo navegador, no seu aparelho. A imagem não sai do seu computador ou celular.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/avif" texto="Escolher imagem" />
+    <p id="erro" class="erro" role="alert" hidden></p>
+
+    <div id="editor" class="stack" hidden>
+      <div class="proporcoes" role="radiogroup" aria-label="Proporção do recorte">
+        {proporcoes.map((p, i) => (
+          <label><input type="radio" name="proporcao" value={p.valor} checked={i === 0} /> <span>{p.nome}</span></label>
+        ))}
+      </div>
+
+      <div class="palco" id="palco">
+        <img id="foto" alt="Imagem a recortar" draggable="false" />
+        <div id="caixa" class="caixa" data-alca="mover" tabindex="0" role="group"
+             aria-label="Área de recorte. Use as setas para mover e Shift com as setas para mudar o tamanho.">
+          <span class="grade" aria-hidden="true"></span>
+          <span class="alca" data-alca="no" aria-hidden="true"></span>
+          <span class="alca" data-alca="ne" aria-hidden="true"></span>
+          <span class="alca" data-alca="so" aria-hidden="true"></span>
+          <span class="alca" data-alca="se" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="medidas">
+        <div class="campo"><label for="rx">X</label><input id="rx" type="number" inputmode="numeric" min="0" step="1" /></div>
+        <div class="campo"><label for="ry">Y</label><input id="ry" type="number" inputmode="numeric" min="0" step="1" /></div>
+        <div class="campo"><label for="rl">Largura</label><input id="rl" type="number" inputmode="numeric" min="1" step="1" /></div>
+        <div class="campo"><label for="ra">Altura</label><input id="ra" type="number" inputmode="numeric" min="1" step="1" /></div>
+      </div>
+
+      <div class="linha-acoes">
+        <div class="campo formato">
+          <label for="formato">Salvar como</label>
+          <select id="formato">
+            <option value="mesmo" selected>Mesmo formato do original</option>
+            <option value="image/jpeg">JPG</option>
+            <option value="image/png">PNG</option>
+            <option value="image/webp">WebP</option>
+          </select>
+        </div>
+        <button type="button" id="tudo" class="btn btn-sec">Selecionar tudo</button>
+      </div>
+
+      <div class="saida resultado">
+        <div class="previa"><img id="previa" alt="Prévia do recorte" /></div>
+        <div class="saida-texto">
+          <p id="info" aria-live="polite"></p>
+          <a id="baixar" class="btn" download>Baixar recorte</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Quando recortar uma imagem</h2>
+    <p>Recortar é escolher só a parte da imagem que interessa e jogar fora o resto. Parece simples, e é, mas resolve muita coisa do dia a dia: tirar a barra de notificações de um print do celular, deixar só o rosto numa foto de grupo para usar no perfil, cortar a borda torta de um documento fotografado ou destacar um trecho de uma planilha para mandar no grupo do trabalho.</p>
+    <h2>Proporções mais usadas</h2>
+    <ul>
+      <li><strong>1:1 (quadrado):</strong> foto de perfil do WhatsApp, Instagram e LinkedIn, e fotos de produto em lojas virtuais.</li>
+      <li><strong>4:5:</strong> o retrato mais alto que o feed do Instagram mostra sem cortar.</li>
+      <li><strong>9:16:</strong> tela inteira do celular, para Stories, Reels, TikTok e status.</li>
+      <li><strong>16:9:</strong> telas de TV e computador, slides e miniaturas de vídeo.</li>
+      <li><strong>3:4 e 4:3:</strong> a proporção padrão das câmeras de celular, em pé e deitada.</li>
+      <li><strong>3:2:</strong> a proporção das câmeras fotográficas e da foto revelada 10 × 15 cm.</li>
+    </ul>
+    <h2>Dicas para um bom recorte</h2>
+    <p>As linhas finas dentro da moldura dividem a área em nove partes. Fotógrafos chamam isso de regra dos terços: colocar o assunto principal sobre uma dessas linhas, em vez de bem no centro, costuma deixar a foto mais agradável. Num retrato, por exemplo, os olhos ficam bem na linha de cima.</p>
+    <p>Lembre que recortar diminui a quantidade de pixels. Se você cortar um pedaço pequeno de uma foto e depois ampliar, ela vai parecer borrada. Para usar em um tamanho específico, recorte primeiro na proporção certa e depois ajuste as medidas na ferramenta de redimensionar.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho, trocarExtensao } from '../../lib/arquivos';
+  import {
+    aplicarProporcao, arrastarRecorte, extensao, formatoParecido, lerProporcao, limitarRecorte, recorteInicial,
+    type Alca, type FormatoSaida, type Retangulo, type Tamanho,
+  } from '../../lib/imagem';
+  import { codificar, desenhar } from '../../lib/canvas';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const erro = $('erro');
+  const editor = $('editor');
+  const foto = $<HTMLImageElement>('foto');
+  const caixa = $('caixa');
+  const campos = { x: $<HTMLInputElement>('rx'), y: $<HTMLInputElement>('ry'), largura: $<HTMLInputElement>('rl'), altura: $<HTMLInputElement>('ra') };
+  const formato = $<HTMLSelectElement>('formato');
+  const previa = $<HTMLImageElement>('previa');
+  const info = $('info');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let arquivo: File | null = null;
+  let bitmap: ImageBitmap | null = null;
+  let img: Tamanho = { largura: 1, altura: 1 };
+  let r: Retangulo = { x: 0, y: 0, largura: 1, altura: 1 };
+  let urlFoto = '', urlRecorte = '';
+
+  const proporcao = () => lerProporcao(document.querySelector<HTMLInputElement>('input[name="proporcao"]:checked')!.value);
+
+  function desenharCaixa() {
+    caixa.style.left = `${(r.x / img.largura) * 100}%`;
+    caixa.style.top = `${(r.y / img.altura) * 100}%`;
+    caixa.style.width = `${(r.largura / img.largura) * 100}%`;
+    caixa.style.height = `${(r.altura / img.altura) * 100}%`;
+    campos.x.value = String(r.x); campos.y.value = String(r.y);
+    campos.largura.value = String(r.largura); campos.altura.value = String(r.altura);
+  }
+
+  let espera = 0;
+  const agendar = () => { clearTimeout(espera); espera = window.setTimeout(gerar, 200); };
+
+  let rodada = 0;
+  async function gerar() {
+    if (!bitmap || !arquivo) return;
+    const minha = ++rodada;
+    const tipo: FormatoSaida = formato.value === 'mesmo' ? formatoParecido(arquivo.type) : (formato.value as FormatoSaida);
+    try {
+      const canvas = desenhar(bitmap, r.largura, r.altura, { recorte: r, fundo: tipo === 'image/jpeg' ? '#fff' : undefined });
+      const blob = await codificar(canvas, tipo, 0.92);
+      if (minha !== rodada) return;
+      if (urlRecorte) URL.revokeObjectURL(urlRecorte);
+      urlRecorte = URL.createObjectURL(blob);
+      previa.src = urlRecorte;
+      baixar.href = urlRecorte;
+      baixar.download = trocarExtensao(arquivo.name, `recortada.${extensao(tipo)}`);
+      baixar.hidden = false;
+      info.innerHTML = '';
+      const forte = document.createElement('strong'); forte.textContent = `${r.largura} × ${r.altura} px`;
+      info.append(forte, `${extensao(tipo).toUpperCase()} · ${tamanho(blob.size)}`);
+    } catch (e) {
+      baixar.hidden = true;
+      info.innerHTML = '';
+      const s = document.createElement('span'); s.className = 'erro';
+      s.textContent = e instanceof Error ? e.message : 'Não foi possível recortar a imagem.';
+      info.append(s);
+    }
+  }
+
+  function atualizar(novo: Retangulo, gerarAgora = false) {
+    r = limitarRecorte(novo, img);
+    desenharCaixa();
+    if (gerarAgora) { clearTimeout(espera); gerar(); } else agendar();
+  }
+
+  function inicio(p: number | null): Retangulo {
+    if (p) return recorteInicial(img, p);
+    // Livre: começa com uma margem de 10% para os cantos ficarem fáceis de pegar.
+    return { x: img.largura * 0.1, y: img.altura * 0.1, largura: img.largura * 0.8, altura: img.altura * 0.8 };
+  }
+
+  entrada.addEventListener('arquivos', async (e) => {
+    const file = (e as CustomEvent<File[]>).detail[0];
+    erro.hidden = true;
+    try {
+      const novo = await createImageBitmap(file);
+      bitmap?.close();
+      bitmap = novo; arquivo = file;
+    } catch {
+      erro.hidden = false;
+      erro.innerHTML = 'Não foi possível abrir esta imagem. É uma foto HEIC do iPhone? Converta antes no <a href="/imagem/heic-para-jpg">HEIC para JPG</a>.';
+      return;
+    }
+    img = { largura: bitmap.width, altura: bitmap.height };
+    if (urlFoto) URL.revokeObjectURL(urlFoto);
+    urlFoto = URL.createObjectURL(file);
+    foto.src = urlFoto;
+    for (const c of Object.values(campos)) c.max = String(c === campos.y || c === campos.altura ? img.altura : img.largura);
+    editor.hidden = false;
+    atualizar(inicio(proporcao()), true);
+  });
+
+  document.querySelectorAll<HTMLInputElement>('input[name="proporcao"]').forEach((el) => el.addEventListener('change', () => {
+    const p = proporcao();
+    atualizar(p ? aplicarProporcao(r, img, p) : r, true);
+  }));
+
+  // Arrastar a moldura ou os cantos (mouse, dedo ou caneta).
+  let arraste: { alca: Alca; x0: number; y0: number; r0: Retangulo; escala: number; id: number } | null = null;
+  caixa.addEventListener('pointerdown', (e) => {
+    const alvo = (e.target as HTMLElement).closest<HTMLElement>('[data-alca]');
+    if (!alvo || e.button > 0) return;
+    e.preventDefault();
+    caixa.focus({ preventScroll: true });
+    const escala = img.largura / foto.getBoundingClientRect().width;
+    arraste = { alca: alvo.dataset.alca as Alca, x0: e.clientX, y0: e.clientY, r0: { ...r }, escala, id: e.pointerId };
+    caixa.setPointerCapture(e.pointerId);
+    caixa.classList.add('ativa');
+  });
+  caixa.addEventListener('pointermove', (e) => {
+    if (!arraste || e.pointerId !== arraste.id) return;
+    const dx = (e.clientX - arraste.x0) * arraste.escala, dy = (e.clientY - arraste.y0) * arraste.escala;
+    r = arrastarRecorte(arraste.r0, arraste.alca, dx, dy, img, proporcao(), Math.max(8, Math.round(arraste.escala * 24)));
+    desenharCaixa();
+  });
+  const soltar = (e: PointerEvent) => {
+    if (!arraste || e.pointerId !== arraste.id) return;
+    arraste = null; caixa.classList.remove('ativa');
+    atualizar(r, true);
+  };
+  caixa.addEventListener('pointerup', soltar);
+  caixa.addEventListener('pointercancel', soltar);
+
+  // Teclado: setas movem; Shift + setas mudam o tamanho (canto inferior direito).
+  caixa.addEventListener('keydown', (e) => {
+    const passo = Math.max(1, Math.round(Math.max(img.largura, img.altura) / 100));
+    const d: Record<string, [number, number]> = { ArrowLeft: [-passo, 0], ArrowRight: [passo, 0], ArrowUp: [0, -passo], ArrowDown: [0, passo] };
+    const v = d[e.key];
+    if (!v) return;
+    e.preventDefault();
+    r = arrastarRecorte(r, e.shiftKey ? 'se' : 'mover', v[0], v[1], img, proporcao(), 8);
+    desenharCaixa(); agendar();
+  });
+
+  // Medidas digitadas.
+  for (const [chave, campo] of Object.entries(campos) as [keyof Retangulo, HTMLInputElement][]) {
+    campo.addEventListener('change', () => {
+      const n = Number(campo.value);
+      if (!Number.isFinite(n)) { desenharCaixa(); return; }
+      const novo = { ...r, [chave]: n };
+      const p = proporcao();
+      if (p && chave === 'largura') novo.altura = n / p;
+      if (p && chave === 'altura') novo.largura = n * p;
+      if (p && (chave === 'largura' || chave === 'altura')) {
+        // Se não couber, encolhe mantendo a proporção.
+        const f = Math.min(1, img.largura / novo.largura, img.altura / novo.altura);
+        novo.largura *= f; novo.altura *= f;
+      }
+      atualizar(novo, true);
+    });
+  }
+
+  $('tudo').addEventListener('click', () => {
+    const p = proporcao();
+    atualizar(p ? recorteInicial(img, p) : { x: 0, y: 0, ...img }, true);
+  });
+  formato.addEventListener('change', gerar);
+</script>
+
+<style>
+  [hidden] { display: none !important; }
+  .proporcoes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .proporcoes label { cursor: pointer; }
+  .proporcoes input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .proporcoes span {
+    display: inline-block; min-width: 52px; text-align: center; padding: 6px 12px; border: 2px solid var(--line); border-radius: 999px;
+    font-weight: 600; font-variant-numeric: tabular-nums; transition: transform 0.2s var(--mola), background-color 0.2s, border-color 0.2s;
+  }
+  .proporcoes label:active span { transform: scale(0.94); }
+  .proporcoes input:checked + span { background: var(--brand); border-color: var(--brand-ink); color: var(--brand-ink); }
+  .proporcoes input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px; }
+
+  .palco {
+    position: relative; width: fit-content; max-width: 100%; margin-inline: auto; line-height: 0;
+    overflow: hidden; border-radius: 8px; user-select: none; -webkit-user-select: none;
+    background: repeating-conic-gradient(var(--line) 0 25%, var(--surface) 0 50%) 0 0 / 20px 20px;
+  }
+  .palco img { display: block; max-width: 100%; max-height: 70vh; width: auto; height: auto; pointer-events: none; }
+  .caixa {
+    position: absolute; cursor: move; touch-action: none;
+    outline: 2px solid var(--brand); outline-offset: -1px;
+    box-shadow: 0 0 0 1px var(--brand-ink), 0 0 0 100vmax color-mix(in srgb, var(--brand-ink) 55%, transparent);
+  }
+  .caixa:focus-visible { outline: 3px solid var(--link); }
+  .grade {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.5; transition: opacity 0.2s var(--suave);
+    background:
+      linear-gradient(to right, transparent calc(33.333% - 0.5px), var(--surface) calc(33.333% - 0.5px), var(--surface) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), var(--surface) calc(66.666% - 0.5px), var(--surface) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px)),
+      linear-gradient(to bottom, transparent calc(33.333% - 0.5px), var(--surface) calc(33.333% - 0.5px), var(--surface) calc(33.333% + 0.5px), transparent calc(33.333% + 0.5px), transparent calc(66.666% - 0.5px), var(--surface) calc(66.666% - 0.5px), var(--surface) calc(66.666% + 0.5px), transparent calc(66.666% + 0.5px));
+  }
+  .caixa.ativa .grade { opacity: 0.9; }
+  .alca {
+    position: absolute; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--brand); border: 2px solid var(--brand-ink); transition: transform 0.2s var(--mola);
+  }
+  /* Área de toque maior que o desenho. */
+  .alca::before { content: ''; position: absolute; inset: -13px; }
+  .alca:hover, .caixa.ativa .alca { transform: scale(1.2); }
+  .alca[data-alca='no'] { left: -5px; top: -5px; cursor: nwse-resize; }
+  .alca[data-alca='ne'] { right: -5px; top: -5px; cursor: nesw-resize; }
+  .alca[data-alca='so'] { left: -5px; bottom: -5px; cursor: nesw-resize; }
+  .alca[data-alca='se'] { right: -5px; bottom: -5px; cursor: nwse-resize; }
+
+  .medidas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @media (max-width: 480px) { .medidas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .medidas input { font-variant-numeric: tabular-nums; }
+  .linha-acoes { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; justify-content: space-between; }
+  .formato { flex: 1 1 220px; max-width: 320px; }
+
+  .saida { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .previa {
+    width: 120px; height: 120px; flex: none; display: grid; place-items: center; border-radius: 8px; overflow: hidden;
+    background: repeating-conic-gradient(var(--line) 0 25%, var(--surface) 0 50%) 0 0 / 16px 16px;
+  }
+  .previa img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .saida-texto { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; flex: 1 1 160px; }
+</style>
