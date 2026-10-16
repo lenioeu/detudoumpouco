@@ -1,0 +1,138 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import { LIMITES } from '../../lib/contador';
+
+const exemplo = `Cole ou digite seu texto aqui. A contagem muda enquanto você escreve.
+
+Serve para conferir o limite de um post, de uma redação ou da bio do Instagram.`;
+---
+<Ferramenta
+  secao="texto"
+  slug="contador-de-caracteres"
+  titulo="Contador de caracteres"
+  subtitulo="Conte caracteres, com e sem espaços, palavras, linhas e parágrafos enquanto digita. Veja também se o texto cabe no X, no Instagram ou no SMS."
+  tituloSeo="Contador de caracteres e palavras online grátis"
+  descricao="Contador de caracteres online: veja na hora quantos caracteres, com e sem espaços, palavras, linhas e parágrafos tem o seu texto, e o limite de cada rede social."
+  passos={[
+    'Cole ou digite o texto na caixa abaixo. Já tem um exemplo para você ver como funciona.',
+    'Os números mudam na hora: caracteres com e sem espaços, palavras, frases, linhas e parágrafos.',
+    'Confira nas barras se o texto cabe no limite do X, do Instagram, do SMS ou do Google.',
+    'Use "Limpar" para começar de novo. O texto não sai do seu aparelho.',
+  ]}
+  perguntas={[
+    { p: 'Espaço conta como caractere?', r: 'Conta. Por isso a ferramenta mostra os dois números: com espaços e sem espaços. Redes sociais e formulários quase sempre contam com espaços. Alguns vestibulares e concursos pedem o número sem espaços, então vale ler o edital.' },
+    { p: 'Quantos caracteres cabem num post do X (Twitter)?', r: '280 caracteres na conta gratuita. Links contam sempre 23 caracteres, seja qual for o tamanho, e emojis e letras de alfabetos como o japonês contam 2. Por isso o número do X pode ser um pouco maior que o desta ferramenta.' },
+    { p: 'Quantos caracteres tem a bio do Instagram?', r: 'A bio aceita até 150 caracteres e a legenda de um post aceita até 2.200. Na legenda, só as primeiras linhas aparecem antes do "mais", então coloque o mais importante no começo.' },
+    { p: 'Quantas palavras tem uma página?', r: 'Uma página de Word em fonte 12 e espaço simples tem cerca de 500 palavras. Com espaço 1,5, fica perto de 350. Uma redação do Enem, de até 30 linhas, costuma ter entre 250 e 400 palavras.' },
+    { p: 'Como a ferramenta conta as palavras?', r: 'Cada sequência de letras ou números conta como uma palavra. Palavras com hífen, como "guarda-chuva", e com apóstrofo, como "d’água", contam uma vez só. Números como 2026 também contam.' },
+    { p: 'Meu texto é enviado para algum lugar?', r: 'Não. A contagem acontece no seu navegador. Nada do que você digita é enviado ou guardado em servidores.' },
+  ]}
+>
+  <div class="stack">
+    <div class="campo">
+      <label for="texto">Seu texto</label>
+      <textarea id="texto" rows="8" spellcheck="true">{exemplo}</textarea>
+    </div>
+    <div class="acoes">
+      <button id="limpar" type="button" class="btn btn-sec">Limpar</button>
+      <button id="copiar" type="button" class="btn btn-sec">Copiar texto</button>
+      <span id="aviso" class="muted" role="status"></span>
+    </div>
+
+    <dl class="numeros" aria-live="polite">
+      <div class="num destaque"><dt>Caracteres</dt><dd id="n-caracteres">0</dd></div>
+      <div class="num"><dt>Sem espaços</dt><dd id="n-semEspacos">0</dd></div>
+      <div class="num destaque"><dt>Palavras</dt><dd id="n-palavras">0</dd></div>
+      <div class="num"><dt>Frases</dt><dd id="n-frases">0</dd></div>
+      <div class="num"><dt>Linhas</dt><dd id="n-linhas">0</dd></div>
+      <div class="num"><dt>Parágrafos</dt><dd id="n-paragrafos">0</dd></div>
+      <div class="num"><dt>Leitura</dt><dd id="n-leitura">0 min</dd></div>
+      <div class="num"><dt>Falando</dt><dd id="n-fala">0 min</dd></div>
+    </dl>
+
+    <div class="limites">
+      <h2 class="rotulo">Cabe no limite?</h2>
+      <ul>
+        {LIMITES.map((l) => (
+          <li data-max={l.max}>
+            <div class="lim-topo"><span>{l.nome}</span><span class="lim-conta muted"></span></div>
+            <div class="barra"><span></span></div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que contar caracteres</h2>
+    <p>Quase todo lugar onde a gente escreve tem um limite. O X corta o post em 280 caracteres, a bio do Instagram para em 150, o SMS divide a mensagem depois de 160 e o Google mostra só os primeiros 60 caracteres de um título. Em trabalhos de escola, concursos e editais, o limite costuma vir em palavras ou em caracteres sem espaços. Contar na mão é demorado e dá erro; aqui o número aparece enquanto você digita.</p>
+    <h2>Caracteres com e sem espaços</h2>
+    <p>"Bom dia, Brasil" tem 15 caracteres com espaços e 13 sem espaços. A vírgula conta, o espaço também. Quando um formulário diz "máximo de 500 caracteres", ele quase sempre inclui os espaços. Já a contagem sem espaços é comum em traduções e revisões pagas por caractere.</p>
+    <h2>Como as palavras são contadas</h2>
+    <p>Cada grupo de letras ou números separado por espaço ou pontuação vira uma palavra. "Pé-de-moleque" conta como uma, "R$ 1.500" conta como duas (o R e o número). Sinais soltos, como travessão ou emoji, não contam como palavra, mas contam como caractere. Emojis com tom de pele ou bandeiras contam 1 caractere aqui, porque é assim que aparecem na tela; o X conta 2.</p>
+    <h2>Dicas para caber no limite</h2>
+    <ul>
+      <li>Troque expressões longas por curtas: "a fim de" vira "para", "no presente momento" vira "agora".</li>
+      <li>Corte advérbios que não mudam o sentido, como "realmente", "basicamente" e "muito".</li>
+      <li>Na bio do Instagram, use quebras de linha em vez de frases completas.</li>
+      <li>No título para o Google, ponha a palavra principal no começo, antes do corte dos 60 caracteres.</li>
+    </ul>
+    <p>O tempo de leitura considera 200 palavras por minuto, uma média de leitura silenciosa de um adulto. O tempo falando considera 130 palavras por minuto, bom para estimar quanto dura um discurso, uma apresentação ou um áudio.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { contar, formatarMinutos } from '../../lib/contador';
+  import { formatar } from '../../lib/numeros';
+
+  const texto = document.getElementById('texto') as HTMLTextAreaElement;
+  const aviso = document.getElementById('aviso')!;
+  const el = (id: string) => document.getElementById(id)!;
+  const itens = Array.from(document.querySelectorAll<HTMLLIElement>('.limites li'));
+  let agendado = 0;
+
+  function atualizar() {
+    agendado = 0;
+    const c = contar(texto.value);
+    for (const k of ['caracteres', 'semEspacos', 'palavras', 'frases', 'linhas', 'paragrafos'] as const) {
+      el(`n-${k}`).textContent = formatar(c[k], 0);
+    }
+    el('n-leitura').textContent = formatarMinutos(c.leituraMin);
+    el('n-fala').textContent = formatarMinutos(c.falaMin);
+    for (const li of itens) {
+      const max = Number(li.dataset.max);
+      const sobra = max - c.caracteres;
+      li.classList.toggle('passou', sobra < 0);
+      li.querySelector('.lim-conta')!.textContent = sobra >= 0
+        ? `${formatar(c.caracteres, 0)} de ${formatar(max, 0)} · faltam ${formatar(sobra, 0)}`
+        : `passou ${formatar(-sobra, 0)}`;
+      li.querySelector<HTMLElement>('.barra span')!.style.transform = `scaleX(${Math.min(1, c.caracteres / max)})`;
+    }
+  }
+  const agendar = () => { if (!agendado) agendado = requestAnimationFrame(atualizar); };
+
+  texto.addEventListener('input', agendar);
+  el('limpar').addEventListener('click', () => { texto.value = ''; aviso.textContent = ''; atualizar(); texto.focus(); });
+  el('copiar').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(texto.value); aviso.textContent = 'Copiado.'; }
+    catch { aviso.textContent = 'Não deu para copiar. Selecione o texto e copie manualmente.'; }
+  });
+  atualizar();
+</script>
+
+<style>
+  textarea { resize: vertical; min-height: 180px; line-height: 1.5; }
+  .acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .numeros { margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .num { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; min-width: 0; }
+  .num.destaque { background: var(--brand-soft); border-color: transparent; }
+  .num dt { font-size: 0.9rem; color: var(--muted); }
+  .num dd { margin: 0; font: 700 1.6rem/1.2 var(--f-display); font-variant-numeric: tabular-nums; }
+  .limites { display: flex; flex-direction: column; gap: 10px; }
+  .limites ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 12px 20px; }
+  .lim-topo { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 0.95rem; }
+  .barra { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 4px; }
+  .barra span { display: block; height: 100%; background: var(--ok); transform-origin: left; transform: scaleX(0); transition: transform 0.25s var(--suave); }
+  .passou .barra span { background: var(--erro); }
+  .passou .lim-conta { color: var(--erro); font-weight: 600; }
+</style>

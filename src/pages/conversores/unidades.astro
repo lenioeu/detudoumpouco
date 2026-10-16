@@ -1,0 +1,163 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import { CATEGORIAS } from '../../lib/unidades';
+const inicial = CATEGORIAS[0];
+---
+<Ferramenta
+  secao="conversores"
+  slug="unidades"
+  titulo="Conversor de unidades"
+  subtitulo="Converta comprimento, peso, temperatura, área, volume e velocidade. Polegadas em centímetros, libras em quilos, Fahrenheit em Celsius, alqueire em hectare e mais."
+  tituloSeo="Conversor de unidades online: medidas, peso e mais"
+  descricao="Conversor de unidades grátis: polegada para cm, libra para kg, Fahrenheit para Celsius, alqueire para hectare, galão para litro, mph para km/h. Resultado na hora."
+  passos={[
+    'Escolha a categoria: comprimento, peso, temperatura, área, volume ou velocidade.',
+    'Digite o valor. Pode usar vírgula para as casas decimais, como 1,75.',
+    'Escolha a unidade de origem e a de destino. O botão de setas troca as duas de lugar.',
+    'Veja o resultado na hora e, logo abaixo, o mesmo valor em todas as outras unidades da categoria.',
+  ]}
+  perguntas={[
+    { p: 'Quantos centímetros tem uma polegada?', r: 'Uma polegada tem exatamente 2,54 centímetros. Para converter, multiplique as polegadas por 2,54. Uma TV de 50 polegadas tem 127 cm de diagonal; um cano de 3/4" tem cerca de 1,9 cm.' },
+    { p: 'Como converter Fahrenheit para Celsius?', r: 'Subtraia 32 e divida por 1,8. Assim, 100 °F são (100 − 32) ÷ 1,8 = 37,8 °C. No caminho contrário, multiplique os graus Celsius por 1,8 e some 32: 25 °C são 77 °F.' },
+    { p: 'Quantos quilos tem uma libra?', r: 'Uma libra (lb) tem 0,45359237 kg, ou cerca de 453,6 gramas. Para uma conta rápida, divida as libras por 2,2: 150 lb dá perto de 68 kg.' },
+    { p: 'Quantos hectares tem um alqueire?', r: 'Depende da região. O alqueire paulista, usado em São Paulo, Paraná e Mato Grosso do Sul, tem 2,42 hectares (24.200 m²). O alqueire mineiro, ou geométrico, tem 4,84 hectares (48.400 m²). Na escritura, confira qual foi usado.' },
+    { p: 'Quantos litros tem um galão?', r: 'O galão americano tem 3,785 litros, e é o mais comum em receitas e produtos importados dos Estados Unidos. O galão imperial, do Reino Unido, tem 4,546 litros. No Brasil, "galão" de água costuma ser o garrafão de 20 litros, que não tem relação com essas medidas.' },
+    { p: 'Quanto é 1 nó em km/h?', r: 'Um nó é uma milha náutica por hora, ou 1,852 km/h. É a unidade de velocidade de barcos, aviões e do vento nas previsões para o mar.' },
+  ]}
+>
+  <form id="form" class="stack" autocomplete="off">
+    <fieldset class="abas" aria-label="Categoria">
+      {CATEGORIAS.map((c, i) => (
+        <label><input type="radio" name="categoria" value={c.id} checked={i === 0} /><span>{c.nome}</span></label>
+      ))}
+    </fieldset>
+
+    <div class="conversao">
+      <div class="campo valor">
+        <label for="valor">Valor</label>
+        <input id="valor" type="text" inputmode="decimal" value="1" />
+      </div>
+      <div class="campo">
+        <label for="de">De</label>
+        <select id="de">{inicial.unidades.map((x) => <option value={x.id} selected={x.id === inicial.padrao[0]}>{x.nome} ({x.simbolo})</option>)}</select>
+      </div>
+      <button id="trocar" type="button" class="btn btn-sec trocar" aria-label="Trocar as unidades de lugar" title="Trocar">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v14m0 0-3-3m3 3 3-3M17 20V6m0 0-3 3m3-3 3 3" /></svg>
+      </button>
+      <div class="campo">
+        <label for="para">Para</label>
+        <select id="para">{inicial.unidades.map((x) => <option value={x.id} selected={x.id === inicial.padrao[1]}>{x.nome} ({x.simbolo})</option>)}</select>
+      </div>
+    </div>
+
+    <output id="saida" class="resultado" for="valor de para" aria-live="polite"></output>
+
+    <div class="todas">
+      <h2 class="rotulo">Em todas as unidades</h2>
+      <table><tbody id="tabela"></tbody></table>
+    </div>
+  </form>
+
+  <Fragment slot="texto">
+    <h2>Medidas que aparecem no dia a dia</h2>
+    <p>O Brasil usa o sistema métrico, mas as medidas inglesas e americanas estão por toda parte: a tela da TV e do celular vem em polegadas, o cano e a chave de boca também, a balança de academia às vezes mostra libras, a receita americana pede Fahrenheit e onças, e a velocidade de barcos e do vento aparece em nós. No campo, ainda se compra e vende terra em alqueire, que muda de tamanho conforme o estado.</p>
+    <h2>Conversões rápidas para guardar</h2>
+    <ul>
+      <li><strong>Polegada:</strong> 2,54 cm. Um pé tem 12 polegadas, ou 30,48 cm.</li>
+      <li><strong>Milha:</strong> 1,609 km. A milha náutica é maior: 1,852 km.</li>
+      <li><strong>Libra:</strong> 453,6 g. Uma onça (oz) de peso tem 28,35 g.</li>
+      <li><strong>Arroba:</strong> 15 kg, usada no preço do boi e do café.</li>
+      <li><strong>Temperatura:</strong> 0 °C = 32 °F, 37 °C (temperatura do corpo) = 98,6 °F, 100 °C = 212 °F.</li>
+      <li><strong>Hectare:</strong> 10.000 m², um quadrado de 100 m de lado, perto de um campo de futebol oficial.</li>
+      <li><strong>Velocidade:</strong> para passar de km/h para m/s, divida por 3,6. 72 km/h são 20 m/s.</li>
+    </ul>
+    <h2>Precisão dos resultados</h2>
+    <p>Os fatores seguem as definições internacionais exatas: a polegada vale 25,4 mm e a libra 0,45359237 kg desde o acordo internacional de 1959. O resultado mostra até 10 algarismos significativos, mais do que suficiente para obra, cozinha, viagem ou trabalho escolar. Para medidas de cozinha, como xícara e colher, use o conversor de medidas de receita, que leva em conta o ingrediente.</p>
+    <p>Atenção ao alqueire: além do paulista (2,42 ha) e do mineiro (4,84 ha), existem o alqueire do norte e o baiano, com outros tamanhos. Em negócios de terra, a área oficial é a que está na matrícula do imóvel, em hectares ou metros quadrados.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero } from '../../lib/numeros';
+  import { CATEGORIAS, categoria, unidade, converter, formatarMedida, comNome } from '../../lib/unidades';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('form');
+  const valor = $<HTMLInputElement>('valor');
+  const de = $<HTMLSelectElement>('de');
+  const para = $<HTMLSelectElement>('para');
+  const saida = $<HTMLOutputElement>('saida');
+  const tabela = $<HTMLTableSectionElement>('tabela');
+  const catAtual = () => categoria((form.elements.namedItem('categoria') as RadioNodeList).value) ?? CATEGORIAS[0];
+
+  let mostrada = CATEGORIAS[0].id;
+
+  function preencher() {
+    const cat = catAtual();
+    mostrada = cat.id;
+    const opcoes = () => cat.unidades.map((x) => new Option(`${x.nome} (${x.simbolo})`, x.id));
+    de.replaceChildren(...opcoes());
+    para.replaceChildren(...opcoes());
+    [de.value, para.value] = cat.padrao;
+    if (cat.id === 'temperatura' && valor.value.trim() === '1') valor.value = '100';
+  }
+
+  function calcular() {
+    const cat = catAtual();
+    if (cat.id !== mostrada) preencher();
+    const n = lerNumero(valor.value);
+    if (n === null) {
+      saida.innerHTML = '<span class="muted">Digite um número, como 1,75.</span>';
+      tabela.replaceChildren();
+      return;
+    }
+    const a = unidade(cat, de.value)!, b = unidade(cat, para.value)!;
+    const r = converter(cat.id, n, a.id, b.id);
+    const forte = document.createElement('strong');
+    forte.textContent = `${formatarMedida(r)} ${b.simbolo}`;
+    saida.replaceChildren(forte, `${comNome(n, a)} = ${comNome(r, b)}`);
+    tabela.replaceChildren(...cat.unidades.filter((x) => x.id !== a.id).map((x) => {
+      const tr = document.createElement('tr');
+      if (x.id === b.id) tr.className = 'atual';
+      const td1 = document.createElement('td'); td1.textContent = formatarMedida(converter(cat.id, n, a.id, x.id));
+      const td2 = document.createElement('td'); td2.textContent = `${x.nome} (${x.simbolo})`;
+      tr.append(td1, td2);
+      return tr;
+    }));
+  }
+
+  $('trocar').addEventListener('click', () => { [de.value, para.value] = [para.value, de.value]; calcular(); });
+  form.addEventListener('input', calcular);
+  form.addEventListener('change', calcular);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calcular();
+</script>
+
+<style>
+  .abas { border: 0; margin: 0; padding: 4px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: var(--bg); border-radius: var(--radius); }
+  @media (min-width: 640px) { .abas { grid-template-columns: repeat(6, 1fr); } }
+  .abas label { position: relative; cursor: pointer; min-width: 0; }
+  .abas input { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+  .abas span { display: block; text-align: center; padding: 8px 2px; border-radius: 8px; font-weight: 600; font-size: 0.92rem; transition: transform 0.18s var(--mola); overflow: hidden; text-overflow: ellipsis; }
+  .abas input:checked + span { background: var(--surface); box-shadow: var(--sombra); }
+  .abas input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 1px; }
+  .abas label:active span { transform: scale(0.96); }
+  .conversao { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; }
+  .conversao .valor { grid-column: 1 / -1; }
+  .conversao > .campo:nth-of-type(2) { grid-column: 1; }
+  .trocar { grid-column: 2; grid-row: 2 / span 2; align-self: center; padding: 10px; transition: transform 0.25s var(--mola); }
+  .trocar:active { transform: rotate(180deg); }
+  .conversao > .campo:nth-of-type(3) { grid-column: 1; }
+  @media (min-width: 760px) {
+    .conversao { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) auto minmax(0, 1fr); }
+    .conversao .valor, .conversao > .campo:nth-of-type(2), .conversao > .campo:nth-of-type(3) { grid-column: auto; }
+    .trocar { grid-column: auto; grid-row: auto; align-self: end; }
+  }
+  #saida { display: block; min-height: 84px; }
+  #saida :global(strong) { overflow-wrap: anywhere; }
+  .todas { display: flex; flex-direction: column; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+  td:first-child { text-align: right; font-weight: 600; width: 45%; }
+  tr.atual td { background: var(--brand-soft); }
+</style>
