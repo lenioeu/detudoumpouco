@@ -80,3 +80,89 @@ export function rendimentoTesouroSelic(
   }
   return montar(valor, saldo - valor, custodia, aliquotaIR(diasCorridos(meses)));
 }
+
+// ---------------------------------------------------------------------------
+// Evolução mês a mês com aportes.
+// Cada aporte é um "lote" com a própria idade: o IR regressivo usa o tempo de cada lote.
+// Um aporte no mês m entra no começo do mês m (m = 0 é o valor inicial) e rende (t − m) meses até o mês t.
+
+export interface Aporte { mes: number; valor: number }
+
+export type Produto = 'poupanca' | 'cdb' | 'tesouro';
+
+export interface ParametrosProduto {
+  selicMeta: number;
+  tr: number;
+  cdi: number;
+  percentualCdi: number;
+  adicionalTesouro: number;
+  custodia: number;
+  isencaoCustodia: number;
+}
+
+export interface Evolucao {
+  /** Valor líquido se resgatar no fim de cada mês: índice t = mês t (0 a n). */
+  liquido: number[];
+  /** Total investido até o mês t. */
+  investido: number[];
+  /** Resumo no fim do prazo, no mesmo formato de antes. */
+  final: Rendimento;
+}
+
+/** Fator de crescimento de um mês para cada produto. */
+export function fatorMensal(p: Produto, x: ParametrosProduto): number {
+  if (p === 'poupanca') return 1 + taxaPoupancaMensal(x.selicMeta, x.tr) / 100;
+  if (p === 'cdb') return Math.pow(1 + (Math.pow(1 + x.cdi / 100, 1 / 252) - 1) * (x.percentualCdi / 100), 252 / 12);
+  const anual = (1 + x.cdi / 100) * (1 + x.adicionalTesouro / 100) - 1;
+  return Math.pow(1 + anual, 1 / 12);
+}
+
+/** Junta aportes do mesmo mês e descarta os que caem fora do prazo. */
+export function organizarAportes(aportes: Aporte[], meses: number): Aporte[] {
+  const m = new Map<number, number>();
+  for (const a of aportes) {
+    const mes = Math.round(a.mes);
+    if (a.valor > 0 && mes >= 0 && mes < meses) m.set(mes, (m.get(mes) ?? 0) + a.valor);
+  }
+  return [...m.entries()].sort((a, b) => a[0] - b[0]).map(([mes, valor]) => ({ mes, valor }));
+}
+
+export function evolucao(p: Produto, aportesBrutos: Aporte[], meses: number, x: ParametrosProduto): Evolucao {
+  const n = Math.round(meses);
+  const aportes = organizarAportes(aportesBrutos, n);
+  const g = fatorMensal(p, x);
+  const comIR = p !== 'poupanca';
+  const liquido: number[] = [];
+  const investido: number[] = [];
+  let custodiaAcum = 0;
+  let fim: Rendimento = montar(0, 0, 0, 0);
+
+  for (let t = 0; t <= n; t++) {
+    let inv = 0, bruto = 0;
+    const ganhos: { ganho: number; aliq: number }[] = [];
+    for (const a of aportes) {
+      if (a.mes > t) break;
+      inv += a.valor;
+      // Poupança só rende em meses inteiros, o que já vale aqui porque t − m é inteiro.
+      const ganho = a.valor * (Math.pow(g, t - a.mes) - 1);
+      bruto += ganho;
+      ganhos.push({ ganho, aliq: comIR ? aliquotaIR(diasCorridos(t - a.mes)) : 0 });
+    }
+    if (p === 'tesouro' && t > 0) custodiaAcum += (Math.max(0, inv + bruto - x.isencaoCustodia) * x.custodia) / 100 / 12;
+    const custodia = p === 'tesouro' ? custodiaAcum : 0;
+    // A custódia é dividida entre os lotes na proporção do ganho de cada um; o IR incide no ganho já sem ela.
+    let ir = 0;
+    for (const l of ganhos) {
+      const parte = bruto > 0 ? (custodia * l.ganho) / bruto : 0;
+      ir += (Math.max(0, l.ganho - parte) * l.aliq) / 100;
+    }
+    const liq = bruto - custodia - ir;
+    investido.push(inv);
+    liquido.push(inv + liq);
+    if (t === n) {
+      const base = Math.max(0, bruto - custodia);
+      fim = { bruto, ir, custodia, liquido: liq, final: inv + liq, rentabilidade: inv ? (liq / inv) * 100 : 0, aliquota: base > 0 ? (ir / base) * 100 : 0 };
+    }
+  }
+  return { liquido, investido, final: fim };
+}

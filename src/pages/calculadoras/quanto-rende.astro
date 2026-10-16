@@ -18,14 +18,14 @@ const REF = {
   secao="calculadoras"
   slug="quanto-rende"
   titulo="Quanto rende: poupança, CDB e Tesouro Selic"
-  subtitulo="Coloque um valor e um prazo e compare, lado a lado, quanto sobra depois do imposto de renda em cada investimento."
-  tituloSeo="Quanto rende: poupança x CDB x Tesouro Selic"
-  descricao="Compare quanto rende seu dinheiro na poupança, no CDB e no Tesouro Selic, já com imposto de renda e custódia. Taxas editáveis. Grátis e no seu navegador."
+  subtitulo="Coloque um valor, um prazo e, se quiser, aportes mensais ou avulsos. Compare quanto sobra depois do imposto em cada investimento e veja a evolução no gráfico."
+  tituloSeo="Quanto rende: poupança x CDB x Tesouro Selic, com aportes"
+  descricao="Compare quanto rende na poupança, no CDB e no Tesouro Selic, com aportes mensais e taxas do dia do Banco Central. Com imposto, custódia e gráfico."
   passos={[
-    'Digite quanto vai investir e por quanto tempo.',
-    'As taxas são preenchidas sozinhas com os valores do dia, direto do Banco Central. Você pode trocá-las para simular outros cenários.',
-    'Ajuste o percentual do CDI do seu CDB e o adicional do Tesouro Selic.',
-    'Compare o valor líquido de cada opção. O melhor aparece destacado.',
+    'Digite quanto vai investir agora e por quanto tempo.',
+    'Se quiser, coloque aportes: um valor fixo todo mês (ou a cada 2, 3, 6 ou 12 meses) e aportes avulsos nos meses que escolher.',
+    'As taxas do dia vêm sozinhas do Banco Central. Ajuste o percentual do CDI do seu CDB, se for diferente de 100%.',
+    'Compare o valor líquido de cada opção e veja no gráfico como o dinheiro cresce mês a mês.',
   ]}
   perguntas={[
     { p: 'Quanto rende R$ 10 mil na poupança por mês?', r: 'Com a Selic acima de 8,5% ao ano, a poupança rende 0,5% ao mês mais a TR. Com TR de 0,169%, isso dá cerca de 0,67% ao mês, ou uns R$ 67 por mês sobre R$ 10 mil. O valor muda todo mês junto com a TR.' },
@@ -37,18 +37,39 @@ const REF = {
 >
   <form id="qr" class="stack" novalidate>
     <div class="linhas">
-      <div class="campo"><label for="qr-valor">Valor investido (R$)</label><input id="qr-valor" type="text" inputmode="decimal" value="10.000" /></div>
+      <div class="campo"><label for="qr-valor">Valor inicial (R$)</label><input id="qr-valor" type="text" inputmode="decimal" value="10.000" /></div>
       <div class="campo">
         <label for="qr-prazo">Prazo</label>
         <div class="par">
-          <input id="qr-prazo" type="text" inputmode="numeric" value="12" />
-          <select id="qr-prazo-un" aria-label="Unidade do prazo"><option value="mes" selected>meses</option><option value="ano">anos</option></select>
+          <input id="qr-prazo" type="text" inputmode="numeric" value="5" />
+          <select id="qr-prazo-un" aria-label="Unidade do prazo"><option value="mes">meses</option><option value="ano" selected>anos</option></select>
         </div>
       </div>
     </div>
 
+    <fieldset class="aportes">
+      <legend>Aportes (opcional)</legend>
+      <div class="linhas">
+        <div class="campo"><label for="qr-aporte">Valor do aporte (R$)</label><input id="qr-aporte" type="text" inputmode="decimal" value="500" /><small>Deixe 0 para não fazer aportes.</small></div>
+        <div class="campo">
+          <label for="qr-freq">Com que frequência</label>
+          <select id="qr-freq">
+            <option value="1" selected>Todo mês</option>
+            <option value="2">A cada 2 meses</option>
+            <option value="3">A cada 3 meses</option>
+            <option value="6">A cada 6 meses</option>
+            <option value="12">Uma vez por ano</option>
+          </select>
+        </div>
+      </div>
+      <div class="avulsos stack">
+        <p class="rotulo">Aportes avulsos <small class="muted">(13º, bônus, restituição…)</small></p>
+        <ul id="qr-avulsos" class="lista-avulsos"></ul>
+        <button type="button" class="btn btn-sec" id="qr-add">+ Adicionar aporte avulso</button>
+      </div>
+    </fieldset>
 
-    <p class="muted nota" id="qr-fonte" aria-live="polite">Conta feita com as taxas de referência de {REF.data}, que você pode trocar logo abaixo dos resultados.</p>
+    <p class="muted nota" id="qr-fonte" aria-live="polite">Conta feita com as taxas de referência de {REF.data}.</p>
     <p class="muted" id="qr-info" aria-live="polite"></p>
     <div class="cartoes" id="qr-res">
       <output class="resultado cartao" id="qr-poupanca"></output>
@@ -56,17 +77,31 @@ const REF = {
       <output class="resultado cartao" id="qr-tesouro"></output>
     </div>
 
+    <section class="evolucao" aria-labelledby="qr-graf-titulo">
+      <h2 id="qr-graf-titulo" class="graf-titulo">Evolução do dinheiro</h2>
+      <p class="muted nota">Quanto você teria se resgatasse em cada mês, já descontados imposto e custódia. Passe o mouse ou o dedo no gráfico para ver os valores.</p>
+      <div id="qr-grafico"></div>
+      <details class="tabela-ano">
+        <summary>Ver os valores ano a ano</summary>
+        <div class="tabela-rolagem" tabindex="0">
+          <table>
+            <thead><tr><th scope="col">Quando</th><th scope="col">Investido</th><th scope="col">Poupança</th><th scope="col">CDB</th><th scope="col">Tesouro Selic</th></tr></thead>
+            <tbody id="qr-tabela"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
     <fieldset class="taxas">
       <legend>Taxas usadas na conta</legend>
       <p class="muted nota" id="qr-fonte-taxas">Buscando as taxas do dia no Banco Central… Enquanto isso, a conta usa os valores de referência de {REF.data}.</p>
       <div class="linhas taxas-grade">
-        <div class="campo"><label for="qr-selic">Selic meta (% ao ano)</label><input id="qr-selic" type="text" inputmode="decimal" value={REF.selicMeta} /><small>Define a regra da poupança.</small></div>
-        <div class="campo"><label for="qr-cdi">Selic efetiva / CDI (% ao ano)</label><input id="qr-cdi" type="text" inputmode="decimal" value={REF.selicEfetiva} /><small>Base do CDB e do Tesouro Selic.</small></div>
-        <div class="campo"><label for="qr-tr">TR (% ao mês)</label><input id="qr-tr" type="text" inputmode="decimal" value={REF.tr} /><small>Somada ao rendimento da poupança.</small></div>
+        <div class="campo"><label for="qr-cdi">CDI (% ao ano)</label><input id="qr-cdi" type="text" inputmode="decimal" value={REF.selicEfetiva} /><small>Base do CDB e do Tesouro Selic.</small></div>
         <div class="campo"><label for="qr-pct">CDB: % do CDI</label><input id="qr-pct" type="text" inputmode="decimal" value={REF.percentualCdi} /><small>Ex.: 100, 110, 120.</small></div>
         <div class="campo"><label for="qr-adic">Tesouro Selic: Selic + (% ao ano)</label><input id="qr-adic" type="text" inputmode="decimal" value={REF.adicionalTesouro} /><small>O adicional que aparece no site do Tesouro.</small></div>
         <div class="campo"><label for="qr-cust">Custódia B3 (% ao ano)</label><input id="qr-cust" type="text" inputmode="decimal" value={REF.custodia} /><small>Cobrada sobre o saldo acima de R$ {REF.isencaoCustodia}.</small></div>
       </div>
+      <p class="muted nota" id="qr-poup-regra"></p>
     </fieldset>
   </form>
 
@@ -80,91 +115,156 @@ const REF = {
       <li><strong>Tesouro Selic:</strong> rende a Selic efetiva mais o adicional do título. A custódia da B3 é descontada mês a mês sobre o saldo acima do valor isento, e o imposto é calculado sobre o rendimento já sem essa taxa.</li>
     </ul>
     <h2>Um exemplo com os valores de referência</h2>
-    <p>R$ 10.000 por 12 meses, com Selic meta de 13,75% e CDI de 13,65% ao ano: a poupança chega a cerca de R$ 10.834, o CDB de 100% do CDI a R$ 11.126 depois do imposto e o Tesouro Selic a uns R$ 11.134. Repare como o prazo pesa: 12 meses já passam de 360 dias, então o imposto cai de 20% para 17,5%.</p>
+    <p>R$ 10.000 por 12 meses, sem aportes, com Selic meta de 13,75% e CDI de 13,65% ao ano: a poupança chega a cerca de R$ 10.834, o CDB de 100% do CDI a R$ 11.126 depois do imposto e o Tesouro Selic a uns R$ 11.134. Repare como o prazo pesa: 12 meses já passam de 360 dias, então o imposto cai de 20% para 17,5%.</p>
+    <h2>Aportes: o efeito de investir todo mês</h2>
+    <p>Quem guarda um pouco todo mês costuma chegar mais longe do que quem investe uma vez só. Com R$ 10 mil iniciais e R$ 500 por mês durante 5 anos, você coloca R$ 40 mil do bolso, e os juros sobre juros fazem o resto. Na calculadora dá para escolher aportes mensais, a cada 2, 3 ou 6 meses, ou anuais, e ainda somar aportes avulsos, como o 13º salário ou a restituição do imposto, no mês em que eles entram. Cada aporte conta o próprio tempo para o imposto de renda: o dinheiro que entrou no começo paga 15%, e o que entrou há poucos meses ainda paga mais. O gráfico mostra quanto você teria se resgatasse em cada mês, já com tudo descontado.</p>
     <h2>Dicas</h2>
     <p>Antes de resgatar, olhe a data. Esperar alguns dias para passar de 180, 360 ou 720 dias pode baixar o imposto. Para prazos muito curtos, de menos de 30 dias, ainda existe o IOF, que esta calculadora não considera. E lembre que as taxas mudam a cada reunião do Copom: a simulação mostra o cenário de hoje mantido pelo prazo todo, não uma promessa.</p>
   </Fragment>
 </Ferramenta>
 
+<script define:vars={{ REF_SELIC: REF.selicMeta, REF_TR: REF.tr }}>
+  // Valores de referência da Selic meta e da TR (usados só na regra da poupança, sem campo na tela).
+  window.__qrRef = { selic: REF_SELIC, tr: REF_TR };
+</script>
+
 <script>
   import { lerNumero, formatar } from '../../lib/numeros';
-  import { reais } from '../../lib/dinheiro';
-  import { rendimentoPoupanca, rendimentoCdb, rendimentoTesouroSelic, diasCorridos, taxaPoupancaMensal, type Rendimento } from '../../lib/investimentos';
+  import { reais, centavos } from '../../lib/dinheiro';
+  import { evolucao, taxaPoupancaMensal, diasCorridos, type Aporte, type Rendimento, type ParametrosProduto } from '../../lib/investimentos';
   import { buscarTaxas } from '../../lib/taxas';
+  import { desenharGrafico, reaisCurto } from '../../lib/grafico';
+  import { duracao } from '../../lib/amortizacao';
 
   const ISENCAO_CUSTODIA = 10000;
-  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-  const ler = (id: string) => lerNumero($<HTMLInputElement>(id).value);
+  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+  const ler = (id: string) => lerNumero($(id).value);
   const form = $<HTMLFormElement>('qr');
   const info = $('qr-info');
   const saidas = { poupanca: $('qr-poupanca'), cdb: $('qr-cdb'), tesouro: $('qr-tesouro') };
+  const grafico = $('qr-grafico'), tabela = $('qr-tabela'), regraPoup = $('qr-poup-regra');
+  const listaAvulsos = $<HTMLUListElement>('qr-avulsos');
+
+  const ref = (window as unknown as { __qrRef: { selic: string; tr: string } }).__qrRef;
+  // Selic meta e TR: sem campo na tela; vêm do Banco Central ou dos valores de referência.
+  let selicMeta = lerNumero(ref.selic) ?? 13.75;
+  let tr = lerNumero(ref.tr) ?? 0;
+
+  // ---- Aportes avulsos
+  let nAvulso = 0;
+  function adicionarAvulso(mes = '', valor = '') {
+    const id = ++nAvulso;
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div class="campo"><label for="av-mes-${id}">No mês nº</label><input id="av-mes-${id}" class="av-mes" type="text" inputmode="numeric" value="${mes}" placeholder="Ex.: 12" /></div>
+      <div class="campo"><label for="av-valor-${id}">Valor (R$)</label><input id="av-valor-${id}" class="av-valor" type="text" inputmode="decimal" value="${valor}" placeholder="Ex.: 3.000" /></div>
+      <button type="button" class="btn btn-sec remover" aria-label="Remover este aporte">Remover</button>`;
+    li.querySelector('.remover')!.addEventListener('click', () => { li.remove(); calcular(); });
+    listaAvulsos.append(li);
+    return li;
+  }
+  $('qr-add').addEventListener('click', () => { adicionarAvulso().querySelector<HTMLInputElement>('.av-mes')!.focus(); });
+  adicionarAvulso('12', '3.000'); // exemplo: 13º no fim do 1º ano
 
   function cartao(nome: string, r: Rendimento, melhor: boolean) {
-    const linhas = [`Rendimento bruto: ${reais(r.bruto)}`];
-    linhas.push(r.aliquota ? `Imposto (${formatar(r.aliquota, 1)}%): −${reais(r.ir)}` : 'Imposto: isento');
+    const linhas = [`Investido: ${reais(r.final - r.liquido)}`, `Rendimento bruto: ${reais(r.bruto)}`];
+    linhas.push(r.ir > 0.004 ? `Imposto (${formatar(r.aliquota, 1)}%): −${reais(r.ir)}` : 'Imposto: isento');
     if (r.custodia > 0.004) linhas.push(`Custódia B3: −${reais(r.custodia)}`);
     linhas.push(`Ganho líquido: ${reais(r.liquido)} (${formatar(r.rentabilidade, 2)}%)`);
     return `<span class="nome">${nome}${melhor ? ' <span class="selo">rende mais</span>' : ''}</span><strong>${reais(r.final)}</strong>${linhas.join('<br>')}`;
   }
 
+  const rotuloMes = (t: number) => t === 0 ? 'Início' : `Mês ${t}${t % 12 === 0 ? ` (${duracao(t)})` : ''}`;
+
   function calcular() {
-    const valor = ler('qr-valor'), prazo = ler('qr-prazo');
-    const selic = ler('qr-selic'), cdi = ler('qr-cdi'), tr = ler('qr-tr') ?? 0;
-    const pct = ler('qr-pct'), adic = ler('qr-adic') ?? 0, cust = ler('qr-cust') ?? 0;
+    const valor = ler('qr-valor') ?? 0, prazo = ler('qr-prazo');
+    const cdi = ler('qr-cdi'), pct = ler('qr-pct'), adic = ler('qr-adic') ?? 0, cust = ler('qr-cust') ?? 0;
+    const aporte = ler('qr-aporte') ?? 0, freq = Number($<HTMLSelectElement>('qr-freq').value);
     const emAnos = $<HTMLSelectElement>('qr-prazo-un').value === 'ano';
     const erro = (msg: string) => {
       info.innerHTML = `<span class="erro">${msg}</span>`;
       Object.values(saidas).forEach((s) => { s.innerHTML = ''; s.classList.remove('melhor'); });
+      grafico.innerHTML = ''; tabela.innerHTML = '';
     };
-    if (valor === null || prazo === null || selic === null || cdi === null || pct === null) return erro('Preencha valor, prazo e as taxas com números.');
-    if (valor <= 0) return erro('O valor investido precisa ser maior que zero.');
-    if (selic < 0 || cdi < 0 || pct < 0 || cust < 0) return erro('Use taxas positivas.');
+    if (prazo === null || cdi === null || pct === null) return erro('Preencha o prazo e as taxas com números.');
+    if (valor < 0 || aporte < 0) return erro('Use valores positivos.');
+    if (cdi < 0 || pct < 0 || cust < 0) return erro('Use taxas positivas.');
     const meses = Math.round(emAnos ? prazo * 12 : prazo);
     if (meses < 1) return erro('O prazo precisa ter pelo menos 1 mês.');
     if (meses > 600) return erro('O prazo máximo é de 50 anos.');
 
-    const r = {
-      poupanca: rendimentoPoupanca(valor, meses, selic, tr),
-      cdb: rendimentoCdb(valor, meses, cdi, pct),
-      tesouro: rendimentoTesouroSelic(valor, meses, cdi, adic, cust, ISENCAO_CUSTODIA),
-    };
+    const aportes: Aporte[] = [{ mes: 0, valor }];
+    if (aporte > 0) for (let m = freq; m < meses; m += freq) aportes.push({ mes: m, valor: aporte });
+    for (const li of Array.from(listaAvulsos.children)) {
+      const mes = lerNumero(li.querySelector<HTMLInputElement>('.av-mes')!.value);
+      const v = lerNumero(li.querySelector<HTMLInputElement>('.av-valor')!.value);
+      if (mes === null && v === null) continue;
+      if (mes === null || v === null || v < 0) return erro('Preencha o mês e o valor de cada aporte avulso, ou remova a linha.');
+      if (mes < 0 || mes >= meses) return erro(`Os aportes avulsos precisam cair entre o mês 0 e o mês ${meses - 1}.`);
+      aportes.push({ mes: Math.round(mes), valor: v });
+    }
+    if (aportes.every((a) => a.valor <= 0)) return erro('Coloque um valor inicial ou algum aporte.');
+
+    const x: ParametrosProduto = { selicMeta, tr, cdi, percentualCdi: pct, adicionalTesouro: adic, custodia: cust, isencaoCustodia: ISENCAO_CUSTODIA };
+    const ev = { poupanca: evolucao('poupanca', aportes, meses, x), cdb: evolucao('cdb', aportes, meses, x), tesouro: evolucao('tesouro', aportes, meses, x) };
+    const r = { poupanca: ev.poupanca.final, cdb: ev.cdb.final, tesouro: ev.tesouro.final };
     const melhor = (Object.keys(r) as (keyof typeof r)[]).reduce((a, b) => (r[b].final > r[a].final ? b : a));
-    info.textContent = `${meses} ${meses === 1 ? 'mês' : 'meses'} ≈ ${diasCorridos(meses)} dias corridos. Poupança rendendo ${formatar(taxaPoupancaMensal(selic, tr), 4)}% ao mês.`;
+
+    const totalInv = ev.cdb.investido.at(-1)!;
+    info.textContent = `${duracao(meses)} (${meses} ${meses === 1 ? 'mês' : 'meses'}, ≈ ${diasCorridos(meses)} dias). Total investido: ${reais(totalInv)}.`;
     saidas.poupanca.innerHTML = cartao('Poupança', r.poupanca, melhor === 'poupanca');
     saidas.cdb.innerHTML = cartao(`CDB ${formatar(pct, 2)}% do CDI`, r.cdb, melhor === 'cdb');
     saidas.tesouro.innerHTML = cartao('Tesouro Selic', r.tesouro, melhor === 'tesouro');
     (Object.keys(saidas) as (keyof typeof saidas)[]).forEach((k) => saidas[k].classList.toggle('melhor', k === melhor));
+    regraPoup.textContent = `A poupança usa a regra oficial: com a Selic meta em ${formatar(selicMeta, 2)}% ao ano e a TR em ${formatar(tr, 4)}% ao mês, ela rende ${formatar(taxaPoupancaMensal(selicMeta, tr), 4)}% ao mês.`;
+
+    desenharGrafico(grafico, [
+      { nome: `CDB ${formatar(pct, 0)}% do CDI`, cor: 'var(--serie-1)', valores: ev.cdb.liquido },
+      { nome: 'Tesouro Selic', cor: 'var(--serie-3)', valores: ev.tesouro.liquido },
+      { nome: 'Poupança', cor: 'var(--serie-2)', valores: ev.poupanca.liquido },
+      { nome: 'Total investido', cor: 'var(--muted)', valores: ev.cdb.investido, tracejada: true },
+    ], {
+      rotuloPonto: rotuloMes,
+      marcaX: (i, n) => n <= 24 ? (i % (n <= 12 ? 1 : 3) === 0 ? (i === 0 ? '0' : `${i}m`) : null)
+        : i % 12 === 0 ? (i === 0 ? '0' : `${i / 12} ${i === 12 ? 'ano' : 'anos'}`) : null,
+      formatarEixo: reaisCurto,
+      formatarValor: reais,
+    });
+
+    const passo = meses <= 24 ? (meses <= 12 ? 1 : 3) : 12;
+    const linhas: number[] = [];
+    for (let t = passo; t < meses; t += passo) linhas.push(t);
+    linhas.push(meses);
+    tabela.innerHTML = linhas.map((t) => `<tr><td>${rotuloMes(t)}</td><td>${centavos(ev.cdb.investido[t])}</td><td>${centavos(ev.poupanca.liquido[t])}</td><td>${centavos(ev.cdb.liquido[t])}</td><td>${centavos(ev.tesouro.liquido[t])}</td></tr>`).join('');
   }
 
   form.addEventListener('input', calcular);
   form.addEventListener('change', calcular);
   form.addEventListener('submit', (e) => e.preventDefault());
+  let largura = 0;
+  new ResizeObserver(() => { if (Math.abs(grafico.clientWidth - largura) > 8) { largura = grafico.clientWidth; calcular(); } }).observe(grafico);
   calcular();
 
-  // Taxas do dia: só preenche os campos que a pessoa ainda não mexeu.
-  const editados = new Set<string>();
-  ['qr-selic', 'qr-cdi', 'qr-tr'].forEach((id) => $(id).addEventListener('input', () => editados.add(id)));
+  // Taxas do dia: só preenche o CDI se a pessoa ainda não mexeu nele.
+  let cdiEditado = false;
+  $('qr-cdi').addEventListener('input', () => { cdiEditado = true; });
   const fonte = $('qr-fonte'), fonteTaxas = $('qr-fonte-taxas');
-  const refTexto = fonte.textContent;
 
   buscarTaxas().then((t) => {
     if (!t) {
-      fonteTaxas.textContent = `Não foi possível buscar as taxas do dia agora. A conta usa os valores de referência; confira as atuais no site do Banco Central e troque aqui.`;
+      fonteTaxas.textContent = 'Não foi possível buscar as taxas do dia agora. A conta usa os valores de referência; você pode trocar o CDI aqui.';
       return;
     }
-    const preencher = (id: string, v: number | undefined, casas: number) => {
-      if (v === undefined || editados.has(id)) return false;
-      $<HTMLInputElement>(id).value = formatar(v, casas);
-      return true;
-    };
-    const mudou = [preencher('qr-selic', t.selicMeta, 2), preencher('qr-cdi', t.cdi, 2), preencher('qr-tr', t.tr, 4)].some(Boolean);
+    if (t.selicMeta !== undefined) selicMeta = t.selicMeta;
+    if (t.tr !== undefined) tr = t.tr;
+    if (t.cdi !== undefined && !cdiEditado) $('qr-cdi').value = formatar(t.cdi, 2);
     const quando = t.data ? ` de ${t.data}` : '';
     const faltou = [t.selicMeta === undefined && 'Selic', t.cdi === undefined && 'CDI', t.tr === undefined && 'TR'].filter(Boolean);
     fonteTaxas.textContent = `Taxas atualizadas automaticamente${quando}. Fonte: ${t.fonte}.` +
-      (faltou.length ? ` Não foi possível buscar: ${faltou.join(', ')}; esse campo usa o valor de referência.` : '') +
-      ' Troque os valores para simular outros cenários.';
-    fonte.textContent = mudou ? `Conta feita com as taxas do dia${quando} (${t.fonte}). Você pode trocá-las logo abaixo dos resultados.` : refTexto;
-    if (mudou) calcular();
+      (faltou.length ? ` Não foi possível buscar: ${faltou.join(', ')}; a conta usa o valor de referência.` : '') +
+      ' Troque o CDI para simular outros cenários.';
+    fonte.textContent = `Conta feita com as taxas do dia${quando} (${t.fonte}).`;
+    calcular();
   });
 </script>
 
@@ -172,15 +272,31 @@ const REF = {
   .linhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
   .par { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
   .par select { width: auto; }
-  .taxas { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
-  .taxas legend { font-weight: 700; padding: 0 6px; }
+  .aportes, .taxas { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .aportes legend, .taxas legend { font-weight: 700; padding: 0 6px; }
+  .rotulo { font-weight: 600; font-size: 0.95rem; }
+  .lista-avulsos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .lista-avulsos :global(li) { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: 10px; align-items: end; animation: entrar 0.25s var(--suave); }
+  @media (max-width: 480px) { .lista-avulsos :global(li) { grid-template-columns: 1fr 1fr; } .lista-avulsos :global(.remover) { grid-column: 1 / -1; } }
+  @keyframes entrar { from { opacity: 0; transform: translateY(4px); } }
+  .avulsos .btn { align-self: flex-start; }
   .nota { font-size: 0.9rem; }
-  .taxas-grade { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); align-items: start; }
+  .taxas-grade { grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); align-items: start; }
   .cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; }
-  .cartao { display: block; min-height: 190px; border: 2px solid transparent; transition: transform 0.25s var(--mola); }
+  .cartao { display: block; min-height: 210px; border: 2px solid transparent; transition: transform 0.25s var(--mola); }
   .cartao.melhor { border-color: var(--brand-ink); transform: translateY(-2px); }
   .cartao :global(.nome) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 700; }
   .cartao :global(.selo) { font-size: 0.75rem; font-weight: 700; background: var(--brand); color: var(--brand-ink); padding: 1px 8px; border-radius: 999px; }
   @media (prefers-color-scheme: dark) { :global(:root:not([data-theme='light'])) .cartao.melhor { border-color: var(--brand); } }
   :global(:root[data-theme='dark']) .cartao.melhor { border-color: var(--brand); }
+  .evolucao { display: flex; flex-direction: column; gap: 8px; }
+  .graf-titulo { font-size: 1.15rem; }
+  #qr-grafico { min-height: 320px; }
+  .tabela-ano summary { cursor: pointer; font-weight: 600; padding-block: 6px; }
+  .tabela-rolagem { max-height: 380px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.86rem; }
+  th { position: sticky; top: 0; background: var(--surface); text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child { text-align: left; }
+  .tabela-rolagem :global(td) { text-align: right; padding: 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .tabela-rolagem :global(td:first-child) { text-align: left; color: var(--muted); }
 </style>

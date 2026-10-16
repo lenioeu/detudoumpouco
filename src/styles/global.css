@@ -127,3 +127,35 @@ details[open]::details-content { height: auto; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after, ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { transition: none !important; animation: none !important; }
 }
+
+/* Gráfico de linhas (src/lib/grafico.ts). Cores das séries: categóricas validadas para claro e escuro. */
+:root { --serie-1: #2a78d6; --serie-2: #eb6834; --serie-3: #1baf7a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { --serie-1: #3987e5; --serie-2: #d95926; --serie-3: #199e70; } }
+:root[data-theme='dark'] { --serie-1: #3987e5; --serie-2: #d95926; --serie-3: #199e70; }
+.grafico-linhas { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.gl-legenda { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.9rem; }
+.gl-legenda li { display: inline-flex; align-items: center; gap: 6px; }
+.gl-amostra { display: inline-block; width: 16px; height: 0; border-top: 3px solid var(--c); border-radius: 2px; }
+.gl-amostra.tracejada { border-top-style: dashed; }
+.gl-caixa { position: relative; }
+.gl-caixa svg { display: block; overflow: visible; touch-action: pan-y; }
+.gl-caixa svg:focus-visible { outline: 3px solid var(--link); outline-offset: 4px; border-radius: 4px; }
+.gl-grade { stroke: var(--line); stroke-width: 1; }
+.gl-base { stroke: var(--muted); stroke-width: 1; }
+.gl-eixo { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.gl-linha { fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
+.gl-linha.tracejada { stroke: var(--muted) !important; stroke-dasharray: 5 5; stroke-width: 1.5; }
+.gl-mira { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.gl-ponto { stroke: var(--surface); stroke-width: 2; }
+.gl-alvo { fill: transparent; cursor: crosshair; }
+.gl-dica {
+  position: absolute; top: 8px; z-index: 2; pointer-events: none; min-width: 210px;
+  background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--sombra-alta); padding: 10px 12px; font-size: 0.88rem; font-variant-numeric: tabular-nums;
+}
+.gl-dica ul { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.gl-dica li { display: flex; align-items: center; gap: 6px; }
+.gl-dica b { margin-left: auto; padding-left: 12px; font-weight: 700; }
+.gl-dica li { white-space: nowrap; }
+.gl-caixa.compacta { display: flex; flex-direction: column; gap: 8px; }
+.gl-caixa.compacta .gl-dica { position: static; min-width: 0; box-shadow: none; background: var(--bg); padding: 8px 10px; font-size: 0.84rem; }
