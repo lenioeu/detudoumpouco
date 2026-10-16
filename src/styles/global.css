@@ -49,6 +49,8 @@ body {
 }
 main { flex: 1; }
 img, svg, canvas, video { max-width: 100%; }
+/* O atributo hidden sempre esconde, mesmo em elementos com display definido por classe. */
+[hidden] { display: none !important; }
 a { color: var(--link); }
 h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; text-wrap: balance; margin: 0; }
 h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.01em; }
