@@ -13,11 +13,12 @@ Regras do projeto e como criar ferramentas: veja [CLAUDE.md](CLAUDE.md).
 
 ## Publicação
 
-O site é publicado no Cloudflare, conectado a este repositório. Configuração do projeto no painel do Cloudflare:
+O site é publicado como Worker estático no Cloudflare (Workers Builds), conectado a este repositório.
+A configuração está em `wrangler.jsonc`. No painel do Cloudflare:
 
-- **Framework:** Astro
+- **Nome do projeto:** `quebragalho` (igual ao `name` do `wrangler.jsonc`)
 - **Comando de build:** `npm run build`
-- **Pasta de saída:** `dist`
+- **Comando de deploy:** `npx wrangler deploy`
 - **Versão do Node:** 22 (variável `NODE_VERSION=22`, se o painel pedir)
 - **Domínio:** `quebragalho.app` em *Custom domains*
 

@@ -1,0 +1,10 @@
+{
+  // Site estático: o Cloudflare só serve os arquivos gerados em ./dist (sem código de servidor).
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "quebragalho",
+  "compatibility_date": "2026-10-13",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}
