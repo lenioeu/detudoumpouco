@@ -1,0 +1,173 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="calculadoras"
+  slug="financiamento"
+  titulo="Simulador de financiamento"
+  subtitulo="Compare as parcelas pela tabela Price e pelo SAC, veja quanto vai pagar de juros e confira a tabela completa, parcela por parcela."
+  tituloSeo="Simulador de financiamento: tabela Price e SAC"
+  descricao="Simule financiamento de imóvel, carro ou empréstimo pela tabela Price e pelo SAC. Veja parcela, total de juros e a tabela mês a mês. Grátis, sem cadastro."
+  passos={[
+    'Digite o valor do bem e quanto vai dar de entrada (pode ser zero).',
+    'Informe a taxa de juros e escolha se ela é ao mês ou ao ano.',
+    'Escolha o prazo em meses ou anos.',
+    'Compare o resumo da Price e do SAC e abra a tabela de parcelas de cada um.',
+  ]}
+  perguntas={[
+    { p: 'Qual a diferença entre tabela Price e SAC?', r: 'Na Price todas as parcelas têm o mesmo valor; no começo você paga quase só juros. No SAC a amortização é igual todo mês e os juros caem junto com o saldo, então a primeira parcela é a maior e as seguintes vão diminuindo. O SAC sempre cobra menos juros no total, mas exige parcelas iniciais mais altas.' },
+    { p: 'Como calcular a parcela da tabela Price?', r: 'A fórmula é PMT = PV × i ÷ (1 − (1 + i)^−n), com PV o valor financiado, i a taxa mensal e n o número de parcelas. Para R$ 10.000 a 1% ao mês em 12 vezes: 10.000 × 0,01 ÷ (1 − 1,01^−12) = R$ 888,49 por mês.' },
+    { p: 'Como calcular a parcela no SAC?', r: 'Divida o valor financiado pelo número de parcelas para achar a amortização e some os juros do mês sobre o saldo devedor. Para R$ 10.000 a 1% ao mês em 12 vezes, a amortização é R$ 833,33; a primeira parcela é 833,33 + 100 = R$ 933,33 e a última é 833,33 + 8,33 = R$ 841,67.' },
+    { p: 'Qual é melhor para financiamento de imóvel, Price ou SAC?', r: 'Se a primeira parcela do SAC cabe no orçamento, ele costuma ser melhor, porque o total de juros é menor e o saldo cai mais rápido. A Price ajuda quando a renda é apertada no começo. A maioria dos bancos usa SAC no crédito imobiliário e Price em carros e empréstimos pessoais.' },
+    { p: 'O simulador inclui seguro, taxa de administração e correção pela TR?', r: 'Não. Ele calcula só juros e amortização. No financiamento imobiliário, o banco soma seguros obrigatórios (MIP e DFI), taxa de administração e, em muitos contratos, a correção do saldo pela TR. Peça o CET (Custo Efetivo Total) ao banco para comparar propostas.' },
+    { p: 'Vale a pena amortizar o financiamento antes do prazo?', r: 'Em geral sim, porque cada real amortizado deixa de pagar juros pelo resto do contrato. A lei garante o desconto proporcional dos juros quando você antecipa parcelas. Reduzir o prazo economiza mais juros; reduzir a parcela alivia o orçamento.' },
+  ]}
+>
+  <form id="fin" class="stack" novalidate>
+    <div class="linhas">
+      <div class="campo"><label for="fin-bem">Valor do bem (R$)</label><input id="fin-bem" type="text" inputmode="decimal" value="300.000" /></div>
+      <div class="campo"><label for="fin-entrada">Entrada (R$)</label><input id="fin-entrada" type="text" inputmode="decimal" value="60.000" /></div>
+      <div class="campo">
+        <label for="fin-taxa">Taxa de juros (%)</label>
+        <div class="par">
+          <input id="fin-taxa" type="text" inputmode="decimal" value="11" />
+          <select id="fin-taxa-un" aria-label="Período da taxa"><option value="ano" selected>ao ano</option><option value="mes">ao mês</option></select>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="fin-prazo">Prazo</label>
+        <div class="par">
+          <input id="fin-prazo" type="text" inputmode="numeric" value="360" />
+          <select id="fin-prazo-un" aria-label="Unidade do prazo"><option value="mes" selected>meses</option><option value="ano">anos</option></select>
+        </div>
+      </div>
+    </div>
+
+    <p class="muted" id="fin-info" aria-live="polite"></p>
+
+    <div class="comparar">
+      <output class="resultado" id="fin-price" for="fin-bem fin-entrada fin-taxa fin-prazo"></output>
+      <output class="resultado" id="fin-sac" for="fin-bem fin-entrada fin-taxa fin-prazo"></output>
+    </div>
+    <p id="fin-economia" class="economia"></p>
+
+    <div class="abas" role="group" aria-label="Qual tabela mostrar">
+      <button type="button" class="btn btn-sec aba" data-sistema="price" aria-pressed="true">Tabela Price</button>
+      <button type="button" class="btn btn-sec aba" data-sistema="sac" aria-pressed="false">Tabela SAC</button>
+    </div>
+    <p class="legenda" id="fin-legenda-tabela">Valores em reais. Role a tabela para ver todas as parcelas (no celular, role também para o lado).</p>
+    <div class="tabela-rolagem" tabindex="0" aria-labelledby="fin-legenda-tabela">
+      <table>
+        <thead><tr><th scope="col">Nº</th><th scope="col">Parcela</th><th scope="col">Juros</th><th scope="col">Amortização</th><th scope="col">Saldo</th></tr></thead>
+        <tbody id="fin-tabela"></tbody>
+      </table>
+    </div>
+  </form>
+
+  <Fragment slot="texto">
+    <h2>Como funciona um financiamento</h2>
+    <p>Toda parcela de financiamento tem duas partes: os juros do mês, calculados sobre o que você ainda deve, e a amortização, que é a parte que de fato abate a dívida. O que muda entre a tabela Price e o SAC é como essas duas partes se dividem ao longo do tempo. O banco empresta o mesmo valor e cobra a mesma taxa, mas o total de juros sai diferente.</p>
+    <h2>Tabela Price: parcela igual do começo ao fim</h2>
+    <p>Na Price, a parcela é fixa. Nos primeiros meses quase todo o valor vai para juros e a dívida diminui devagar. Com o tempo a proporção se inverte. É o sistema mais comum em financiamento de carro, crédito pessoal e compras parceladas com juros, porque deixa o orçamento previsível.</p>
+    <h2>SAC: parcela que diminui todo mês</h2>
+    <p>No Sistema de Amortização Constante, você abate a mesma fatia da dívida todo mês. Como o saldo cai mais rápido, os juros também caem, e a parcela fica menor a cada mês. A primeira parcela é a mais pesada. Bancos costumam aprovar o financiamento imobiliário olhando essa primeira parcela, que em geral não pode passar de 30% da renda.</p>
+    <h2>Um exemplo para comparar</h2>
+    <p>Imagine R$ 240.000 financiados a 11% ao ano em 360 meses. Na Price, a parcela fica em torno de R$ 2.192 do começo ao fim, e o total de juros passa de R$ 549 mil. No SAC, a primeira parcela é de cerca de R$ 2.763 e a última fica perto de R$ 672. No total, o SAC cobra uns R$ 170 mil a menos de juros. Use o simulador acima para ver os números exatos do seu caso.</p>
+    <h2>Antes de assinar</h2>
+    <ul>
+      <li>Peça o CET, que inclui seguros, tarifas e impostos. Ele é o número certo para comparar bancos.</li>
+      <li>Pergunte se o saldo é corrigido pela TR ou por outro índice, o que faz a parcela variar.</li>
+      <li>Simule uma entrada maior. Cada real a menos financiado deixa de pagar juros por anos.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero, formatar } from '../../lib/numeros';
+  import { reais, centavos } from '../../lib/dinheiro';
+  import { anualParaMensal, mensalParaAnual, tabelaPrice, tabelaSac, type Financiamento } from '../../lib/juros';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('fin');
+  const outPrice = $('fin-price');
+  const outSac = $('fin-sac');
+  const info = $('fin-info');
+  const economia = $('fin-economia');
+  const tabela = $('fin-tabela');
+  const abas = Array.from(document.querySelectorAll<HTMLButtonElement>('.aba'));
+  let sistema: 'price' | 'sac' = 'price';
+  let atual: { price: Financiamento; sac: Financiamento } | null = null;
+
+  function desenharTabela() {
+    if (!atual) { tabela.innerHTML = ''; return; }
+    tabela.innerHTML = atual[sistema].parcelas.map((p) =>
+      `<tr><td>${p.numero}</td><td>${centavos(p.prestacao)}</td><td>${centavos(p.juros)}</td><td>${centavos(p.amortizacao)}</td><td>${centavos(p.saldo)}</td></tr>`).join('');
+  }
+
+  function calcular() {
+    const bem = lerNumero($<HTMLInputElement>('fin-bem').value);
+    const entrada = lerNumero($<HTMLInputElement>('fin-entrada').value) ?? 0;
+    const taxa = lerNumero($<HTMLInputElement>('fin-taxa').value);
+    const prazo = lerNumero($<HTMLInputElement>('fin-prazo').value);
+    const taxaAnual = $<HTMLSelectElement>('fin-taxa-un').value === 'ano';
+    const emAnos = $<HTMLSelectElement>('fin-prazo-un').value === 'ano';
+
+    const erro = (msg: string) => {
+      atual = null;
+      outPrice.innerHTML = `<span class="erro">${msg}</span>`;
+      outSac.innerHTML = '';
+      info.textContent = ''; economia.textContent = '';
+      desenharTabela();
+    };
+    if (bem === null || taxa === null || prazo === null) return erro('Preencha valor, taxa e prazo com números.');
+    if (bem < 0 || entrada < 0 || taxa < 0) return erro('Use valores positivos.');
+    const valor = bem - entrada;
+    if (valor <= 0) return erro('A entrada precisa ser menor que o valor do bem.');
+    const meses = Math.round(emAnos ? prazo * 12 : prazo);
+    if (meses < 1) return erro('O prazo precisa ter pelo menos 1 mês.');
+    if (meses > 600) return erro('O prazo máximo é de 600 meses (50 anos).');
+
+    const taxaMensal = taxaAnual ? anualParaMensal(taxa) : taxa;
+    const price = tabelaPrice(valor, taxaMensal, meses);
+    const sac = tabelaSac(valor, taxaMensal, meses);
+    atual = { price, sac };
+
+    info.textContent = `Valor financiado: ${reais(valor)} em ${meses} parcelas. Taxa de ${formatar(taxaMensal, 4)}% ao mês (${formatar(taxaAnual ? taxa : mensalParaAnual(taxa), 2)}% ao ano).`;
+    outPrice.innerHTML = `<span class="rotulo">Tabela Price</span><strong>${reais(price.primeira)}</strong>parcela fixa<br>Juros: ${reais(price.totalJuros)}<br>Total pago: ${reais(price.totalPago)}`;
+    outSac.innerHTML = `<span class="rotulo">SAC</span><strong>${reais(sac.primeira)}</strong>1ª parcela, caindo até ${reais(sac.ultima)}<br>Juros: ${reais(sac.totalJuros)}<br>Total pago: ${reais(sac.totalPago)}`;
+    const dif = price.totalJuros - sac.totalJuros;
+    economia.textContent = dif > 0.005 ? `No SAC você paga ${reais(dif)} a menos de juros no total.` : 'Com juros zero, Price e SAC dão o mesmo total.';
+    desenharTabela();
+  }
+
+  abas.forEach((b) => b.addEventListener('click', () => {
+    sistema = b.dataset.sistema as 'price' | 'sac';
+    abas.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    desenharTabela();
+  }));
+  form.addEventListener('input', calcular);
+  form.addEventListener('change', calcular);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calcular();
+</script>
+
+<style>
+  .linhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+  .par { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .par select { width: auto; }
+  .comparar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+  .resultado { display: block; min-height: 150px; }
+  .resultado :global(.rotulo) { display: block; color: var(--muted); }
+  .economia { font-weight: 600; color: var(--ok); min-height: 1.6em; }
+  .abas { display: flex; gap: 8px; flex-wrap: wrap; }
+  .aba { padding: 8px 14px; }
+  .aba[aria-pressed='true'] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand-ink); }
+  .legenda { font-size: 0.9rem; color: var(--muted); }
+  .tabela-rolagem { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); overscroll-behavior: contain; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.86rem; }
+  th { position: sticky; top: 0; background: var(--surface); text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child { text-align: left; left: 0; z-index: 1; }
+  .tabela-rolagem :global(td) { text-align: right; padding: 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .tabela-rolagem :global(td:first-child) { text-align: left; color: var(--muted); position: sticky; left: 0; background: var(--surface); }
+  .tabela-rolagem :global(tr:last-child td) { border-bottom: 0; }
+</style>
