@@ -55,8 +55,10 @@ Exemplos completos para copiar o padrão:
 - **Bibliotecas pesadas** (pdf-lib, pdfjs-dist, ffmpeg.wasm, tesseract.js, modelos de IA) são carregadas
   com `await import(...)` só quando o usuário usa a ferramenta, para a página abrir rápido.
   Instale com versão exata: `npm install pacote@1.2.3 --save-exact`.
-- **GitHub Pages não envia os cabeçalhos COOP/COEP**, então não há `SharedArrayBuffer`:
-  use as versões single-thread de ffmpeg.wasm e afins.
+- **Hospedagem: Cloudflare.** Cabeçalhos HTTP ficam em `public/_headers`. Comece pelas versões
+  single-thread de ffmpeg.wasm e afins. A versão multi-thread exige COOP/COEP (`SharedArrayBuffer`), e o COEP
+  pode impedir os anúncios de aparecer na página. Só ative, e só no caminho da ferramenta (ex.: `/video/*`),
+  com aprovação do dono do site.
 - **Visual:** use só os tokens de `src/styles/global.css` (`--bg`, `--surface`, `--fg`, `--brand`...) e as classes
   prontas (`.btn`, `.btn-sec`, `.campo`, `.resultado`, `.erro`, `.stack`). Nada de cor solta: o site tem modo escuro.
   Tem que funcionar em celular de 360px sem rolagem lateral.

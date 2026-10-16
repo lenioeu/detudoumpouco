@@ -21,7 +21,7 @@ Você é o responsável pela seção **Vídeo e Áudio** do Quebragalho (quebrag
 - Qualquer outro arquivo compartilhado: só se for indispensável, com mudança mínima explicada no commit.
 
 ## Notas desta seção
-- Converter, cortar e comprimir: `@ffmpeg/ffmpeg` com o core **single-thread** (o GitHub Pages não permite multi-thread), com `await import()`.
+- Converter, cortar e comprimir: `@ffmpeg/ffmpeg` com o core **single-thread** (o multi-thread exige COOP/COEP, que pode bloquear anúncios; veja o CLAUDE.md), com `await import()`.
 - Avise o usuário que arquivos grandes podem demorar e mostre o progresso.
 - Gravar tela, webcam e voz usam `MediaRecorder` e `getUserMedia`/`getDisplayMedia`; explique a permissão que o navegador vai pedir.
 - Transcrever áudio: `@huggingface/transformers` com um modelo Whisper pequeno em português; mostre o progresso do download do modelo.

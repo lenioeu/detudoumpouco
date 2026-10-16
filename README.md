@@ -13,11 +13,14 @@ Regras do projeto e como criar ferramentas: veja [CLAUDE.md](CLAUDE.md).
 
 ## Publicação
 
-O site é publicado no GitHub Pages pelo workflow `.github/workflows/deploy.yml` a cada push na branch `main`.
+O site é publicado no Cloudflare, conectado a este repositório. Configuração do projeto no painel do Cloudflare:
 
-Configuração única:
-1. No GitHub: **Settings → Pages → Source: GitHub Actions**.
-2. Em **Settings → Pages → Custom domain**, coloque `quebragalho.app` e marque **Enforce HTTPS**.
-3. No registrador do domínio, crie os registros DNS que o GitHub indicar (4 registros `A` apontando para o GitHub Pages).
+- **Framework:** Astro
+- **Comando de build:** `npm run build`
+- **Pasta de saída:** `dist`
+- **Versão do Node:** 22 (variável `NODE_VERSION=22`, se o painel pedir)
+- **Domínio:** `quebragalho.app` em *Custom domains*
+
+Cabeçalhos HTTP (cache e segurança) ficam em `public/_headers`.
 
 Depois da aprovação no AdSense, coloque o ID `ca-pub-...` em `src/config.ts` (`adsenseClient`) e crie `public/ads.txt`.

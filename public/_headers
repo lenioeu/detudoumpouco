@@ -1,0 +1,11 @@
+# Cabeçalhos do Cloudflare Pages / Workers (arquivo lido na publicação).
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Arquivos com nome versionado pelo Astro e a fonte: cache de 1 ano.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
