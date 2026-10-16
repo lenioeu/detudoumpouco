@@ -6,7 +6,7 @@ export default [
   { slug: 'financiamento', nome: 'Simulador de financiamento', resumo: 'Parcelas pela tabela Price e SAC.', status: 'pronta' },
   { slug: 'quanto-rende', nome: 'Quanto rende', resumo: 'Poupança, CDB e Tesouro lado a lado.', status: 'pronta' },
   { slug: 'regra-de-tres', nome: 'Regra de três', resumo: 'Simples e composta, com o passo a passo.', status: 'pronta' },
-  { slug: 'alcool-ou-gasolina', nome: 'Álcool ou gasolina?', resumo: 'Descubra qual compensa mais no seu carro.', status: 'planejada' },
+  { slug: 'alcool-ou-gasolina', nome: 'Álcool ou gasolina?', resumo: 'Descubra qual compensa mais no seu carro.', status: 'pronta' },
   { slug: 'salario-liquido', nome: 'Salário líquido', resumo: 'Descontos de INSS e IR no seu salário.', status: 'planejada' },
   { slug: 'hora-extra', nome: 'Hora extra', resumo: 'Valor das horas extras a 50% e 100%.', status: 'planejada' },
   { slug: 'preco-de-venda', nome: 'Preço de venda', resumo: 'Preço com margem de lucro, para MEI e pequenos negócios.', status: 'planejada' },

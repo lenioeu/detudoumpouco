@@ -1,0 +1,122 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="calculadoras"
+  slug="alcool-ou-gasolina"
+  titulo="Álcool ou gasolina: qual compensa?"
+  subtitulo="Digite o preço do litro no posto e descubra na hora qual combustível sai mais barato. Se souber o consumo do seu carro, a conta fica ainda mais exata."
+  tituloSeo="Álcool ou gasolina? Calcule qual compensa mais"
+  descricao="Descubra se compensa abastecer com álcool ou gasolina: compare os preços pela regra dos 70% ou pelo consumo real do seu carro. Grátis e na hora, no celular."
+  passos={[
+    'Digite o preço do litro do álcool (etanol) e da gasolina no posto.',
+    'Veja na hora qual compensa pela regra dos 70%.',
+    'Se souber quantos km/l seu carro faz com cada um, preencha o consumo para uma conta sob medida.',
+  ]}
+  perguntas={[
+    { p: 'Como saber se compensa álcool ou gasolina?', r: 'Divida o preço do álcool pelo da gasolina. Se der menos de 0,70, o álcool compensa; se der mais, a gasolina. Exemplo: R$ 4,19 ÷ R$ 6,29 = 0,67, então o álcool está valendo a pena.' },
+    { p: 'Por que a regra é 70%?', r: 'O etanol tem menos energia por litro que a gasolina, e por isso o carro faz menos quilômetros com ele. Na média dos carros flex, o rendimento com álcool fica perto de 70% do rendimento com gasolina. Se o litro do álcool custar menos que 70% do da gasolina, cada quilômetro sai mais barato.' },
+    { p: 'A regra dos 70% vale para todo carro?', r: 'Não exatamente. Alguns motores rendem 72% ou 75% com etanol, outros 65%. Por isso a calculadora aceita o consumo do seu carro: o limite passa a ser o consumo com álcool dividido pelo consumo com gasolina. Os números de consumo estão na tabela do Inmetro (PBEV) ou no computador de bordo.' },
+    { p: 'Qual o preço máximo do álcool para valer a pena?', r: 'Multiplique o preço da gasolina por 0,7. Com a gasolina a R$ 6,00, o álcool compensa até R$ 4,20 o litro. A calculadora mostra esse valor já com o consumo do seu carro, se você informar.' },
+    { p: 'Pode misturar álcool e gasolina no tanque do carro flex?', r: 'Pode. O carro flex foi feito para rodar com qualquer mistura dos dois. Muita gente alterna conforme o preço. Só vale a pena rodar alguns quilômetros depois de trocar para o motor se ajustar à nova mistura.' },
+  ]}
+>
+  <form id="ag" class="stack" novalidate>
+    <div class="linhas">
+      <div class="campo"><label for="ag-etanol">Preço do álcool (R$/litro)</label><input id="ag-etanol" type="text" inputmode="decimal" value="4,19" /></div>
+      <div class="campo"><label for="ag-gasolina">Preço da gasolina (R$/litro)</label><input id="ag-gasolina" type="text" inputmode="decimal" value="6,29" /></div>
+    </div>
+
+    <output class="resultado" id="ag-res" for="ag-etanol ag-gasolina"></output>
+
+    <div class="medidor" aria-hidden="true">
+      <div class="trilho"><span class="faixa-e"></span><span id="ag-limite" class="limite"></span><span id="ag-ponteiro" class="ponteiro"></span></div>
+      <div class="escala"><span>50%</span><span>Álcool compensa · Gasolina compensa</span><span>90%</span></div>
+    </div>
+
+    <fieldset class="consumo">
+      <legend>Consumo do seu carro (opcional)</legend>
+      <p class="muted nota">Deixe em branco para usar a regra dos 70%.</p>
+      <div class="linhas">
+        <div class="campo"><label for="ag-ce">Com álcool (km/l)</label><input id="ag-ce" type="text" inputmode="decimal" placeholder="Ex.: 8,2" /></div>
+        <div class="campo"><label for="ag-cg">Com gasolina (km/l)</label><input id="ag-cg" type="text" inputmode="decimal" placeholder="Ex.: 11,8" /></div>
+      </div>
+    </fieldset>
+  </form>
+
+  <Fragment slot="texto">
+    <h2>Por que o álcool precisa ser mais barato</h2>
+    <p>Um litro de etanol tem cerca de 30% menos energia que um litro de gasolina comum. Na prática, o mesmo carro flex que faz 12 km/l com gasolina costuma fazer uns 8,4 km/l com álcool. Então não basta o álcool ser mais barato: ele precisa ser barato o suficiente para compensar os quilômetros a menos. É daí que vem a famosa regra dos 70%.</p>
+    <h2>Como a conta é feita</h2>
+    <p>Sem o consumo do carro, a calculadora divide o preço do álcool pelo preço da gasolina e compara com 0,70. Abaixo disso, o álcool ganha. Quando você informa o consumo com cada combustível, ela troca o 0,70 pela proporção real do seu carro e mostra quanto custa rodar 100 km com cada um. Esse é o número que importa no bolso.</p>
+    <h2>Exemplos</h2>
+    <ul>
+      <li>Álcool a R$ 4,19 e gasolina a R$ 6,29: a razão é 0,67. O álcool compensa, e valeria a pena até R$ 4,40 o litro.</li>
+      <li>Álcool a R$ 4,50 e gasolina a R$ 6,00: a razão é 0,75. A gasolina compensa.</li>
+      <li>Carro que faz 8 km/l com álcool e 11,5 km/l com gasolina, álcool a R$ 4,00 e gasolina a R$ 5,80: rodar 100 km custa R$ 50,00 com álcool e R$ 50,43 com gasolina. Quase empate, com leve vantagem do álcool.</li>
+    </ul>
+    <h2>Outras coisas que pesam</h2>
+    <p>O álcool costuma dar um pouco mais de potência e polui menos na queima, mas pode deixar a partida mais difícil em dias muito frios em carros antigos. A gasolina dá mais autonomia, o que ajuda em viagens longas com poucos postos. Quando a diferença fica perto de zero, como no último exemplo, escolha pelo que for mais prático. E confira o consumo do seu carro na tabela do Inmetro ou no computador de bordo: ele muda bastante entre cidade e estrada.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero, formatar } from '../../lib/numeros';
+  import { reais } from '../../lib/dinheiro';
+  import { compararCombustiveis } from '../../lib/combustivel';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('ag');
+  const res = $('ag-res');
+  const ponteiro = $('ag-ponteiro');
+  const limite = $('ag-limite');
+  const pct = (n: number) => `${formatar(n * 100, 1)}%`;
+  // Posição na escala de 50% a 90%, de 0 a 1.
+  const posicao = (r: number) => Math.min(1, Math.max(0, (r - 0.5) / 0.4));
+
+  function calcular() {
+    const pe = lerNumero($<HTMLInputElement>('ag-etanol').value);
+    const pg = lerNumero($<HTMLInputElement>('ag-gasolina').value);
+    const ce = lerNumero($<HTMLInputElement>('ag-ce').value);
+    const cg = lerNumero($<HTMLInputElement>('ag-cg').value);
+    if (pe === null || pg === null) { res.innerHTML = '<span class="muted">Digite os dois preços.</span>'; ponteiro.style.opacity = '0'; return; }
+    const r = compararCombustiveis(pe, pg, ce, cg);
+    if (!r) { res.innerHTML = '<span class="erro">Os preços precisam ser maiores que zero.</span>'; ponteiro.style.opacity = '0'; return; }
+
+    const titulo = r.compensa === 'etanol' ? 'Abasteça com álcool' : r.compensa === 'gasolina' ? 'Abasteça com gasolina' : 'Tanto faz';
+    const regra = r.custoKm ? `o limite do seu carro, ${pct(r.limite)}` : 'o limite de 70%';
+    const linhas = [
+      `O álcool custa ${pct(r.razao)} do preço da gasolina, contra ${regra}.`,
+      `Com a gasolina a ${reais(pg)}, o álcool compensa até ${reais(r.etanolMaximo)} o litro.`,
+    ];
+    if (r.custoKm) {
+      linhas.push(`Para rodar 100 km: ${reais(r.custoKm.etanol * 100)} com álcool e ${reais(r.custoKm.gasolina * 100)} com gasolina.`);
+    } else if ((ce !== null) !== (cg !== null)) {
+      linhas.push('<span class="muted">Preencha o consumo com os dois combustíveis para usar o do seu carro.</span>');
+    }
+    res.innerHTML = `<strong>${titulo}</strong>${linhas.join('<br>')}`;
+
+    ponteiro.style.opacity = '1';
+    ponteiro.style.transform = `translateX(${posicao(r.razao) * 100}cqw)`;
+    limite.style.transform = `translateX(${posicao(r.limite) * 100}cqw)`;
+  }
+
+  form.addEventListener('input', calcular);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calcular();
+</script>
+
+<style>
+  .linhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+  .resultado { display: block; min-height: 132px; }
+  .medidor { display: flex; flex-direction: column; gap: 6px; }
+  .trilho { position: relative; height: 14px; border-radius: 7px; background: var(--line); container-type: inline-size; }
+  .faixa-e { position: absolute; inset: 0; border-radius: 7px; background: linear-gradient(90deg, var(--ok), transparent); opacity: 0.35; }
+  .limite { position: absolute; left: -1px; top: -4px; width: 2px; height: 22px; background: var(--fg); transition: transform 0.3s var(--suave); }
+  .ponteiro { position: absolute; left: -9px; top: -4px; width: 18px; height: 22px; border-radius: 6px; background: var(--brand); border: 2px solid var(--brand-ink); transition: transform 0.35s var(--mola), opacity 0.2s var(--suave); }
+  .escala { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+  .escala span:nth-child(2) { text-align: center; }
+  .consumo { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .consumo legend { font-weight: 700; padding: 0 6px; }
+  .nota { font-size: 0.9rem; }
+</style>
