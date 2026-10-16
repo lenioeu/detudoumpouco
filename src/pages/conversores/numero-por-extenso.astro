@@ -1,0 +1,135 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="conversores"
+  slug="numero-por-extenso"
+  titulo="Número por extenso"
+  subtitulo="Digite um número ou um valor em reais e veja como se escreve por extenso, pronto para copiar para o recibo, o cheque ou o contrato."
+  tituloSeo="Número por extenso: valores em reais e números"
+  descricao="Escreva números e valores em reais por extenso, com centavos: mil e um, dois milhões de reais, cento e um reais e cinquenta centavos. Grátis e na hora."
+  passos={[
+    'Escolha se quer escrever um valor em reais ou só o número.',
+    'Digite o número. Pode usar ponto para os milhares e vírgula para os centavos, como 1.230,40.',
+    'O texto por extenso aparece na hora. Marque "Primeira letra maiúscula" se for começar uma frase.',
+    'Clique em "Copiar" e cole no seu documento.',
+  ]}
+  perguntas={[
+    { p: 'Como se escreve 1.500 reais por extenso?', r: 'Mil e quinhentos reais. Não se usa "um mil": o certo é só "mil". Com centavos, por exemplo R$ 1.500,50, fica "mil e quinhentos reais e cinquenta centavos".' },
+    { p: 'É "um milhão de reais" ou "um milhão reais"?', r: 'Um milhão de reais. Quando o valor termina em milhão, bilhão ou trilhão redondo, entra o "de": "dois milhões de reais". Se vierem milhares depois, o "de" sai: "dois milhões e quinhentos mil reais".' },
+    { p: 'Quando usar o "e" entre mil e o resto do número?', r: 'Use "e" quando o que vem depois do mil for menor que 100 ou uma centena redonda: mil e um, mil e vinte, mil e cem, mil e quinhentos. Nos outros casos não há "e" depois do mil: mil duzentos e trinta, dois mil quatrocentos e dez.' },
+    { p: 'Como escrever um valor só de centavos por extenso?', r: 'Escreva apenas os centavos, sem "zero reais": R$ 0,50 é "cinquenta centavos" e R$ 0,01 é "um centavo".' },
+    { p: 'É catorze ou quatorze?', r: 'As duas formas estão certas e aparecem no Vocabulário Ortográfico da Academia Brasileira de Letras. A ferramenta usa "catorze", mas você pode trocar por "quatorze" sem erro.' },
+    { p: 'Por que escrever o valor por extenso em recibos e contratos?', r: 'O extenso dificulta adulterações, como acrescentar um zero ao número. Em caso de diferença entre o número e o extenso num cheque, vale o valor por extenso, segundo a Lei do Cheque (Lei 7.357/1985, art. 12).' },
+  ]}
+>
+  <form id="form" class="stack" autocomplete="off">
+    <fieldset class="modos">
+      <legend class="rotulo">Escrever como</legend>
+      <label class="opcao"><input type="radio" name="modo" value="reais" checked /> Valor em reais</label>
+      <label class="opcao"><input type="radio" name="modo" value="numero" /> Só o número</label>
+    </fieldset>
+    <div class="campo">
+      <label for="valor">Número</label>
+      <input id="valor" type="text" inputmode="decimal" value="1.230,40" />
+      <small>Até 9,9 trilhões em reais, com centavos.</small>
+    </div>
+    <label class="opcao"><input id="maiuscula" type="checkbox" /> Primeira letra maiúscula</label>
+    <output id="saida" class="resultado" for="valor" aria-live="polite"></output>
+    <div class="acoes">
+      <button id="copiar" type="button" class="btn">Copiar</button>
+      <span id="aviso" class="muted" role="status"></span>
+    </div>
+    <div class="exemplos">
+      <span class="muted">Exemplos:</span>
+      {['1.001', '15', '2.500.000', '1.000.000', '0,99', '101,50'].map((v) => (
+        <button type="button" class="btn btn-sec chip" data-valor={v}>{v}</button>
+      ))}
+    </div>
+  </form>
+
+  <Fragment slot="texto">
+    <h2>Para que serve escrever o número por extenso</h2>
+    <p>Recibos, cheques, notas promissórias, contratos de aluguel e propostas comerciais costumam trazer o valor duas vezes: em algarismos e por extenso. O motivo é segurança. É fácil transformar R$ 100 em R$ 1.000 acrescentando um zero, mas é bem mais difícil mudar "cem reais" para "mil reais" sem deixar rastro. No cheque, se o número e o extenso não baterem, vale o que está escrito por extenso.</p>
+    <h2>As regras que mais confundem</h2>
+    <ul>
+      <li><strong>Cem ou cento:</strong> 100 é "cem". A partir de 101 vira "cento": cento e um, cento e cinquenta.</li>
+      <li><strong>Sem "um mil":</strong> 1.000 é "mil", e 1.001 é "mil e um". O "um" só aparece antes de milhão, bilhão e trilhão.</li>
+      <li><strong>O "e" depois do mil:</strong> entra quando o resto é menor que 100 ou termina em dois zeros (mil e oitenta, mil e trezentos). Em 1.230, fica "mil duzentos e trinta".</li>
+      <li><strong>"De reais":</strong> R$ 1.000.000 é "um milhão de reais". Já R$ 1.200.000 é "um milhão e duzentos mil reais", sem o "de".</li>
+      <li><strong>Singular:</strong> R$ 1,00 é "um real" e R$ 0,01 é "um centavo".</li>
+    </ul>
+    <h2>Exemplos prontos</h2>
+    <ul>
+      <li>R$ 1.412,00: mil quatrocentos e doze reais.</li>
+      <li>R$ 2.350,75: dois mil trezentos e cinquenta reais e setenta e cinco centavos.</li>
+      <li>R$ 15.000,00: quinze mil reais.</li>
+      <li>R$ 250.000,00: duzentos e cinquenta mil reais.</li>
+      <li>R$ 3.000.000,00: três milhões de reais.</li>
+    </ul>
+    <h2>Números com vírgula</h2>
+    <p>No modo "Só o número", a parte depois da vírgula é lida como se fala no dia a dia: 3,5 vira "três vírgula cinco" e 2,05 vira "dois vírgula zero cinco". Para medidas e notas escolares isso basta. Em textos jurídicos ou técnicos, às vezes se prefere "dois inteiros e cinco centésimos"; nesse caso, ajuste o texto depois de copiar.</p>
+    <p>Dica para o recibo: escreva o extenso entre parênteses logo depois do número, assim: R$ 850,00 (oitocentos e cinquenta reais). Fica claro e evita qualquer dúvida sobre o valor combinado.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero } from '../../lib/numeros';
+  import { reaisPorExtenso, decimalPorExtenso, capitalizar } from '../../lib/extenso';
+
+  const form = document.getElementById('form') as HTMLFormElement;
+  const valor = document.getElementById('valor') as HTMLInputElement;
+  const maiuscula = document.getElementById('maiuscula') as HTMLInputElement;
+  const saida = document.getElementById('saida')!;
+  const copiar = document.getElementById('copiar') as HTMLButtonElement;
+  const aviso = document.getElementById('aviso')!;
+  let texto = '';
+
+  function calcular() {
+    const modo = (form.elements.namedItem('modo') as RadioNodeList).value;
+    const n = lerNumero(valor.value);
+    texto = '';
+    aviso.textContent = '';
+    if (n === null) {
+      saida.innerHTML = '<span class="muted">Digite um número, como 1.230,40.</span>';
+    } else {
+      try {
+        const s = String(n);
+        if (modo === 'numero' && /e/i.test(s)) throw new RangeError();
+        texto = modo === 'reais' ? reaisPorExtenso(n) : decimalPorExtenso(s);
+        if (maiuscula.checked) texto = capitalizar(texto);
+        const strong = document.createElement('strong');
+        strong.className = 'extenso';
+        strong.textContent = texto;
+        saida.replaceChildren(strong);
+      } catch {
+        saida.innerHTML = '<span class="erro">Número grande demais. O limite é 9,9 trilhões em reais e 999 trilhões no modo número.</span>';
+      }
+    }
+    copiar.disabled = !texto;
+  }
+
+  copiar.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(texto); aviso.textContent = 'Copiado.'; }
+    catch { aviso.textContent = 'Não deu para copiar. Selecione o texto e copie manualmente.'; }
+  });
+  form.querySelectorAll<HTMLButtonElement>('.chip').forEach((b) => b.addEventListener('click', () => {
+    valor.value = b.dataset.valor!;
+    calcular();
+  }));
+  form.addEventListener('input', calcular);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calcular();
+</script>
+
+<style>
+  .modos { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+  .modos legend { padding: 0; margin-bottom: 6px; width: 100%; }
+  .opcao { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .opcao input { width: 18px; height: 18px; accent-color: var(--brand); }
+  #saida { display: block; min-height: 96px; }
+  #saida :global(.extenso) { font-size: 1.3rem; overflow-wrap: anywhere; }
+  .acoes { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .exemplos { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chip { padding: 6px 12px; font-size: 0.95rem; }
+</style>
