@@ -56,13 +56,14 @@ export function proporcional(original: Tamanho, campo: 'largura' | 'altura', val
 
 export type OpcoesTamanho =
   | { modo: 'porcentagem'; porcentagem: number }
-  | { modo: 'pixels'; largura: number; altura: number; manter: boolean; base: 'largura' | 'altura' };
+  | { modo: 'pixels'; largura: number; altura: number; manter: boolean; base: 'largura' | 'altura'; naoAumentar?: boolean };
 
 /**
  * Tamanho final de uma imagem.
  * - porcentagem: 50 deixa a imagem com metade da largura e metade da altura.
  * - pixels com "manter": usa o lado `base` e calcula o outro pela proporção da própria imagem
- *   (assim funciona em lote, com fotos em pé e deitadas).
+ *   (assim funciona em lote, com fotos em pé e deitadas). Com `naoAumentar`, imagens que já são
+ *   menores que o pedido ficam como estão.
  * - pixels sem "manter": usa largura e altura exatas (pode esticar).
  */
 export function calcularTamanho(original: Tamanho, o: OpcoesTamanho): Tamanho {
@@ -72,6 +73,7 @@ export function calcularTamanho(original: Tamanho, o: OpcoesTamanho): Tamanho {
     t = { largura: Math.max(1, Math.round(original.largura * f)), altura: Math.max(1, Math.round(original.altura * f)) };
   } else if (o.manter) {
     t = proporcional(original, o.base, o.base === 'largura' ? o.largura : o.altura);
+    if (o.naoAumentar && t.largura > original.largura) t = { ...original };
   } else {
     t = { largura: Math.max(1, Math.round(o.largura)), altura: Math.max(1, Math.round(o.altura)) };
   }
