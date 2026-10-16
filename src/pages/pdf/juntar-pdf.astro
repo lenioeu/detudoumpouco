@@ -70,7 +70,7 @@ import GradeArquivos from '../../components/GradeArquivos.astro';
 
 <script>
   import { tamanho } from '../../lib/arquivos';
-  import { abrirParaEditar, abrirParaVer, miniatura, novoPdf, paraBlob, filaDeTrabalho, ErroPdf } from '../../lib/pdf-navegador';
+  import { abrirParaEditar, abrirParaVer, fecharPdf, miniatura, novoPdf, paraBlob, filaDeTrabalho, ErroPdf } from '../../lib/pdf-navegador';
   import { criarCartao, numerar } from '../../lib/cartao-arquivo';
   import { animarTroca, mover, ordenavel } from '../../lib/ordenavel';
 
@@ -134,7 +134,7 @@ import GradeArquivos from '../../components/GradeArquivos.astro';
       if (!itens.includes(it)) return;
       const doc = await abrirParaVer(dados);
       try { it.li.querySelector('.mini')!.append(await miniatura(doc, 1, 140)); }
-      finally { doc.destroy(); }
+      finally { fecharPdf(doc); }
     }).catch(() => { /* sem miniatura, o arquivo ainda pode ser juntado */ });
   }
 

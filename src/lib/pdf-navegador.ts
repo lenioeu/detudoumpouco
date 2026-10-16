@@ -66,6 +66,11 @@ export async function abrirParaVer(dados: ArrayBuffer): Promise<DocumentoPdfJs> 
   }
 }
 
+/** Libera a memória e o worker de um documento aberto com abrirParaVer. */
+export function fecharPdf(doc: DocumentoPdfJs | null | undefined): void {
+  doc?.loadingTask.destroy().catch(() => undefined);
+}
+
 /** Abre o PDF com o pdf-lib para copiar páginas. Recusa PDFs criptografados (o resultado sairia em branco). */
 export async function abrirParaEditar(dados: ArrayBuffer): Promise<PDFDocument> {
   const { PDFDocument } = await carregarPdfLib();

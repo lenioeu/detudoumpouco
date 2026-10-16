@@ -20,7 +20,7 @@ const { id, rotulo } = Astro.props;
   }
   @keyframes entrar { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
   .grade-arquivos :global(li.arrastando) {
-    z-index: 2; cursor: grabbing; box-shadow: var(--sombra-alta); border-color: var(--brand-ink); opacity: 0.95;
+    z-index: 2; cursor: grabbing; box-shadow: var(--sombra-alta); border-color: var(--fg); opacity: 0.95;
   }
   .grade-arquivos :global(li.com-erro) { border-color: var(--erro); }
   .grade-arquivos :global(.mini) {

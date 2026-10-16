@@ -1,0 +1,350 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="dividir-pdf"
+  titulo="Dividir PDF"
+  subtitulo="Separe as páginas que você precisa em novos arquivos: um intervalo, várias partes ou cada página sozinha. Tudo no seu navegador, sem enviar o PDF."
+  tituloSeo="Dividir PDF online grátis: separar páginas sem enviar"
+  descricao="Divida PDF em várias partes ou extraia só as páginas que precisa, grátis. Veja as miniaturas e escolha. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Escolha como dividir: páginas escolhidas, todas as páginas separadas ou a cada tantas páginas.',
+    'Para escolher, clique nas miniaturas ou digite os intervalos, como 1-3, 5, 8-10. Cada parte vira um arquivo.',
+    'Clique em "Dividir PDF" e baixe os arquivos um por um ou todos juntos num .zip.',
+  ]}
+  perguntas={[
+    { p: 'Como separar uma página de um PDF?', r: 'Escolha o PDF, clique na miniatura da página que você quer (ou digite o número dela no campo "Páginas") e clique em "Dividir PDF". Vai sair um arquivo só com aquela página.' },
+    { p: 'Como dividir um PDF em várias partes?', r: 'Digite os intervalos separados por vírgula, como 1-10, 11-20, 21-30. Cada intervalo vira um PDF. Se as partes têm o mesmo tamanho, use a opção "A cada" e informe quantas páginas cada arquivo deve ter.' },
+    { p: 'Como juntar páginas soltas num PDF só?', r: 'Escolha as páginas (por exemplo, 2, 5, 9) e marque "Juntar as páginas escolhidas em um arquivo só". O resultado é um PDF com essas páginas, na ordem em que você digitou.' },
+    { p: 'Dividir o PDF diminui a qualidade?', r: 'Não. As páginas são copiadas do jeito que estão, com textos selecionáveis e imagens na mesma qualidade. Só muda quais páginas ficam em cada arquivo.' },
+    { p: 'O PDF é enviado para algum lugar?', r: 'Não. A divisão acontece no seu navegador. Você pode até desconectar a internet depois que a página abrir que a ferramenta continua funcionando.' },
+    { p: 'Por que meu PDF dá erro?', r: 'PDFs com senha para abrir ou com bloqueio de edição, comuns em extratos de banco, não podem ser divididos sem antes tirar a proteção com a senha. Arquivos corrompidos também não abrem.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+
+      <fieldset class="modos">
+        <legend class="rotulo">Como dividir</legend>
+        <label class="modo"><input type="radio" name="modo" value="escolher" checked /> Escolher páginas</label>
+        <label class="modo"><input type="radio" name="modo" value="todas" /> Separar todas as páginas</label>
+        <label class="modo"><input type="radio" name="modo" value="cada" /> A cada
+          <input id="cada" type="number" min="1" value="2" inputmode="numeric" aria-label="Quantidade de páginas por arquivo" /> páginas
+        </label>
+      </fieldset>
+
+      <div id="campo-escolher" class="stack">
+        <div class="campo">
+          <label for="intervalos">Páginas</label>
+          <input id="intervalos" type="text" placeholder="Ex.: 1-3, 5, 8-10" autocomplete="off" />
+          <small>Cada parte separada por vírgula vira um arquivo. Você também pode clicar nas miniaturas.</small>
+        </div>
+        <label class="marcar"><input id="juntar" type="checkbox" /> Juntar as páginas escolhidas em um arquivo só</label>
+      </div>
+
+      <p id="resumo" class="muted" aria-live="polite"></p>
+      <ol id="paginas" class="paginas" aria-label="Páginas do PDF"></ol>
+
+      <div class="enviar">
+        <button id="dividir" type="button" class="btn" disabled>Dividir PDF</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong id="saida-titulo"></strong><span id="saida-info" class="muted"></span></div>
+        <a id="zip" class="btn" href="#" download>Baixar todos (.zip)</a>
+      </div>
+      <ul id="arquivos" class="arquivos"></ul>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Três jeitos de dividir</h2>
+    <ul>
+      <li><strong>Escolher páginas:</strong> o mais usado. Serve para tirar só a página do comprovante de um extrato de 30 páginas, mandar só o capítulo que o professor pediu ou separar a certidão que veio grudada em outros documentos. Digite 4 para uma página, 4-7 para um trecho e use vírgulas para criar vários arquivos de uma vez.</li>
+      <li><strong>Separar todas as páginas:</strong> cada página vira um PDF. É útil quando um escaneamento juntou documentos de pessoas diferentes, como as fichas de inscrição de uma turma, e cada uma precisa ir para um lugar.</li>
+      <li><strong>A cada tantas páginas:</strong> corta o PDF em partes iguais. Se um boleto de condomínio tem 2 páginas por apartamento, "a cada 2" gera um arquivo por apartamento. Também ajuda quando um site limita o tamanho do envio e o arquivo precisa ir em pedaços.</li>
+    </ul>
+    <h2>Como ler os intervalos</h2>
+    <p>"1-3, 5, 8-10" gera três arquivos: o primeiro com as páginas 1, 2 e 3; o segundo só com a 5; o terceiro com 8, 9 e 10. Um intervalo aberto, como "12-", vai da página 12 até o fim. Se digitar ao contrário, como "10-8", as páginas saem em ordem invertida. Com a opção "Juntar as páginas escolhidas em um arquivo só", tudo vira um PDF único, na ordem digitada. É um jeito rápido de reorganizar um documento.</p>
+    <h2>Dicas</h2>
+    <p>Confira os números nas miniaturas antes de digitar: o número que conta é a posição da página no arquivo, que nem sempre bate com o número impresso no rodapé. Os arquivos saem com o nome original e as páginas no final, como "contrato-paginas-1-3.pdf", para você saber o que tem dentro sem abrir. Para fazer o caminho contrário, use o <a href="/pdf/juntar-pdf">Juntar PDF</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, fecharPdf, miniatura, novoPdf, filaDeTrabalho, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { aCada, escreverIntervalos, lerIntervalos, nomeDoGrupo } from '../../lib/intervalos';
+  import { criarZip } from '../../lib/zip';
+  import type { PDFDocument } from 'pdf-lib';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const cada = $<HTMLInputElement>('cada');
+  const campoEscolher = $('campo-escolher');
+  const intervalos = $<HTMLInputElement>('intervalos');
+  const juntar = $<HTMLInputElement>('juntar');
+  const resumo = $('resumo');
+  const grade = $('paginas');
+  const botao = $<HTMLButtonElement>('dividir');
+  const status = $('status');
+  const saida = $('saida');
+  const listaArquivos = $('arquivos');
+  const zip = $<HTMLAnchorElement>('zip');
+
+  let nomeBase = 'documento';
+  let total = 0;
+  let original: PDFDocument | null = null;
+  let visor: DocumentoPdfJs | null = null;
+  let observador: IntersectionObserver | null = null;
+  let rodada = 0;
+  let urls: string[] = [];
+  // Uma fila nova por arquivo: um desenho que ficou pela metade no arquivo anterior não trava o próximo.
+  let fila = filaDeTrabalho();
+
+  const modo = () => document.querySelector<HTMLInputElement>('input[name="modo"]:checked')!.value;
+
+  function limparSaida() {
+    saida.hidden = true;
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    listaArquivos.innerHTML = '';
+  }
+
+  /** Os grupos de páginas (cada grupo vira um arquivo) conforme o modo escolhido. */
+  function grupos(): { grupos: number[][]; erro?: string } {
+    if (!total) return { grupos: [] };
+    if (modo() === 'todas') return { grupos: aCada(total, 1) };
+    if (modo() === 'cada') {
+      const n = Math.floor(Number(cada.value));
+      if (!(n >= 1)) return { grupos: [], erro: 'Informe quantas páginas cada arquivo deve ter.' };
+      return { grupos: aCada(total, Math.min(n, total)) };
+    }
+    if (!intervalos.value.trim()) return { grupos: [], erro: 'Clique nas páginas que você quer ou digite os números.' };
+    const r = lerIntervalos(intervalos.value, total);
+    if (r.erro) return r;
+    return { grupos: juntar.checked ? [r.grupos.flat()] : r.grupos };
+  }
+
+  function atualizar() {
+    campoEscolher.hidden = modo() !== 'escolher';
+    const g = grupos();
+    const grupoDe = new Map<number, number>();
+    g.grupos.forEach((grupo, i) => grupo.forEach((p) => { if (!grupoDe.has(p)) grupoDe.set(p, i + 1); }));
+    for (const li of Array.from(grade.children) as HTMLElement[]) {
+      const p = Number(li.dataset.pagina);
+      const n = grupoDe.get(p);
+      li.classList.toggle('fora', !n);
+      li.querySelector('button')!.setAttribute('aria-pressed', String(!!n && modo() === 'escolher'));
+      const marca = li.querySelector<HTMLElement>('.grupo')!;
+      marca.hidden = !n;
+      marca.textContent = n && g.grupos.length > 1 ? `Arquivo ${n}` : 'Escolhida';
+      li.classList.toggle('par', !!n && n % 2 === 0);
+    }
+    if (g.erro) {
+      resumo.textContent = g.erro;
+      resumo.className = modo() === 'escolher' && intervalos.value.trim() ? 'erro' : 'muted';
+    } else {
+      const n = g.grupos.length;
+      const paginas = g.grupos.reduce((s, x) => s + x.length, 0);
+      resumo.className = 'muted';
+      resumo.textContent = `Vai gerar ${n} ${n === 1 ? 'arquivo' : 'arquivos'} com ${paginas} ${paginas === 1 ? 'página' : 'páginas'} no total.`;
+    }
+    botao.disabled = !original || !!g.erro || !g.grupos.length;
+  }
+
+  function montarGrade() {
+    observador?.disconnect();
+    grade.innerHTML = '';
+    const minha = rodada;
+    observador = new IntersectionObserver((entradas) => {
+      for (const e of entradas) {
+        if (!e.isIntersecting) continue;
+        observador!.unobserve(e.target);
+        const li = e.target as HTMLElement;
+        const n = Number(li.dataset.pagina);
+        fila(async () => {
+          if (minha !== rodada || !visor) return;
+          const c = await miniatura(visor, n, 120);
+          if (minha === rodada) li.querySelector('.mini')!.append(c);
+        }).catch(() => { /* sem miniatura; o número continua na tela */ });
+      }
+    }, { rootMargin: '400px 0px' });
+    for (let p = 1; p <= total; p++) {
+      const li = document.createElement('li');
+      li.dataset.pagina = String(p);
+      li.innerHTML = `<button type="button" aria-label="Página ${p}"><span class="mini"><span class="grupo" hidden></span></span><span class="num">${p}</span></button>`;
+      grade.append(li);
+      observador.observe(li);
+    }
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    original = null; total = 0;
+    fecharPdf(visor); visor = null;
+    fila = filaDeTrabalho();
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    status.textContent = '';
+    try {
+      const dados = await file.arrayBuffer();
+      const doc = await abrirParaEditar(dados);
+      if (minha !== rodada) return;
+      original = doc;
+      total = doc.getPageCount();
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      painel.hidden = false;
+      intervalos.value = '';
+      montarGrade();
+      atualizar();
+      const v = await abrirParaVer(dados);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v;
+      // As miniaturas que já estavam visíveis entram agora que o visor abriu.
+      for (const li of Array.from(grade.children)) { observador!.unobserve(li); observador!.observe(li); }
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  grade.addEventListener('click', (e) => {
+    const li = (e.target as HTMLElement).closest<HTMLElement>('li[data-pagina]');
+    if (!li) return;
+    const p = Number(li.dataset.pagina);
+    let escolhidas: number[] = [];
+    if (modo() === 'escolher') {
+      const r = lerIntervalos(intervalos.value, total);
+      if (!r.erro) escolhidas = r.grupos.flat();
+    } else {
+      document.querySelector<HTMLInputElement>('input[name="modo"][value="escolher"]')!.checked = true;
+    }
+    escolhidas = escolhidas.includes(p) ? escolhidas.filter((x) => x !== p) : [...escolhidas, p];
+    intervalos.value = escreverIntervalos(escolhidas);
+    limparSaida();
+    atualizar();
+  });
+
+  document.querySelectorAll('input[name="modo"]').forEach((r) => r.addEventListener('change', () => { limparSaida(); atualizar(); }));
+  for (const el of [cada, intervalos]) el.addEventListener('input', () => { limparSaida(); atualizar(); });
+  cada.addEventListener('focus', () => { document.querySelector<HTMLInputElement>('input[name="modo"][value="cada"]')!.checked = true; atualizar(); });
+  juntar.addEventListener('change', () => { limparSaida(); atualizar(); });
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+
+  botao.addEventListener('click', async () => {
+    const g = grupos();
+    if (!original || g.erro || !g.grupos.length) return;
+    const minha = rodada;
+    botao.disabled = true;
+    limparSaida();
+    const feitos: { nome: string; bytes: Uint8Array; grupo: number[] }[] = [];
+    try {
+      for (const [i, grupo] of g.grupos.entries()) {
+        status.textContent = `Criando o arquivo ${i + 1} de ${g.grupos.length}…`;
+        const novo = await novoPdf();
+        const copias = await novo.copyPages(original, grupo.map((p) => p - 1));
+        copias.forEach((pg) => novo.addPage(pg));
+        feitos.push({ nome: `${nomeBase}-${nomeDoGrupo(grupo)}.pdf`, bytes: await novo.save(), grupo });
+        if (minha !== rodada) return;
+      }
+      for (const f of feitos) {
+        const url = URL.createObjectURL(new Blob([f.bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' }));
+        urls.push(url);
+        const li = document.createElement('li');
+        const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = f.nome;
+        const det = document.createElement('span'); det.className = 'muted';
+        det.textContent = `${f.grupo.length} ${f.grupo.length === 1 ? 'página' : 'páginas'} · ${tamanho(f.bytes.length)}`;
+        const a = document.createElement('a'); a.className = 'btn'; a.href = url; a.download = f.nome; a.textContent = 'Baixar';
+        li.append(nome, det, a);
+        listaArquivos.append(li);
+      }
+      const varios = feitos.length > 1;
+      zip.hidden = !varios;
+      if (varios) {
+        const url = URL.createObjectURL(new Blob([criarZip(feitos.map((f) => ({ nome: f.nome, dados: f.bytes }))) as Uint8Array<ArrayBuffer>], { type: 'application/zip' }));
+        urls.push(url);
+        zip.href = url;
+        zip.download = `${nomeBase}-dividido.zip`;
+      }
+      $('saida-titulo').textContent = `${feitos.length} ${varios ? 'arquivos prontos' : 'arquivo pronto'}`;
+      $('saida-info').textContent = varios ? 'Baixe um por um ou todos juntos.' : '';
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch {
+      status.textContent = 'Não foi possível dividir o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      atualizar();
+    }
+  });
+</script>
+
+<style>
+  .modos { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 10px; }
+  .modos legend { margin-bottom: 8px; }
+  .modo {
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+    transition: border-color 0.15s, background-color 0.15s, transform 0.2s var(--mola);
+  }
+  .modo:has(input:checked) { border-color: var(--fg); background: var(--brand-soft); font-weight: 600; }
+  .modo:active { transform: scale(0.97); }
+  .modo input[type='radio'] { accent-color: var(--fg); margin: 0; }
+  .modo input[type='number'] { width: 4.5em; padding: 4px 8px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--fg); }
+
+  .paginas {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px;
+  }
+  .paginas :global(li) { transition: opacity 0.2s var(--suave); }
+  .paginas :global(li.fora) { opacity: 0.45; }
+  .paginas :global(button) {
+    width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 6px; cursor: pointer;
+    font: inherit; color: var(--fg); background: var(--surface);
+    border: 2px solid var(--line); border-radius: var(--radius);
+    transition: transform 0.2s var(--mola), border-color 0.15s;
+  }
+  .paginas :global(button:hover) { transform: translateY(-2px); }
+  .paginas :global(button:active) { transform: scale(0.96); }
+  .paginas :global(li:not(.fora) button) { border-color: var(--fg); }
+  .paginas :global(.mini) {
+    position: relative; aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden;
+    background: var(--bg); border-radius: 6px;
+  }
+  .paginas :global(.mini canvas) { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; box-shadow: 0 0 0 1px var(--line); animation: surgir 0.25s var(--suave); }
+  .paginas :global(.grupo) {
+    position: absolute; left: 4px; right: 4px; bottom: 4px; z-index: 1; padding: 2px 6px; border-radius: 6px; text-align: center;
+    font: 700 0.75rem var(--f-display); background: var(--brand); color: var(--brand-ink); border: 1.5px solid var(--brand-ink);
+  }
+  .paginas :global(li.par .grupo) { background: var(--surface); color: var(--fg); border-color: var(--fg); }
+  .paginas :global(.num) { font-weight: 600; font-size: 0.85rem; text-align: center; }
+
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+  .arquivos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .arquivos :global(li) { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); animation: entrar 0.3s var(--suave) backwards; }
+  .arquivos :global(.nome) { font-weight: 600; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+  .arquivos :global(.btn) { padding: 7px 14px; font-size: 0.95rem; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+</style>
