@@ -1,0 +1,231 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="texto"
+  slug="gerador-de-qr-code"
+  titulo="Gerador de QR Code"
+  subtitulo="Crie um QR Code para um link, um texto, a senha do Wi-Fi ou o seu WhatsApp. Escolha as cores e baixe em PNG ou SVG, de graça e sem cadastro."
+  tituloSeo="Gerador de QR Code grátis: link, Wi-Fi e WhatsApp"
+  descricao="Gere QR Code grátis para link, texto, Wi-Fi ou WhatsApp. Escolha as cores e baixe em PNG ou SVG para imprimir. Não expira e funciona sem cadastro."
+  passos={[
+    'Escolha o tipo: link, texto, Wi-Fi ou WhatsApp.',
+    'Preencha os campos. O QR Code muda na hora, enquanto você digita.',
+    'Se quiser, troque as cores. Mantenha o desenho escuro sobre fundo claro para qualquer câmera ler.',
+    'Baixe em PNG para mandar ou colar num documento, ou em SVG para gráfica e materiais grandes.',
+    'Antes de imprimir, aponte a câmera do celular para a tela e confira se abre o que você espera.',
+  ]}
+  perguntas={[
+    { p: 'O QR Code gerado aqui expira?', r: 'Não. O conteúdo fica gravado no próprio desenho do QR Code, sem passar por nenhum servidor nosso. Ele funciona para sempre, enquanto o link ou a rede Wi-Fi que ele aponta existirem.' },
+    { p: 'Qual a diferença entre PNG e SVG?', r: 'PNG é uma imagem comum, boa para WhatsApp, e-mail, Word e redes sociais. SVG é vetorial: pode ser aumentado em qualquer tamanho sem perder nitidez, ideal para banner, adesivo, cardápio e qualquer material de gráfica.' },
+    { p: 'Como fazer um QR Code da senha do Wi-Fi?', r: 'Escolha "Wi-Fi", digite o nome da rede exatamente como aparece no celular (maiúsculas contam) e a senha. Quem apontar a câmera do Android ou do iPhone para o código conecta sem precisar digitar nada.' },
+    { p: 'Posso mudar a cor do QR Code?', r: 'Pode, desde que o desenho fique bem mais escuro que o fundo. QR Code claro sobre fundo escuro, ou com pouco contraste, falha em muitas câmeras. A ferramenta avisa quando o contraste fica baixo.' },
+    { p: 'Qual o tamanho mínimo para imprimir um QR Code?', r: 'Uma regra prática é o lado do QR Code ter pelo menos um décimo da distância de leitura. Para ler a 30 cm, use 3 cm ou mais. Em cartaz lido a 2 metros, 20 cm. Deixe sempre uma margem branca em volta.' },
+    { p: 'Dá para fazer QR Code de Pix aqui?', r: 'Para Pix use o gerador de QR Code Pix, que monta o código no padrão do Banco Central, com chave, valor e nome do recebedor. Um QR Code comum com a chave escrita não funciona no aplicativo do banco.' },
+  ]}
+>
+  <div class="layout">
+    <form id="form" class="stack" autocomplete="off">
+      <fieldset class="abas" aria-label="Tipo de QR Code">
+        <label><input type="radio" name="tipo" value="link" checked /><span>Link</span></label>
+        <label><input type="radio" name="tipo" value="texto" /><span>Texto</span></label>
+        <label><input type="radio" name="tipo" value="wifi" /><span>Wi-Fi</span></label>
+        <label><input type="radio" name="tipo" value="whatsapp" /><span>WhatsApp</span></label>
+      </fieldset>
+
+      <div class="painel stack" data-painel="link">
+        <div class="campo">
+          <label for="link">Endereço do site</label>
+          <input id="link" type="text" inputmode="url" value="https://oquebragalho.app" />
+        </div>
+      </div>
+      <div class="painel stack" data-painel="texto" hidden>
+        <div class="campo">
+          <label for="texto">Texto</label>
+          <textarea id="texto" rows="4">Cardápio do dia: arroz, feijão, frango assado e salada.</textarea>
+        </div>
+      </div>
+      <div class="painel stack" data-painel="wifi" hidden>
+        <div class="campo">
+          <label for="rede">Nome da rede (SSID)</label>
+          <input id="rede" type="text" value="MinhaCasa" />
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input id="senha" type="text" value="senha-do-wifi" />
+        </div>
+        <div class="campo">
+          <label for="seguranca">Segurança</label>
+          <select id="seguranca">
+            <option value="WPA" selected>WPA, WPA2 ou WPA3 (a mais comum)</option>
+            <option value="WEP">WEP (roteadores antigos)</option>
+            <option value="nopass">Sem senha</option>
+          </select>
+        </div>
+        <label class="opcao"><input id="oculta" type="checkbox" /> Rede oculta</label>
+      </div>
+      <div class="painel stack" data-painel="whatsapp" hidden>
+        <div class="campo">
+          <label for="tel">Número com DDD</label>
+          <input id="tel" type="text" inputmode="tel" value="(11) 91234-5678" />
+          <small>Números do Brasil ganham o 55 sozinhos. De outro país, comece pelo código dele.</small>
+        </div>
+        <div class="campo">
+          <label for="msg">Mensagem pronta (opcional)</label>
+          <input id="msg" type="text" value="Olá! Vi seu anúncio e quero saber mais." />
+        </div>
+      </div>
+
+      <details class="mais">
+        <summary>Cores e qualidade</summary>
+        <div class="opcoes">
+          <div class="campo"><label for="cor">Cor do desenho</label><input id="cor" type="color" value="#000000" /></div>
+          <div class="campo"><label for="fundo">Cor do fundo</label><input id="fundo" type="color" value="#ffffff" /></div>
+          <div class="campo">
+            <label for="correcao">Correção de erros</label>
+            <select id="correcao">
+              <option value="L">Baixa (7%)</option>
+              <option value="M" selected>Média (15%)</option>
+              <option value="Q">Alta (25%)</option>
+              <option value="H">Máxima (30%)</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="largura">Tamanho do PNG</label>
+            <select id="largura">
+              <option value="512">512 px</option>
+              <option value="1024" selected>1024 px</option>
+              <option value="2048">2048 px</option>
+            </select>
+          </div>
+        </div>
+      </details>
+    </form>
+
+    <div class="saida stack">
+      <div id="quadro" class="quadro" role="img" aria-label="QR Code gerado"></div>
+      <p id="msg-erro" class="erro" role="alert" hidden></p>
+      <p id="aviso-cor" class="erro" hidden>Pouco contraste: algumas câmeras podem não ler. Use um desenho escuro sobre fundo claro.</p>
+      <div class="baixar">
+        <a id="baixar-png" class="btn" download="qrcode.png" href="#">Baixar PNG</a>
+        <a id="baixar-svg" class="btn btn-sec" download="qrcode.svg" href="#">Baixar SVG</a>
+      </div>
+      <p class="muted conteudo">Conteúdo: <span id="conteudo"></span></p>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que é um QR Code</h2>
+    <p>QR Code é um código de barras quadrado que a câmera do celular lê em um segundo. Dentro dele cabe um link, um texto curto, os dados de uma rede Wi-Fi ou um número de telefone. Ele foi criado no Japão, em 1994, para controlar peças de carro, e ficou popular no Brasil com cardápios de restaurante e com o Pix.</p>
+    <h2>Ideias de uso</h2>
+    <ul>
+      <li><strong>Wi-Fi para visitas:</strong> imprima e cole na geladeira ou no balcão. Ninguém precisa soletrar a senha.</li>
+      <li><strong>WhatsApp do seu negócio:</strong> no cartão de visita ou na vitrine, o cliente aponta a câmera e a conversa abre com a mensagem pronta.</li>
+      <li><strong>Cardápio ou catálogo:</strong> gere o QR Code do link do PDF ou da página e coloque na mesa.</li>
+      <li><strong>Convite:</strong> leve para a localização no mapa, para a lista de presentes ou para a confirmação de presença.</li>
+      <li><strong>Etiqueta:</strong> um texto com instruções de uso, data de validade ou contato do dono de um objeto.</li>
+    </ul>
+    <h2>Dicas para o QR Code funcionar sempre</h2>
+    <p>Quanto menos conteúdo, mais simples o desenho e mais fácil a leitura. Prefira links curtos. Deixe a margem branca em volta: ela faz parte do código e ajuda a câmera a achar o quadrado. Use cores escuras sobre fundo claro; azul-marinho, verde-escuro ou vinho funcionam bem sobre branco.</p>
+    <p>A correção de erros deixa o código legível mesmo com parte dele riscada, suja ou dobrada. A média (15%) serve para quase tudo. Use alta ou máxima em adesivos ao ar livre ou em embalagens que vão ser manuseadas, sabendo que o desenho fica com mais quadradinhos.</p>
+    <p>Tudo é gerado no seu navegador. O link, o texto e a senha do Wi-Fi que você digita não são enviados para nenhum servidor, e o QR Code não depende de nenhum serviço nosso para continuar funcionando.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { normalizarLink, textoWifi, linkWhatsapp, type SegurancaWifi } from '../../lib/qr-conteudo';
+  import { desenharQr, contraste, luminancia, type Correcao } from '../../lib/qr-render';
+
+  const form = document.getElementById('form') as HTMLFormElement;
+  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+  const quadro = $<HTMLDivElement>('quadro');
+  const erro = $<HTMLParagraphElement>('msg-erro');
+  const avisoCor = $<HTMLParagraphElement>('aviso-cor');
+  const png = $<HTMLAnchorElement>('baixar-png');
+  const svg = $<HTMLAnchorElement>('baixar-svg');
+  const conteudoEl = $<HTMLSpanElement>('conteudo');
+  let urlSvg = '';
+  let versao = 0;
+
+  const tipo = () => (form.elements.namedItem('tipo') as RadioNodeList).value;
+
+  function conteudo(): { texto: string; falta?: string } {
+    switch (tipo()) {
+      case 'link': { const l = normalizarLink($('link').value); return l ? { texto: l } : { texto: '', falta: 'Digite o endereço do site.' }; }
+      case 'texto': { const t = $<HTMLTextAreaElement>('texto').value; return t.trim() ? { texto: t } : { texto: '', falta: 'Digite um texto.' }; }
+      case 'wifi': {
+        const rede = $('rede').value;
+        if (!rede) return { texto: '', falta: 'Digite o nome da rede.' };
+        return { texto: textoWifi({ rede, senha: $('senha').value, seguranca: $<HTMLSelectElement>('seguranca').value as SegurancaWifi, oculta: $('oculta').checked }) };
+      }
+      default: {
+        const l = linkWhatsapp($('tel').value, $('msg').value);
+        return l ? { texto: l } : { texto: '', falta: 'Digite um telefone com DDD, como (11) 91234-5678.' };
+      }
+    }
+  }
+
+  function habilitar(ok: boolean) {
+    for (const a of [png, svg]) { a.classList.toggle('desligado', !ok); a.setAttribute('aria-disabled', String(!ok)); }
+  }
+
+  async function gerar() {
+    const v = ++versao;
+    const { texto, falta } = conteudo();
+    const cor = $('cor').value, fundo = $('fundo').value;
+    avisoCor.hidden = contraste(cor, fundo) >= 4 && luminancia(cor) < luminancia(fundo);
+    conteudoEl.textContent = texto || '—';
+    if (falta) { erro.textContent = falta; erro.hidden = false; quadro.classList.add('vazio'); habilitar(false); return; }
+    try {
+      const qr = await desenharQr(texto, { cor, fundo, correcao: $<HTMLSelectElement>('correcao').value as Correcao, largura: Number($<HTMLSelectElement>('largura').value) });
+      if (v !== versao) return;
+      quadro.innerHTML = qr.svg;
+      quadro.classList.remove('vazio');
+      erro.hidden = true;
+      png.href = qr.png;
+      if (urlSvg) URL.revokeObjectURL(urlSvg);
+      urlSvg = URL.createObjectURL(new Blob([qr.svg], { type: 'image/svg+xml' }));
+      svg.href = urlSvg;
+      habilitar(true);
+    } catch {
+      if (v !== versao) return;
+      erro.textContent = 'Conteúdo grande demais para um QR Code. Encurte o texto ou o link.';
+      erro.hidden = false; quadro.classList.add('vazio'); habilitar(false);
+    }
+  }
+
+  form.querySelectorAll<HTMLInputElement>('input[name=tipo]').forEach((r) => r.addEventListener('change', () => {
+    form.querySelectorAll<HTMLElement>('.painel').forEach((p) => { p.hidden = p.dataset.painel !== r.value; });
+  }));
+  for (const a of [png, svg]) a.addEventListener('click', (e) => { if (a.classList.contains('desligado')) e.preventDefault(); });
+  form.addEventListener('input', gerar);
+  form.addEventListener('change', gerar);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  gerar();
+</script>
+
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  @media (min-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; } }
+  .abas { border: 0; margin: 0; padding: 4px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: var(--bg); border-radius: var(--radius); }
+  .abas label { position: relative; cursor: pointer; min-width: 0; }
+  .abas input { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+  .abas span { display: block; text-align: center; padding: 8px 2px; border-radius: 8px; font-weight: 600; font-size: clamp(0.85rem, 3.6vw, 0.95rem); transition: transform 0.18s var(--mola); }
+  .abas input:checked + span { background: var(--surface); box-shadow: var(--sombra); }
+  .abas input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 1px; }
+  .abas label:active span { transform: scale(0.96); }
+  .painel { animation: trocar 0.22s var(--suave); }
+  .painel[hidden] { display: none; }
+  @keyframes trocar { from { opacity: 0; transform: translateY(4px); } }
+  .opcao { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .opcao input { width: 18px; height: 18px; accent-color: var(--brand); }
+  .mais summary { cursor: pointer; font-weight: 600; }
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 12px; }
+  input[type='color'] { width: 100%; height: 44px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+  .quadro { width: 100%; max-width: 300px; aspect-ratio: 1; margin-inline: auto; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--surface); transition: opacity 0.2s var(--suave); }
+  .quadro :global(svg) { display: block; width: 100%; height: 100%; }
+  .quadro.vazio { opacity: 0.25; }
+  .baixar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .desligado { opacity: 0.5; pointer-events: none; }
+  .conteudo { font-size: 0.85rem; overflow-wrap: anywhere; }
+</style>
