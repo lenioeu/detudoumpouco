@@ -2,7 +2,7 @@ import type { Ferramenta } from '../tipos';
 
 export default [
   { slug: 'porcentagem', nome: 'Calculadora de porcentagem', resumo: 'Quanto é X% de um valor, aumentos, descontos e variação.', status: 'pronta' },
-  { slug: 'juros-compostos', nome: 'Juros compostos', resumo: 'Quanto seu dinheiro rende com aportes mensais.', status: 'planejada' },
+  { slug: 'juros-compostos', nome: 'Juros compostos', resumo: 'Quanto seu dinheiro rende com aportes mensais.', status: 'pronta' },
   { slug: 'financiamento', nome: 'Simulador de financiamento', resumo: 'Parcelas pela tabela Price e SAC.', status: 'planejada' },
   { slug: 'quanto-rende', nome: 'Quanto rende', resumo: 'Poupança, CDB e Tesouro lado a lado.', status: 'planejada' },
   { slug: 'regra-de-tres', nome: 'Regra de três', resumo: 'Simples e composta, com o passo a passo.', status: 'planejada' },
