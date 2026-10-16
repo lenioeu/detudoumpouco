@@ -1,7 +1,8 @@
 ---
 import Ferramenta from '../../layouts/Ferramenta.astro';
 
-// Valores iniciais de exemplo. Ao atualizar, troque também a data de referência.
+// Valores de reserva: aparecem enquanto as taxas do dia carregam, ou se o Banco Central não responder.
+// Ao atualizar, troque também a data de referência.
 const REF = {
   data: 'setembro de 2026',
   selicMeta: '13,75',
@@ -22,7 +23,7 @@ const REF = {
   descricao="Compare quanto rende seu dinheiro na poupança, no CDB e no Tesouro Selic, já com imposto de renda e custódia. Taxas editáveis. Grátis e no seu navegador."
   passos={[
     'Digite quanto vai investir e por quanto tempo.',
-    'Confira as taxas. Elas vêm preenchidas com valores de exemplo; troque pelas de hoje se quiser.',
+    'As taxas são preenchidas sozinhas com os valores do dia, direto do Banco Central. Você pode trocá-las para simular outros cenários.',
     'Ajuste o percentual do CDI do seu CDB e o adicional do Tesouro Selic.',
     'Compare o valor líquido de cada opção. O melhor aparece destacado.',
   ]}
@@ -47,7 +48,7 @@ const REF = {
     </div>
 
 
-    <p class="muted nota">Conta feita com as taxas de referência de {REF.data}, que você pode trocar logo abaixo dos resultados.</p>
+    <p class="muted nota" id="qr-fonte" aria-live="polite">Conta feita com as taxas de referência de {REF.data}, que você pode trocar logo abaixo dos resultados.</p>
     <p class="muted" id="qr-info" aria-live="polite"></p>
     <div class="cartoes" id="qr-res">
       <output class="resultado cartao" id="qr-poupanca"></output>
@@ -57,7 +58,7 @@ const REF = {
 
     <fieldset class="taxas">
       <legend>Taxas usadas na conta</legend>
-      <p class="muted nota">Preenchidas com valores de referência de {REF.data} (Selic meta definida pelo Copom em 16/09/2026). Elas mudam com o tempo: confira as atuais no site do Banco Central e troque aqui.</p>
+      <p class="muted nota" id="qr-fonte-taxas">Buscando as taxas do dia no Banco Central… Enquanto isso, a conta usa os valores de referência de {REF.data}.</p>
       <div class="linhas taxas-grade">
         <div class="campo"><label for="qr-selic">Selic meta (% ao ano)</label><input id="qr-selic" type="text" inputmode="decimal" value={REF.selicMeta} /><small>Define a regra da poupança.</small></div>
         <div class="campo"><label for="qr-cdi">Selic efetiva / CDI (% ao ano)</label><input id="qr-cdi" type="text" inputmode="decimal" value={REF.selicEfetiva} /><small>Base do CDB e do Tesouro Selic.</small></div>
@@ -89,6 +90,7 @@ const REF = {
   import { lerNumero, formatar } from '../../lib/numeros';
   import { reais } from '../../lib/dinheiro';
   import { rendimentoPoupanca, rendimentoCdb, rendimentoTesouroSelic, diasCorridos, taxaPoupancaMensal, type Rendimento } from '../../lib/investimentos';
+  import { buscarTaxas } from '../../lib/taxas';
 
   const ISENCAO_CUSTODIA = 10000;
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -138,6 +140,32 @@ const REF = {
   form.addEventListener('change', calcular);
   form.addEventListener('submit', (e) => e.preventDefault());
   calcular();
+
+  // Taxas do dia: só preenche os campos que a pessoa ainda não mexeu.
+  const editados = new Set<string>();
+  ['qr-selic', 'qr-cdi', 'qr-tr'].forEach((id) => $(id).addEventListener('input', () => editados.add(id)));
+  const fonte = $('qr-fonte'), fonteTaxas = $('qr-fonte-taxas');
+  const refTexto = fonte.textContent;
+
+  buscarTaxas().then((t) => {
+    if (!t) {
+      fonteTaxas.textContent = `Não foi possível buscar as taxas do dia agora. A conta usa os valores de referência; confira as atuais no site do Banco Central e troque aqui.`;
+      return;
+    }
+    const preencher = (id: string, v: number | undefined, casas: number) => {
+      if (v === undefined || editados.has(id)) return false;
+      $<HTMLInputElement>(id).value = formatar(v, casas);
+      return true;
+    };
+    const mudou = [preencher('qr-selic', t.selicMeta, 2), preencher('qr-cdi', t.cdi, 2), preencher('qr-tr', t.tr, 4)].some(Boolean);
+    const quando = t.data ? ` de ${t.data}` : '';
+    const faltou = [t.selicMeta === undefined && 'Selic', t.cdi === undefined && 'CDI', t.tr === undefined && 'TR'].filter(Boolean);
+    fonteTaxas.textContent = `Taxas atualizadas automaticamente${quando}. Fonte: ${t.fonte}.` +
+      (faltou.length ? ` Não foi possível buscar: ${faltou.join(', ')}; esse campo usa o valor de referência.` : '') +
+      ' Troque os valores para simular outros cenários.';
+    fonte.textContent = mudou ? `Conta feita com as taxas do dia${quando} (${t.fonte}). Você pode trocá-las logo abaixo dos resultados.` : refTexto;
+    if (mudou) calcular();
+  });
 </script>
 
 <style>

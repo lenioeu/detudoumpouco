@@ -51,7 +51,9 @@ Exemplos completos para copiar o padrão:
 ## Regras
 
 - **Nada sai do aparelho do usuário.** Proibido enviar arquivos ou dados digitados para servidores.
-  Exceção: a seção Consultas chama APIs públicas gratuitas (ViaCEP, AwesomeAPI, BrasilAPI), e a página diz qual.
+  Exceção: buscar dados públicos que não dependem da pessoa, em APIs gratuitas (ViaCEP, AwesomeAPI, BrasilAPI,
+  Banco Central). A página diz a fonte e precisa continuar funcionando se a API falhar.
+  Ex.: `src/lib/taxas.ts` busca Selic, CDI e TR do dia para o "Quanto rende".
 - **Bibliotecas pesadas** (pdf-lib, pdfjs-dist, ffmpeg.wasm, tesseract.js, modelos de IA) são carregadas
   com `await import(...)` só quando o usuário usa a ferramenta, para a página abrir rápido.
   Instale com versão exata: `npm install pacote@1.2.3 --save-exact`.
