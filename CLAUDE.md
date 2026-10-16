@@ -76,7 +76,9 @@ Exemplos completos para copiar o padrão:
 - **Ícones:** `Icone.astro` tem um ícone por seção; não use emoji como ícone.
 - **Texto:** português do Brasil, frases curtas, tom de quem ajuda. Números no padrão brasileiro
   (`formatar()` e `lerNumero()` de `src/lib/numeros.ts`). Para baixar, use links `<a download>`.
-- **AdSense:** não coloque anúncio dentro da área da ferramenta nem perto de botões. O layout já posiciona
+- **AdSense:** conta `ca-pub-4412739787805429` em `src/config.ts`; o código vai no `<head>` de todas as páginas
+  e o `public/ads.txt` autoriza a conta. Os blocos só aparecem quando os IDs estão em `SITE.adsenseSlots`.
+  Não coloque anúncio dentro da área da ferramenta nem perto de botões. O layout já posiciona
   os dois espaços de anúncio. Nada de conteúdo enganoso, adulto, de pirataria ou que gere documentos falsos
   (por isso não há gerador de CPF nem baixador de vídeo do YouTube/Instagram).
 - **Saúde:** citar a fonte (Ministério da Saúde, OMS, sociedades médicas) e avisar que não substitui consulta.

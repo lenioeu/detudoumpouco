@@ -24,4 +24,4 @@ A configuração está em `wrangler.jsonc`. No painel do Cloudflare:
 
 Cabeçalhos HTTP (cache e segurança) ficam em `public/_headers`.
 
-Depois da aprovação no AdSense, coloque o ID `ca-pub-...` em `src/config.ts` (`adsenseClient`) e crie `public/ads.txt`.
+AdSense: a conta está em `src/config.ts` (`adsenseClient`) e em `public/ads.txt`. Depois da aprovação, crie os blocos de anúncio no painel e coloque os IDs em `adsenseSlots`, ou ligue os anúncios automáticos no painel.

@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import CartaoFerramenta from '../../components/CartaoFerramenta.astro';
 import AdSlot from '../../components/AdSlot.astro';
 import Icone from '../../components/Icone.astro';
+import { SITE } from '../../config';
 import { prontas, secoesAtivas } from '../../data';
 import type { Secao } from '../../data/secoes';
 
@@ -20,7 +21,7 @@ const lista = prontas(s.slug);
       <p class="muted sub">{s.descricao}</p>
     </header>
     <ul>{lista.map((f) => <li><CartaoFerramenta f={f} /></li>)}</ul>
-    <AdSlot />
+    <AdSlot slot={SITE.adsenseSlots.fim ?? undefined} />
   </div>
 </Base>
 
