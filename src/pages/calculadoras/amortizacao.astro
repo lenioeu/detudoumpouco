@@ -1,0 +1,184 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="calculadoras"
+  slug="amortizacao"
+  titulo="Simulador de amortização"
+  subtitulo="Veja quanto você economiza pagando a mais no financiamento, de uma vez ou todo mês, e compare reduzir o prazo com reduzir a parcela."
+  tituloSeo="Simulador de amortização de financiamento"
+  descricao="Simule amortização extraordinária no financiamento: quanto economiza de juros e quantos meses a menos. Compare reduzir prazo ou parcela, na Price e no SAC."
+  passos={[
+    'Informe quanto ainda deve (o saldo devedor), a taxa de juros e quantas parcelas faltam.',
+    'Escolha o sistema do seu contrato: SAC ou Price. Está escrito no contrato e no extrato do banco.',
+    'Digite quanto pretende pagar a mais: um valor único, um valor todo mês, ou os dois.',
+    'Escolha entre reduzir o prazo ou reduzir a parcela e compare com o cenário sem amortizar.',
+  ]}
+  perguntas={[
+    { p: 'É melhor amortizar reduzindo o prazo ou a parcela?', r: 'Reduzir o prazo economiza mais juros, porque você deixa de pagar juros sobre os meses que somem do contrato. Reduzir a parcela economiza menos, mas alivia o orçamento todo mês. Se a parcela já cabe tranquila, o prazo costuma ser a melhor escolha.' },
+    { p: 'O banco é obrigado a aceitar a amortização?', r: 'Sim. O Código de Defesa do Consumidor (art. 52, § 2º) garante a quitação antecipada, total ou parcial, com redução proporcional dos juros. Peça ao banco o valor exato do saldo devedor antes de pagar, porque ele pode incluir seguros e correção.' },
+    { p: 'Posso usar o FGTS para amortizar o financiamento?', r: 'No financiamento imobiliário pelo Sistema Financeiro da Habitação, sim, respeitando as regras da Caixa, como o intervalo mínimo de 2 anos entre usos. Simule aqui com o valor do FGTS como pagamento único para ver o efeito.' },
+    { p: 'Vale mais a pena amortizar ou investir o dinheiro?', r: 'Compare a taxa do financiamento com o rendimento líquido do investimento. Se o financiamento cobra 11% ao ano e o investimento rende menos que isso depois do imposto, amortizar costuma ganhar. Mantenha antes uma reserva de emergência, porque o dinheiro amortizado não volta.' },
+    { p: 'Por que a economia é maior no começo do contrato?', r: 'Porque é no começo que o saldo é maior e os juros pesam mais. Cada real amortizado cedo deixa de pagar juros por muito mais tempo do que um real amortizado no fim.' },
+  ]}
+>
+  <form id="am" class="stack" novalidate>
+    <div class="linhas">
+      <div class="campo"><label for="am-saldo">Saldo devedor (R$)</label><input id="am-saldo" type="text" inputmode="decimal" value="200.000" /><small>Quanto ainda falta pagar.</small></div>
+      <div class="campo">
+        <label for="am-taxa">Taxa de juros (%)</label>
+        <div class="par">
+          <input id="am-taxa" type="text" inputmode="decimal" value="11" />
+          <select id="am-taxa-un" aria-label="Período da taxa"><option value="ano" selected>ao ano</option><option value="mes">ao mês</option></select>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="am-prazo">Parcelas que faltam</label>
+        <div class="par">
+          <input id="am-prazo" type="text" inputmode="numeric" value="300" />
+          <select id="am-prazo-un" aria-label="Unidade do prazo"><option value="mes" selected>meses</option><option value="ano">anos</option></select>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="am-sistema">Sistema</label>
+        <select id="am-sistema"><option value="sac" selected>SAC (parcela cai todo mês)</option><option value="price">Price (parcela fixa)</option></select>
+      </div>
+    </div>
+
+    <fieldset class="extra">
+      <legend>Quanto vai pagar a mais</legend>
+      <div class="linhas">
+        <div class="campo"><label for="am-unico">Valor único (R$)</label><input id="am-unico" type="text" inputmode="decimal" value="20.000" /><small>Ex.: FGTS, 13º, bônus. Deixe 0 se não houver.</small></div>
+        <div class="campo"><label for="am-mes">Pago junto com a parcela nº</label><input id="am-mes" type="text" inputmode="numeric" value="1" /></div>
+        <div class="campo"><label for="am-mensal">Todo mês, a mais (R$)</label><input id="am-mensal" type="text" inputmode="decimal" value="300" /><small>Deixe 0 se não houver.</small></div>
+      </div>
+      <div class="modos" role="radiogroup" aria-label="O que reduzir">
+        <label class="modo"><input type="radio" name="am-modo" value="prazo" checked /><span><strong>Reduzir o prazo</strong>A parcela segue igual e você termina antes.</span></label>
+        <label class="modo"><input type="radio" name="am-modo" value="parcela" /><span><strong>Reduzir a parcela</strong>O prazo segue igual e a parcela fica menor.</span></label>
+      </div>
+    </fieldset>
+
+    <p class="muted" id="am-info" aria-live="polite"></p>
+    <output class="resultado destaque" id="am-economia" for="am-saldo am-taxa am-prazo am-unico am-mensal"></output>
+    <div class="comparar">
+      <output class="resultado neutro" id="am-sem"></output>
+      <output class="resultado neutro" id="am-com"></output>
+    </div>
+
+    <p class="legenda" id="am-legenda">Parcelas com a amortização, em reais. Role a tabela para ver todas (no celular, role também para o lado).</p>
+    <div class="tabela-rolagem" tabindex="0" aria-labelledby="am-legenda">
+      <table>
+        <thead><tr><th scope="col">Nº</th><th scope="col">Parcela</th><th scope="col">Juros</th><th scope="col">Amortização</th><th scope="col">Extra</th><th scope="col">Saldo</th></tr></thead>
+        <tbody id="am-tabela"></tbody>
+      </table>
+    </div>
+  </form>
+
+  <Fragment slot="texto">
+    <h2>O que é amortização extraordinária</h2>
+    <p>Amortizar é abater a dívida. Toda parcela já traz uma parte de amortização, mas você pode pagar um valor a mais, fora do combinado, para reduzir o saldo devedor mais rápido. Esse pagamento extra vai inteiro para a dívida, sem juros embutidos. Como os juros de cada mês são calculados sobre o saldo que sobra, cada real abatido hoje deixa de gerar juros em todos os meses seguintes.</p>
+    <h2>Reduzir o prazo ou a parcela?</h2>
+    <p>Na hora de amortizar, o banco pergunta o que você quer reduzir. Reduzindo o prazo, a parcela continua parecida e o contrato acaba antes, então você para de pagar juros mais cedo e economiza mais. Reduzindo a parcela, o contrato termina na mesma data, mas cada parcela fica menor, o que ajuda quando o orçamento está apertado. O simulador mostra as duas opções lado a lado com o cenário sem amortizar: troque a escolha e veja a diferença.</p>
+    <h2>Um exemplo</h2>
+    <p>Com R$ 200 mil de saldo a 11% ao ano, faltando 300 parcelas no SAC, quem paga R$ 20 mil de uma vez logo no começo e mais R$ 300 todo mês, reduzindo o prazo, termina o financiamento muitos anos antes e deixa de pagar dezenas de milhares de reais em juros. Os valores exatos aparecem acima e mudam conforme o seu caso.</p>
+    <h2>Antes de amortizar</h2>
+    <ul>
+      <li>Peça ao banco o saldo devedor atualizado. Ele pode incluir seguros, taxas e correção pela TR, que este simulador não considera.</li>
+      <li>Guarde uma reserva de emergência antes. O dinheiro usado para amortizar não volta para a sua conta.</li>
+      <li>Compare com investir: se o investimento rende menos que a taxa do financiamento depois do imposto, amortizar costuma ser melhor. Veja quanto o dinheiro renderia na calculadora <a href="/calculadoras/quanto-rende">Quanto rende</a>.</li>
+      <li>Quer comparar Price e SAC desde o começo do contrato? Use o <a href="/calculadoras/financiamento">simulador de financiamento</a>.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero, formatar } from '../../lib/numeros';
+  import { reais, centavos } from '../../lib/dinheiro';
+  import { anualParaMensal } from '../../lib/juros';
+  import { simularAmortizacao, duracao, type Sistema, type Modo } from '../../lib/amortizacao';
+
+  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('am');
+  const info = $('am-info'), economia = $('am-economia'), outSem = $('am-sem'), outCom = $('am-com'), tabela = $('am-tabela');
+
+  function calcular() {
+    const saldo = lerNumero($('am-saldo').value), taxa = lerNumero($('am-taxa').value), prazo = lerNumero($('am-prazo').value);
+    const unico = lerNumero($('am-unico').value) ?? 0, mensal = lerNumero($('am-mensal').value) ?? 0;
+    const mesUnico = lerNumero($('am-mes').value) ?? 1;
+    const taxaAnual = $<HTMLSelectElement>('am-taxa-un').value === 'ano';
+    const emAnos = $<HTMLSelectElement>('am-prazo-un').value === 'ano';
+    const sistema = $<HTMLSelectElement>('am-sistema').value as Sistema;
+    const modo = (form.querySelector<HTMLInputElement>('input[name="am-modo"]:checked')?.value ?? 'prazo') as Modo;
+
+    const erro = (msg: string) => {
+      economia.innerHTML = `<span class="erro">${msg}</span>`;
+    outSem.innerHTML = outCom.innerHTML = tabela.innerHTML = info.textContent = '';
+    };
+    if (saldo === null || taxa === null || prazo === null) return erro('Preencha saldo, taxa e parcelas com números.');
+    if (saldo <= 0) return erro('O saldo devedor precisa ser maior que zero.');
+    if (taxa < 0 || unico < 0 || mensal < 0) return erro('Use valores positivos.');
+    const meses = Math.round(emAnos ? prazo * 12 : prazo);
+    if (meses < 1) return erro('Precisa faltar pelo menos 1 parcela.');
+    if (meses > 600) return erro('O máximo é de 600 parcelas (50 anos).');
+    if (mesUnico < 1 || mesUnico > meses) return erro(`O pagamento único precisa cair entre a parcela 1 e a ${meses}.`);
+
+    const taxaMensal = taxaAnual ? anualParaMensal(taxa) : taxa;
+    const base = { saldo, taxaMensal, meses, sistema };
+    const sem = simularAmortizacao({ ...base, modo: 'prazo' });
+    const com = simularAmortizacao({ ...base, modo, extraMensal: mensal, extraUnico: unico, mesUnico: Math.round(mesUnico) });
+
+    const nome = sistema === 'sac' ? 'SAC' : 'Price';
+    info.textContent = `${nome}, ${meses} parcelas, taxa de ${formatar(taxaMensal, 4)}% ao mês.`;
+    const parcelaTxt = (r: typeof sem) => sistema === 'price' ? `Parcela: ${reais(r.primeira)}` : `1ª parcela: ${reais(r.primeira)}, caindo até ${reais(r.ultima)}`;
+    outSem.innerHTML = `<span class="rotulo">Sem amortizar</span><strong>${reais(sem.totalJuros)}</strong>de juros em ${duracao(sem.meses)}<br>${parcelaTxt(sem)}<br>Total pago: ${reais(sem.totalPago)}`;
+    outCom.innerHTML = `<span class="rotulo">Com amortização</span><strong>${reais(com.totalJuros)}</strong>de juros em ${duracao(com.meses)}<br>${parcelaTxt(com)}<br>Pago a mais: ${reais(com.totalExtra)}<br>Total pago: ${reais(com.totalPago)}`;
+
+    const poupou = sem.totalJuros - com.totalJuros;
+    const menos = sem.meses - com.meses;
+    // Parcela no mês seguinte ao primeiro pagamento extra, nos dois cenários, para comparar o mesmo mês.
+    const idx = Math.min(unico > 0 ? Math.round(mesUnico) : 1, com.linhas.length - 1);
+    const antes = sem.linhas[idx]?.prestacao ?? 0, agora = com.linhas[idx]?.prestacao ?? 0;
+    if (com.totalExtra < 0.005) {
+      economia.innerHTML = '<span class="muted">Digite um valor único ou mensal para ver quanto economiza.</span>';
+    } else if (modo === 'parcela') {
+      economia.innerHTML = `<strong>A parcela cai de ${reais(antes)} para ${reais(agora)}</strong> e você economiza ${reais(poupou)} em juros.` +
+        (menos > 0 ? ` Com os pagamentos mensais a mais, o contrato ainda termina ${duracao(menos)} antes.` : '');
+    } else {
+      economia.innerHTML = `<strong>Você economiza ${reais(poupou)} em juros</strong>` + (menos > 0 ? ` e termina ${duracao(menos)} antes.` : '.');
+    }
+    tabela.innerHTML = com.linhas.map((l) =>
+      `<tr><td>${l.numero}</td><td>${centavos(l.prestacao)}</td><td>${centavos(l.juros)}</td><td>${centavos(l.amortizacao)}</td><td>${l.extra > 0.004 ? centavos(l.extra) : '–'}</td><td>${centavos(l.saldo)}</td></tr>`).join('');
+  }
+
+  form.addEventListener('input', calcular);
+  form.addEventListener('change', calcular);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calcular();
+</script>
+
+<style>
+  .linhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+  .par { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .par select { width: auto; }
+  .extra { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+  .extra legend { font-weight: 700; padding: 0 6px; }
+  .modos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+  .modo { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 2px solid var(--line); border-radius: var(--radius); cursor: pointer; transition: border-color 0.2s, transform 0.2s var(--mola); }
+  .modo:has(input:checked) { border-color: var(--brand-ink); background: var(--brand-soft); }
+  .modo input { margin-top: 4px; accent-color: var(--fg); }
+  .modo span { display: flex; flex-direction: column; font-size: 0.93rem; color: var(--muted); }
+  .modo strong { color: var(--fg); font-size: 1rem; }
+  .destaque { display: block; font-size: 1.1rem; min-height: 56px; }
+  .destaque :global(strong) { display: inline; font-size: inherit; }
+  .comparar { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px; }
+  .neutro { display: block; min-height: 170px; background: var(--bg); }
+  .resultado :global(.rotulo) { display: block; color: var(--muted); }
+  .legenda { font-size: 0.9rem; color: var(--muted); }
+  .tabela-rolagem { max-height: 420px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); overscroll-behavior: contain; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.86rem; }
+  th { position: sticky; top: 0; background: var(--surface); text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child { text-align: left; left: 0; z-index: 1; }
+  .tabela-rolagem :global(td) { text-align: right; padding: 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .tabela-rolagem :global(td:first-child) { text-align: left; color: var(--muted); position: sticky; left: 0; background: var(--surface); }
+  .tabela-rolagem :global(tr:last-child td) { border-bottom: 0; }
+</style>

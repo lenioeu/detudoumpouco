@@ -4,6 +4,7 @@ export default [
   { slug: 'porcentagem', nome: 'Calculadora de porcentagem', resumo: 'Quanto é X% de um valor, aumentos, descontos e variação.', status: 'pronta' },
   { slug: 'juros-compostos', nome: 'Juros compostos', resumo: 'Quanto seu dinheiro rende com aportes mensais.', status: 'pronta' },
   { slug: 'financiamento', nome: 'Simulador de financiamento', resumo: 'Parcelas pela tabela Price e SAC.', status: 'pronta' },
+  { slug: 'amortizacao', nome: 'Simulador de amortização', resumo: 'Quanto economiza pagando a mais no financiamento.', status: 'pronta' },
   { slug: 'quanto-rende', nome: 'Quanto rende', resumo: 'Poupança, CDB e Tesouro lado a lado.', status: 'pronta' },
   { slug: 'regra-de-tres', nome: 'Regra de três', resumo: 'Simples e composta, com o passo a passo.', status: 'pronta' },
   { slug: 'alcool-ou-gasolina', nome: 'Álcool ou gasolina?', resumo: 'Descubra qual compensa mais no seu carro.', status: 'pronta' },
