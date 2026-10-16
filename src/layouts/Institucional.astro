@@ -1,0 +1,14 @@
+---
+import Base from './Base.astro';
+interface Props { titulo: string; descricao: string; }
+const { titulo, descricao } = Astro.props;
+---
+<Base titulo={titulo} descricao={descricao}>
+  <div class="container pagina">
+    <article class="prosa">
+      <h1>{titulo}</h1>
+      <slot />
+    </article>
+  </div>
+</Base>
+<style>.pagina { padding-block: 28px 0; }</style>

@@ -1,0 +1,91 @@
+/* Quebragalho: amarelo de ferramenta sobre tinta escura, cinzas levemente frios. */
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --fg: #16181d;
+  --muted: #5a6070;
+  --line: #dfe2e8;
+  --brand: #ffc42e;
+  --brand-ink: #16181d;
+  --brand-soft: #fff4d1;
+  --link: #1d5bd6;
+  --ok: #157a50;
+  --erro: #b42318;
+  --radius: 10px;
+  --f-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --f-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --f-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --w: 1080px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #111317; --surface: #1a1d23; --fg: #eceef2; --muted: #9aa1ae; --line: #2b2f38;
+    --brand-soft: #3a3115; --link: #84aaff; --ok: #4cc38a; --erro: #ff7b6e; color-scheme: dark;
+  }
+}
+:root[data-theme='dark'] {
+  --bg: #111317; --surface: #1a1d23; --fg: #eceef2; --muted: #9aa1ae; --line: #2b2f38;
+  --brand-soft: #3a3115; --link: #84aaff; --ok: #4cc38a; --erro: #ff7b6e; color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 16px/1.6 var(--f-body);
+  display: flex; flex-direction: column; min-height: 100vh;
+}
+main { flex: 1; }
+img, svg, canvas, video { max-width: 100%; }
+a { color: var(--link); }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.9rem, 4.5vw, 2.6rem); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 1.45rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; }
+:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+
+.container {
+  width: 100%; max-width: var(--w); margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.muted { color: var(--muted); }
+
+/* Controles de formulário usados por todas as ferramentas */
+.campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.campo label, .rotulo { font-weight: 600; font-size: 0.95rem; }
+.campo small { color: var(--muted); font-size: 0.85rem; }
+input[type='text'], input[type='number'], input[type='date'], input[type='email'], select, textarea {
+  font: inherit; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--link); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--link) 25%, transparent); }
+input[type='range'] { width: 100%; accent-color: var(--fg); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 700 1rem var(--f-display); text-decoration: none; cursor: pointer;
+  padding: 11px 20px; border-radius: 8px; border: 2px solid var(--brand-ink);
+  background: var(--brand); color: var(--brand-ink);
+}
+.btn:hover { filter: brightness(0.96); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-sec { background: transparent; color: var(--fg); border-color: var(--line); }
+
+/* Caixa de resultado */
+.resultado {
+  background: var(--brand-soft); border-radius: var(--radius); padding: 16px 18px;
+  font-variant-numeric: tabular-nums;
+}
+.resultado strong { font-family: var(--f-display); font-size: 1.6rem; display: block; line-height: 1.2; }
+.erro { color: var(--erro); font-weight: 600; }
+
+/* Texto longo das páginas de ferramenta */
+.prosa { max-width: 68ch; display: flex; flex-direction: column; gap: 14px; }
+.prosa h2 { margin-top: 18px; }
+.prosa ul, .prosa ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

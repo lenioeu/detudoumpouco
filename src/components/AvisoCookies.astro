@@ -1,0 +1,28 @@
+---
+// Aviso de cookies exigido pela LGPD. A escolha fica salva no navegador.
+---
+<div class="cookies" id="aviso-cookies" hidden>
+  <p>Usamos cookies para mostrar anúncios e entender o uso do site. Seus arquivos nunca são enviados. Saiba mais na <a href="/privacidade">política de privacidade</a>.</p>
+  <button type="button" class="btn" id="aceitar-cookies">Entendi</button>
+</div>
+
+<script>
+  const aviso = document.getElementById('aviso-cookies')!;
+  let visto = false;
+  try { visto = localStorage.getItem('qg-cookies') === 'ok'; } catch {}
+  if (!visto) aviso.hidden = false;
+  document.getElementById('aceitar-cookies')!.addEventListener('click', () => {
+    try { localStorage.setItem('qg-cookies', 'ok'); } catch {}
+    aviso.hidden = true;
+  });
+</script>
+
+<style>
+  .cookies {
+    position: fixed; z-index: 50; left: 0; right: 0; bottom: 0;
+    padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 20px rgb(0 0 0 / 0.08);
+    display: flex; gap: 12px 20px; align-items: center; justify-content: center; flex-wrap: wrap; font-size: 0.93rem;
+  }
+  .cookies p { max-width: 70ch; }
+</style>

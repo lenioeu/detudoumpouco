@@ -1,0 +1,13 @@
+---
+import Institucional from '../layouts/Institucional.astro';
+import { SITE } from '../config';
+---
+<Institucional titulo="Sobre o Quebragalho" descricao="Quem somos e como funcionam as ferramentas grátis do Quebragalho.">
+  <p>O {SITE.nome} reúne ferramentas simples para resolver tarefas do dia a dia: fazer uma conta, juntar um PDF, diminuir uma foto, converter um áudio. Tudo grátis e sem cadastro.</p>
+  <h2>Seus arquivos ficam com você</h2>
+  <p>As ferramentas funcionam dentro do seu navegador. Quando você escolhe um arquivo, ele é processado no seu próprio computador ou celular e não é enviado para nenhum servidor. Por isso o site funciona rápido e é seguro para documentos pessoais.</p>
+  <h2>Como o site se mantém</h2>
+  <p>O {SITE.nome} é gratuito porque exibe anúncios. Eles nunca têm acesso aos arquivos que você usa nas ferramentas.</p>
+  <h2>Fale com a gente</h2>
+  <p>Encontrou um erro ou quer sugerir uma ferramenta? Veja a página de <a href="/contato">contato</a>.</p>
+</Institucional>

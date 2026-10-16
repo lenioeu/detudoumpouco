@@ -1,0 +1,33 @@
+---
+import { SITE } from '../config';
+import { secoesAtivas } from '../data';
+const atual = Astro.url.pathname.split('/')[1] ?? '';
+const secoes = secoesAtivas();
+---
+<header class="topo">
+  <div class="container barra">
+    <a class="marca" href="/" aria-label={`${SITE.nome}, página inicial`}>
+      <img src="/favicon.svg" width="32" height="32" alt="" />
+      <span>{SITE.nome}</span>
+    </a>
+    <nav aria-label="Seções">
+      <ul>
+        {secoes.map((s) => (
+          <li><a href={`/${s.slug}`} aria-current={atual === s.slug ? 'page' : undefined}>{s.nome}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .topo { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .barra { display: flex; align-items: center; gap: 12px 28px; flex-wrap: wrap; padding-block: 12px; }
+  .marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); font: 800 1.3rem var(--f-display); letter-spacing: -0.01em; }
+  nav { min-width: 0; flex: 1; }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  a[aria-current], nav a { white-space: nowrap; }
+  nav a { display: block; padding: 6px 10px; border-radius: 6px; color: var(--fg); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+  nav a:hover { background: var(--bg); }
+  nav a[aria-current='page'] { background: var(--brand); color: var(--brand-ink); }
+</style>

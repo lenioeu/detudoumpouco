@@ -1,0 +1,21 @@
+---
+// Espaço de anúncio. Não carrega nada enquanto SITE.adsenseClient for null.
+// Em desenvolvimento mostra uma caixa tracejada para ver onde o anúncio vai ficar.
+import { SITE } from '../config';
+interface Props { slot?: string; formato?: 'auto' | 'horizontal' | 'retangulo'; }
+const { slot = '', formato = 'auto' } = Astro.props;
+const dev = import.meta.env.DEV;
+---
+{SITE.adsenseClient ? (
+  <div class="anuncio" aria-label="Publicidade">
+    <ins class="adsbygoogle" style="display:block" data-ad-client={SITE.adsenseClient} data-ad-slot={slot} data-ad-format={formato === 'auto' ? 'auto' : formato} data-full-width-responsive="true"></ins>
+    <script is:inline>(window.adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+) : dev ? (
+  <div class="anuncio dev">Espaço de anúncio ({formato})</div>
+) : null}
+
+<style>
+  .anuncio { margin-block: 24px; min-height: 90px; }
+  .dev { display: grid; place-items: center; border: 2px dashed var(--line); border-radius: var(--radius); color: var(--muted); font-size: 0.9rem; }
+</style>

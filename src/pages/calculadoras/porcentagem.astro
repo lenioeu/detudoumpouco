@@ -1,0 +1,119 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="calculadoras"
+  slug="porcentagem"
+  titulo="Calculadora de porcentagem"
+  subtitulo="Descubra quanto é X% de um valor, quanto um número representa em porcentagem, aplique aumentos e descontos e calcule a variação entre dois valores."
+  tituloSeo="Calculadora de porcentagem online e grátis"
+  descricao="Calcule porcentagem online: quanto é X% de um valor, aumento e desconto, quantos por cento um número representa e variação percentual. Grátis e na hora."
+  passos={[
+    'Escolha qual conta você quer fazer entre os quatro quadros abaixo.',
+    'Digite os valores. Pode usar vírgula ou ponto para os centavos.',
+    'O resultado aparece na hora, junto com a conta usada.',
+  ]}
+  perguntas={[
+    { p: 'Como calcular porcentagem de um valor?', r: 'Multiplique o valor pela porcentagem e divida por 100. Por exemplo, 15% de 200 é 200 × 15 ÷ 100 = 30.' },
+    { p: 'Como calcular um desconto?', r: 'Multiplique o preço por (1 − desconto ÷ 100). Um produto de R$ 80 com 25% de desconto custa 80 × 0,75 = R$ 60. No quadro "Aumento ou desconto", digite o desconto com sinal de menos, como −25.' },
+    { p: 'Como saber quantos por cento um número representa de outro?', r: 'Divida o primeiro pelo segundo e multiplique por 100. Se você gastou R$ 450 de um salário de R$ 1.500, gastou 450 ÷ 1.500 × 100 = 30% do salário.' },
+    { p: 'Como calcular a variação percentual?', r: 'Subtraia o valor antigo do novo, divida pelo antigo e multiplique por 100. Se o preço foi de R$ 50 para R$ 60, a variação é (60 − 50) ÷ 50 × 100 = 20% de aumento.' },
+    { p: 'Um aumento de 10% seguido de um desconto de 10% volta ao valor original?', r: 'Não. R$ 100 com 10% de aumento vira R$ 110, e 10% de desconto sobre R$ 110 dá R$ 99. O desconto incide sobre um valor maior, por isso o resultado fica 1% abaixo do original.' },
+  ]}
+>
+  <div class="grade">
+    <form class="calc" data-modo="de">
+      <h2>Quanto é X% de um valor</h2>
+      <div class="linha">
+        <div class="campo"><label for="de-p">Porcentagem (%)</label><input id="de-p" type="text" inputmode="decimal" value="15" /></div>
+        <div class="campo"><label for="de-v">do valor</label><input id="de-v" type="text" inputmode="decimal" value="200" /></div>
+      </div>
+      <output class="resultado" for="de-p de-v"></output>
+    </form>
+
+    <form class="calc" data-modo="quanto">
+      <h2>X é quantos % de Y</h2>
+      <div class="linha">
+        <div class="campo"><label for="q-a">O valor</label><input id="q-a" type="text" inputmode="decimal" value="450" /></div>
+        <div class="campo"><label for="q-b">representa quanto de</label><input id="q-b" type="text" inputmode="decimal" value="1500" /></div>
+      </div>
+      <output class="resultado" for="q-a q-b"></output>
+    </form>
+
+    <form class="calc" data-modo="aplicar">
+      <h2>Aumento ou desconto</h2>
+      <div class="linha">
+        <div class="campo"><label for="a-v">Valor</label><input id="a-v" type="text" inputmode="decimal" value="80" /></div>
+        <div class="campo"><label for="a-p">Porcentagem (%)</label><input id="a-p" type="text" inputmode="decimal" value="-25" /><small>Use − para desconto</small></div>
+      </div>
+      <output class="resultado" for="a-v a-p"></output>
+    </form>
+
+    <form class="calc" data-modo="variacao">
+      <h2>Variação percentual</h2>
+      <div class="linha">
+        <div class="campo"><label for="v-de">De</label><input id="v-de" type="text" inputmode="decimal" value="50" /></div>
+        <div class="campo"><label for="v-para">Para</label><input id="v-para" type="text" inputmode="decimal" value="60" /></div>
+      </div>
+      <output class="resultado" for="v-de v-para"></output>
+    </form>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que é porcentagem</h2>
+    <p>Porcentagem é uma forma de dizer "quantas partes em cada 100". Falar em 30% de um valor é o mesmo que pegar 30 de cada 100 partes dele, ou 0,30 vezes o valor. Por isso toda conta de porcentagem vira uma multiplicação ou divisão por 100.</p>
+    <h2>Exemplos do dia a dia</h2>
+    <ul>
+      <li><strong>Gorjeta:</strong> os 10% do garçom numa conta de R$ 180 são R$ 18.</li>
+      <li><strong>Reajuste de aluguel:</strong> um aluguel de R$ 1.200 com reajuste de 4,5% passa a R$ 1.254.</li>
+      <li><strong>Promoção:</strong> um tênis de R$ 300 com 40% de desconto sai por R$ 180.</li>
+      <li><strong>Inflação de um produto:</strong> se o café foi de R$ 18 para R$ 24, subiu 33,3%.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero, formatar } from '../../lib/numeros';
+  import { porcentoDe, quantoPorcento, aplicarPorcentagem, variacao } from '../../lib/porcentagem';
+
+  type Conta = (x: number, y: number) => string;
+  const contas: Record<string, Conta> = {
+    de: (p, v) => `<strong>${formatar(porcentoDe(p, v))}</strong>${formatar(p)}% de ${formatar(v)} = ${formatar(v)} × ${formatar(p)} ÷ 100`,
+    quanto: (a, b) => {
+      const r = quantoPorcento(a, b);
+      return r === null ? '<span class="erro">O segundo valor não pode ser zero.</span>'
+        : `<strong>${formatar(r)}%</strong>${formatar(a)} ÷ ${formatar(b)} × 100`;
+    },
+    aplicar: (v, p) => {
+      const r = aplicarPorcentagem(v, p);
+      const tipo = p >= 0 ? 'aumento' : 'desconto';
+      return `<strong>${formatar(r)}</strong>${tipo} de ${formatar(Math.abs(r - v))} sobre ${formatar(v)}`;
+    },
+    variacao: (de, para) => {
+      const r = variacao(de, para);
+      if (r === null) return '<span class="erro">O valor inicial não pode ser zero.</span>';
+      const tipo = r > 0 ? 'de aumento' : r < 0 ? 'de queda' : '(sem variação)';
+      return `<strong>${r > 0 ? '+' : ''}${formatar(r)}%</strong>${tipo}, de ${formatar(de)} para ${formatar(para)}`;
+    },
+  };
+
+  document.querySelectorAll<HTMLFormElement>('form.calc').forEach((form) => {
+    const [x, y] = Array.from(form.querySelectorAll('input'));
+    const out = form.querySelector('output')!;
+    const calcular = () => {
+      const a = lerNumero(x.value), b = lerNumero(y.value);
+      out.innerHTML = a === null || b === null ? '<span class="muted">Preencha os dois campos com números.</span>' : contas[form.dataset.modo!](a, b);
+    };
+    form.addEventListener('input', calcular);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    calcular();
+  });
+</script>
+
+<style>
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+  .calc { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+  .calc h2 { font-size: 1.05rem; }
+  .linha { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .resultado { display: block; min-height: 72px; }
+</style>

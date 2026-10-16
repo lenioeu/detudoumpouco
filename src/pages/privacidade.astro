@@ -1,0 +1,24 @@
+---
+import Institucional from '../layouts/Institucional.astro';
+import { SITE } from '../config';
+---
+<Institucional titulo="Política de privacidade" descricao="Como o Quebragalho trata seus dados: arquivos processados no navegador, cookies e anúncios.">
+  <p class="muted">Última atualização: outubro de 2026.</p>
+  <p>Esta política explica quais dados o {SITE.nome} ({SITE.url}) coleta e como eles são usados, de acordo com a Lei Geral de Proteção de Dados (Lei 13.709/2018).</p>
+
+  <h2>Arquivos e dados que você digita</h2>
+  <p>As ferramentas funcionam no seu navegador. Arquivos (PDF, imagens, vídeos, áudios) e valores digitados nas calculadoras são processados no seu aparelho e <strong>não são enviados</strong> para nossos servidores nem para terceiros. Algumas ferramentas guardam preferências ou textos no armazenamento do seu próprio navegador para sua comodidade; você pode apagá-los limpando os dados do site.</p>
+  <p>Ferramentas de consulta (como busca de CEP ou cotação de moedas) enviam apenas o termo consultado para o serviço público que fornece a resposta, indicado na própria página.</p>
+
+  <h2>Cookies e anúncios</h2>
+  <p>O site exibe anúncios do Google AdSense. O Google e seus parceiros podem usar cookies para mostrar anúncios com base em visitas anteriores a este e a outros sites. Você pode desativar a publicidade personalizada nas <a href="https://adssettings.google.com" rel="noopener">configurações de anúncios do Google</a>. Saiba mais em <a href="https://policies.google.com/technologies/ads?hl=pt-BR" rel="noopener">como o Google usa cookies em publicidade</a>.</p>
+
+  <h2>Estatísticas de acesso</h2>
+  <p>Podemos usar ferramentas de estatística para contar visitas e páginas mais acessadas, de forma agregada, sem identificar você.</p>
+
+  <h2>Seus direitos</h2>
+  <p>Você pode pedir informações sobre seus dados, correção ou exclusão, escrevendo para <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+
+  <h2>Mudanças nesta política</h2>
+  <p>Esta página pode ser atualizada. A data no topo indica a versão mais recente.</p>
+</Institucional>

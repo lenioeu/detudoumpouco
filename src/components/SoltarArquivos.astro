@@ -1,0 +1,41 @@
+---
+// Área para arrastar ou escolher arquivos. Reutilize em todas as ferramentas de arquivo.
+// Quando o usuário escolhe arquivos, o elemento dispara o evento "arquivos"
+// com event.detail = File[]. Exemplo:
+//   document.getElementById('entrada')!.addEventListener('arquivos', (e) => {
+//     const files = (e as CustomEvent<File[]>).detail;
+//   });
+interface Props { id: string; accept: string; multiple?: boolean; texto?: string; dica?: string; }
+const { id, accept, multiple = false, texto = 'Escolher arquivo', dica = 'ou arraste e solte aqui' } = Astro.props;
+---
+<div class="soltar" id={id} data-soltar>
+  <input type="file" id={`${id}-input`} accept={accept} multiple={multiple} />
+  <label for={`${id}-input`} class="btn">{texto}</label>
+  <span class="muted">{dica}</span>
+  <span class="privado">🔒 O arquivo é processado no seu aparelho e não é enviado para lugar nenhum.</span>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-soltar]').forEach((zona) => {
+    const input = zona.querySelector('input')!;
+    const enviar = (lista: FileList | null) => {
+      const files = Array.from(lista ?? []);
+      if (files.length) zona.dispatchEvent(new CustomEvent('arquivos', { detail: files }));
+    };
+    input.addEventListener('change', () => { enviar(input.files); input.value = ''; });
+    zona.addEventListener('dragover', (e) => { e.preventDefault(); zona.classList.add('sobre'); });
+    zona.addEventListener('dragleave', () => zona.classList.remove('sobre'));
+    zona.addEventListener('drop', (e) => { e.preventDefault(); zona.classList.remove('sobre'); enviar(e.dataTransfer?.files ?? null); });
+  });
+</script>
+
+<style>
+  .soltar {
+    display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+    padding: 36px 16px; border: 2px dashed var(--line); border-radius: var(--radius); background: var(--surface);
+  }
+  .soltar.sobre { border-color: var(--brand-ink); background: var(--brand-soft); }
+  input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  input:focus-visible + label { outline: 3px solid var(--link); outline-offset: 2px; }
+  .privado { font-size: 0.85rem; color: var(--ok); font-weight: 600; }
+</style>

@@ -1,0 +1,9 @@
+---
+import Institucional from '../layouts/Institucional.astro';
+import { SITE } from '../config';
+---
+<Institucional titulo="Contato" descricao="Fale com o Quebragalho: sugestões de ferramentas, erros e parcerias.">
+  <p>Para sugerir uma ferramenta, avisar sobre um erro ou falar sobre parcerias, escreva para:</p>
+  <p><strong><a href={`mailto:${SITE.email}`}>{SITE.email}</a></strong></p>
+  <p>Respondemos em até 3 dias úteis.</p>
+</Institucional>

@@ -1,0 +1,16 @@
+---
+import type { FerramentaCompleta } from '../data';
+interface Props { f: FerramentaCompleta; }
+const { f } = Astro.props;
+---
+<a class="cartao" href={f.url}>
+  <strong>{f.nome}</strong>
+  <span>{f.resumo}</span>
+</a>
+
+<style>
+  .cartao { display: flex; flex-direction: column; gap: 4px; height: 100%; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--fg); text-decoration: none; }
+  .cartao:hover { border-color: var(--fg); }
+  strong { font-family: var(--f-display); font-size: 1.05rem; }
+  span { color: var(--muted); font-size: 0.93rem; }
+</style>

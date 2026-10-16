@@ -1,0 +1,35 @@
+---
+import { SITE } from '../config';
+import { secoesAtivas } from '../data';
+const ano = new Date().getFullYear();
+---
+<footer class="rodape">
+  <div class="container grade">
+    <div class="stack">
+      <strong class="nome">{SITE.nome}</strong>
+      <p class="muted">{SITE.slogan}. Tudo roda no seu navegador: seus arquivos não são enviados para nenhum servidor.</p>
+    </div>
+    <nav aria-label="Seções do site">
+      <ul>{secoesAtivas().map((s) => <li><a href={`/${s.slug}`}>{s.nome}</a></li>)}</ul>
+    </nav>
+    <nav aria-label="Institucional">
+      <ul>
+        <li><a href="/sobre">Sobre</a></li>
+        <li><a href="/contato">Contato</a></li>
+        <li><a href="/privacidade">Política de privacidade</a></li>
+        <li><a href="/termos">Termos de uso</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="container copy muted">© {ano} {SITE.nome}</div>
+</footer>
+
+<style>
+  .rodape { margin-top: 64px; border-top: 1px solid var(--line); background: var(--surface); padding-block: 32px 24px; font-size: 0.95rem; }
+  .grade { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .grade { grid-template-columns: 1fr; } }
+  .nome { font: 800 1.15rem var(--f-display); }
+  ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  a { color: var(--fg); }
+  .copy { margin-top: 24px; font-size: 0.85rem; }
+</style>

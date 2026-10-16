@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro';
+import CartaoFerramenta from '../components/CartaoFerramenta.astro';
+import { SITE } from '../config';
+import { prontas, secoesAtivas } from '../data';
+const secoes = secoesAtivas();
+---
+<Base titulo={SITE.slogan} descricao={SITE.descricao}
+  jsonLd={[{ '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.nome, url: SITE.url, inLanguage: 'pt-BR' }]}>
+  <section class="hero">
+    <div class="container stack">
+      <h1>Quebrou o galho.<br />Ferramentas grátis que resolvem na hora.</h1>
+      <p class="sub">Calculadoras, conversores e ferramentas de PDF, imagem, vídeo e áudio. Sem cadastro, sem instalar nada, e seus arquivos não saem do seu aparelho.</p>
+    </div>
+  </section>
+
+  <div class="container secoes">
+    {secoes.map((s) => (
+      <section class="secao">
+        <div class="titulo-secao">
+          <h2><a href={`/${s.slug}`}>{s.nome}</a></h2>
+          <span class="muted">{s.resumo}</span>
+        </div>
+        <ul>{prontas(s.slug).map((f) => <li><CartaoFerramenta f={f} /></li>)}</ul>
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .hero { background: var(--brand); color: var(--brand-ink); padding-block: clamp(32px, 6vw, 56px); }
+  .hero h1 { max-width: 22ch; }
+  .sub { font-size: 1.1rem; max-width: 60ch; }
+  .secoes { display: flex; flex-direction: column; gap: 40px; padding-block: 40px 0; }
+  .secao { display: flex; flex-direction: column; gap: 14px; }
+  .titulo-secao { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
+  .titulo-secao a { color: var(--fg); text-decoration: none; }
+  .titulo-secao a:hover { text-decoration: underline; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+</style>

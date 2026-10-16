@@ -1,0 +1,135 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="imagem"
+  slug="comprimir-imagem"
+  titulo="Comprimir imagem"
+  subtitulo="Diminua o tamanho de fotos JPG, PNG e WebP sem perder qualidade visível. Várias imagens de uma vez, direto no seu navegador."
+  tituloSeo="Comprimir imagem online: JPG, PNG e WebP grátis"
+  descricao="Comprima imagens JPG, PNG e WebP online e grátis. Reduza o tamanho de fotos para enviar por e-mail ou WhatsApp, sem enviar seus arquivos para servidores."
+  passos={[
+    'Escolha uma ou várias imagens, ou arraste para a área indicada.',
+    'Ajuste a qualidade e, se quiser, a largura máxima. 75% costuma ser o melhor equilíbrio.',
+    'Clique em "Baixar" ao lado de cada imagem comprimida.',
+  ]}
+  perguntas={[
+    { p: 'Minhas fotos são enviadas para algum servidor?', r: 'Não. A compressão acontece dentro do seu navegador, no seu computador ou celular. As imagens nunca saem do seu aparelho.' },
+    { p: 'Qual qualidade devo escolher?', r: 'Entre 70% e 80% a diferença costuma ser invisível e o arquivo fica de 3 a 10 vezes menor. Abaixo de 50% começam a aparecer borrões e blocos.' },
+    { p: 'Qual formato escolher: JPG ou WebP?', r: 'WebP gera arquivos menores e funciona em todos os navegadores atuais. Escolha JPG se a imagem for usada em um sistema antigo ou em um formulário que só aceita JPG.' },
+    { p: 'Dá para comprimir PNG com fundo transparente?', r: 'Sim, escolhendo o formato WebP, que mantém a transparência. No formato JPG, o fundo transparente vira branco.' },
+    { p: 'Funciona com fotos HEIC do iPhone?', r: 'A maioria dos navegadores ainda não abre HEIC. Converta antes para JPG; o próprio iPhone faz isso ao compartilhar a foto escolhendo "Mais compatível" nas configurações da câmera.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp" multiple texto="Escolher imagens" />
+
+    <div class="opcoes">
+      <div class="campo">
+        <label for="qualidade">Qualidade: <span id="qualidade-valor">75%</span></label>
+        <input id="qualidade" type="range" min="30" max="95" step="5" value="75" />
+      </div>
+      <div class="campo">
+        <label for="largura">Largura máxima</label>
+        <select id="largura">
+          <option value="0">Manter o tamanho original</option>
+          <option value="3840">3840 px (4K)</option>
+          <option value="1920" selected>1920 px (Full HD)</option>
+          <option value="1280">1280 px</option>
+          <option value="800">800 px</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="formato">Formato</label>
+        <select id="formato">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/webp">WebP (menor, mantém transparência)</option>
+        </select>
+      </div>
+    </div>
+
+    <p id="resumo" class="resultado" hidden></p>
+    <ul id="lista" class="lista"></ul>
+  </div>
+</Ferramenta>
+
+<script>
+  import { tamanho, trocarExtensao } from '../../lib/arquivos';
+
+  const entrada = document.getElementById('entrada')!;
+  const qualidade = document.getElementById('qualidade') as HTMLInputElement;
+  const qualidadeValor = document.getElementById('qualidade-valor')!;
+  const largura = document.getElementById('largura') as HTMLSelectElement;
+  const formato = document.getElementById('formato') as HTMLSelectElement;
+  const lista = document.getElementById('lista')!;
+  const resumo = document.getElementById('resumo')!;
+
+  let arquivos: File[] = [];
+  const urls: string[] = [];
+
+  async function comprimir(file: File): Promise<Blob> {
+    const bitmap = await createImageBitmap(file);
+    const max = Number(largura.value);
+    const escala = max && bitmap.width > max ? max / bitmap.width : 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * escala);
+    canvas.height = Math.round(bitmap.height * escala);
+    const ctx = canvas.getContext('2d')!;
+    if (formato.value === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return new Promise((ok, falha) =>
+      canvas.toBlob((b) => (b ? ok(b) : falha(new Error('falha'))), formato.value, Number(qualidade.value) / 100));
+  }
+
+  async function processar() {
+    urls.splice(0).forEach(URL.revokeObjectURL);
+    lista.innerHTML = '';
+    if (!arquivos.length) { resumo.hidden = true; return; }
+    let antes = 0, depois = 0;
+    const ext = formato.value === 'image/webp' ? 'webp' : 'jpg';
+    for (const file of arquivos) {
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="nome"></span><span class="muted">Comprimindo…</span>`;
+      li.querySelector('.nome')!.textContent = file.name;
+      lista.append(li);
+      try {
+        const blob = await comprimir(file);
+        // Se a versão comprimida ficar maior, oferecemos o original.
+        const final = blob.size < file.size ? blob : file;
+        antes += file.size; depois += final.size;
+        const url = URL.createObjectURL(final); urls.push(url);
+        const economia = Math.round((1 - final.size / file.size) * 100);
+        li.innerHTML = '';
+        const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = file.name;
+        const info = document.createElement('span'); info.className = 'muted';
+        info.textContent = final === file ? `${tamanho(file.size)} · já estava otimizada` : `${tamanho(file.size)} → ${tamanho(final.size)} (−${economia}%)`;
+        const a = document.createElement('a'); a.className = 'btn'; a.href = url; a.textContent = 'Baixar';
+        a.download = final === file ? file.name : trocarExtensao(file.name, ext);
+        li.append(nome, info, a);
+      } catch {
+        li.querySelector('.muted')!.textContent = 'Não foi possível abrir esta imagem.';
+        li.querySelector('.muted')!.className = 'erro';
+      }
+    }
+    if (depois > 0) {
+      resumo.hidden = false;
+      resumo.innerHTML = `<strong>${tamanho(antes)} → ${tamanho(depois)}</strong>Economia de ${Math.round((1 - depois / antes) * 100)}% no total.`;
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => { arquivos = (e as CustomEvent<File[]>).detail; processar(); });
+  qualidade.addEventListener('input', () => { qualidadeValor.textContent = `${qualidade.value}%`; });
+  qualidade.addEventListener('change', processar);
+  largura.addEventListener('change', processar);
+  formato.addEventListener('change', processar);
+</script>
+
+<style>
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .lista :global(li) { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); }
+  .lista :global(.nome) { font-weight: 600; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+  .lista :global(.btn) { padding: 7px 14px; font-size: 0.95rem; }
+</style>

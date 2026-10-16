@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import CartaoFerramenta from '../../components/CartaoFerramenta.astro';
+import AdSlot from '../../components/AdSlot.astro';
+import { prontas, secoesAtivas } from '../../data';
+import type { Secao } from '../../data/secoes';
+
+export function getStaticPaths() {
+  return secoesAtivas().map((s) => ({ params: { secao: s.slug }, props: { s } }));
+}
+const { s } = Astro.props as { s: Secao };
+const lista = prontas(s.slug);
+---
+<Base titulo={s.titulo} descricao={s.descricao}>
+  <div class="container pagina">
+    <nav class="trilha" aria-label="Você está em"><a href="/">Início</a> <span aria-hidden="true">›</span> {s.nome}</nav>
+    <header class="stack">
+      <h1>{s.titulo}</h1>
+      <p class="muted sub">{s.descricao}</p>
+    </header>
+    <ul>{lista.map((f) => <li><CartaoFerramenta f={f} /></li>)}</ul>
+    <AdSlot />
+  </div>
+</Base>
+
+<style>
+  .pagina { display: flex; flex-direction: column; gap: 24px; padding-block: 20px 0; }
+  .trilha { font-size: 0.9rem; color: var(--muted); }
+  .trilha a { color: var(--muted); }
+  .sub { font-size: 1.1rem; max-width: 60ch; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+</style>

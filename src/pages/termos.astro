@@ -1,0 +1,16 @@
+---
+import Institucional from '../layouts/Institucional.astro';
+import { SITE } from '../config';
+---
+<Institucional titulo="Termos de uso" descricao="Termos de uso das ferramentas gratuitas do Quebragalho.">
+  <p class="muted">Última atualização: outubro de 2026.</p>
+  <p>Ao usar o {SITE.nome}, você concorda com estes termos.</p>
+  <h2>Uso das ferramentas</h2>
+  <p>As ferramentas são gratuitas e oferecidas como estão. Fazemos o possível para que os resultados estejam corretos, mas eles servem como apoio e não substituem a orientação de um profissional (contador, médico, engenheiro, entre outros).</p>
+  <h2>Seus arquivos</h2>
+  <p>Você é responsável pelos arquivos que usa nas ferramentas e por ter o direito de usá-los. Os arquivos são processados no seu aparelho e não ficam guardados conosco.</p>
+  <h2>Uso proibido</h2>
+  <p>Não use o site para atividades ilegais nem tente prejudicar seu funcionamento.</p>
+  <h2>Contato</h2>
+  <p>Dúvidas: <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+</Institucional>
