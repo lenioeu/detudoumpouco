@@ -1,0 +1,266 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+const exemplo = ['Ana Clara', 'Bruno', 'Camila', 'Diego', 'Eduarda', 'Felipe', 'Giovana', 'Henrique'].join('\n');
+---
+<Ferramenta
+  secao="sorteios"
+  slug="sorteador-de-nomes"
+  titulo="Sorteador de nomes"
+  subtitulo="Cole a lista de participantes e sorteie um ou vários ganhadores. Sorteio justo, feito no seu navegador, sem cadastro."
+  tituloSeo="Sorteador de nomes online grátis e justo"
+  descricao="Sorteie nomes online de graça: cole a lista, escolha quantos ganhadores e sorteie sem repetir. Ideal para rifas, sorteios do Instagram e sala de aula."
+  passos={[
+    'Digite ou cole os nomes na caixa, um por linha. Também pode colar separados por vírgula.',
+    'Escolha quantos nomes quer sortear.',
+    'Se for fazer várias rodadas, marque "Tirar da lista quem já foi sorteado".',
+    'Clique em "Sortear". O resultado aparece com a data e a hora, pronto para tirar print ou copiar.',
+  ]}
+  perguntas={[
+    { p: 'O sorteador de nomes é confiável?', r: 'Sim. Ele usa o gerador criptográfico do navegador (crypto.getRandomValues), o mesmo tipo de recurso usado para criar senhas e chaves de segurança. Cada nome da lista tem exatamente a mesma chance de sair, e ninguém, nem o site, consegue prever ou escolher o resultado.' },
+    { p: 'Como sortear vários nomes sem repetir?', r: 'Digite em "Quantos sortear" o número de ganhadores e clique em "Sortear". Dentro de um mesmo sorteio, um nome nunca sai duas vezes. Para várias rodadas seguidas sem repetir ninguém, marque "Tirar da lista quem já foi sorteado".' },
+    { p: 'Como fazer sorteio de comentários do Instagram?', r: 'Copie os nomes de usuário de quem comentou e cole aqui, um por linha. Se a mesma pessoa comentou várias vezes e cada comentário vale uma chance, desmarque "Ignorar nomes repetidos". Se cada pessoa só pode concorrer uma vez, deixe a opção marcada.' },
+    { p: 'Dá para sortear a ordem de apresentação dos alunos?', r: 'Sim. Clique em "Sortear a ordem de todos" e a lista inteira aparece embaralhada, numerada do primeiro ao último. Serve para ordem de seminário, de jogadas ou de quem escolhe primeiro.' },
+    { p: 'Os nomes que eu digito ficam salvos em algum lugar?', r: 'Não. A lista fica só na página aberta no seu aparelho e não é enviada para nenhum servidor. Ao fechar ou recarregar a página, ela some.' },
+    { p: 'Existe limite de nomes?', r: 'Não há um limite fixo. Listas com milhares de nomes funcionam normalmente, porque o sorteio é feito no próprio navegador em uma fração de segundo.' },
+  ]}
+>
+  <div class="sorteador">
+    <div class="campo entrada">
+      <label for="nomes">Nomes, um por linha</label>
+      <textarea id="nomes" rows="9" spellcheck="false" autocomplete="off">{exemplo}</textarea>
+      <div class="sob-lista">
+        <small id="contagem" aria-live="polite">8 nomes na lista</small>
+        <button id="devolver" class="btn btn-sec mini" type="button" hidden>Devolver sorteados à lista</button>
+      </div>
+    </div>
+
+    <div class="stack controles">
+      <div class="campo qtd">
+        <label for="quantidade">Quantos sortear</label>
+        <input id="quantidade" type="number" inputmode="numeric" min="1" step="1" value="1" />
+      </div>
+      <label class="marca"><input id="tirar" type="checkbox" /> Tirar da lista quem já foi sorteado</label>
+      <label class="marca"><input id="unicos" type="checkbox" checked /> Ignorar nomes repetidos</label>
+      <div class="acoes">
+        <button id="sortear" class="btn" type="button">Sortear</button>
+        <button id="ordem" class="btn btn-sec" type="button">Sortear a ordem de todos</button>
+      </div>
+    </div>
+
+    <div class="saida" aria-live="polite">
+      <p id="tambor" class="tambor" hidden></p>
+      <div id="resultado" class="resultado">
+        <p class="muted">O resultado aparece aqui.</p>
+      </div>
+      <div id="pos" class="acoes" hidden>
+        <button id="copiar" class="btn btn-sec" type="button">Copiar resultado</button>
+        <span id="aviso" class="muted" role="status"></span>
+      </div>
+    </div>
+
+    <details id="historico" class="historico" hidden>
+      <summary>Sorteios anteriores desta página (<span id="n-hist">0</span>)</summary>
+      <ol id="lista-hist"></ol>
+    </details>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Como o sorteio funciona (e por que ele é justo)</h2>
+    <p>Muita ferramenta de sorteio usa a função comum de números aleatórios do JavaScript, que é rápida mas previsível: ela foi feita para jogos e efeitos visuais, não para decidir quem ganha um prêmio. Aqui o sorteio usa o <strong>gerador criptográfico do navegador</strong> (<code>crypto.getRandomValues</code>), o mesmo usado para criar senhas e chaves de segurança.</p>
+    <p>Também cuidamos de um detalhe que muita gente esquece: o <strong>viés de módulo</strong>. Quando se transforma um número aleatório grande em uma posição da lista com uma simples divisão, os primeiros nomes podem ganhar uma chance um pouquinho maior. O sorteador descarta esses valores "sobrando" e tira outro, então todos os nomes têm exatamente a mesma probabilidade. Para vários ganhadores, a lista é embaralhada pelo método de Fisher-Yates, e cada pessoa só pode sair uma vez por sorteio.</p>
+    <p>Tudo acontece no seu aparelho. Nenhum nome é enviado para servidor, e nem nós temos como influenciar o resultado.</p>
+
+    <h2>Quando usar</h2>
+    <ul>
+      <li><strong>Sorteio no Instagram:</strong> cole os @ de quem comentou. Se cada comentário vale uma chance, desmarque "Ignorar nomes repetidos" para que quem comentou três vezes tenha três chances.</li>
+      <li><strong>Rifa e bingo da escola:</strong> cole o nome de quem comprou cada número e sorteie o primeiro, o segundo e o terceiro prêmio de uma vez, colocando 3 em "Quantos sortear".</li>
+      <li><strong>Sala de aula:</strong> sorteie quem lê em voz alta ou use "Sortear a ordem de todos" para definir a sequência das apresentações.</li>
+      <li><strong>Trabalho e casa:</strong> quem paga o café, quem lava a louça, quem apresenta na reunião de segunda.</li>
+    </ul>
+
+    <h2>Dicas para um sorteio transparente</h2>
+    <ul>
+      <li>Mostre a lista completa antes de sortear, de preferência em uma transmissão ao vivo ou gravação de tela.</li>
+      <li>O resultado sai com a data e a hora exatas. Tire um print da tela inteira e publique junto com o ganhador.</li>
+      <li>Combine antes quantos ganhadores e quantos suplentes serão sorteados. Sortear todos de uma vez evita a desconfiança de "sortear até sair quem eu queria".</li>
+      <li>Em várias rodadas (primeiro, depois segundo prêmio), marque "Tirar da lista quem já foi sorteado" para ninguém ganhar duas vezes.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { chaveNome, indiceAleatorio, lerNomes, semDuplicados, sortearNomes } from '../../lib/sorteio';
+  import { formatar } from '../../lib/numeros';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const nomes = $<HTMLTextAreaElement>('nomes');
+  const contagem = $('contagem');
+  const quantidade = $<HTMLInputElement>('quantidade');
+  const tirar = $<HTMLInputElement>('tirar');
+  const unicos = $<HTMLInputElement>('unicos');
+  const btnSortear = $<HTMLButtonElement>('sortear');
+  const btnOrdem = $<HTMLButtonElement>('ordem');
+  const tambor = $('tambor');
+  const resultado = $('resultado');
+  const pos = $('pos');
+  const aviso = $('aviso');
+  const devolver = $<HTMLButtonElement>('devolver');
+  const historico = $<HTMLDetailsElement>('historico');
+  const listaHist = $('lista-hist');
+  const movimentoReduzido = matchMedia('(prefers-reduced-motion: reduce)');
+
+  let textoResultado = '';
+  let ultimosTirados: string[] = [];
+
+  const lista = () => (unicos.checked ? semDuplicados(lerNomes(nomes.value)) : lerNomes(nomes.value));
+
+  function atualizarContagem() {
+    const todos = lerNomes(nomes.value);
+    const n = lista().length;
+    const rep = todos.length - semDuplicados(todos).length;
+    let t = n === 1 ? '1 nome na lista' : `${formatar(n, 0)} nomes na lista`;
+    if (rep > 0) t += unicos.checked ? ` (${formatar(rep, 0)} repetido${rep > 1 ? 's' : ''} ignorado${rep > 1 ? 's' : ''})` : ` (${formatar(rep, 0)} repetido${rep > 1 ? 's' : ''})`;
+    contagem.textContent = t;
+  }
+
+  const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+  function agora() {
+    const d = new Date();
+    return `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR')}`;
+  }
+
+  /** Mostra nomes trocando rápido por menos de 1 segundo. Pulado com movimento reduzido. */
+  function girar(candidatos: string[]): Promise<void> {
+    if (movimentoReduzido.matches || candidatos.length < 2) return Promise.resolve();
+    tambor.hidden = false;
+    resultado.hidden = true;
+    return new Promise((fim) => {
+      const inicio = performance.now();
+      let ultimo = 0;
+      const passo = (t: number) => {
+        const dec = t - inicio;
+        // Começa trocando a cada 50 ms e vai desacelerando.
+        const intervalo = 50 + dec * 0.12;
+        if (t - ultimo >= intervalo) {
+          ultimo = t;
+          tambor.textContent = candidatos[indiceAleatorio(candidatos.length)];
+          tambor.classList.remove('troca');
+          void tambor.offsetWidth;
+          tambor.classList.add('troca');
+        }
+        if (dec < 900) requestAnimationFrame(passo);
+        else { tambor.hidden = true; resultado.hidden = false; fim(); }
+      };
+      requestAnimationFrame(passo);
+    });
+  }
+
+  function mostrar(titulo: string, escolhidos: string[], total: number) {
+    const quando = agora();
+    const itens = escolhidos.map((n, i) => `<li style="animation-delay:${Math.min(i, 12) * 40}ms"><span class="pos">${i + 1}º</span> ${escapar(n)}</li>`).join('');
+    const unico = escolhidos.length === 1;
+    resultado.innerHTML = `${unico ? `<p class="muted">${titulo}</p><strong class="ganhador">${escapar(escolhidos[0])}</strong>` : `<p class="muted">${titulo}</p><ol class="ganhadores">${itens}</ol>`}
+      <p class="quando">Sorteado em ${quando}, entre ${formatar(total, 0)} ${total === 1 ? 'nome' : 'nomes'}.</p>`;
+    textoResultado = `${titulo}\n${escolhidos.map((n, i) => (unico ? n : `${i + 1}º ${n}`)).join('\n')}\nSorteado em ${quando}, entre ${total} nomes, em oquebragalho.app`;
+    pos.hidden = false;
+    aviso.textContent = '';
+
+    const li = document.createElement('li');
+    li.textContent = `${quando}: ${escolhidos.join(', ')}`;
+    listaHist.prepend(li);
+    historico.hidden = false;
+    $('n-hist').textContent = String(listaHist.children.length);
+  }
+
+  async function sortear(todos: boolean) {
+    const candidatos = lista();
+    if (candidatos.length === 0) {
+      resultado.innerHTML = ultimosTirados.length
+        ? '<p class="erro">Todos já foram sorteados. Use "Devolver sorteados à lista" para recomeçar.</p>'
+        : '<p class="erro">Digite pelo menos um nome na lista.</p>';
+      pos.hidden = true;
+      return;
+    }
+    const distintos = semDuplicados(candidatos).length;
+    let k = distintos;
+    if (!todos) {
+      k = Math.floor(Number(quantidade.value));
+      if (!Number.isFinite(k) || k < 1) {
+        resultado.innerHTML = '<p class="erro">Em "Quantos sortear", coloque 1 ou mais.</p>';
+        pos.hidden = true;
+        return;
+      }
+      if (k > distintos) {
+        resultado.innerHTML = `<p class="erro">A lista tem ${formatar(distintos, 0)} ${distintos === 1 ? 'nome diferente' : 'nomes diferentes'}. Não dá para sortear ${formatar(k, 0)} sem repetir.</p>`;
+        pos.hidden = true;
+        return;
+      }
+    }
+    // O resultado é decidido antes da animação; ela é só para dar suspense.
+    const escolhidos = sortearNomes(candidatos, k);
+    btnSortear.disabled = btnOrdem.disabled = true;
+    await girar(candidatos);
+    btnSortear.disabled = btnOrdem.disabled = false;
+
+    const titulo = todos ? 'Ordem sorteada' : k === 1 ? 'Nome sorteado' : `${k} nomes sorteados`;
+    mostrar(titulo, escolhidos, candidatos.length);
+
+    if (tirar.checked && !todos) {
+      // Tira todas as linhas de quem saiu (inclusive repetidas), mantendo o resto da lista.
+      const sair = new Set(escolhidos.map(chaveNome));
+      nomes.value = lerNomes(nomes.value).filter((n) => !sair.has(chaveNome(n))).join('\n');
+      ultimosTirados = [...ultimosTirados, ...escolhidos];
+      devolver.hidden = false;
+      atualizarContagem();
+    }
+  }
+
+  nomes.addEventListener('input', atualizarContagem);
+  unicos.addEventListener('change', atualizarContagem);
+  btnSortear.addEventListener('click', () => sortear(false));
+  btnOrdem.addEventListener('click', () => sortear(true));
+  devolver.addEventListener('click', () => {
+    const atual = nomes.value.trim();
+    nomes.value = (atual ? atual + '\n' : '') + ultimosTirados.join('\n');
+    ultimosTirados = [];
+    devolver.hidden = true;
+    atualizarContagem();
+  });
+  $('copiar').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(textoResultado); aviso.textContent = 'Copiado.'; }
+    catch { aviso.textContent = 'Não deu para copiar. Selecione o resultado e copie manualmente.'; }
+  });
+  atualizarContagem();
+</script>
+
+<style>
+  .sorteador { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px 24px; }
+  @media (min-width: 760px) {
+    .sorteador { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+    .saida, .historico { grid-column: 1 / -1; }
+  }
+  textarea { resize: vertical; min-height: 200px; line-height: 1.5; }
+  .sob-lista { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .mini { padding: 4px 12px; font-size: 0.9rem; }
+  .qtd input { max-width: 140px; }
+  .marca { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .marca input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--brand); }
+  .acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .saida { display: flex; flex-direction: column; gap: 12px; }
+  .saida .resultado, .tambor { min-height: 140px; }
+  .tambor {
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    background: var(--brand-soft); border-radius: var(--radius); padding: 16px;
+    font: 800 clamp(1.6rem, 6vw, 2.4rem)/1.15 var(--f-display); overflow-wrap: anywhere;
+  }
+  .tambor.troca { animation: trocar 0.12s var(--suave); }
+  @keyframes trocar { from { opacity: 0.3; transform: translateY(-6px); } }
+  .resultado :global(.ganhador) { font-size: clamp(1.8rem, 7vw, 2.8rem); overflow-wrap: anywhere; margin-block: 4px; }
+  .resultado :global(.ganhadores) { margin: 6px 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 6px 16px; }
+  .resultado :global(.ganhadores li) { font: 700 1.2rem/1.3 var(--f-display); overflow-wrap: anywhere; animation: surgir 0.28s var(--suave) backwards; }
+  .resultado :global(.pos) { color: var(--muted); font-weight: 600; font-size: 0.95rem; margin-right: 4px; }
+  .resultado :global(.quando) { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
+  .historico summary { cursor: pointer; font-weight: 600; }
+  .historico ol { margin: 8px 0 0; padding-left: 22px; color: var(--muted); font-size: 0.95rem; display: flex; flex-direction: column; gap: 4px; overflow-wrap: anywhere; }
+</style>
