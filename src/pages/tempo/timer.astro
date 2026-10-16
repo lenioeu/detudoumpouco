@@ -1,0 +1,309 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+const atalhos = [1, 2, 3, 5, 10, 15, 20, 30, 45, 60];
+---
+<Ferramenta
+  secao="tempo"
+  slug="timer"
+  titulo="Timer online"
+  subtitulo="Contagem regressiva com alarme. Escolha o tempo, clique em iniciar e o aviso toca quando acabar, mesmo com outra aba aberta."
+  tituloSeo="Timer online com alarme: contagem regressiva"
+  descricao="Timer online grátis com alarme sonoro: escolha minutos e segundos, inicie a contagem regressiva e ouça o aviso no fim. Tempo na aba e tela sempre acesa."
+  passos={[
+    'Escolha um dos atalhos, como 5 ou 10 minutos, ou digite horas, minutos e segundos.',
+    'Clique em "Iniciar". A contagem aparece em tamanho grande e também no título da aba.',
+    'Se precisar, pause, continue ou some mais 1 minuto sem recomeçar.',
+    'Quando o tempo acabar, o alarme toca e a tela pisca. Clique em "Parar alarme" para silenciar.',
+  ]}
+  perguntas={[
+    { p: 'O timer toca se eu estiver em outra aba?', r: 'Sim. Depois que você clica em "Iniciar", o navegador libera o som da página e o alarme toca mesmo com outra aba na frente. Só não toque com o volume do aparelho no mudo e evite fechar a aba do timer.' },
+    { p: 'Por que preciso clicar para o alarme funcionar?', r: 'Os navegadores bloqueiam sons automáticos para nenhum site começar a tocar áudio sozinho. O clique em "Iniciar" (ou em "Testar som") é a autorização para a página tocar o alarme depois.' },
+    { p: 'Como colocar um timer de 5 minutos?', r: 'Clique no atalho "5 min" e depois em "Iniciar". Para outros tempos, digite nos campos de horas, minutos e segundos. Dá para colocar até 99 horas.' },
+    { p: 'A tela do celular apaga durante a contagem?', r: 'O site pede ao navegador para manter a tela acesa enquanto o timer roda. Se o navegador recusar, por exemplo no modo de economia de bateria, aparece um aviso. Mesmo com a tela apagada, a contagem continua certa, mas alguns celulares só tocam o alarme quando você desbloqueia a tela.' },
+    { p: 'O timer atrasa com o tempo?', r: 'Não. Ele marca a hora exata em que deve terminar e compara com o relógio do aparelho, em vez de descontar um segundo de cada vez. Mesmo que a tela trave ou a aba fique em segundo plano, o fim acontece na hora certa.' },
+    { p: 'Qual a diferença entre timer e cronômetro?', r: 'O timer faz contagem regressiva: você define quanto tempo quer e ele avisa quando chega a zero. O cronômetro conta para cima, a partir do zero, para medir quanto tempo algo levou.' },
+  ]}
+>
+  <div class="timer">
+    <div class="atalhos" role="group" aria-label="Tempos prontos">
+      {atalhos.map((m) => <button type="button" class="chip" data-min={m}>{m === 60 ? '1 hora' : `${m} min`}</button>)}
+    </div>
+
+    <fieldset id="campos" class="campos">
+      <legend class="sr">Tempo do timer</legend>
+      <div class="campo"><label for="h">Horas</label><input id="h" type="text" inputmode="numeric" value="0" maxlength="2" autocomplete="off" /></div>
+      <div class="campo"><label for="m">Minutos</label><input id="m" type="text" inputmode="numeric" value="5" maxlength="3" autocomplete="off" /></div>
+      <div class="campo"><label for="s">Segundos</label><input id="s" type="text" inputmode="numeric" value="0" maxlength="3" autocomplete="off" /></div>
+    </fieldset>
+
+    <div id="painel" class="painel">
+      <p id="visor" class="visor" role="timer" aria-live="off">05:00</p>
+      <div class="barra" aria-hidden="true"><span id="progresso"></span></div>
+      <p id="estado" class="estado" aria-live="polite"></p>
+    </div>
+
+    <div class="botoes">
+      <button id="principal" class="btn grande" type="button">Iniciar</button>
+      <button id="mais" class="btn btn-sec grande" type="button" hidden>+1 min</button>
+      <button id="zerar" class="btn btn-sec grande" type="button" hidden>Zerar</button>
+    </div>
+
+    <div class="som">
+      <label class="marca"><input id="tocar" type="checkbox" checked /> Tocar alarme no fim</label>
+      <button id="testar" class="btn btn-sec mini" type="button">Testar som</button>
+    </div>
+    <p id="tela" class="muted dica" role="status"></p>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Como o timer mede o tempo</h2>
+    <p>Ao clicar em "Iniciar", o timer anota o instante exato no relógio de alta precisão do navegador e calcula quando a contagem deve terminar. A cada atualização da tela, ele compara o relógio com esse momento final. Por isso a contagem não "escorrega": mesmo que o celular economize bateria, a aba fique em segundo plano ou o computador trave por alguns segundos, o fim acontece na hora certa.</p>
+    <p>O alarme é um bipe gerado pelo próprio navegador, sem baixar nenhum arquivo. Ele repete a cada segundo por até um minuto, ou até você clicar em "Parar alarme". No celular, o aparelho também vibra, se o navegador permitir.</p>
+
+    <h2>Ideias de uso</h2>
+    <ul>
+      <li><strong>Cozinha:</strong> 3 minutos para o ovo quente, 7 para o ovo cozido, 10 para o macarrão, 25 para o bolo no forno.</li>
+      <li><strong>Estudo:</strong> blocos de 25 ou 50 minutos de foco, com pausas de 5 a 10 minutos entre eles.</li>
+      <li><strong>Exercícios:</strong> prancha de 1 minuto, descanso de 90 segundos entre as séries, alongamento de 30 segundos por posição.</li>
+      <li><strong>Sala de aula e reuniões:</strong> tempo de prova, de apresentação ou de fala de cada pessoa, com o número grande visível no telão.</li>
+      <li><strong>Crianças:</strong> 15 minutos de videogame, 2 minutos para escovar os dentes, a vez de cada um no brinquedo.</li>
+    </ul>
+
+    <h2>Dicas</h2>
+    <ul>
+      <li>Clique em "Testar som" antes de começar para conferir o volume.</li>
+      <li>Enquanto conta, o tempo restante aparece no título da aba. Dá para trabalhar em outro site e olhar a aba de vez em quando.</li>
+      <li>Precisa de mais um pouco? O botão "+1 min" estica a contagem sem recomeçar.</li>
+      <li>O último tempo usado fica guardado neste navegador para a próxima visita.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { formatarTimer, duracaoMs, separar, relogioNovo, decorrido, iniciar, pausar } from '../../lib/tempo';
+  import { prepararSom, bipar, tocarAlarme, pararAlarme } from '../../lib/alarme';
+  import { criarTelaAcesa } from '../../lib/tela-acesa';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const campos = $<HTMLFieldSetElement>('campos');
+  const inH = $<HTMLInputElement>('h'), inM = $<HTMLInputElement>('m'), inS = $<HTMLInputElement>('s');
+  const visor = $('visor');
+  const progresso = $('progresso');
+  const estado = $('estado');
+  const painel = $('painel');
+  const principal = $<HTMLButtonElement>('principal');
+  const mais = $<HTMLButtonElement>('mais');
+  const zerarBtn = $<HTMLButtonElement>('zerar');
+  const tocar = $<HTMLInputElement>('tocar');
+  const tituloOriginal = document.title;
+  const CHAVE = 'quebragalho:timer';
+  const MAX = 99 * 3600_000 + 59 * 60_000 + 59_000;
+
+  type Fase = 'pronto' | 'rodando' | 'pausado' | 'fim';
+  let fase: Fase = 'pronto';
+  let duracao = 5 * 60_000;
+  let relogio = relogioNovo();
+  let fimTimeout = 0;
+  let quadro = 0;
+  let terminouEm = '';
+
+  const tela = criarTelaAcesa((e) => {
+    $('tela').textContent = e === 'recusada' || e === 'indisponivel'
+      ? 'Seu navegador não deixou manter a tela acesa. Se ela apagar, a contagem continua certa.'
+      : '';
+  });
+
+  const restante = () => Math.max(0, duracao - decorrido(relogio, performance.now()));
+  const inteiro = (v: string) => (v.trim() === '' ? 0 : /^\d+$/.test(v.trim()) ? Number(v) : NaN);
+
+  function lerCampos(): number | null {
+    const ms = duracaoMs(inteiro(inH.value), inteiro(inM.value), inteiro(inS.value));
+    return ms === null || ms <= 0 || ms > MAX ? null : ms;
+  }
+
+  function preencherCampos(ms: number) {
+    const { h, m, s } = separar(ms);
+    inH.value = String(h); inM.value = String(m); inS.value = String(s);
+  }
+
+  function desenhar() {
+    const r = fase === 'pronto' ? duracao : restante();
+    visor.textContent = formatarTimer(r);
+    visor.classList.toggle('longo', r > 3_599_000);
+    progresso.style.transform = `scaleX(${duracao ? r / duracao : 0})`;
+  }
+
+  function atualizarTitulo() {
+    if (fase === 'pronto') document.title = tituloOriginal;
+    else if (fase === 'fim') document.title = 'Tempo esgotado! · Timer';
+    else document.title = `${formatarTimer(restante())}${fase === 'pausado' ? ' (pausado)' : ''} · Timer`;
+  }
+
+  function atualizarTela() {
+    principal.textContent = { pronto: 'Iniciar', rodando: 'Pausar', pausado: 'Continuar', fim: 'Parar alarme' }[fase];
+    principal.classList.toggle('pausar', fase === 'rodando');
+    mais.hidden = !(fase === 'rodando' || fase === 'pausado');
+    zerarBtn.hidden = fase === 'pronto';
+    campos.disabled = fase !== 'pronto';
+    painel.classList.toggle('acabou', fase === 'fim');
+    estado.textContent = fase === 'fim' ? `Tempo esgotado! Terminou às ${terminouEm}.`
+      : fase === 'pausado' ? 'Pausado.'
+      : fase === 'rodando' ? `Termina por volta das ${new Date(Date.now() + restante()).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`
+      : '';
+    desenhar();
+    atualizarTitulo();
+  }
+
+  function loop() {
+    if (fase !== 'rodando') { quadro = 0; return; }
+    if (restante() <= 0) { terminar(); quadro = 0; return; }
+    desenhar();
+    quadro = requestAnimationFrame(loop);
+  }
+
+  function agendarFim() {
+    clearTimeout(fimTimeout);
+    // Um único setTimeout até o fim: o navegador não o atrasa tanto quanto contagens repetidas em abas escondidas.
+    if (fase === 'rodando') fimTimeout = window.setTimeout(verificar, restante() + 10);
+  }
+
+  function verificar() {
+    if (fase !== 'rodando') return;
+    if (restante() <= 0) terminar();
+    else agendarFim();
+  }
+
+  function comecar() {
+    const ms = lerCampos();
+    if (ms === null) {
+      estado.innerHTML = '<span class="erro">Escolha um tempo entre 1 segundo e 99 horas.</span>';
+      return;
+    }
+    duracao = ms;
+    try { localStorage.setItem(CHAVE, String(ms)); } catch { /* sem armazenamento: tudo bem */ }
+    relogio = iniciar(relogioNovo(), performance.now());
+    fase = 'rodando';
+    seguir();
+  }
+
+  function seguir() {
+    if (tocar.checked) prepararSom();
+    tela.ligar();
+    agendarFim();
+    if (!quadro) quadro = requestAnimationFrame(loop);
+    atualizarTela();
+  }
+
+  function terminar() {
+    relogio = pausar(relogio, performance.now());
+    fase = 'fim';
+    clearTimeout(fimTimeout);
+    terminouEm = new Date().toLocaleTimeString('pt-BR');
+    tela.desligar();
+    if (tocar.checked) tocarAlarme();
+    atualizarTela();
+  }
+
+  function zerar() {
+    pararAlarme();
+    clearTimeout(fimTimeout);
+    tela.desligar();
+    relogio = relogioNovo();
+    fase = 'pronto';
+    preencherCampos(duracao);
+    atualizarTela();
+  }
+
+  principal.addEventListener('click', () => {
+    if (fase === 'pronto') comecar();
+    else if (fase === 'rodando') {
+      relogio = pausar(relogio, performance.now());
+      fase = 'pausado';
+      clearTimeout(fimTimeout);
+      tela.desligar();
+      atualizarTela();
+    } else if (fase === 'pausado') {
+      relogio = iniciar(relogio, performance.now());
+      fase = 'rodando';
+      seguir();
+    } else zerar();
+  });
+  zerarBtn.addEventListener('click', zerar);
+  mais.addEventListener('click', () => {
+    duracao = Math.min(MAX, duracao + 60_000);
+    agendarFim();
+    atualizarTela();
+  });
+  $('testar').addEventListener('click', () => { if (prepararSom()) bipar(); });
+
+  for (const inp of [inH, inM, inS]) {
+    inp.addEventListener('input', () => {
+      const ms = lerCampos();
+      if (ms !== null) { duracao = ms; estado.textContent = ''; desenhar(); }
+    });
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') comecar(); });
+  }
+  document.querySelectorAll<HTMLButtonElement>('.chip').forEach((c) => c.addEventListener('click', () => {
+    if (fase !== 'pronto') zerar();
+    duracao = Number(c.dataset.min) * 60_000;
+    preencherCampos(duracao);
+    estado.textContent = '';
+    desenhar();
+    principal.focus();
+  }));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== ' ' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    if ((e.target as HTMLElement).closest('button, a, input, textarea, select, summary, [contenteditable]')) return;
+    e.preventDefault();
+    principal.click();
+  });
+
+  // Título da aba e conferência do fim, mesmo com a aba escondida (requestAnimationFrame para nesse caso).
+  setInterval(() => {
+    if (fase === 'rodando') { verificar(); atualizarTitulo(); }
+  }, 500);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && fase === 'rodando') { verificar(); desenhar(); }
+  });
+
+  try {
+    const salvo = Number(localStorage.getItem(CHAVE));
+    if (salvo > 0 && salvo <= MAX) { duracao = salvo; preencherCampos(salvo); }
+  } catch { /* sem armazenamento: usa o padrão */ }
+  atualizarTela();
+</script>
+
+<style>
+  .timer { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+  .atalhos { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .chip {
+    font: 600 0.92rem var(--f-body); color: var(--fg); background: transparent; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+    transition: transform 0.18s var(--mola);
+  }
+  .chip:hover { border-color: var(--fg); }
+  .chip:active { transform: scale(0.95); }
+  .campos { border: 0; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 96px)); gap: 10px; justify-content: center; }
+  .campos:disabled { opacity: 0.55; }
+  .campos input { text-align: center; font: 700 1.3rem var(--f-display); font-variant-numeric: tabular-nums; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .painel { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 8px 12px 4px; border-radius: var(--radius); }
+  .visor { font: 800 clamp(3.4rem, 18vw, 7rem)/1 var(--f-display); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; white-space: nowrap; }
+  .visor.longo { font-size: clamp(2.8rem, 14vw, 6rem); }
+  .barra { width: 100%; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .barra span { display: block; height: 100%; background: var(--brand); transform-origin: left; }
+  .estado { min-height: 1.6em; color: var(--muted); }
+  .acabou { background: var(--brand-soft); animation: piscar 1s var(--suave) infinite; }
+  .acabou .estado { color: var(--fg); font-weight: 700; }
+  @keyframes piscar { 50% { opacity: 0.55; } }
+  .botoes { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .grande { min-width: 96px; padding: 12px 16px; font-size: 1.1rem; }
+  .pausar { background: var(--surface); color: var(--fg); }
+  .som { display: flex; align-items: center; justify-content: center; gap: 10px 16px; flex-wrap: wrap; }
+  .marca { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marca input { width: 20px; height: 20px; margin: 0; accent-color: var(--brand); }
+  .mini { padding: 5px 12px; font-size: 0.9rem; }
+  .dica { font-size: 0.9rem; }
+  .dica:empty { display: none; }
+</style>

@@ -1,0 +1,239 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="sorteios"
+  slug="sorteador-de-numeros"
+  titulo="Sorteador de números"
+  subtitulo="Sorteie um ou vários números entre dois valores, com ou sem repetição. Sorteio justo, feito no seu navegador."
+  tituloSeo="Sorteador de números online: sorteio aleatório"
+  descricao="Sorteie números aleatórios online: escolha o intervalo, quantos números e se pode repetir. Ideal para rifas, bingo e sorteios. Grátis, justo e sem cadastro."
+  passos={[
+    'Digite o menor e o maior número do sorteio, por exemplo de 1 a 100.',
+    'Escolha quantos números quer sortear.',
+    'Deixe "Sem repetir" marcado para que cada número saia no máximo uma vez.',
+    'Clique em "Sortear". Para rodadas seguidas, como num bingo, marque "Não repetir números que já saíram".',
+  ]}
+  perguntas={[
+    { p: 'Como sortear um número aleatório de 1 a 100?', r: 'Deixe "De" em 1, "Até" em 100 e "Quantos números" em 1, e clique em "Sortear". Os dois limites entram no sorteio: tanto o 1 quanto o 100 podem sair.' },
+    { p: 'O sorteio de números é realmente aleatório?', r: 'Sim. O número é gerado pelo gerador criptográfico do navegador (crypto.getRandomValues), feito para senhas e chaves de segurança. Cada número do intervalo tem a mesma chance, e o site não tem como escolher ou prever o resultado.' },
+    { p: 'Como fazer uma rifa online com esse sorteador?', r: 'Numere os bilhetes de 1 até o total vendido e sorteie nesse intervalo. Para vários prêmios, coloque a quantidade de prêmios em "Quantos números" com "Sem repetir" marcado: o primeiro número é o primeiro prêmio, e assim por diante.' },
+    { p: 'Dá para usar como globo de bingo?', r: 'Sim. Coloque de 1 a 75 (ou 1 a 90), 1 número por vez, e marque "Não repetir números que já saíram". A cada clique sai uma pedra nova, e a lista das que já saíram fica logo abaixo.' },
+    { p: 'Qual a diferença entre sortear com e sem repetição?', r: 'Sem repetição, cada número sai no máximo uma vez, como bolinhas tiradas de um saco. Com repetição, cada número é sorteado de forma independente, como jogar um dado várias vezes: o mesmo valor pode aparecer de novo.' },
+    { p: 'Gerar números aqui aumenta a chance de ganhar na loteria?', r: 'Não. Na Mega-Sena e em outras loterias, toda combinação tem exatamente a mesma chance. O sorteador só escolhe os números por você, sem nenhuma previsão.' },
+  ]}
+>
+  <div class="stack">
+    <div class="atalhos" role="group" aria-label="Atalhos">
+      <span class="muted">Atalhos:</span>
+      <button type="button" class="chip" data-min="1" data-max="10" data-qtd="1">1 a 10</button>
+      <button type="button" class="chip" data-min="1" data-max="100" data-qtd="1">1 a 100</button>
+      <button type="button" class="chip" data-min="1" data-max="75" data-qtd="1" data-bingo>Bingo (1 a 75)</button>
+      <button type="button" class="chip" data-min="1" data-max="60" data-qtd="6" data-ordenar>6 de 1 a 60</button>
+    </div>
+
+    <div class="grade">
+      <div class="campo"><label for="min">De</label><input id="min" type="text" inputmode="numeric" value="1" /></div>
+      <div class="campo"><label for="max">Até</label><input id="max" type="text" inputmode="numeric" value="100" /></div>
+      <div class="campo"><label for="qtd">Quantos números</label><input id="qtd" type="text" inputmode="numeric" value="1" /></div>
+    </div>
+
+    <div class="opcoes">
+      <label class="marca"><input id="sem-repetir" type="checkbox" checked /> Sem repetir</label>
+      <label class="marca"><input id="ordenar" type="checkbox" /> Mostrar em ordem crescente</label>
+      <label class="marca"><input id="acumular" type="checkbox" /> Não repetir números que já saíram (bingo)</label>
+    </div>
+
+    <div class="acoes">
+      <button id="sortear" class="btn" type="button">Sortear</button>
+    </div>
+
+    <div class="saida" aria-live="polite">
+      <div id="resultado" class="resultado"><p class="muted">O resultado aparece aqui.</p></div>
+      <div id="pos" class="acoes" hidden>
+        <button id="copiar" class="btn btn-sec" type="button">Copiar resultado</button>
+        <span id="aviso" class="muted" role="status"></span>
+      </div>
+    </div>
+
+    <section id="ja-saiu" class="ja-saiu" hidden aria-label="Números que já saíram">
+      <div class="ja-topo">
+        <h2>Já saíram (<span id="n-saiu">0</span>)</h2>
+        <button id="recomecar" class="btn btn-sec mini" type="button">Recomeçar</button>
+      </div>
+      <p id="lista-saiu" class="lista-saiu"></p>
+    </section>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que este sorteio é justo</h2>
+    <p>Os números são gerados com o <strong>gerador criptográfico do navegador</strong> (<code>crypto.getRandomValues</code>), e não com a função comum de números aleatórios do JavaScript, que é previsível e foi feita para jogos e efeitos visuais. É o mesmo recurso usado para criar senhas e chaves de segurança.</p>
+    <p>Também evitamos o <strong>viés de módulo</strong>, um erro clássico de sorteadores: ao "encaixar" um número aleatório grande num intervalo pequeno com uma divisão simples, alguns números ficam um pouco mais prováveis que outros. Aqui, os valores que causariam esse desequilíbrio são descartados e sorteados de novo. Resultado: de 1 a 100, cada número tem exatamente 1% de chance.</p>
+    <p>Sem repetição, o sorteador funciona como bolinhas tiradas de um saco, embaralhando os números pelo método de Fisher-Yates. Tudo roda no seu aparelho; nada é enviado para servidor.</p>
+
+    <h2>Exemplos de uso</h2>
+    <ul>
+      <li><strong>Rifa:</strong> vendeu 200 números? Sorteie 1 número de 1 a 200. Se forem 3 prêmios, sorteie 3 sem repetir; a ordem em que saem define o primeiro, o segundo e o terceiro prêmio.</li>
+      <li><strong>Bingo em casa ou na escola:</strong> use o atalho "Bingo (1 a 75)". Cada clique tira uma pedra nova, e o painel "Já saíram" mostra todas, em ordem, para conferir a cartela.</li>
+      <li><strong>Sorteio por número de comentário ou de pedido:</strong> se os participantes estão numa planilha, sorteie a linha (por exemplo, de 2 a 351) e veja quem está nela.</li>
+      <li><strong>Escolher pela sorte:</strong> o número de uma questão para estudar, a página de um livro, a mesa que começa a reunião.</li>
+    </ul>
+
+    <h2>Dicas</h2>
+    <ul>
+      <li>Os dois limites entram no sorteio. De 1 a 10 são 10 números possíveis.</li>
+      <li>Aceita números negativos e intervalos grandes, de −1 bilhão até 1 bilhão.</li>
+      <li>Para publicar um sorteio, mostre os números escolhidos na tela antes de clicar e tire um print do resultado: ele sai com a data e a hora.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { sortearNumeros, inteiroEntre } from '../../lib/sorteio';
+  import { lerNumero, formatar } from '../../lib/numeros';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const min = $<HTMLInputElement>('min');
+  const max = $<HTMLInputElement>('max');
+  const qtd = $<HTMLInputElement>('qtd');
+  const semRepetir = $<HTMLInputElement>('sem-repetir');
+  const ordenar = $<HTMLInputElement>('ordenar');
+  const acumular = $<HTMLInputElement>('acumular');
+  const btn = $<HTMLButtonElement>('sortear');
+  const resultado = $('resultado');
+  const pos = $('pos');
+  const aviso = $('aviso');
+  const jaSaiu = $('ja-saiu');
+  const movimentoReduzido = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const saidos: number[] = [];
+  let textoResultado = '';
+  const f = (n: number) => formatar(n, 0);
+
+  function erro(msg: string) {
+    resultado.innerHTML = `<p class="erro">${msg}</p>`;
+    pos.hidden = true;
+  }
+
+  function atualizarSaidos() {
+    jaSaiu.hidden = !acumular.checked || saidos.length === 0;
+    $('n-saiu').textContent = f(saidos.length);
+    $('lista-saiu').textContent = saidos.map(f).join(' · ');
+  }
+
+  /** Números "rolando" por menos de 1 segundo antes do resultado. Pulado com movimento reduzido. */
+  function rolar(a: number, b: number): Promise<void> {
+    if (movimentoReduzido.matches || a === b) return Promise.resolve();
+    resultado.innerHTML = '<p class="muted">Sorteando…</p><strong class="grande rolando" id="rolo"></strong>';
+    const rolo = $('rolo');
+    rolo.textContent = f(inteiroEntre(a, b));
+    return new Promise((fim) => {
+      const inicio = performance.now();
+      let ultimo = 0;
+      const passo = (t: number) => {
+        const dec = t - inicio;
+        if (t - ultimo >= 45 + dec * 0.1) {
+          ultimo = t;
+          rolo.textContent = f(inteiroEntre(a, b));
+        }
+        if (dec < 800) requestAnimationFrame(passo);
+        else fim();
+      };
+      requestAnimationFrame(passo);
+    });
+  }
+
+  async function sortear() {
+    const a = lerNumero(min.value), b = lerNumero(max.value), k = lerNumero(qtd.value);
+    if (a === null || b === null || k === null) return erro('Preencha os três campos com números inteiros.');
+    const pedido = {
+      min: a, max: b, quantidade: k, repetir: !semRepetir.checked,
+      excluir: acumular.checked ? new Set(saidos) : undefined,
+    };
+    const r = sortearNumeros(pedido);
+    if (!r.ok) return erro(r.erro);
+
+    // O resultado já está decidido; a animação é só suspense.
+    btn.disabled = true;
+    await rolar(a, b);
+    btn.disabled = false;
+
+    const lista = ordenar.checked ? r.numeros.slice().sort((x, y) => x - y) : r.numeros;
+    const d = new Date();
+    const quando = `${d.toLocaleDateString('pt-BR')} às ${d.toLocaleTimeString('pt-BR')}`;
+    const intervalo = `de ${f(a)} a ${f(b)}`;
+    if (lista.length === 1) {
+      resultado.innerHTML = `<p class="muted">Número sorteado ${intervalo}</p><strong class="grande">${f(lista[0])}</strong>`;
+    } else {
+      const limite = 300; // Mostra até 300 na tela; o "Copiar" leva todos.
+      const bolas = lista.slice(0, limite).map((n, i) => `<li style="animation-delay:${Math.min(i, 15) * 35}ms">${f(n)}</li>`).join('');
+      const resto = lista.length > limite ? `<p class="muted">E mais ${f(lista.length - limite)} números. Use "Copiar resultado" para levar todos.</p>` : '';
+      resultado.innerHTML = `<p class="muted">${f(lista.length)} números sorteados ${intervalo}${pedido.repetir ? ' (com repetição)' : ''}</p><ol class="bolas">${bolas}</ol>${resto}`;
+    }
+    resultado.insertAdjacentHTML('beforeend', `<p class="quando">Sorteado em ${quando}.</p>`);
+    textoResultado = `Números sorteados ${intervalo}: ${lista.map(f).join(', ')}\nSorteado em ${quando}, em oquebragalho.app`;
+    pos.hidden = false;
+    aviso.textContent = '';
+
+    if (acumular.checked) { saidos.push(...r.numeros); atualizarSaidos(); }
+  }
+
+  btn.addEventListener('click', sortear);
+  for (const el of [min, max, qtd]) el.addEventListener('keydown', (e) => { if (e.key === 'Enter') sortear(); });
+  acumular.addEventListener('change', atualizarSaidos);
+  $('recomecar').addEventListener('click', () => {
+    saidos.length = 0;
+    atualizarSaidos();
+    resultado.innerHTML = '<p class="muted">Tudo zerado. Clique em "Sortear" para começar de novo.</p>';
+    pos.hidden = true;
+  });
+  document.querySelectorAll<HTMLButtonElement>('.chip').forEach((c) => c.addEventListener('click', () => {
+    min.value = c.dataset.min!;
+    max.value = c.dataset.max!;
+    qtd.value = c.dataset.qtd!;
+    semRepetir.checked = true;
+    ordenar.checked = 'ordenar' in c.dataset;
+    if ('bingo' in c.dataset) acumular.checked = true;
+    atualizarSaidos();
+    btn.focus();
+  }));
+  $('copiar').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(textoResultado); aviso.textContent = 'Copiado.'; }
+    catch { aviso.textContent = 'Não deu para copiar. Selecione os números e copie manualmente.'; }
+  });
+</script>
+
+<style>
+  .atalhos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .chip {
+    font: 600 0.92rem var(--f-body); color: var(--fg); background: transparent; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px;
+    transition: transform 0.18s var(--mola);
+  }
+  .chip:hover { border-color: var(--fg); }
+  .chip:active { transform: scale(0.95); }
+  .grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 420px) { .grade { grid-template-columns: 1fr 1fr; } .grade .campo:last-child { grid-column: 1 / -1; } }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 10px 22px; }
+  .marca { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .marca input { width: 20px; height: 20px; margin: 2px 0 0; flex: none; accent-color: var(--brand); }
+  .acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .acoes .btn:only-child { min-width: 160px; }
+  .saida { display: flex; flex-direction: column; gap: 12px; }
+  .saida .resultado { min-height: 140px; }
+  .resultado :global(.grande) { font-size: clamp(2.6rem, 12vw, 4.2rem); overflow-wrap: anywhere; }
+  .resultado :global(.rolando) { animation: none; opacity: 0.75; }
+  .resultado :global(.bolas) { list-style: none; margin: 10px 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .resultado :global(.bolas li) {
+    min-width: 46px; height: 46px; padding: 0 10px; border-radius: 23px; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 2px solid var(--brand-ink); font: 800 1.1rem var(--f-display);
+    animation: aparecer 0.3s var(--mola) backwards;
+  }
+  @keyframes aparecer { from { opacity: 0; transform: scale(0.6); } }
+  .resultado :global(.quando) { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
+  .ja-saiu { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .ja-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .ja-topo h2 { font-size: 1.05rem; }
+  .mini { padding: 4px 12px; font-size: 0.9rem; }
+  .lista-saiu { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+</style>
