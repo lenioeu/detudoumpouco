@@ -1,6 +1,6 @@
 import type { Repositorio } from "./banco.js";
 import { mascararCpf } from "./cpf.js";
-import { formatarDataHora, sha256 } from "./assinatura/pagina.js";
+import { formatarDataHora, fundamentoLegal, sha256 } from "./assinatura/pagina.js";
 import { formatarTelefone } from "./telefone.js";
 
 export function urlDeVerificacao(urlPublica: string, codigo: string): string {
@@ -30,6 +30,7 @@ export function paginaDeVerificacao(banco: Repositorio, codigo: string, nomeDoEs
   const signatarios = banco.signatarios(envio.id);
   const final = banco.pdfFinal(envio.id);
   const hashFinal = final ? sha256(final) : null;
+  const carimbo = banco.carimbo(envio.id);
   const situacao =
     envio.status === "concluido"
       ? `<span class="selo ok">Assinado por todos</span>`
@@ -85,10 +86,15 @@ export function paginaDeVerificacao(banco: Repositorio, codigo: string, nomeDoEs
         <dt>Enviado em</dt><dd>${esc(formatarDataHora(envio.criadoEm))}</dd>
         <dt>SHA-256 do original</dt><dd><code>${esc(envio.hashOriginal)}</code></dd>
         ${hashFinal ? `<dt>SHA-256 da via final</dt><dd><code>${esc(hashFinal)}</code></dd>` : ""}
+        ${
+          carimbo
+            ? `<dt>Carimbo do tempo</dt><dd>RFC 3161, emitido em ${esc(formatarDataHora(carimbo.em))} por ${esc(hostDe(carimbo.autoridade))} sobre o SHA-256 da via final. <a href="${esc(envio.id)}/carimbo.tsr" download>Baixar o carimbo (.tsr)</a></dd>`
+            : ""
+        }
       </dl>
       <section><h2>Assinaturas</h2><ul class="assinaturas">${linhas}</ul></section>
       ${conferencia}
-      <p class="lei">Assinaturas eletrônicas simples, nos termos do art. 4º, I, da Lei 14.063/2020 e do art. 10, § 2º, da MP 2.200-2/2001.</p>`,
+      <p class="lei">${esc(fundamentoLegal(envio.exigeSelfie))}</p>`,
     ),
   };
 }
@@ -118,4 +124,17 @@ function moldura(titulo: string, corpo: string): string {
   @media (max-width: 480px) { dl { grid-template-columns: minmax(0, 1fr); } dd { margin-bottom: 8px; } }
 </style></head>
 <body><main><p class="marca">Verificação de assinatura eletrônica</p><h1>${esc(titulo)}</h1>${corpo}</main></body></html>`;
+}
+
+function hostDe(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url;
+  }
+}
+
+/** Arquivo .tsr do carimbo do tempo, para conferência independente (ex.: openssl ts -verify). */
+export function arquivoDoCarimbo(banco: Repositorio, codigo: string): Uint8Array | null {
+  return /^[0-9a-f-]{36}$/.test(codigo) ? (banco.carimbo(codigo)?.token ?? null) : null;
 }

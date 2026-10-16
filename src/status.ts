@@ -6,8 +6,15 @@ export type StatusSignatario =
   | "visualizou"
   | "aguardando_cpf"
   | "aguardando_selfie"
+  | "aguardando_confirmacao"
   | "assinado"
   | "recusado";
 
 /** Quem ainda pode receber lembrete: já convidado e sem assinar. */
-export const STATUS_EM_ANDAMENTO: StatusSignatario[] = ["convidado", "visualizou", "aguardando_cpf", "aguardando_selfie"];
+export const STATUS_EM_ANDAMENTO: StatusSignatario[] = [
+  "convidado",
+  "visualizou",
+  "aguardando_cpf",
+  "aguardando_selfie",
+  "aguardando_confirmacao",
+];

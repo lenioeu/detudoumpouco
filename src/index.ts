@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { criarCarimbador } from "./assinatura/carimbo.js";
 import { AssinadorDePdf } from "./assinatura/certificado.js";
 import { Banco } from "./banco.js";
 import { carregarConfig } from "./config.js";
@@ -20,12 +21,16 @@ const assinador = AssinadorDePdf.carregarOuGerar(config.CERTIFICATE_PATH, config
   local: config.SENDER_LOCATION,
   contato: config.PUBLIC_URL,
 });
-const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
+const carimbador = config.TSA_URL ? criarCarimbador(config.TSA_URL) : undefined;
+const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas, carimbador);
 const ia = new IdentificadorDePartes(new Anthropic(), config.ANTHROPIC_MODEL);
 const fluxo = new Fluxo(config, banco, whatsapp, ia, coleta, avisos, filas, lerTextoDoPdf);
 
-// Lembretes para quem foi convidado e ainda não assinou
-setInterval(() => void coleta.enviarLembretes().catch((e) => console.error("Erro nos lembretes:", e)), 15 * 60_000);
+// A cada 15 minutos: lembretes para quem não assinou e carimbos do tempo que falharam
+setInterval(() => {
+  void coleta.enviarLembretes().catch((e) => console.error("Erro nos lembretes:", e));
+  void coleta.carimbarPendentes().catch((e) => console.error("Erro nos carimbos do tempo:", e));
+}, 15 * 60_000);
 
 criarServidor(config, fluxo, banco).listen(config.PORT, () => {
   console.log(`AssinaBot ouvindo na porta ${config.PORT}`);

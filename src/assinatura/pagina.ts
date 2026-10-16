@@ -34,9 +34,17 @@ export type RegistroDeAssinatura = SignatarioNaPagina & {
   lembretes?: number;
 };
 
-export const FUNDAMENTO_LEGAL =
-  "As assinaturas acima são assinaturas eletrônicas simples, nos termos do art. 4º, I, da Lei 14.063/2020 " +
-  "e do art. 10, § 2º, da MP 2.200-2/2001.";
+/**
+ * Simples (art. 4º, I) por padrão; avançada (art. 4º, II) quando cada signatário,
+ * além do WhatsApp e do CPF, enviou selfie segurando documento de identidade.
+ */
+export function fundamentoLegal(avancada: boolean): string {
+  return avancada
+    ? "As assinaturas acima são assinaturas eletrônicas avançadas, nos termos do art. 4º, II, da Lei 14.063/2020 " +
+        "e do art. 10, § 2º, da MP 2.200-2/2001."
+    : "As assinaturas acima são assinaturas eletrônicas simples, nos termos do art. 4º, I, da Lei 14.063/2020 " +
+        "e do art. 10, § 2º, da MP 2.200-2/2001.";
+}
 
 const A4: [number, number] = [595.28, 841.89];
 const MARGEM = 56;
@@ -79,8 +87,8 @@ export async function prepararDocumento(
   e.texto(titulo, 11);
   e.texto(`SHA-256 do documento original: ${hashOriginal}`, 7, CINZA);
   e.texto(
-    "As partes abaixo assinam eletronicamente este documento por meio do WhatsApp, nos termos do art. 4º, I, " +
-      "da Lei 14.063/2020 e do art. 10, § 2º, da MP 2.200-2/2001. O registro de cada assinatura consta no certificado ao final.",
+    "As partes abaixo assinam eletronicamente este documento por meio do WhatsApp, nos termos da Lei 14.063/2020 " +
+      "e do art. 10, § 2º, da MP 2.200-2/2001. O registro de cada assinatura consta no certificado ao final.",
     8,
     CINZA,
   );
@@ -134,6 +142,12 @@ export async function finalizarDocumento(
     remetenteTelefone: string;
     urlVerificacao: string;
     registros: RegistroDeAssinatura[];
+    /** Assinatura avançada: o envio exigiu selfie com documento de identidade. */
+    avancada?: boolean;
+    /** Se a via final recebe carimbo do tempo (RFC 3161) depois de assinada. */
+    comCarimboDoTempo?: boolean;
+    /** Nome no certificado digital que assina o arquivo. */
+    certificadoDoArquivo?: string;
   },
 ): Promise<Uint8Array> {
   const hashApresentado = sha256(apresentado);
@@ -203,14 +217,36 @@ export async function finalizarDocumento(
     e.texto(`${formatarDataHora(ev.em, false)}   ${ev.texto}`, 8, undefined, false, 12);
   }
 
-  e.espaco(10);
+  e.espaco(8);
+  e.garantir(110);
+  e.titulo("Provas de integridade");
+  const avancada = dados.avancada ?? false;
+  e.campo(
+    "Nível de assinatura",
+    avancada ? "Avançada (Lei 14.063/2020, art. 4º, II)" : "Simples (Lei 14.063/2020, art. 4º, I)",
+  );
+  e.campo(
+    "Fatores de autenticação",
+    "posse do número de WhatsApp, CPF informado e confirmado na revisão" +
+      (avancada ? ", selfie segurando documento de identidade" : ""),
+  );
+  e.campo("Verificação biométrica", "não realizada");
+  e.campo(
+    "Assinatura digital do arquivo",
+    `${dados.certificadoDoArquivo ? `certificado de ${dados.certificadoDoArquivo}` : "certificado do remetente"}; alterações posteriores invalidam a assinatura`,
+  );
+  if (dados.comCarimboDoTempo) {
+    e.campo("Carimbo do tempo", "RFC 3161 sobre o SHA-256 da via final, verificável na página de verificação");
+  }
+
+  e.espaco(8);
   e.garantir(60);
   e.texto("Documento assinado eletronicamente", 9, undefined, true);
-  e.texto(FUNDAMENTO_LEGAL, 8, CINZA);
+  e.texto(fundamentoLegal(avancada), 8, CINZA);
   e.texto(
-    "Cada signatário recebeu o documento no próprio WhatsApp, declarou ter lido e concordado ao tocar em \"Assinar\" " +
-      "e confirmou a identidade informando o CPF. Os códigos SHA-256 permitem verificar que o conteúdo não foi alterado, " +
-      "e o arquivo é assinado digitalmente: alterações posteriores invalidam essa assinatura.",
+    "Cada signatário recebeu o documento no próprio WhatsApp, declarou ter lido e concordado, informou o CPF" +
+      (avancada ? ", enviou selfie segurando documento de identidade" : "") +
+      " e confirmou os dados antes de assinar. Os códigos SHA-256 permitem verificar que o conteúdo não foi alterado.",
     8,
     CINZA,
   );
@@ -266,8 +302,8 @@ function linhaDoTempo(dados: {
     eventos.push({
       em: r.assinadoEm,
       texto: r.selfie
-        ? `${r.nome} assinou o documento, confirmando o CPF ${formatarCpf(r.cpf)} e enviando selfie com documento de identidade`
-        : `${r.nome} assinou o documento, confirmando o CPF ${formatarCpf(r.cpf)}`,
+        ? `${r.nome} enviou selfie com documento de identidade, confirmou nome e CPF ${formatarCpf(r.cpf)} na revisão e assinou`
+        : `${r.nome} confirmou nome e CPF ${formatarCpf(r.cpf)} na revisão e assinou`,
     });
   }
   const ultima = dados.registros.map((r) => r.assinadoEm).sort().at(-1);

@@ -1,8 +1,9 @@
 import type { Envio, Repositorio, Signatario } from "../banco.js";
 import type { Config } from "../config.js";
-import { validarCpf } from "../cpf.js";
+import { formatarCpf, validarCpf } from "../cpf.js";
 import type { AssinadorDePdf } from "../assinatura/certificado.js";
-import { finalizarDocumento, type RegistroDeAssinatura } from "../assinatura/pagina.js";
+import type { Carimbador } from "../assinatura/carimbo.js";
+import { finalizarDocumento, type RegistroDeAssinatura, sha256 } from "../assinatura/pagina.js";
 import { urlDeVerificacao } from "../verificacao.js";
 import { formatarTelefone } from "../telefone.js";
 import { type Avisador, type Filas, type Mensageiro, nomeDeArquivo } from "./avisos.js";
@@ -13,7 +14,7 @@ const TIPOS_DE_FOTO = ["image/jpeg", "image/jpg", "image/png"];
 const TAMANHO_MAXIMO_SELFIE = 8 * 1024 * 1024;
 
 /** Botões da conversa com quem assina; o id leva o envio e a posição do signatário. */
-export const ACOES = ["ver", "assinar", "recusar"] as const;
+export const ACOES = ["ver", "assinar", "recusar", "confirmar", "corrigir"] as const;
 export type Acao = (typeof ACOES)[number];
 
 export function idDoBotao(acao: Acao, envioId: string, indice: number): string {
@@ -21,7 +22,7 @@ export function idDoBotao(acao: Acao, envioId: string, indice: number): string {
 }
 
 export function lerBotao(id: string): { acao: Acao; envioId: string; indice: number } | null {
-  const m = /^(ver|assinar|recusar):([0-9a-f-]{36}):(\d+)$/.exec(id);
+  const m = /^(ver|assinar|recusar|confirmar|corrigir):([0-9a-f-]{36}):(\d+)$/.exec(id);
   return m ? { acao: m[1] as Acao, envioId: m[2]!, indice: Number(m[3]) } : null;
 }
 
@@ -37,6 +38,8 @@ export class ColetaDeAssinaturas {
     private readonly avisos: Avisador,
     private readonly assinador: Pick<AssinadorDePdf, "assinar">,
     private readonly filas: Filas,
+    /** Pede o carimbo do tempo do hash da via final; sem ele, a via sai sem carimbo. */
+    private readonly carimbador?: Carimbador,
   ) {}
 
   /** Convida quem deve assinar agora: o primeiro (sequencial) ou todos (simultânea). Devolve quem falhou. */
@@ -77,7 +80,15 @@ export class ColetaDeAssinaturas {
       this.banco.registrarEvento(envio.id, `botao_${botao.acao}`, { indice: s.indice, mensagemId });
       if (botao.acao === "ver") await this.mostrarDocumento(envioAtual, atual);
       else if (botao.acao === "assinar") await this.pedirCpf(envioAtual, atual);
-      else await this.recusar(envioAtual, atual);
+      else if (botao.acao === "recusar") await this.recusar(envioAtual, atual);
+      else if (atual.status !== "aguardando_confirmacao") {
+        await this.whatsapp.enviarTexto(de, "Este botão não vale mais. Siga a última mensagem que você recebeu.");
+      } else if (botao.acao === "confirmar") await this.concluirAssinatura(envioAtual, atual, mensagemId);
+      else {
+        // Corrigir o CPF: a selfie, se já foi enviada, continua valendo
+        this.banco.atualizarSignatario(envio.id, s.indice, { status: "aguardando_cpf" });
+        await this.whatsapp.enviarTexto(de, "Tudo bem. Digite o seu *CPF* de novo (só os números).");
+      }
     });
   }
 
@@ -93,20 +104,14 @@ export class ColetaDeAssinaturas {
         await this.whatsapp.enviarTexto(atual.telefone, "Esse CPF não é válido. Confira os números e digite de novo.");
         return;
       }
-      if (envio.exigeSelfie) {
+      this.banco.registrarEvento(s.envioId, "cpf_informado", { indice: s.indice, mensagemId });
+      if (envio.exigeSelfie && !atual.selfieEm) {
         this.banco.atualizarSignatario(s.envioId, s.indice, { status: "aguardando_selfie", cpf });
-        this.banco.registrarEvento(s.envioId, "cpf_informado", { indice: s.indice, mensagemId });
         await this.pedirSelfie(atual.telefone);
         return;
       }
-      const assinadoEm = new Date().toISOString();
-      this.banco.atualizarSignatario(s.envioId, s.indice, { status: "assinado", cpf, assinadoEm, mensagemAssinaturaId: mensagemId });
-      this.banco.registrarEvento(s.envioId, "assinado", { indice: s.indice, mensagemId, assinadoEm });
-      await this.whatsapp.enviarTexto(
-        atual.telefone,
-        "✅ Assinatura registrada! Quando todos assinarem, você recebe aqui a via final do documento.",
-      );
-      await this.avancar(envio, atual);
+      this.banco.atualizarSignatario(s.envioId, s.indice, { status: "aguardando_confirmacao", cpf });
+      await this.mostrarRevisao(envio, { ...atual, cpf });
     });
   }
 
@@ -126,16 +131,18 @@ export class ColetaDeAssinaturas {
         await this.whatsapp.enviarTexto(atual.telefone, "A foto ficou grande demais. Tire outra pela câmera do WhatsApp e envie de novo.");
         return;
       }
-      const assinadoEm = new Date().toISOString();
-      this.banco.salvarSelfie(s.envioId, s.indice, { dados, tipo }, assinadoEm);
-      this.banco.atualizarSignatario(s.envioId, s.indice, { status: "assinado", assinadoEm, mensagemAssinaturaId: mensagemId });
-      this.banco.registrarEvento(s.envioId, "assinado", { indice: s.indice, mensagemId, assinadoEm, selfie: true });
-      await this.whatsapp.enviarTexto(
-        atual.telefone,
-        "✅ Selfie recebida e assinatura registrada! Quando todos assinarem, você recebe aqui a via final do documento.",
-      );
-      await this.avancar(envio, atual);
+      this.banco.salvarSelfie(s.envioId, s.indice, { dados, tipo }, new Date().toISOString());
+      this.banco.atualizarSignatario(s.envioId, s.indice, { status: "aguardando_confirmacao" });
+      this.banco.registrarEvento(s.envioId, "selfie_recebida", { indice: s.indice, mensagemId });
+      await this.whatsapp.enviarTexto(atual.telefone, "📷 Selfie recebida.");
+      await this.mostrarRevisao(envio, atual);
     });
+  }
+
+  /** Mensagem de texto de quem está na revisão: mostra a revisão de novo. */
+  async lembrarRevisao(s: Signatario): Promise<void> {
+    const envio = this.banco.envio(s.envioId);
+    if (envio) await this.mostrarRevisao(envio, s);
   }
 
   /** Mensagem de texto de quem deveria mandar a selfie. */
@@ -179,7 +186,50 @@ export class ColetaDeAssinaturas {
     }
   }
 
+  /** Tenta de novo o carimbo do tempo de vias concluídas que ficaram sem (TSA fora do ar, por exemplo). */
+  async carimbarPendentes(): Promise<void> {
+    for (const id of this.banco.concluidosSemCarimbo()) {
+      const final = this.banco.pdfFinal(id);
+      if (final) await this.carimbar(id, final);
+    }
+  }
+
+  private async carimbar(envioId: string, final: Uint8Array): Promise<void> {
+    if (!this.carimbador) return;
+    try {
+      const carimbo = await this.carimbador(sha256(final));
+      this.banco.salvarCarimbo(envioId, carimbo);
+      this.banco.registrarEvento(envioId, "carimbo_do_tempo", { em: carimbo.em, autoridade: carimbo.autoridade });
+    } catch (erro) {
+      console.error(`Carimbo do tempo do envio ${envioId} falhou (será tentado de novo):`, erro);
+    }
+  }
+
   // ---------------------------------------------------------------- etapas
+
+  /** Última etapa: a pessoa confere nome e CPF e confirma a assinatura. */
+  private async mostrarRevisao(envio: Envio, s: Signatario): Promise<void> {
+    await this.whatsapp.enviarBotoes(
+      s.telefone,
+      `*Confirme seus dados*\n\n📄 ${envio.titulo}\nNome: *${s.nome}*\nCPF: *${formatarCpf(s.cpf ?? "")}*` +
+        (envio.exigeSelfie ? "\nSelfie com documento: enviada" : "") +
+        "\n\nAo tocar em *Confirmar assinatura*, você confirma que estes dados estão corretos, que leu e concorda com o documento " +
+        "e que assina por livre vontade.",
+      [
+        { id: idDoBotao("confirmar", envio.id, s.indice), titulo: "Confirmar assinatura" },
+        { id: idDoBotao("corrigir", envio.id, s.indice), titulo: "Corrigir CPF" },
+      ],
+    );
+  }
+
+  /** Toque em "Confirmar assinatura": a assinatura vale a partir daqui. */
+  private async concluirAssinatura(envio: Envio, s: Signatario, mensagemId: string): Promise<void> {
+    const assinadoEm = new Date().toISOString();
+    this.banco.atualizarSignatario(envio.id, s.indice, { status: "assinado", assinadoEm, mensagemAssinaturaId: mensagemId });
+    this.banco.registrarEvento(envio.id, "assinado", { indice: s.indice, mensagemId, assinadoEm, selfie: Boolean(s.selfieEm) });
+    await this.whatsapp.enviarTexto(s.telefone, "✅ Assinatura registrada! Quando todos assinarem, você recebe aqui a via final do documento.");
+    await this.avancar(envio, s);
+  }
 
   private async pedirSelfie(telefone: string): Promise<void> {
     await this.whatsapp.enviarTexto(
@@ -302,10 +352,14 @@ export class ColetaDeAssinaturas {
       remetenteTelefone: envio.remetente,
       urlVerificacao: urlDeVerificacao(this.config.PUBLIC_URL, envio.id),
       registros,
+      avancada: envio.exigeSelfie,
+      comCarimboDoTempo: Boolean(this.carimbador),
+      certificadoDoArquivo: this.config.SENDER_DISPLAY_NAME,
     });
     const final = await this.assinador.assinar(preenchido, `Assinaturas eletrônicas de "${envio.titulo}"`);
     this.banco.concluirEnvio(envio.id, final);
     this.banco.registrarEvento(envio.id, "concluido", { signatarios: signatarios.length });
+    await this.carimbar(envio.id, final);
 
     const anexo = { pdf: final, nomeArquivo: nomeDeArquivo(envio.titulo, " - assinado") };
     await this.avisos.avisar(

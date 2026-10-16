@@ -18,8 +18,9 @@ Bot de WhatsApp para colher assinaturas eletrônicas em documentos do escritóri
 
 1. Recebe: "*Olá, Maria! Escritório X enviou o documento "Procuração" para você assinar…*", com o botão **Ver documento**.
 2. Toca no botão e recebe o PDF na conversa, com os botões **Assinar** e **Recusar**.
-3. Ao tocar em **Assinar**, digita o CPF para confirmar a identidade e, se o escritório pediu, manda uma selfie segurando o documento de identidade.
-4. Quando todos assinam, recebe a via final ali mesmo.
+3. Ao tocar em **Assinar**, digita o CPF e, se o escritório pediu, manda uma selfie segurando o documento de identidade.
+4. **Revisão:** confere nome (o do documento) e CPF e toca em **Confirmar assinatura**, declarando que os dados estão corretos e que assina por livre vontade. Se o CPF estiver errado, toca em **Corrigir CPF**. A assinatura só vale a partir da confirmação.
+5. Quando todos assinam, recebe a via final ali mesmo.
 
 **Lembretes:** quem foi convidado e não assinou recebe o convite de novo depois de `REMINDER_AFTER_HOURS` horas (padrão 24), até `REMINDER_MAX` vezes (padrão 2). O escritório é avisado de cada lembrete e, no fim, de quem continua sem assinar.
 
@@ -32,9 +33,12 @@ O PDF final tem:
 - **O documento original**, sem alteração de conteúdo. Se o nome de quem assina aparece sozinho numa linha (o bloco de assinatura, como "MARIA DA SILVA" embaixo de "\_\_\_\_\_"), o carimbo de assinatura é posto **na própria linha de assinatura**.
 - **A página de assinaturas**, com um bloco por pessoa e o mesmo carimbo: "*Assinado eletronicamente por Maria da Silva, CPF 529.982.247-25, WhatsApp +55 (51) 98888-7777, em 15/10/2026 às 11:11:30*".
 - **O certificado de assinatura eletrônica**: código do documento, SHA-256 do original e da versão assinada, **QR Code e link para a página de verificação**, os dados de cada assinatura (CPF completo, WhatsApp, canal e data) e a **linha do tempo** (envio, convites, abertura do documento no próprio WhatsApp, que verifica a posse do número, assinaturas e conclusão).
-- **Fundamento legal**: assinaturas eletrônicas simples, art. 4º, I, da Lei 14.063/2020 e art. 10, § 2º, da MP 2.200-2/2001.
+- **Provas de integridade**: nível da assinatura, fatores de autenticação (posse do número, CPF confirmado na revisão e, se pedida, selfie com documento), "verificação biométrica: não realizada", assinatura digital do arquivo e carimbo do tempo.
+- **Fundamento legal**: assinatura eletrônica **simples** (art. 4º, I, da Lei 14.063/2020) ou **avançada** (art. 4º, II) quando o envio pede selfie com documento, sempre com o art. 10, § 2º, da MP 2.200-2/2001.
 - **Rodapé em todas as páginas**, com o código do documento e o endereço de verificação.
 - **A assinatura digital do arquivo**, feita com o certificado do escritório. Qualquer alteração posterior aparece como assinatura inválida no Adobe Reader ou no verificador do ITI.
+
+**Carimbo do tempo (RFC 3161)**: depois de assinada, a via final tem o SHA-256 carimbado por uma autoridade de carimbo do tempo (`TSA_URL`, FreeTSA por padrão; uma ACT ICP-Brasil também serve). É uma prova independente de que o documento existia, exatamente assim, naquela data e hora. Se a autoridade estiver fora do ar, o bot tenta de novo a cada 15 minutos. O arquivo `.tsr` pode ser baixado na página de verificação e conferido por qualquer pessoa (`openssl ts -verify -data via.pdf -in carimbo.tsr -token_in -CAfile cadeia-da-tsa.pem`).
 
 **Página de verificação** (`/verificar/<código>`): aberta pelo QR Code ou pelo rodapé. Mostra a situação do documento e de cada assinatura e permite conferir se um PDF é a via final sem alteração (o arquivo é conferido no navegador, sem envio). Na internet o CPF aparece parcialmente oculto; completo, só no documento.
 
@@ -42,7 +46,7 @@ O bot também guarda no banco (tabela `eventos`) cada passo: convites, botões t
 
 ## Testar sem WhatsApp (simulador)
 
-**Versão on-line, sem instalar nada:** o mesmo simulador roda inteiro no navegador como página do claude.ai. A leitura do documento usa o Claude da conta de quem abre a página, e a via final pode ser salva pelo botão "Salvar PDF". Para gerar a página a partir do código: `npm run simulador:web` (cria `dist/simulador-web.html`).
+**Versão on-line, sem instalar nada:** o mesmo simulador roda inteiro no navegador como página do claude.ai. A leitura do documento usa o Claude da conta de quem abre a página, e a via final pode ser salva pelo botão "Salvar PDF". Ali a via sai sem carimbo do tempo, porque a página não pode chamar sites externos; no simulador local e no bot o carimbo funciona. Para gerar a página a partir do código: `npm run simulador:web` (cria `dist/simulador-web.html`).
 
 **Versão local:**
 

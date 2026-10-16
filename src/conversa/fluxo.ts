@@ -64,6 +64,11 @@ export class Fluxo {
             await this.coleta.lembrarSelfie(esperandoSelfie);
             return;
           }
+          const naRevisao = this.banco.aguardandoConfirmacao(m.de);
+          if (naRevisao && !(ehEscritorio && PEDIDO_DE_STATUS.test(m.texto.trim()))) {
+            await this.coleta.lembrarRevisao(naRevisao);
+            return;
+          }
         }
 
         if (ehEscritorio) await this.conversarComEscritorio(m);

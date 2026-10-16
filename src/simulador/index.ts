@@ -7,6 +7,7 @@
 import { readFileSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import express from "express";
+import { criarCarimbador } from "../assinatura/carimbo.js";
 import { AssinadorDePdf } from "../assinatura/certificado.js";
 import { Banco } from "../banco.js";
 import { carregarConfig } from "../config.js";
@@ -15,7 +16,7 @@ import { Fluxo } from "../conversa/fluxo.js";
 import { ColetaDeAssinaturas } from "../conversa/signatario.js";
 import { IdentificadorDePartes } from "../ia/partes.js";
 import { lerTextoDoPdf } from "../assinatura/texto-node.js";
-import { paginaDeVerificacao } from "../verificacao.js";
+import { arquivoDoCarimbo, paginaDeVerificacao } from "../verificacao.js";
 import type { MensagemRecebida } from "../whatsapp/webhook.js";
 import { IaDeDemonstracao } from "./ia-demonstracao.js";
 import { WhatsAppSimulado } from "./whatsapp-simulado.js";
@@ -51,7 +52,16 @@ const assinador = AssinadorDePdf.carregarOuGerar(config.CERTIFICATE_PATH, config
   local: config.SENDER_LOCATION,
   contato: config.PUBLIC_URL,
 });
-const coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
+// Carimbo do tempo de verdade (FreeTSA por padrão); TSA_URL= vazio desliga
+const coleta = new ColetaDeAssinaturas(
+  config,
+  banco,
+  whatsapp,
+  avisos,
+  assinador,
+  filas,
+  config.TSA_URL ? criarCarimbador(config.TSA_URL) : undefined,
+);
 const ia = comIa ? new IdentificadorDePartes(new Anthropic(), config.ANTHROPIC_MODEL) : new IaDeDemonstracao();
 const fluxo = new Fluxo(config, banco, whatsapp, ia, coleta, avisos, filas, lerTextoDoPdf);
 
@@ -73,6 +83,16 @@ app.get("/eventos", (req, res) => {
   const enviar = (m: unknown) => res.write(`data: ${JSON.stringify(m)}\n\n`);
   const parar = whatsapp.aoReceber(enviar);
   req.on("close", parar);
+});
+
+app.get("/verificar/:codigo/carimbo.tsr", (req, res) => {
+  const tsr = arquivoDoCarimbo(banco, req.params.codigo);
+  if (!tsr) {
+    res.sendStatus(404);
+    return;
+  }
+  res.type("application/timestamp-reply").set("Content-Disposition", `attachment; filename="carimbo-${req.params.codigo}.tsr"`);
+  res.send(Buffer.from(tsr));
 });
 
 app.get("/verificar/:codigo", (req, res) => {

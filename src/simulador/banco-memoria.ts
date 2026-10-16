@@ -1,3 +1,4 @@
+import type { Carimbo } from "../assinatura/carimbo.js";
 import type { Envio, Pendencia, Repositorio, Selfie, Signatario } from "../banco.js";
 import { STATUS_EM_ANDAMENTO } from "../status.js";
 import type { Estado } from "../conversa/estado.js";
@@ -9,6 +10,7 @@ export class BancoMemoria implements Repositorio {
   private readonly envios = new Map<string, Envio & { pdfFinal?: Uint8Array }>();
   private readonly lista: Signatario[] = [];
   private readonly selfies = new Map<string, Selfie>();
+  private readonly carimbos = new Map<string, Carimbo>();
   private readonly mensagens = new Map<string, { envioId: string; indice: number | null }>();
   private readonly registro: { envioId: string | null; tipo: string; detalhe: unknown; em: string }[] = [];
   private filaDePendencias: Pendencia[] = [];
@@ -60,6 +62,18 @@ export class BancoMemoria implements Repositorio {
     return this.envios.get(id)?.pdfFinal ?? null;
   }
 
+  salvarCarimbo(id: string, carimbo: Carimbo): void {
+    this.carimbos.set(id, carimbo);
+  }
+
+  carimbo(id: string): Carimbo | null {
+    return this.carimbos.get(id) ?? null;
+  }
+
+  concluidosSemCarimbo(): string[] {
+    return [...this.envios.values()].filter((e) => e.status === "concluido" && !this.carimbos.has(e.id)).map((e) => e.id);
+  }
+
   concluirEnvio(id: string, pdfFinal: Uint8Array): void {
     const e = this.envios.get(id);
     if (e) Object.assign(e, { status: "concluido", pdfFinal });
@@ -91,6 +105,13 @@ export class BancoMemoria implements Repositorio {
       .filter((s) => s.telefone === telefone && s.status === "aguardando_selfie" && this.envios.get(s.envioId)?.status === "aguardando")
       .sort((a, b) => (b.visualizadoEm ?? "").localeCompare(a.visualizadoEm ?? ""));
     return candidatos[0] ? { ...candidatos[0] } : null;
+  }
+
+  aguardandoConfirmacao(telefone: string): Signatario | null {
+    const s = this.lista.find(
+      (x) => x.telefone === telefone && x.status === "aguardando_confirmacao" && this.envios.get(x.envioId)?.status === "aguardando",
+    );
+    return s ? { ...s } : null;
   }
 
   salvarSelfie(envioId: string, indice: number, selfie: Selfie, em: string): void {

@@ -7,6 +7,7 @@ import { Fluxo } from "../src/conversa/fluxo.js";
 import { ColetaDeAssinaturas, lerBotao } from "../src/conversa/signatario.js";
 import type { Analise } from "../src/ia/partes.js";
 import { IaDeDemonstracao } from "../src/simulador/ia-demonstracao.js";
+import { lerTextoDoPdf } from "../src/assinatura/texto-node.js";
 import { ErroWhatsApp } from "../src/whatsapp/cliente.js";
 import { paginaDeVerificacao } from "../src/verificacao.js";
 import type { MensagemRecebida } from "../src/whatsapp/webhook.js";
@@ -104,6 +105,7 @@ describe("assinatura pelo WhatsApp", () => {
   let fluxo: Fluxo;
   let assinados: Uint8Array[];
   let coleta: ColetaDeAssinaturas;
+  let tsaForaDoAr = false;
   let id = 0;
 
   const de = (telefone: string, m: Record<string, unknown>) =>
@@ -122,7 +124,12 @@ describe("assinatura pelo WhatsApp", () => {
         return pdf;
       },
     };
-    coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas);
+    tsaForaDoAr = false;
+    const carimbador = async () => {
+      if (tsaForaDoAr) throw new Error("TSA fora do ar");
+      return { token: new Uint8Array([48, 3, 2, 1, 0]), em: "2026-10-16T15:00:00.000Z", autoridade: "https://tsa.exemplo.com.br/tsr" };
+    };
+    coleta = new ColetaDeAssinaturas(config, banco, whatsapp, avisos, assinador, filas, carimbador);
     const demonstracao = new IaDeDemonstracao();
     const ia = {
       ajustarSignatarios: demonstracao.ajustarSignatarios.bind(demonstracao),
@@ -171,6 +178,14 @@ describe("assinatura pelo WhatsApp", () => {
     await de(telefone, { tipo: "botao", botaoId: whatsapp.botao(telefone, "Assinar") });
     expect(whatsapp.ultimoTexto(telefone)).toContain("CPF");
     await de(telefone, { tipo: "texto", texto: cpf });
+    // Sem selfie, a próxima etapa é a revisão
+    if (whatsapp.ultimoTexto(telefone).includes("Confirme seus dados")) await confirmar(telefone);
+  }
+
+  /** Toque em "Confirmar assinatura" na tela de revisão. */
+  async function confirmar(telefone: string) {
+    expect(whatsapp.ultimoTexto(telefone)).toContain("Confirme seus dados");
+    await de(telefone, { tipo: "botao", botaoId: whatsapp.botao(telefone, "Confirmar assinatura") });
   }
 
   it("do PDF até a via final, em ordem", async () => {
@@ -186,7 +201,21 @@ describe("assinatura pelo WhatsApp", () => {
     await de(MARIA, { tipo: "botao", botaoId: whatsapp.botao(MARIA, "Assinar") });
     await de(MARIA, { tipo: "texto", texto: "123.456.789-00" });
     expect(whatsapp.ultimoTexto(MARIA)).toContain("não é válido");
+    await de(MARIA, { tipo: "texto", texto: "111.444.777-35" }); // CPF válido, mas errado
+
+    // revisão: nome do documento e o CPF digitado; ainda não assinou
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("Nome: *Maria da Silva*");
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("CPF: *111.444.777-35*");
+    expect(whatsapp.convites().map((c) => c.para)).toEqual([MARIA]);
+    await de(MARIA, { tipo: "texto", texto: "ok" }); // texto em vez do botão: mostra a revisão de novo
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("Confirme seus dados");
+
+    // corrige o CPF e confirma
+    await de(MARIA, { tipo: "botao", botaoId: whatsapp.botao(MARIA, "Corrigir CPF") });
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("Digite o seu *CPF* de novo");
     await de(MARIA, { tipo: "texto", texto: CPF_MARIA });
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("CPF: *529.982.247-25*");
+    await confirmar(MARIA);
     expect(whatsapp.ultimoTexto(MARIA)).toContain("Assinatura registrada");
 
     // escritório avisado e João convidado
@@ -338,16 +367,22 @@ describe("assinatura pelo WhatsApp", () => {
     expect(whatsapp.ultimoTexto(MARIA)).toContain("selfie segurando seu documento");
     expect(whatsapp.convites().map((c) => c.para)).toEqual([MARIA]); // ainda não assinou
     await de(MARIA, { tipo: "imagem", mediaId: "img1", mimeType: "image/png" });
-    expect(whatsapp.ultimoTexto(MARIA)).toContain("Selfie recebida");
+    expect(whatsapp.ultimoTexto(MARIA)).toContain("Selfie com documento: enviada");
+    expect(whatsapp.convites().map((c) => c.para)).toEqual([MARIA]); // só vale depois da revisão
+    await confirmar(MARIA);
     expect(whatsapp.convites().map((c) => c.para)).toEqual([MARIA, JOAO]);
 
     await assinar(JOAO, CPF_JOAO);
     await de(JOAO, { tipo: "imagem", mediaId: "img2", mimeType: "image/png" });
+    await confirmar(JOAO);
     expect(assinados).toHaveLength(1);
     const envioId = lerBotao(String(whatsapp.convites()[0]!.args[2]))!.envioId;
     expect(banco.selfie(envioId, 0)?.tipo).toBe("image/png");
-    // a selfie foi embutida no PDF final (há uma imagem no arquivo)
+    // a selfie foi embutida no PDF final (há uma imagem no arquivo) e a assinatura é avançada
     expect(Buffer.from(assinados[0]!).includes("/Subtype /Image")).toBe(true);
+    const texto = (await lerTextoDoPdf(assinados[0]!)).flatMap((p) => p.trechos.map((t) => t.texto)).join(" ");
+    expect(texto).toContain("Avançada (Lei 14.063/2020, art. 4º, II)");
+    expect(texto).toContain("assinaturas eletrônicas avançadas");
   });
 
   it("lista os documentos quando o escritório pede", async () => {
@@ -380,5 +415,23 @@ describe("assinatura pelo WhatsApp", () => {
     // o lembrete leva ao mesmo documento: ela ainda consegue assinar
     await assinar(MARIA, CPF_MARIA);
     expect(whatsapp.ultimoTexto(MARIA)).toContain("Assinatura registrada");
+  });
+
+  it("carimba a via final no tempo e tenta de novo se a autoridade falhar", async () => {
+    await enviarProcuracao();
+    tsaForaDoAr = true;
+    await assinar(MARIA, CPF_MARIA);
+    await assinar(JOAO, CPF_JOAO);
+    const envioId = lerBotao(String(whatsapp.convites()[0]!.args[2]))!.envioId;
+    expect(banco.envio(envioId)?.status).toBe("concluido");
+    expect(banco.carimbo(envioId)).toBeNull(); // a via foi entregue mesmo sem o carimbo
+
+    tsaForaDoAr = false;
+    await coleta.carimbarPendentes();
+    expect(banco.carimbo(envioId)?.em).toBe("2026-10-16T15:00:00.000Z");
+    const { html } = paginaDeVerificacao(banco, envioId, "Escritório Teste");
+    expect(html).toContain("Carimbo do tempo");
+    expect(html).toContain("tsa.exemplo.com.br");
+    expect(html).toContain("assinaturas eletrônicas simples"); // sem selfie: simples
   });
 });

@@ -51,6 +51,12 @@ const esquema = z.object({
   CERTIFICATE_PATH: z.string().default("data/certificado.p12"),
   CERTIFICATE_PASSWORD: z.string().min(8),
 
+  /**
+   * Autoridade de carimbo do tempo (RFC 3161) que carimba o hash da via final.
+   * Deixe vazio para desligar. A FreeTSA é gratuita; ACTs ICP-Brasil também funcionam.
+   */
+  TSA_URL: z.string().default("https://freetsa.org/tsr"),
+
   /** Horas sem assinar até o lembrete automático, e quantos lembretes mandar no máximo. */
   REMINDER_AFTER_HOURS: z.coerce.number().positive().default(24),
   REMINDER_MAX: z.coerce.number().int().min(0).default(2),

@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import type { Carimbo } from "./assinatura/carimbo.js";
 import type { Bloco } from "./assinatura/pagina.js";
 import type { Estado } from "./conversa/estado.js";
 
@@ -73,7 +74,10 @@ export class Banco {
         status TEXT NOT NULL,
         pdf_final BLOB,
         criado_em TEXT NOT NULL,
-        exige_selfie INTEGER NOT NULL DEFAULT 0
+        exige_selfie INTEGER NOT NULL DEFAULT 0,
+        carimbo BLOB,
+        carimbo_em TEXT,
+        carimbo_autoridade TEXT
       );
       CREATE TABLE IF NOT EXISTS signatarios (
         envio_id TEXT NOT NULL REFERENCES envios(id),
@@ -121,6 +125,9 @@ export class Banco {
     // Bancos criados por versões anteriores: acrescenta as colunas novas
     for (const sql of [
       "ALTER TABLE envios ADD COLUMN exige_selfie INTEGER NOT NULL DEFAULT 0",
+      "ALTER TABLE envios ADD COLUMN carimbo BLOB",
+      "ALTER TABLE envios ADD COLUMN carimbo_em TEXT",
+      "ALTER TABLE envios ADD COLUMN carimbo_autoridade TEXT",
       "ALTER TABLE signatarios ADD COLUMN selfie BLOB",
       "ALTER TABLE signatarios ADD COLUMN selfie_tipo TEXT",
       "ALTER TABLE signatarios ADD COLUMN selfie_em TEXT",
@@ -225,6 +232,25 @@ export class Banco {
     return l?.pdf_final ?? null;
   }
 
+  salvarCarimbo(id: string, carimbo: Carimbo): void {
+    this.db
+      .prepare("UPDATE envios SET carimbo = ?, carimbo_em = ?, carimbo_autoridade = ? WHERE id = ?")
+      .run(carimbo.token, carimbo.em, carimbo.autoridade, id);
+  }
+
+  carimbo(id: string): Carimbo | null {
+    const l = this.db.prepare("SELECT carimbo, carimbo_em, carimbo_autoridade FROM envios WHERE id = ?").get(id) as
+      | { carimbo: Uint8Array | null; carimbo_em: string | null; carimbo_autoridade: string | null }
+      | undefined;
+    return l?.carimbo ? { token: l.carimbo, em: l.carimbo_em ?? "", autoridade: l.carimbo_autoridade ?? "" } : null;
+  }
+
+  /** Envios concluídos cujo carimbo do tempo ainda não foi obtido (a TSA pode ter falhado). */
+  concluidosSemCarimbo(): string[] {
+    const linhas = this.db.prepare("SELECT id FROM envios WHERE status = 'concluido' AND carimbo IS NULL").all() as { id: string }[];
+    return linhas.map((l) => l.id);
+  }
+
   concluirEnvio(id: string, pdfFinal: Uint8Array): void {
     this.db.prepare("UPDATE envios SET status = 'concluido', pdf_final = ? WHERE id = ?").run(pdfFinal, id);
   }
@@ -263,6 +289,18 @@ export class Banco {
       .prepare(
         `SELECT s.* FROM signatarios s JOIN envios e ON e.id = s.envio_id
          WHERE s.telefone = ? AND s.status = 'aguardando_selfie' AND e.status = 'aguardando'
+         ORDER BY s.visualizado_em DESC LIMIT 1`,
+      )
+      .get(telefone);
+    return l ? lerSignatario(l) : null;
+  }
+
+  /** Assinatura deste telefone parada na revisão (a mais recente, se houver mais de uma). */
+  aguardandoConfirmacao(telefone: string): Signatario | null {
+    const l = this.db
+      .prepare(
+        `SELECT s.* FROM signatarios s JOIN envios e ON e.id = s.envio_id
+         WHERE s.telefone = ? AND s.status = 'aguardando_confirmacao' AND e.status = 'aguardando'
          ORDER BY s.visualizado_em DESC LIMIT 1`,
       )
       .get(telefone);
