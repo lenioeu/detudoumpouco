@@ -1,0 +1,237 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="tempo"
+  slug="cronometro"
+  titulo="Cronômetro online"
+  subtitulo="Cronômetro preciso com voltas, centésimos de segundo e tempo na aba do navegador. Funciona no celular e no computador, sem instalar nada."
+  tituloSeo="Cronômetro online com voltas e centésimos"
+  descricao="Cronômetro online grátis com voltas e centésimos de segundo. Marque parciais, veja a volta mais rápida e baixe os tempos em planilha. Funciona no celular."
+  passos={[
+    'Clique em "Iniciar" (ou aperte a barra de espaço) para começar a contar.',
+    'Clique em "Volta" (ou aperte V) a cada parcial. A tabela mostra o tempo de cada volta e o total.',
+    'Clique em "Pausar" para parar e em "Continuar" para seguir do mesmo ponto.',
+    'Use "Zerar" (ou Z) para recomeçar. Se quiser guardar as voltas, baixe a planilha antes.',
+  ]}
+  perguntas={[
+    { p: 'O cronômetro continua contando se eu trocar de aba ou bloquear o celular?', r: 'Sim. O tempo é calculado pelo relógio do aparelho, e não por contagem de tiques na tela. Ao voltar para a aba, o número certo aparece na hora. O tempo também fica visível no título da aba enquanto você usa outros sites.' },
+    { p: 'Qual a precisão do cronômetro online?', r: 'A medição usa o relógio de alta precisão do navegador (performance.now), com resolução bem abaixo de um milésimo de segundo. A tela mostra centésimos. Na prática, o maior erro é o tempo de reação de quem aperta o botão, que costuma ficar entre 0,15 e 0,3 segundo.' },
+    { p: 'Como marcar voltas no cronômetro?', r: 'Com o cronômetro rodando, clique em "Volta" ou aperte a tecla V. Cada linha mostra quanto durou aquela volta e o tempo total até ali. Com duas voltas ou mais, a mais rápida e a mais lenta ficam destacadas.' },
+    { p: 'A tela do celular apaga enquanto o cronômetro roda?', r: 'Na maioria dos celulares, não: o site pede ao navegador para manter a tela acesa enquanto o cronômetro conta. Se o navegador não permitir (por exemplo, no modo de economia de bateria), aparece um aviso, e o tempo continua certo mesmo com a tela apagada.' },
+    { p: 'Se eu recarregar a página, perco o tempo?', r: 'Sim. O cronômetro guarda o tempo só enquanto a página está aberta. Antes de fechar ou recarregar, anote o resultado ou baixe as voltas em planilha.' },
+  ]}
+>
+  <div class="crono">
+    <p id="visor" class="visor" role="timer" aria-live="off" aria-label="Tempo do cronômetro">00:00,00</p>
+    <p id="parcial" class="parcial" aria-hidden="true">Volta 1 · 00:00,00</p>
+
+    <div class="botoes">
+      <button id="principal" class="btn grande" type="button">Iniciar</button>
+      <button id="volta" class="btn btn-sec grande" type="button" disabled>Volta</button>
+      <button id="zerar" class="btn btn-sec grande" type="button" disabled>Zerar</button>
+    </div>
+    <p class="muted dica">Atalhos: <kbd>Espaço</kbd> inicia e pausa, <kbd>V</kbd> marca volta, <kbd>Z</kbd> zera.</p>
+    <p id="tela" class="muted dica" role="status"></p>
+
+    <div id="area-voltas" class="area-voltas" hidden>
+      <div class="voltas-topo">
+        <h2>Voltas</h2>
+        <div class="acoes">
+          <button id="copiar" class="btn btn-sec mini" type="button">Copiar</button>
+          <a id="baixar" class="btn btn-sec mini" download="voltas-cronometro.csv" href="#">Baixar planilha (CSV)</a>
+        </div>
+      </div>
+      <span id="aviso" class="muted" role="status"></span>
+      <div class="tabela-voltas">
+        <table>
+          <thead><tr><th scope="col">Volta</th><th scope="col">Tempo da volta</th><th scope="col">Total</th></tr></thead>
+          <tbody id="voltas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Um cronômetro que não "atrasa"</h2>
+    <p>Muitos cronômetros de site contam o tempo somando pequenos intervalos: a cada 10 milésimos, mais um centésimo. O problema é que o navegador não garante esses intervalos. Quando a aba fica em segundo plano, o celular economiza bateria ou o computador está ocupado, os "tiques" atrasam e o cronômetro fica para trás sem você perceber.</p>
+    <p>Este cronômetro faz diferente. Ao iniciar, ele anota o instante exato no relógio de alta precisão do navegador. O tempo mostrado é sempre a diferença entre agora e aquele instante, somada aos trechos antes de cada pausa. A tela só desenha o resultado; se ela parar de atualizar por um tempo, o número volta certo logo depois.</p>
+
+    <h2>Para que usar</h2>
+    <ul>
+      <li><strong>Corrida e natação:</strong> marque cada volta na pista ou na piscina e veja qual foi a mais rápida. Ao final, baixe a planilha para acompanhar a evolução.</li>
+      <li><strong>Estudos e provas:</strong> cronometre quanto tempo leva cada questão de um simulado do Enem e descubra onde você perde mais tempo.</li>
+      <li><strong>Apresentações:</strong> ensaie um seminário ou um pitch e marque uma volta a cada parte, para equilibrar o tempo de cada tópico.</li>
+      <li><strong>Cozinha e experimentos:</strong> meça o tempo exato de fervura, de reação de uma experiência de ciências ou de carregamento de um aparelho.</li>
+      <li><strong>Brincadeiras:</strong> quem monta o quebra-cabeça mais rápido, quem fica mais tempo sem piscar.</li>
+    </ul>
+
+    <h2>Dicas</h2>
+    <ul>
+      <li>No computador, os atalhos de teclado são mais rápidos que o mouse: a barra de espaço inicia e pausa, e a tecla V marca a volta.</li>
+      <li>Enquanto o cronômetro roda, o tempo aparece no título da aba. Dá para usar outro site e continuar de olho.</li>
+      <li>A planilha baixada usa ponto e vírgula como separador, então abre direto no Excel e no Google Planilhas em português.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { formatarCronometro, relogioNovo, decorrido, iniciar, pausar, novaVolta, extremos, voltasCsv, type Volta } from '../../lib/tempo';
+  import { criarTelaAcesa } from '../../lib/tela-acesa';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const visor = $('visor');
+  const parcial = $('parcial');
+  const principal = $<HTMLButtonElement>('principal');
+  const btnVolta = $<HTMLButtonElement>('volta');
+  const btnZerar = $<HTMLButtonElement>('zerar');
+  const areaVoltas = $('area-voltas');
+  const corpo = $('voltas');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const aviso = $('aviso');
+  const tituloOriginal = document.title;
+
+  let relogio = relogioNovo();
+  let voltas: Volta[] = [];
+  let quadro = 0;
+  let urlCsv = '';
+
+  const tela = criarTelaAcesa((e) => {
+    $('tela').textContent = e === 'recusada' || e === 'indisponivel'
+      ? 'Seu navegador não deixou manter a tela acesa. Se ela apagar, o tempo continua certo.'
+      : '';
+  });
+
+  function desenhar() {
+    const agora = performance.now();
+    const t = decorrido(relogio, agora);
+    visor.textContent = formatarCronometro(t);
+    visor.classList.toggle('longo', t >= 3_600_000);
+    const ultima = voltas.length ? voltas[voltas.length - 1].total : 0;
+    parcial.textContent = `Volta ${voltas.length + 1} · ${formatarCronometro(t - ultima)}`;
+  }
+
+  function atualizarTitulo() {
+    const t = decorrido(relogio, performance.now());
+    if (!relogio.rodando && t === 0) { document.title = tituloOriginal; return; }
+    // Na aba, só até os segundos: centésimos piscando no título só atrapalham.
+    const txt = formatarCronometro(t).replace(/,\d\d$/, '');
+    document.title = `${txt}${relogio.rodando ? '' : ' (pausado)'} · Cronômetro`;
+  }
+
+  function loop() {
+    desenhar();
+    quadro = relogio.rodando ? requestAnimationFrame(loop) : 0;
+  }
+
+  function atualizarBotoes() {
+    const t = decorrido(relogio, performance.now());
+    principal.textContent = relogio.rodando ? 'Pausar' : t > 0 ? 'Continuar' : 'Iniciar';
+    principal.classList.toggle('pausar', relogio.rodando);
+    btnVolta.disabled = !relogio.rodando;
+    btnZerar.disabled = relogio.rodando || t === 0;
+  }
+
+  function alternar() {
+    const agora = performance.now();
+    if (relogio.rodando) {
+      relogio = pausar(relogio, agora);
+      tela.desligar();
+    } else {
+      relogio = iniciar(relogio, agora);
+      tela.ligar();
+      if (!quadro) quadro = requestAnimationFrame(loop);
+    }
+    desenhar();
+    atualizarBotoes();
+    atualizarTitulo();
+  }
+
+  function marcarVolta() {
+    if (!relogio.rodando) return;
+    voltas = [...voltas, novaVolta(voltas, decorrido(relogio, performance.now()))];
+    desenharVoltas();
+  }
+
+  function zerar() {
+    if (relogio.rodando) return;
+    relogio = relogioNovo();
+    voltas = [];
+    desenharVoltas();
+    desenhar();
+    atualizarBotoes();
+    atualizarTitulo();
+  }
+
+  function desenharVoltas() {
+    areaVoltas.hidden = voltas.length === 0;
+    const ext = extremos(voltas);
+    corpo.innerHTML = voltas.map((v, i) => {
+      const cls = ext?.rapida === i ? 'rapida' : ext?.lenta === i ? 'lenta' : '';
+      const marca = cls === 'rapida' ? ' <span class="selo">mais rápida</span>' : cls === 'lenta' ? ' <span class="selo">mais lenta</span>' : '';
+      return `<tr class="${cls}"><td>${v.numero}${marca}</td><td>${formatarCronometro(v.volta)}</td><td>${formatarCronometro(v.total)}</td></tr>`;
+    }).reverse().join('');
+    if (urlCsv) URL.revokeObjectURL(urlCsv);
+    urlCsv = voltas.length ? URL.createObjectURL(new Blob(['﻿' + voltasCsv(voltas)], { type: 'text/csv;charset=utf-8' })) : '';
+    baixar.href = urlCsv || '#';
+    aviso.textContent = '';
+  }
+
+  principal.addEventListener('click', alternar);
+  btnVolta.addEventListener('click', marcarVolta);
+  btnZerar.addEventListener('click', zerar);
+  $('copiar').addEventListener('click', async () => {
+    const txt = voltas.map((v) => `Volta ${v.numero}: ${formatarCronometro(v.volta)} (total ${formatarCronometro(v.total)})`).join('\n');
+    try { await navigator.clipboard.writeText(txt); aviso.textContent = 'Voltas copiadas.'; }
+    catch { aviso.textContent = 'Não deu para copiar. Baixe a planilha.'; }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    const alvo = e.target as HTMLElement;
+    // Em botões, links e campos, a tecla faz o que já faria normalmente.
+    if (alvo.closest('button, a, input, textarea, select, summary, [contenteditable]')) return;
+    const k = e.key.toLowerCase();
+    if (k === ' ') { e.preventDefault(); alternar(); }
+    else if (k === 'v') marcarVolta();
+    else if (k === 'z') zerar();
+  });
+
+  // O título da aba continua atualizando mesmo com a aba escondida (requestAnimationFrame para nesse caso).
+  setInterval(() => { if (relogio.rodando) atualizarTitulo(); }, 500);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') desenhar(); });
+  desenhar();
+</script>
+
+<style>
+  .crono { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+  .visor {
+    font: 800 clamp(3rem, 15vw, 6.5rem)/1 var(--f-display); font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em; margin-top: 8px; white-space: nowrap;
+  }
+  .visor.longo { font-size: clamp(2.4rem, 11vw, 5.2rem); }
+  .parcial { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 1.05rem; min-height: 1.6em; }
+  .botoes { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .grande { min-width: 96px; padding: 12px 16px; font-size: 1.1rem; }
+  .pausar { background: var(--surface); color: var(--fg); }
+  .dica { font-size: 0.9rem; min-height: 0; }
+  .dica:empty { display: none; }
+  kbd { font: 600 0.8rem var(--f-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; }
+  .area-voltas { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 8px; text-align: left; margin-top: 6px; }
+  .voltas-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .voltas-topo h2 { font-size: 1.15rem; }
+  .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mini { padding: 5px 12px; font-size: 0.9rem; }
+  .tabela-voltas { max-height: 360px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  th { position: sticky; top: 0; background: var(--surface); font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:first-child { animation: surgir 0.25s var(--suave); }
+  .selo { display: inline-block; font-size: 0.75rem; font-weight: 700; border-radius: 4px; padding: 0 6px; margin-left: 4px; }
+  .rapida td { color: var(--ok); }
+  .rapida .selo { border: 1px solid var(--ok); }
+  .lenta td { color: var(--erro); }
+  .lenta .selo { border: 1px solid var(--erro); }
+</style>
