@@ -1,0 +1,235 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import { LIMITE_NOME, LIMITE_CIDADE, LIMITE_TXID } from '../../lib/pix';
+---
+<Ferramenta
+  secao="texto"
+  slug="qr-code-pix"
+  titulo="Gerador de QR Code Pix"
+  subtitulo="Crie um QR Code Pix e o código copia e cola para receber pagamentos, com ou sem valor definido. No padrão do Banco Central, grátis e sem cadastro."
+  tituloSeo="QR Code Pix grátis: gerar Pix copia e cola com valor"
+  descricao="Gere QR Code Pix com valor e o Pix copia e cola para receber pagamentos. Padrão BR Code do Banco Central, grátis, sem cadastro e sem enviar seus dados."
+  passos={[
+    'Escolha o tipo da sua chave Pix e digite a chave. O exemplo que aparece de início não é de ninguém: troque pelos seus dados.',
+    'Escreva o seu nome e a sua cidade, como estão no banco. Acentos são tirados automaticamente.',
+    'Se quiser, informe o valor. Sem valor, quem paga digita quanto vai mandar.',
+    'Confira os dados lidos de volta do código, embaixo do QR Code.',
+    'Baixe o QR Code em PNG ou SVG, ou copie o Pix copia e cola. Antes de divulgar, faça um Pix de teste de R$ 0,01.',
+  ]}
+  perguntas={[
+    { p: 'É seguro gerar QR Code Pix aqui?', r: 'Sim. O código é montado no seu navegador, com o seu nome, cidade e chave, e nada é enviado para servidores. O QR Code só serve para alguém mandar dinheiro para a sua chave: ninguém consegue tirar dinheiro da sua conta com ele.' },
+    { p: 'O QR Code Pix gerado aqui expira?', r: 'Não. É um QR Code estático: vale enquanto a sua chave Pix existir e pode ser pago várias vezes. Se você trocar ou excluir a chave no banco, gere um novo.' },
+    { p: 'Qual a diferença entre QR Code Pix com e sem valor?', r: 'Com valor, o aplicativo do banco já abre com a quantia preenchida, ideal para cobrar um produto ou serviço específico. Sem valor, quem paga digita o valor, bom para doações, vaquinhas e para deixar no balcão.' },
+    { p: 'O que é o Pix copia e cola?', r: 'É o mesmo conteúdo do QR Code em forma de texto. Serve para quem vai pagar pelo próprio celular, onde não dá para apontar a câmera. A pessoa copia o código, abre o aplicativo do banco e escolhe "Pix copia e cola".' },
+    { p: 'Por que o nome e a cidade não aceitam acento?', r: 'O padrão do Banco Central (BR Code) limita o nome a 25 e a cidade a 15 caracteres, e alguns bancos recusam letras acentuadas. Por isso a ferramenta tira os acentos. Na hora de pagar, o banco mostra o nome que está cadastrado na chave.' },
+    { p: 'Para que serve o identificador?', r: 'É um código seu, como o número do pedido, que aparece no extrato de quem recebe em alguns bancos. Aceita até 25 letras e números, sem espaço. Se você não precisa, deixe em branco.' },
+  ]}
+>
+  <div class="layout">
+    <form id="form" class="stack" autocomplete="off">
+      <p id="aviso-exemplo" class="exemplo">Os dados abaixo são só um exemplo. Troque pela sua chave, seu nome e sua cidade.</p>
+      <div class="linha">
+        <div class="campo">
+          <label for="tipo">Tipo de chave</label>
+          <select id="tipo">
+            <option value="aleatoria" selected>Chave aleatória</option>
+            <option value="cpf">CPF</option>
+            <option value="cnpj">CNPJ</option>
+            <option value="telefone">Celular</option>
+            <option value="email">E-mail</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="chave">Chave Pix</label>
+          <input id="chave" type="text" value="123e4567-e12b-12d1-a456-426655440000" spellcheck="false" autocapitalize="off" />
+        </div>
+      </div>
+      <div class="linha">
+        <div class="campo">
+          <label for="nome">Nome de quem recebe</label>
+          <input id="nome" type="text" maxlength={LIMITE_NOME} value="Fulano de Tal" autocomplete="name" />
+          <small>Até {LIMITE_NOME} caracteres.</small>
+        </div>
+        <div class="campo">
+          <label for="cidade">Cidade</label>
+          <input id="cidade" type="text" maxlength={LIMITE_CIDADE} value="Brasília" />
+          <small>Até {LIMITE_CIDADE} caracteres.</small>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="valor">Valor (R$, opcional)</label>
+        <input id="valor" type="text" inputmode="decimal" value="10,00" placeholder="Em branco: quem paga digita" />
+      </div>
+      <details class="mais">
+        <summary>Identificador e mensagem (opcional)</summary>
+        <div class="stack mais-campos">
+          <div class="campo">
+            <label for="txid">Identificador</label>
+            <input id="txid" type="text" maxlength={LIMITE_TXID} placeholder="Ex.: PEDIDO123" spellcheck="false" autocapitalize="characters" />
+            <small>Só letras sem acento e números, até {LIMITE_TXID}.</small>
+          </div>
+          <div class="campo">
+            <label for="descricao">Mensagem para quem paga</label>
+            <input id="descricao" type="text" maxlength="72" placeholder="Ex.: Bolo de chocolate" />
+            <small>Nem todo banco mostra a mensagem.</small>
+          </div>
+        </div>
+      </details>
+    </form>
+
+    <div class="saida stack">
+      <div id="quadro" class="quadro" role="img" aria-label="QR Code Pix"></div>
+      <p id="msg-erro" class="erro" role="alert" hidden></p>
+      <div class="baixar">
+        <a id="baixar-png" class="btn" download="qrcode-pix.png" href="#">Baixar PNG</a>
+        <a id="baixar-svg" class="btn btn-sec" download="qrcode-pix.svg" href="#">Baixar SVG</a>
+      </div>
+      <div class="campo">
+        <label for="copiaecola">Pix copia e cola</label>
+        <textarea id="copiaecola" rows="4" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="acoes">
+        <button id="copiar" type="button" class="btn btn-sec">Copiar código</button>
+        <span id="aviso-copia" class="muted" role="status"></span>
+      </div>
+      <dl id="conferencia" class="conferencia" aria-live="polite"></dl>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Como funciona o QR Code Pix</h2>
+    <p>O QR Code Pix segue o BR Code, o padrão do Banco Central para pagamentos instantâneos. Dentro do desenho vai um texto com a sua chave, o seu nome, a cidade, o valor (se você quiser) e um código de verificação no fim, o CRC. Quando alguém aponta a câmera do aplicativo do banco, ele lê esse texto, confere o CRC e abre a tela de pagamento já preenchida. Se uma única letra estiver errada, o CRC não bate e o banco recusa o código, o que evita pagamentos para a chave errada.</p>
+    <p>Esta ferramenta monta o código no seu navegador e, logo depois, lê de volta o que foi gerado e mostra embaixo do QR Code a chave, o nome, a cidade, o valor e se o CRC está correto. Assim você confere tudo antes de imprimir.</p>
+    <h2>Onde usar</h2>
+    <ul>
+      <li><strong>Balcão e feira:</strong> imprima o QR Code sem valor e deixe à vista. O cliente digita quanto vai pagar.</li>
+      <li><strong>Cobrança de serviço:</strong> gere com o valor do orçamento e mande o PNG e o copia e cola pelo WhatsApp.</li>
+      <li><strong>Vaquinha, rifa e doação:</strong> sem valor, com uma mensagem que explique o motivo.</li>
+      <li><strong>Cardápio e convite:</strong> use o SVG, que não perde qualidade quando é ampliado na gráfica.</li>
+    </ul>
+    <h2>Cuidados importantes</h2>
+    <ul>
+      <li>Antes de divulgar, faça um Pix de R$ 0,01 para o seu próprio código e veja se o dinheiro chega na conta certa.</li>
+      <li>A chave precisa estar cadastrada no seu banco. Para celular, use o número com DDD que você registrou como chave.</li>
+      <li>Ao receber, confira o nome que o banco mostra para quem paga. Golpistas às vezes trocam QR Codes impressos por outros; cole o seu num lugar onde ninguém consiga cobrir com um adesivo.</li>
+      <li>O valor fica fixo no código. Mudou o preço? Gere um novo.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero, formatar } from '../../lib/numeros';
+  import { gerarPix, lerPix, normalizarChave, ErroPix, type TipoChave } from '../../lib/pix';
+  import { desenharQr } from '../../lib/qr-render';
+
+  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('form');
+  const tipo = $<HTMLSelectElement>('tipo');
+  const quadro = $<HTMLDivElement>('quadro');
+  const erro = $<HTMLParagraphElement>('msg-erro');
+  const png = $<HTMLAnchorElement>('baixar-png');
+  const svg = $<HTMLAnchorElement>('baixar-svg');
+  const copiaecola = $<HTMLTextAreaElement>('copiaecola');
+  const copiar = $<HTMLButtonElement>('copiar');
+  const conferencia = $<HTMLDListElement>('conferencia');
+  const avisoExemplo = $<HTMLParagraphElement>('aviso-exemplo');
+  const EXEMPLO = '123e4567-e12b-12d1-a456-426655440000';
+  const DICAS: Record<string, string> = {
+    aleatoria: '123e4567-e89b-12d3-a456-426614174000', cpf: '000.000.000-00', cnpj: '00.000.000/0001-00',
+    telefone: '(11) 91234-5678', email: 'voce@exemplo.com',
+  };
+  let urlSvg = '';
+  let versao = 0;
+
+  function falhar(msg: string) {
+    erro.textContent = msg; erro.hidden = false;
+    quadro.classList.add('vazio');
+    copiaecola.value = '';
+    conferencia.replaceChildren();
+    for (const a of [png, svg]) { a.classList.add('desligado'); a.setAttribute('aria-disabled', 'true'); }
+    copiar.disabled = true;
+  }
+
+  function conferir(codigo: string) {
+    const l = lerPix(codigo);
+    const linhas: [string, string][] = [
+      ['Chave', l.chave ?? '—'],
+      ['Nome', l.nome ?? '—'],
+      ['Cidade', l.cidade ?? '—'],
+      ['Valor', l.valor ? `R$ ${formatar(l.valor)}` : 'Quem paga digita'],
+    ];
+    if (l.txid && l.txid !== '***') linhas.push(['Identificador', l.txid]);
+    if (l.descricao) linhas.push(['Mensagem', l.descricao]);
+    linhas.push(['Código de verificação', l.crcOk ? 'Correto' : 'ERRO']);
+    conferencia.replaceChildren(...linhas.flatMap(([k, v]) => {
+      const dt = document.createElement('dt'); dt.textContent = k;
+      const dd = document.createElement('dd'); dd.textContent = v;
+      return [dt, dd];
+    }));
+    return l.crcOk;
+  }
+
+  async function gerar() {
+    const v = ++versao;
+    avisoExemplo.hidden = $('chave').value.trim().toLowerCase() !== EXEMPLO;
+    let codigo: string;
+    try {
+      const textoValor = $('valor').value.trim();
+      const valor = textoValor ? lerNumero(textoValor) : 0;
+      if (valor === null || valor < 0) throw new ErroPix('Valor inválido. Use o formato 10,50.');
+      codigo = gerarPix({
+        chave: normalizarChave(tipo.value as TipoChave, $('chave').value),
+        nome: $('nome').value, cidade: $('cidade').value, valor,
+        txid: $('txid').value, descricao: $('descricao').value,
+      });
+    } catch (e) {
+      falhar(e instanceof ErroPix ? e.message : 'Não foi possível gerar o código.');
+      return;
+    }
+    if (!conferir(codigo)) { falhar('Erro interno ao conferir o código. Não use este QR Code.'); return; }
+    const qr = await desenharQr(codigo, { correcao: 'M', largura: 1024 });
+    if (v !== versao) return;
+    quadro.innerHTML = qr.svg;
+    quadro.classList.remove('vazio');
+    erro.hidden = true;
+    copiaecola.value = codigo;
+    png.href = qr.png;
+    if (urlSvg) URL.revokeObjectURL(urlSvg);
+    urlSvg = URL.createObjectURL(new Blob([qr.svg], { type: 'image/svg+xml' }));
+    svg.href = urlSvg;
+    for (const a of [png, svg]) { a.classList.remove('desligado'); a.setAttribute('aria-disabled', 'false'); }
+    copiar.disabled = false;
+  }
+
+  tipo.addEventListener('change', () => { $('chave').placeholder = DICAS[tipo.value]; });
+  for (const a of [png, svg]) a.addEventListener('click', (e) => { if (a.classList.contains('desligado')) e.preventDefault(); });
+  copiar.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(copiaecola.value); $('aviso-copia').textContent = 'Copiado.'; }
+    catch { copiaecola.select(); $('aviso-copia').textContent = 'Selecionado. Use Ctrl+C ou "Copiar" do celular.'; }
+  });
+  form.addEventListener('input', () => { $('aviso-copia').textContent = ''; gerar(); });
+  form.addEventListener('change', gerar);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  gerar();
+</script>
+
+<style>
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  @media (min-width: 800px) { .layout { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; } }
+  .linha { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+  .exemplo { background: var(--brand-soft); border-radius: var(--radius); padding: 10px 14px; font-weight: 600; }
+  .exemplo[hidden] { display: none; }
+  .mais summary { cursor: pointer; font-weight: 600; }
+  .mais-campos { margin-top: 12px; }
+  .quadro { width: 100%; max-width: 300px; aspect-ratio: 1; margin-inline: auto; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--surface); transition: opacity 0.2s var(--suave); }
+  .quadro :global(svg) { display: block; width: 100%; height: 100%; }
+  .quadro.vazio { opacity: 0.25; }
+  .baixar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .desligado { opacity: 0.5; pointer-events: none; }
+  #copiaecola { font: 0.85rem/1.4 var(--f-mono); resize: none; word-break: break-all; }
+  .acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .conferencia { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 0.9rem; border-top: 1px solid var(--line); padding-top: 12px; }
+  .conferencia:empty { display: none; }
+  .conferencia :global(dt) { color: var(--muted); }
+  .conferencia :global(dd) { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
+</style>

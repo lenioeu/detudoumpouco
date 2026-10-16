@@ -1,7 +1,7 @@
 import type { Ferramenta } from '../tipos';
 
 export default [
-  { slug: 'qr-code-pix', nome: 'QR Code Pix', resumo: 'Gere um QR Code Pix com valor para receber pagamentos.', status: 'planejada' },
+  { slug: 'qr-code-pix', nome: 'QR Code Pix', resumo: 'Gere um QR Code Pix com valor para receber pagamentos.', status: 'pronta' },
   { slug: 'contador-de-caracteres', nome: 'Contador de caracteres', resumo: 'Conte caracteres, palavras e linhas.', status: 'pronta' },
   { slug: 'gerador-de-qr-code', nome: 'Gerador de QR Code', resumo: 'QR Code para link, texto ou Wi-Fi.', status: 'pronta' },
   { slug: 'fontes-para-instagram', nome: 'Fontes para Instagram', resumo: 'Letras diferentes para a sua bio.', status: 'planejada' },
