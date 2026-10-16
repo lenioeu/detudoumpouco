@@ -1,0 +1,266 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="pdf-para-jpg"
+  titulo="PDF para JPG"
+  subtitulo="Salve cada página do PDF como imagem JPG ou PNG, na resolução que você escolher. A conversão é feita no seu navegador, sem enviar o arquivo."
+  tituloSeo="PDF para JPG online grátis: páginas viram imagem"
+  descricao="Converta PDF em JPG ou PNG grátis, página por página, em até 300 dpi. Baixe uma imagem ou todas num .zip. O PDF não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Escolha o formato (JPG ou PNG) e a resolução. 150 dpi serve para quase tudo; 300 dpi é para imprimir.',
+    'Se não quiser todas, digite as páginas que quer converter, como 1-3, 5.',
+    'Clique em "Converter" e baixe as imagens uma a uma ou todas juntas num .zip.',
+  ]}
+  perguntas={[
+    { p: 'Como transformar PDF em JPG pelo celular?', r: 'Abra esta página no navegador do celular, toque em "Escolher PDF", selecione o arquivo e toque em "Converter". Cada página aparece como imagem com o botão "Baixar". No iPhone, segure o dedo na imagem para salvar direto na galeria.' },
+    { p: 'Qual resolução escolher?', r: '150 dpi deixa o texto nítido na tela do computador e do celular, com arquivos leves, e é o melhor para mandar por WhatsApp ou colocar numa apresentação. 300 dpi é para imprimir ou dar zoom em detalhes, mas gera imagens quatro vezes maiores. 72 dpi serve só para miniaturas.' },
+    { p: 'JPG ou PNG: qual é melhor?', r: 'JPG gera arquivos bem menores e é o formato que todo site e aplicativo aceita. PNG não perde nada de qualidade e deixa textos e linhas finas perfeitamente nítidos, mas o arquivo fica maior. Para páginas com fotos, prefira JPG; para tabelas, gráficos e plantas, PNG.' },
+    { p: 'Dá para converter só uma página do PDF?', r: 'Sim. No campo "Páginas", digite o número da página (por exemplo, 3) ou um intervalo (como 2-4). Deixe o campo vazio para converter todas.' },
+    { p: 'O PDF é enviado para algum servidor?', r: 'Não. As páginas são desenhadas pelo seu navegador, com a mesma tecnologia de leitura de PDF que o Firefox usa. O arquivo não sai do seu computador ou celular.' },
+    { p: 'Por que meu PDF não abre?', r: 'PDFs que pedem senha para abrir não podem ser convertidos sem a senha. Arquivos corrompidos ou que não são PDF de verdade (como um arquivo renomeado) também não abrem.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <div class="opcoes">
+        <div class="campo">
+          <label for="formato">Formato</label>
+          <select id="formato">
+            <option value="image/jpeg" selected>JPG (arquivo menor)</option>
+            <option value="image/png">PNG (sem perda)</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="dpi">Resolução</label>
+          <select id="dpi">
+            <option value="72">72 dpi (miniatura)</option>
+            <option value="150" selected>150 dpi (tela e WhatsApp)</option>
+            <option value="300">300 dpi (imprimir)</option>
+          </select>
+        </div>
+        <div class="campo" id="campo-qualidade">
+          <label for="qualidade">Qualidade do JPG: <span id="qualidade-valor">90%</span></label>
+          <input id="qualidade" type="range" min="50" max="100" step="5" value="90" />
+        </div>
+        <div class="campo">
+          <label for="paginas">Páginas</label>
+          <input id="paginas" type="text" placeholder="Todas (ou ex.: 1-3, 5)" autocomplete="off" />
+          <small id="paginas-msg">Deixe vazio para converter todas.</small>
+        </div>
+      </div>
+      <div class="enviar">
+        <button id="converter" type="button" class="btn">Converter</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong id="saida-titulo"></strong><span id="saida-info" class="muted"></span></div>
+        <a id="zip" class="btn" href="#" download hidden>Baixar todas (.zip)</a>
+      </div>
+      <ol id="imagens" class="imagens" aria-label="Imagens geradas"></ol>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que transformar PDF em imagem</h2>
+    <p>Imagem abre em qualquer lugar, sem precisar de leitor de PDF. Por isso converter vale a pena quando você quer mostrar uma página no status do WhatsApp, colocar um gráfico de relatório numa apresentação, postar um cardápio ou um convite nas redes sociais, ou enviar um documento para um sistema que só aceita foto, como alguns cadastros de aplicativo e formulários de RH.</p>
+    <h2>O que significa dpi</h2>
+    <p>Dpi é a quantidade de pontos por polegada (2,54 cm). Uma folha A4 tem cerca de 8,3 por 11,7 polegadas, então em 150 dpi ela vira uma imagem de 1240 por 1754 pixels, e em 300 dpi, de 2480 por 3508 pixels. Quanto mais pontos, mais detalhe e mais peso. Uma página de texto em JPG a 150 dpi costuma ficar entre 150 KB e 400 KB; a mesma página a 300 dpi passa facilmente de 1 MB.</p>
+    <h2>Dicas</h2>
+    <ul>
+      <li>Para ler um documento no celular, 150 dpi é suficiente. Só suba para 300 dpi se for imprimir ou recortar um pedaço pequeno da página.</li>
+      <li>Páginas com muito texto pequeno, tabelas e gráficos ficam mais nítidas em PNG. Fotos e páginas coloridas ficam menores em JPG, com qualidade entre 80% e 90%.</li>
+      <li>Para um PDF com muitas páginas, use "Baixar todas (.zip)": você recebe um arquivo só, com as imagens numeradas na ordem.</li>
+      <li>Se a imagem final estiver pesada demais, passe pelo <a href="/imagem/comprimir-imagem">Comprimir imagem</a>. Para fazer o caminho contrário, use o <a href="/pdf/jpg-para-pdf">JPG para PDF</a>.</li>
+    </ul>
+    <p>Em celulares com pouca memória, páginas muito grandes (como plantas de arquitetura em 300 dpi) podem ser reduzidas automaticamente para o navegador conseguir desenhar. Quando isso acontece, a página avisa ao lado da imagem.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { codificar } from '../../lib/canvas';
+  import { abrirParaVer, desenharPagina, fecharPdf, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { lerIntervalos } from '../../lib/intervalos';
+  import { criarZip } from '../../lib/zip';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const formato = $<HTMLSelectElement>('formato');
+  const dpi = $<HTMLSelectElement>('dpi');
+  const qualidade = $<HTMLInputElement>('qualidade');
+  const qualidadeValor = $('qualidade-valor');
+  const campoQualidade = $('campo-qualidade');
+  const paginas = $<HTMLInputElement>('paginas');
+  const paginasMsg = $('paginas-msg');
+  const botao = $<HTMLButtonElement>('converter');
+  const status = $('status');
+  const saida = $('saida');
+  const imagens = $('imagens');
+  const zip = $<HTMLAnchorElement>('zip');
+
+  let visor: DocumentoPdfJs | null = null;
+  let total = 0;
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let urls: string[] = [];
+  let convertendo = false;
+
+  function limparSaida() {
+    rodada++;
+    convertendo = false;
+    saida.hidden = true;
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    imagens.innerHTML = '';
+    zip.hidden = true;
+    status.textContent = '';
+  }
+
+  function escolhidas(): { lista: number[]; erro?: string } {
+    if (!paginas.value.trim()) return { lista: Array.from({ length: total }, (_, i) => i + 1) };
+    const r = lerIntervalos(paginas.value, total);
+    return r.erro ? { lista: [], erro: r.erro } : { lista: [...new Set(r.grupos.flat())] };
+  }
+
+  function atualizar() {
+    campoQualidade.hidden = formato.value !== 'image/jpeg';
+    const e = escolhidas();
+    paginasMsg.textContent = e.erro ?? 'Deixe vazio para converter todas.';
+    paginasMsg.className = e.erro ? 'erro' : '';
+    botao.disabled = convertendo || !visor || !!e.erro || !e.lista.length;
+    botao.textContent = e.lista.length && !e.erro ? `Converter ${e.lista.length} ${e.lista.length === 1 ? 'página' : 'páginas'}` : 'Converter';
+  }
+
+  async function carregar(file: File) {
+    limparSaida();
+    const minha = rodada;
+    aviso.hidden = true;
+    painel.hidden = true;
+    fecharPdf(visor); visor = null; total = 0;
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const v = await abrirParaVer(await file.arrayBuffer());
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v;
+      total = v.numPages;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      paginas.value = '';
+      painel.hidden = false;
+      atualizar();
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  async function converter() {
+    const e = escolhidas();
+    if (!visor || e.erro || !e.lista.length) return;
+    limparSaida();
+    const minha = rodada;
+    convertendo = true;
+    atualizar();
+    const doc = visor;
+    const tipo = formato.value as 'image/jpeg' | 'image/png';
+    const ext = tipo === 'image/png' ? 'png' : 'jpg';
+    const escala = Number(dpi.value) / 72;
+    const q = Number(qualidade.value) / 100;
+    const digitos = String(total).length;
+    const feitas: { nome: string; blob: Blob }[] = [];
+    saida.hidden = false;
+    $('saida-titulo').textContent = 'Convertendo…';
+    $('saida-info').textContent = '';
+    try {
+      for (const [i, n] of e.lista.entries()) {
+        status.textContent = `Convertendo a página ${n} (${i + 1} de ${e.lista.length})…`;
+        const { canvas, reduzida } = await desenharPagina(doc, n, escala);
+        if (minha !== rodada) return;
+        const blob = await codificar(canvas, tipo, q);
+        const largura = canvas.width, altura = canvas.height;
+        canvas.width = canvas.height = 0; // libera a memória do canvas na hora
+        if (minha !== rodada) return;
+        const nome = total === 1 ? `${nomeBase}.${ext}` : `${nomeBase}-pagina-${String(n).padStart(digitos, '0')}.${ext}`;
+        feitas.push({ nome, blob });
+        const url = URL.createObjectURL(blob); urls.push(url);
+
+        const li = document.createElement('li');
+        const mini = document.createElement('span'); mini.className = 'mini';
+        const img = document.createElement('img'); img.src = url; img.alt = `Página ${n}`; img.width = largura; img.height = altura; img.decoding = 'async';
+        mini.append(img);
+        const titulo = document.createElement('span'); titulo.className = 'num'; titulo.textContent = `Página ${n}`;
+        const det = document.createElement('span'); det.className = 'muted det';
+        det.textContent = `${largura} × ${altura} px · ${tamanho(blob.size)}` + (reduzida ? ' · reduzida para caber na memória' : '');
+        const a = document.createElement('a'); a.className = 'btn btn-sec'; a.href = url; a.download = nome; a.textContent = 'Baixar';
+        li.append(mini, titulo, det, a);
+        imagens.append(li);
+      }
+      if (feitas.length > 1) {
+        status.textContent = 'Montando o .zip…';
+        const arquivos = await Promise.all(feitas.map(async (f) => ({ nome: f.nome, dados: new Uint8Array(await f.blob.arrayBuffer()) })));
+        if (minha !== rodada) return;
+        const url = URL.createObjectURL(new Blob([criarZip(arquivos) as Uint8Array<ArrayBuffer>], { type: 'application/zip' }));
+        urls.push(url);
+        zip.href = url;
+        zip.download = `${nomeBase}-imagens.zip`;
+        zip.hidden = false;
+      }
+      const soma = feitas.reduce((s, f) => s + f.blob.size, 0);
+      $('saida-titulo').textContent = `${feitas.length} ${feitas.length === 1 ? 'imagem pronta' : 'imagens prontas'}`;
+      $('saida-info').textContent = `${tamanho(soma)} no total`;
+      status.textContent = 'Pronto!';
+    } catch (err) {
+      if (minha !== rodada) return;
+      status.textContent = err instanceof Error && /navegador|imagem/.test(err.message)
+        ? err.message
+        : 'Não foi possível converter. Tente uma resolução menor ou menos páginas.';
+      if (!feitas.length) saida.hidden = true;
+    } finally {
+      if (minha === rodada) { convertendo = false; atualizar(); }
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  botao.addEventListener('click', converter);
+  qualidade.addEventListener('input', () => { qualidadeValor.textContent = `${qualidade.value}%`; });
+  for (const el of [formato, dpi, qualidade]) el.addEventListener('change', () => { limparSaida(); atualizar(); });
+  paginas.addEventListener('input', () => { if (!saida.hidden) limparSaida(); atualizar(); });
+</script>
+
+<style>
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+  .imagens {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+  }
+  .imagens :global(li) {
+    display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 8px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    animation: entrar 0.3s var(--suave) backwards;
+  }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+  .imagens :global(.mini) { aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden; background: var(--bg); border-radius: 6px; }
+  .imagens :global(.mini img) { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; box-shadow: 0 0 0 1px var(--line); }
+  .imagens :global(.num) { font-weight: 600; font-size: 0.9rem; }
+  .imagens :global(.det) { font-size: 0.8rem; line-height: 1.35; overflow-wrap: anywhere; }
+  .imagens :global(.btn) { padding: 6px 12px; font-size: 0.9rem; margin-top: auto; }
+</style>
