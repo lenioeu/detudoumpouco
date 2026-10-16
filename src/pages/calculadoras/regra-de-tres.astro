@@ -1,0 +1,227 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+
+const grandezasIniciais = [
+  { nome: 'Máquinas', antigo: '5', novo: '3', inversa: false },
+  { nome: 'Horas por dia', antigo: '8', novo: '10', inversa: false },
+];
+---
+<Ferramenta
+  secao="calculadoras"
+  slug="regra-de-tres"
+  titulo="Calculadora de regra de três"
+  subtitulo="Resolva regra de três simples e composta, direta ou inversa, e veja a conta montada passo a passo."
+  tituloSeo="Regra de três simples e composta online, com passo a passo"
+  descricao="Calcule regra de três simples e composta, com grandezas diretas e inversas. Veja a conta montada passo a passo e o resultado na hora. Grátis e sem cadastro."
+  passos={[
+    'Escolha entre regra de três simples ou composta.',
+    'Na simples, preencha os três valores que você conhece e diga se a relação é direta ou inversa.',
+    'Na composta, digite o valor conhecido da grandeza que quer descobrir e as outras grandezas antes e depois.',
+    'Marque cada grandeza como direta ou inversa. O resultado e a conta aparecem na hora.',
+  ]}
+  perguntas={[
+    { p: 'Como fazer regra de três simples?', r: 'Monte a proporção com os valores da mesma grandeza na mesma coluna e multiplique cruzado. Se 3 kg custam R$ 12, quanto custam 5 kg? 3 está para 12 assim como 5 está para x, então x = 12 × 5 ÷ 3 = R$ 20.' },
+    { p: 'Como saber se a regra de três é direta ou inversa?', r: 'Pergunte: se uma grandeza aumenta, a outra aumenta ou diminui? Mais quilos, preço maior: direta. Mais pedreiros, menos dias de obra: inversa. Na inversa, você inverte uma das razões antes de multiplicar cruzado.' },
+    { p: 'Como resolver regra de três inversa?', r: 'Multiplique os valores da mesma linha em vez de cruzar. Se 4 pedreiros fazem uma obra em 12 dias, 6 pedreiros fazem em 4 × 12 ÷ 6 = 8 dias.' },
+    { p: 'Como fazer regra de três composta?', r: 'Comece pelo valor conhecido da grandeza que quer descobrir e multiplique por uma fração para cada outra grandeza: novo ÷ antigo se for direta, antigo ÷ novo se for inversa. Se 5 máquinas, 8 horas por dia, fazem 400 peças, 3 máquinas, 10 horas por dia, fazem 400 × 3/5 × 10/8 = 300 peças.' },
+    { p: 'Regra de três serve para porcentagem?', r: 'Serve. Se 200 é 100%, quanto por cento é 50? 200 está para 100 assim como 50 está para x, então x = 100 × 50 ÷ 200 = 25%. Para contas de porcentagem do dia a dia, a calculadora de porcentagem do site é mais rápida.' },
+  ]}
+>
+  <div class="stack">
+    <div class="abas" role="tablist" aria-label="Tipo de regra de três">
+      <button type="button" class="btn btn-sec aba" role="tab" id="aba-simples" aria-controls="rt-simples" aria-selected="true">Simples</button>
+      <button type="button" class="btn btn-sec aba" role="tab" id="aba-composta" aria-controls="rt-composta" aria-selected="false" tabindex="-1">Composta</button>
+    </div>
+
+    <form id="rt-simples" class="stack painel" role="tabpanel" aria-labelledby="aba-simples" novalidate>
+      <div class="proporcao">
+        <div class="campo"><label for="s-a">Se</label><input id="s-a" type="text" inputmode="decimal" value="3" /></div>
+        <span class="seta" aria-hidden="true">→</span>
+        <div class="campo"><label for="s-b">está para</label><input id="s-b" type="text" inputmode="decimal" value="12" /></div>
+        <div class="campo"><label for="s-c">então</label><input id="s-c" type="text" inputmode="decimal" value="5" /></div>
+        <span class="seta" aria-hidden="true">→</span>
+        <div class="campo"><span class="rotulo">está para</span><span class="x">x</span></div>
+      </div>
+      <fieldset class="relacao">
+        <legend class="rotulo">Relação entre as grandezas</legend>
+        <label><input type="radio" name="s-rel" id="s-direta" value="direta" checked /> Direta (uma sobe, a outra sobe)</label>
+        <label><input type="radio" name="s-rel" id="s-inversa" value="inversa" /> Inversa (uma sobe, a outra desce)</label>
+      </fieldset>
+      <output class="resultado" id="s-res" for="s-a s-b s-c"></output>
+    </form>
+
+    <form id="rt-composta" class="stack painel" role="tabpanel" aria-labelledby="aba-composta" hidden novalidate>
+      <div class="cartao-g incognita">
+        <p class="rotulo">Grandeza que você quer descobrir</p>
+        <div class="grade-g">
+          <div class="campo"><label for="c-nome">Nome</label><input id="c-nome" type="text" value="Peças" /></div>
+          <div class="campo"><label for="c-valor">Valor conhecido</label><input id="c-valor" type="text" inputmode="decimal" value="400" /></div>
+        </div>
+      </div>
+      <div id="c-lista" class="stack">
+        {grandezasIniciais.map((g, i) => (
+          <div class="cartao-g grandeza">
+            <div class="grade-g">
+              <div class="campo"><label for={`g${i}-nome`}>Grandeza</label><input id={`g${i}-nome`} class="g-nome" type="text" value={g.nome} /></div>
+              <div class="campo"><label for={`g${i}-rel`}>Relação</label><select id={`g${i}-rel`} class="g-rel"><option value="direta" selected={!g.inversa}>Direta</option><option value="inversa" selected={g.inversa}>Inversa</option></select></div>
+              <div class="campo"><label for={`g${i}-antigo`}>Antes</label><input id={`g${i}-antigo`} class="g-antigo" type="text" inputmode="decimal" value={g.antigo} /></div>
+              <div class="campo"><label for={`g${i}-novo`}>Depois</label><input id={`g${i}-novo`} class="g-novo" type="text" inputmode="decimal" value={g.novo} /></div>
+            </div>
+            <button type="button" class="btn btn-sec remover">Remover</button>
+          </div>
+        ))}
+      </div>
+      <template id="c-modelo">
+        <div class="cartao-g grandeza">
+          <div class="grade-g">
+            <div class="campo"><label>Grandeza</label><input class="g-nome" type="text" value="" placeholder="Ex.: Dias" /></div>
+            <div class="campo"><label>Relação</label><select class="g-rel"><option value="direta" selected>Direta</option><option value="inversa">Inversa</option></select></div>
+            <div class="campo"><label>Antes</label><input class="g-antigo" type="text" inputmode="decimal" value="" /></div>
+            <div class="campo"><label>Depois</label><input class="g-novo" type="text" inputmode="decimal" value="" /></div>
+          </div>
+          <button type="button" class="btn btn-sec remover">Remover</button>
+        </div>
+      </template>
+      <button type="button" class="btn btn-sec" id="c-adicionar">Adicionar grandeza</button>
+      <p class="muted dica">Direta: se esta grandeza aumenta, o resultado aumenta. Inversa: se ela aumenta, o resultado diminui.</p>
+      <output class="resultado" id="c-res"></output>
+    </form>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que é regra de três</h2>
+    <p>Regra de três é o jeito de achar um valor desconhecido quando duas grandezas variam juntas, sempre na mesma proporção. Você conhece três números, a relação entre eles, e descobre o quarto. É a conta por trás de receitas, preços por quilo, consumo de combustível, escalas de mapa e muita questão de concurso.</p>
+    <h2>Direta ou inversa</h2>
+    <p>Na regra de três direta, as grandezas andam no mesmo sentido: o dobro de farinha pede o dobro de ovos. Na inversa, andam em sentidos opostos: o dobro de velocidade faz a viagem durar metade do tempo. Antes de calcular, pergunte se "mais de um" significa "mais" ou "menos" do outro. Errar essa pergunta é o motivo mais comum de resposta errada.</p>
+    <h2>Exemplos resolvidos</h2>
+    <ul>
+      <li><strong>Simples direta:</strong> 3 kg de carne custam R$ 12. Quanto custam 5 kg? x = 12 × 5 ÷ 3 = R$ 20.</li>
+      <li><strong>Simples inversa:</strong> a 60 km/h a viagem leva 2 horas. A 90 km/h, leva 60 × 2 ÷ 90 = 1,33 hora, ou 1 hora e 20 minutos.</li>
+      <li><strong>Composta direta:</strong> 5 máquinas trabalhando 8 horas por dia fazem 400 peças. 3 máquinas trabalhando 10 horas por dia fazem 400 × 3/5 × 10/8 = 300 peças.</li>
+      <li><strong>Composta inversa:</strong> 10 operários, trabalhando 8 horas por dia, fazem um muro em 6 dias. Com 12 operários e 5 horas por dia, o muro leva 6 × 10/12 × 8/5 = 8 dias. As duas grandezas são inversas: mais gente ou mais horas, menos dias.</li>
+    </ul>
+    <h2>Dica para a composta</h2>
+    <p>Compare cada grandeza só com a que você quer descobrir, como se as outras estivessem paradas. Não importa se, para você, máquinas e horas parecem ligadas entre si: o que conta é o efeito de cada uma no resultado. Depois é só multiplicar o valor conhecido por todas as frações.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero, formatar } from '../../lib/numeros';
+  import { regraDeTresSimples, regraDeTresComposta, type Grandeza } from '../../lib/regra-de-tres';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const f = (n: number) => formatar(n, 4);
+  const escapar = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+  // Abas
+  const abas = [$('aba-simples'), $('aba-composta')];
+  const paineis = [$('rt-simples'), $('rt-composta')];
+  function ativar(i: number) {
+    abas.forEach((a, j) => { a.setAttribute('aria-selected', String(i === j)); a.tabIndex = i === j ? 0 : -1; paineis[j].hidden = i !== j; });
+  }
+  abas.forEach((a, i) => {
+    a.addEventListener('click', () => ativar(i));
+    a.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const j = (i + 1) % 2; ativar(j); abas[j].focus(); }
+    });
+  });
+
+  // Simples
+  const formS = $<HTMLFormElement>('rt-simples');
+  const resS = $('s-res');
+  function calcularSimples() {
+    const a = lerNumero($<HTMLInputElement>('s-a').value), b = lerNumero($<HTMLInputElement>('s-b').value), c = lerNumero($<HTMLInputElement>('s-c').value);
+    const inversa = $<HTMLInputElement>('s-inversa').checked;
+    if (a === null || b === null || c === null) { resS.innerHTML = '<span class="muted">Preencha os três valores com números.</span>'; return; }
+    const x = regraDeTresSimples(a, b, c, inversa);
+    if (x === null) { resS.innerHTML = `<span class="erro">${inversa ? 'O terceiro valor' : 'O primeiro valor'} não pode ser zero.</span>`; return; }
+    resS.innerHTML = `<strong>x = ${f(x)}</strong>` + (inversa
+      ? `Inversa: ${f(a)} × ${f(b)} = ${f(c)} × x, então x = ${f(a)} × ${f(b)} ÷ ${f(c)}`
+      : `Direta: ${f(a)} está para ${f(b)} assim como ${f(c)} está para x, então x = ${f(b)} × ${f(c)} ÷ ${f(a)}`);
+  }
+  formS.addEventListener('input', calcularSimples);
+  formS.addEventListener('submit', (e) => e.preventDefault());
+  calcularSimples();
+
+  // Composta
+  const formC = $<HTMLFormElement>('rt-composta');
+  const lista = $('c-lista');
+  const resC = $('c-res');
+  const modelo = $<HTMLTemplateElement>('c-modelo');
+  const btnAdd = $<HTMLButtonElement>('c-adicionar');
+  const MAX = 6;
+  let contador = 100;
+
+  function atualizarBotoes() {
+    const cartoes = lista.querySelectorAll('.grandeza');
+    cartoes.forEach((c) => ((c.querySelector('.remover') as HTMLButtonElement).disabled = cartoes.length <= 1));
+    btnAdd.disabled = cartoes.length >= MAX;
+  }
+
+  function calcularComposta() {
+    const nome = $<HTMLInputElement>('c-nome').value.trim() || 'x';
+    const valor = lerNumero($<HTMLInputElement>('c-valor').value);
+    const cartoes = Array.from(lista.querySelectorAll<HTMLElement>('.grandeza'));
+    const grandezas: (Grandeza & { nome: string })[] = [];
+    for (const c of cartoes) {
+      const antigo = lerNumero(c.querySelector<HTMLInputElement>('.g-antigo')!.value);
+      const novo = lerNumero(c.querySelector<HTMLInputElement>('.g-novo')!.value);
+      if (antigo === null || novo === null) { resC.innerHTML = '<span class="muted">Preencha os valores de antes e depois de todas as grandezas.</span>'; return; }
+      grandezas.push({ nome: c.querySelector<HTMLInputElement>('.g-nome')!.value.trim() || 'grandeza', antigo, novo, inversa: c.querySelector<HTMLSelectElement>('.g-rel')!.value === 'inversa' });
+    }
+    if (valor === null) { resC.innerHTML = '<span class="muted">Preencha o valor conhecido.</span>'; return; }
+    const r = regraDeTresComposta(valor, grandezas);
+    if (!r) { resC.innerHTML = '<span class="erro">Nenhum valor usado como divisor pode ser zero.</span>'; return; }
+    const fracoes = r.fatores.map((fa) => `(${f(fa.numerador)} ÷ ${f(fa.denominador)})`).join(' × ');
+    const explicacao = grandezas.map((g) => `${escapar(g.nome)}: ${g.inversa ? 'inversa, antes ÷ depois' : 'direta, depois ÷ antes'}`).join('<br>');
+    resC.innerHTML = `<strong>${escapar(nome)} = ${f(r.x)}</strong>${escapar(nome)} = ${f(valor)} × ${fracoes}<br><span class="muted">${explicacao}</span>`;
+  }
+
+  btnAdd.addEventListener('click', () => {
+    const novo = modelo.content.firstElementChild!.cloneNode(true) as HTMLElement;
+    const id = contador++;
+    novo.querySelectorAll('.campo').forEach((campo, k) => {
+      const el = campo.querySelector('input, select')!;
+      el.id = `g${id}-${k}`;
+      campo.querySelector('label')!.htmlFor = el.id;
+    });
+    lista.append(novo);
+    atualizarBotoes();
+    novo.querySelector<HTMLInputElement>('.g-nome')!.focus();
+    calcularComposta();
+  });
+  lista.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest('.remover');
+    if (!b) return;
+    b.closest('.grandeza')!.remove();
+    atualizarBotoes();
+    calcularComposta();
+  });
+  formC.addEventListener('input', calcularComposta);
+  formC.addEventListener('change', calcularComposta);
+  formC.addEventListener('submit', (e) => e.preventDefault());
+  atualizarBotoes();
+  calcularComposta();
+</script>
+
+<style>
+  .abas { display: flex; gap: 8px; flex-wrap: wrap; }
+  .aba { padding: 8px 16px; }
+  .aba[aria-selected='true'] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand-ink); }
+  .painel { animation: entrar 0.25s var(--suave); }
+  .painel[hidden] { display: none; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+  .proporcao { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px 8px; align-items: end; }
+  .seta { padding-bottom: 10px; color: var(--muted); font-weight: 700; }
+  .x { display: flex; align-items: center; height: 46px; padding: 0 12px; border: 1px dashed var(--line); border-radius: 8px; font-weight: 700; font-style: italic; }
+  .relacao { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+  .relacao legend { padding: 0; margin-bottom: 6px; }
+  .relacao label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .resultado { display: block; min-height: 96px; overflow-wrap: anywhere; }
+  .cartao-g { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .incognita { background: var(--bg); }
+  .grade-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr)); gap: 10px; }
+  .remover { align-self: flex-start; padding: 6px 12px; font-size: 0.9rem; }
+  .dica { font-size: 0.9rem; }
+  #c-adicionar { align-self: flex-start; }
+</style>

@@ -1,0 +1,148 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+---
+<Ferramenta
+  secao="calculadoras"
+  slug="juros-compostos"
+  titulo="Calculadora de juros compostos"
+  subtitulo="Veja quanto o seu dinheiro vira com o tempo, somando um valor inicial, aportes todo mês e os juros sobre juros."
+  tituloSeo="Calculadora de juros compostos com aporte mensal"
+  descricao="Simule juros compostos com valor inicial e aporte mensal. Veja o total investido, quanto veio de juros e a evolução ano a ano. Grátis e no seu navegador."
+  passos={[
+    'Digite quanto você já tem para começar (pode ser zero).',
+    'Informe quanto pretende guardar por mês.',
+    'Coloque a taxa de juros e escolha se ela é ao mês ou ao ano.',
+    'Escolha o prazo em meses ou anos. O resultado e a tabela de evolução aparecem na hora.',
+  ]}
+  perguntas={[
+    { p: 'Qual é a fórmula dos juros compostos?', r: 'Sem aportes, a fórmula é M = C × (1 + i)^n, em que C é o capital, i a taxa por período e n o número de períodos. Com aporte mensal A no fim de cada mês, soma-se A × ((1 + i)^n − 1) ÷ i. Exemplo: R$ 1.000 a 1% ao mês por 12 meses viram 1.000 × 1,01^12 = R$ 1.126,83.' },
+    { p: 'Qual a diferença entre juros simples e compostos?', r: 'Nos juros simples, a taxa incide sempre sobre o valor inicial. Nos compostos, incide sobre o saldo do mês anterior, que já inclui os juros. R$ 1.000 a 1% ao mês por 12 meses dão R$ 1.120 nos juros simples e R$ 1.126,83 nos compostos. A diferença cresce muito com o tempo.' },
+    { p: 'Como transformar taxa ao ano em taxa ao mês?', r: 'Não basta dividir por 12. A taxa mensal equivalente é (1 + taxa anual)^(1/12) − 1. Para 12% ao ano, isso dá cerca de 0,949% ao mês, e não 1%. A calculadora faz essa conversão sozinha quando você escolhe "ao ano".' },
+    { p: 'Quanto rende R$ 500 por mês durante 10 anos?', r: 'Depende da taxa. A 12% ao ano, R$ 500 por mês durante 10 anos (R$ 60.000 guardados) chegam a cerca de R$ 110.965. A 6% ao ano, chegam a cerca de R$ 81.237. Use a calculadora com a taxa do seu investimento.' },
+    { p: 'A calculadora desconta imposto de renda e inflação?', r: 'Não. Ela mostra o valor bruto. Para comparar poupança, CDB e Tesouro Selic já com imposto de renda, use a calculadora Quanto rende. Para ver o ganho real, use como taxa o rendimento esperado menos a inflação.' },
+  ]}
+>
+  <form id="jc" class="stack" novalidate>
+    <div class="linhas">
+      <div class="campo"><label for="jc-inicial">Valor inicial (R$)</label><input id="jc-inicial" type="text" inputmode="decimal" value="10.000" /></div>
+      <div class="campo"><label for="jc-aporte">Aporte mensal (R$)</label><input id="jc-aporte" type="text" inputmode="decimal" value="500" /></div>
+      <div class="campo">
+        <label for="jc-taxa">Taxa de juros (%)</label>
+        <div class="par">
+          <input id="jc-taxa" type="text" inputmode="decimal" value="12" />
+          <select id="jc-taxa-un" aria-label="Período da taxa"><option value="ano" selected>ao ano</option><option value="mes">ao mês</option></select>
+        </div>
+      </div>
+      <div class="campo">
+        <label for="jc-prazo">Prazo</label>
+        <div class="par">
+          <input id="jc-prazo" type="text" inputmode="numeric" value="10" />
+          <select id="jc-prazo-un" aria-label="Unidade do prazo"><option value="ano" selected>anos</option><option value="mes">meses</option></select>
+        </div>
+      </div>
+    </div>
+
+    <output class="resultado" id="jc-res" for="jc-inicial jc-aporte jc-taxa jc-prazo"></output>
+
+    <div id="jc-barra" class="barra" aria-hidden="true"><span class="b-inv"></span></div>
+    <p class="legenda"><span class="ponto p-inv"></span> Dinheiro guardado <span class="ponto p-jur"></span> Juros</p>
+
+    <h2 class="titulo-tabela" id="jc-titulo-tabela">Evolução ano a ano</h2>
+    <p class="legenda">Valores em reais, no fim de cada período.</p>
+    <div class="tabela-rolagem" tabindex="0" aria-labelledby="jc-titulo-tabela">
+      <table>
+        <thead><tr><th scope="col" id="jc-col">Ano</th><th scope="col">Guardado</th><th scope="col">Juros</th><th scope="col">Saldo</th></tr></thead>
+        <tbody id="jc-tabela"></tbody>
+      </table>
+    </div>
+  </form>
+
+  <Fragment slot="texto">
+    <h2>O que são juros compostos</h2>
+    <p>Juros compostos são os famosos "juros sobre juros". A cada mês, o rendimento é calculado sobre o saldo inteiro, que já inclui o que rendeu antes. No começo a diferença parece pequena, mas depois de alguns anos os juros de um único mês podem passar do valor que você guarda por mês. É por isso que tempo costuma pesar mais que a taxa.</p>
+    <h2>Como a conta é feita</h2>
+    <p>A calculadora segue o saldo mês a mês: aplica a taxa mensal sobre o saldo e depois soma o aporte. Assim, o aporte de cada mês começa a render no mês seguinte, como acontece quando você investe logo depois de receber o salário. Se a taxa estiver ao ano, ela é convertida para a taxa mensal equivalente, e não simplesmente dividida por 12.</p>
+    <h2>Exemplos para ter noção</h2>
+    <ul>
+      <li><strong>Só o valor inicial:</strong> R$ 1.000 a 1% ao mês por 12 meses viram R$ 1.126,83. Dos R$ 126,83 de juros, R$ 6,83 são juros sobre juros.</li>
+      <li><strong>Só aportes:</strong> R$ 100 por mês a 1% ao mês por 12 meses somam R$ 1.268,25, sendo R$ 1.200 seus e R$ 68,25 de juros.</li>
+      <li><strong>Longo prazo:</strong> R$ 10.000 iniciais mais R$ 500 por mês a 12% ao ano, por 10 anos, chegam a cerca de R$ 142.000. Você guardou R$ 70.000; o resto veio dos juros.</li>
+    </ul>
+    <h2>Dicas para usar bem</h2>
+    <p>Use a taxa líquida, depois do imposto, se quiser um número mais próximo do que vai cair na conta. Para pensar em poder de compra, desconte a inflação: um investimento de 11% ao ano com inflação de 4,5% rende algo perto de 6,2% ao ano de ganho real. E lembre que a tabela é uma simulação com taxa fixa. Na vida real a taxa muda, e o resultado muda junto.</p>
+    <p>Os juros compostos também trabalham contra você nas dívidas. Um cartão de crédito a 12% ao mês dobra a dívida em pouco mais de 6 meses. Vale a mesma conta, só que do outro lado.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero } from '../../lib/numeros';
+  import { reais, centavos } from '../../lib/dinheiro';
+  import { anualParaMensal, jurosCompostos } from '../../lib/juros';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('jc');
+  const res = $('jc-res');
+  const tabela = $('jc-tabela');
+  const barra = $('jc-barra');
+
+  function calcular() {
+    const inicial = lerNumero($<HTMLInputElement>('jc-inicial').value) ?? 0;
+    const aporte = lerNumero($<HTMLInputElement>('jc-aporte').value) ?? 0;
+    const taxa = lerNumero($<HTMLInputElement>('jc-taxa').value);
+    const prazo = lerNumero($<HTMLInputElement>('jc-prazo').value);
+    const taxaAnual = $<HTMLSelectElement>('jc-taxa-un').value === 'ano';
+    const emAnos = $<HTMLSelectElement>('jc-prazo-un').value === 'ano';
+
+    const erro = (msg: string) => { res.innerHTML = `<span class="erro">${msg}</span>`; tabela.innerHTML = ''; barra.style.visibility = 'hidden'; };
+    if (taxa === null || prazo === null) return erro('Preencha a taxa e o prazo com números.');
+    if (inicial < 0 || aporte < 0 || taxa < 0) return erro('Use valores positivos.');
+    const meses = Math.round(emAnos ? prazo * 12 : prazo);
+    if (meses < 1) return erro('O prazo precisa ter pelo menos 1 mês.');
+    if (meses > 1200) return erro('O prazo máximo é de 100 anos.');
+
+    const taxaMensal = taxaAnual ? anualParaMensal(taxa) : taxa;
+    const r = jurosCompostos(inicial, aporte, taxaMensal, meses);
+    res.innerHTML = `<strong>${reais(r.montante)}</strong>Guardado: ${reais(r.investido)} · Juros: ${reais(r.juros)}`;
+
+    const total = r.montante || 1;
+    barra.style.visibility = 'visible';
+    (barra.children[0] as HTMLElement).style.transform = `scaleX(${Math.min(1, r.investido / total)})`;
+
+    // Até 24 meses mostra mês a mês; acima disso, ano a ano (fim de cada ano e o último mês).
+    const porMes = meses <= 24;
+    $('jc-col').textContent = porMes ? 'Mês' : 'Ano';
+    $('jc-titulo-tabela').textContent = porMes ? 'Evolução mês a mês' : 'Evolução ano a ano';
+    const linhas = r.meses.filter((l) => porMes || l.mes % 12 === 0 || l.mes === meses);
+    tabela.innerHTML = linhas.map((l) => {
+      const rotulo = porMes ? String(l.mes) : l.mes % 12 === 0 ? String(l.mes / 12) : `${Math.floor(l.mes / 12)} e ${l.mes % 12} m`;
+      return `<tr><td>${rotulo}</td><td>${centavos(l.investido)}</td><td>${centavos(l.juros)}</td><td>${centavos(l.saldo)}</td></tr>`;
+    }).join('');
+  }
+
+  form.addEventListener('input', calcular);
+  form.addEventListener('change', calcular);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calcular();
+</script>
+
+<style>
+  .linhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+  .par { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .par select { width: auto; }
+  .resultado { display: block; min-height: 84px; }
+  .barra { position: relative; height: 14px; border-radius: 7px; background: var(--brand); overflow: hidden; }
+  .barra span { position: absolute; inset: 0; transform-origin: 0 0; transition: transform 0.3s var(--suave); }
+  .b-inv { background: var(--muted); }
+  .legenda { font-size: 0.9rem; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ponto { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .p-inv { background: var(--muted); }
+  .p-jur { background: var(--brand); margin-left: 10px; }
+  .titulo-tabela { font-size: 1.1rem; margin-top: 4px; }
+  .tabela-rolagem { max-height: 360px; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius); overscroll-behavior: contain; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.88rem; }
+  th { position: sticky; top: 0; background: var(--surface); text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child { text-align: left; }
+  .tabela-rolagem :global(td) { text-align: right; padding: 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .tabela-rolagem :global(td:first-child) { text-align: left; color: var(--muted); }
+  .tabela-rolagem :global(tr:last-child td) { border-bottom: 0; }
+</style>

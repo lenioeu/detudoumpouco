@@ -1,0 +1,158 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+
+// Valores iniciais de exemplo. Ao atualizar, troque também a data de referência.
+const REF = {
+  data: 'setembro de 2026',
+  selicMeta: '13,75',
+  selicEfetiva: '13,65',
+  tr: '0,1690',
+  percentualCdi: '100',
+  adicionalTesouro: '0,10',
+  custodia: '0,20',
+  isencaoCustodia: '10.000',
+};
+---
+<Ferramenta
+  secao="calculadoras"
+  slug="quanto-rende"
+  titulo="Quanto rende: poupança, CDB e Tesouro Selic"
+  subtitulo="Coloque um valor e um prazo e compare, lado a lado, quanto sobra depois do imposto de renda em cada investimento."
+  tituloSeo="Quanto rende: poupança x CDB x Tesouro Selic"
+  descricao="Compare quanto rende seu dinheiro na poupança, no CDB e no Tesouro Selic, já com imposto de renda e custódia. Taxas editáveis. Grátis e no seu navegador."
+  passos={[
+    'Digite quanto vai investir e por quanto tempo.',
+    'Confira as taxas. Elas vêm preenchidas com valores de exemplo; troque pelas de hoje se quiser.',
+    'Ajuste o percentual do CDI do seu CDB e o adicional do Tesouro Selic.',
+    'Compare o valor líquido de cada opção. O melhor aparece destacado.',
+  ]}
+  perguntas={[
+    { p: 'Quanto rende R$ 10 mil na poupança por mês?', r: 'Com a Selic acima de 8,5% ao ano, a poupança rende 0,5% ao mês mais a TR. Com TR de 0,169%, isso dá cerca de 0,67% ao mês, ou uns R$ 67 por mês sobre R$ 10 mil. O valor muda todo mês junto com a TR.' },
+    { p: 'O que rende mais, poupança ou CDB?', r: 'Com a Selic alta, um CDB que paga 100% do CDI rende mais que a poupança mesmo depois do imposto de renda. Com a Selic de 13,75% ao ano, R$ 10 mil em 12 meses rendem cerca de R$ 834 na poupança e R$ 1.126 líquidos num CDB de 100% do CDI. Com a Selic baixa, a diferença diminui e CDBs que pagam menos de 90% do CDI podem perder.' },
+    { p: 'Como funciona o imposto de renda no CDB e no Tesouro Selic?', r: 'O imposto incide só sobre o rendimento e diminui com o tempo: 22,5% até 180 dias, 20% de 181 a 360 dias, 17,5% de 361 a 720 dias e 15% acima de 720 dias. Ele é descontado na hora do resgate. A poupança, a LCI e a LCA são isentas para pessoa física.' },
+    { p: 'O Tesouro Selic tem taxa?', r: 'A B3 cobra uma taxa de custódia anual sobre o saldo, que a calculadora considera como 0,20% ao ano sobre o que passa de R$ 10 mil. Confira a regra atual no site do Tesouro Direto, porque ela já mudou algumas vezes. Muitas corretoras não cobram taxa própria.' },
+    { p: 'Qual é mais seguro: poupança, CDB ou Tesouro Selic?', r: 'O Tesouro Selic é garantido pelo Tesouro Nacional, considerado o investimento mais seguro do país. Poupança e CDB são garantidos pelo FGC até R$ 250 mil por CPF e por instituição. Para reserva de emergência, os três têm liquidez diária ou quase isso.' },
+  ]}
+>
+  <form id="qr" class="stack" novalidate>
+    <div class="linhas">
+      <div class="campo"><label for="qr-valor">Valor investido (R$)</label><input id="qr-valor" type="text" inputmode="decimal" value="10.000" /></div>
+      <div class="campo">
+        <label for="qr-prazo">Prazo</label>
+        <div class="par">
+          <input id="qr-prazo" type="text" inputmode="numeric" value="12" />
+          <select id="qr-prazo-un" aria-label="Unidade do prazo"><option value="mes" selected>meses</option><option value="ano">anos</option></select>
+        </div>
+      </div>
+    </div>
+
+
+    <p class="muted nota">Conta feita com as taxas de referência de {REF.data}, que você pode trocar logo abaixo dos resultados.</p>
+    <p class="muted" id="qr-info" aria-live="polite"></p>
+    <div class="cartoes" id="qr-res">
+      <output class="resultado cartao" id="qr-poupanca"></output>
+      <output class="resultado cartao" id="qr-cdb"></output>
+      <output class="resultado cartao" id="qr-tesouro"></output>
+    </div>
+
+    <fieldset class="taxas">
+      <legend>Taxas usadas na conta</legend>
+      <p class="muted nota">Preenchidas com valores de referência de {REF.data} (Selic meta definida pelo Copom em 16/09/2026). Elas mudam com o tempo: confira as atuais no site do Banco Central e troque aqui.</p>
+      <div class="linhas taxas-grade">
+        <div class="campo"><label for="qr-selic">Selic meta (% ao ano)</label><input id="qr-selic" type="text" inputmode="decimal" value={REF.selicMeta} /><small>Define a regra da poupança.</small></div>
+        <div class="campo"><label for="qr-cdi">Selic efetiva / CDI (% ao ano)</label><input id="qr-cdi" type="text" inputmode="decimal" value={REF.selicEfetiva} /><small>Base do CDB e do Tesouro Selic.</small></div>
+        <div class="campo"><label for="qr-tr">TR (% ao mês)</label><input id="qr-tr" type="text" inputmode="decimal" value={REF.tr} /><small>Somada ao rendimento da poupança.</small></div>
+        <div class="campo"><label for="qr-pct">CDB: % do CDI</label><input id="qr-pct" type="text" inputmode="decimal" value={REF.percentualCdi} /><small>Ex.: 100, 110, 120.</small></div>
+        <div class="campo"><label for="qr-adic">Tesouro Selic: Selic + (% ao ano)</label><input id="qr-adic" type="text" inputmode="decimal" value={REF.adicionalTesouro} /><small>O adicional que aparece no site do Tesouro.</small></div>
+        <div class="campo"><label for="qr-cust">Custódia B3 (% ao ano)</label><input id="qr-cust" type="text" inputmode="decimal" value={REF.custodia} /><small>Cobrada sobre o saldo acima de R$ {REF.isencaoCustodia}.</small></div>
+      </div>
+    </fieldset>
+  </form>
+
+  <Fragment slot="texto">
+    <h2>Como a calculadora compara os três</h2>
+    <p>Cada investimento tem sua regra. A poupança segue uma fórmula fixa por lei; o CDB pós-fixado paga um percentual do CDI; o Tesouro Selic acompanha a própria Selic. Para comparar de forma justa, a calculadora tira de cada um o que você paga de verdade: imposto de renda no CDB e no Tesouro, e a taxa de custódia da B3 no Tesouro. O número que importa é o valor líquido, o que cai na sua conta no resgate.</p>
+    <h2>As regras usadas</h2>
+    <ul>
+      <li><strong>Poupança:</strong> com a Selic meta acima de 8,5% ao ano, rende 0,5% ao mês mais a TR. Com a Selic igual ou abaixo disso, rende 70% da Selic mais a TR. O rendimento só entra na data de aniversário, por isso a conta usa meses inteiros. É isenta de imposto de renda.</li>
+      <li><strong>CDB:</strong> rende o percentual escolhido do CDI a cada dia útil, contando 252 dias úteis por ano. O imposto segue a tabela regressiva da Receita Federal (Lei 11.033/2004).</li>
+      <li><strong>Tesouro Selic:</strong> rende a Selic efetiva mais o adicional do título. A custódia da B3 é descontada mês a mês sobre o saldo acima do valor isento, e o imposto é calculado sobre o rendimento já sem essa taxa.</li>
+    </ul>
+    <h2>Um exemplo com os valores de referência</h2>
+    <p>R$ 10.000 por 12 meses, com Selic meta de 13,75% e CDI de 13,65% ao ano: a poupança chega a cerca de R$ 10.834, o CDB de 100% do CDI a R$ 11.126 depois do imposto e o Tesouro Selic a uns R$ 11.134. Repare como o prazo pesa: 12 meses já passam de 360 dias, então o imposto cai de 20% para 17,5%.</p>
+    <h2>Dicas</h2>
+    <p>Antes de resgatar, olhe a data. Esperar alguns dias para passar de 180, 360 ou 720 dias pode baixar o imposto. Para prazos muito curtos, de menos de 30 dias, ainda existe o IOF, que esta calculadora não considera. E lembre que as taxas mudam a cada reunião do Copom: a simulação mostra o cenário de hoje mantido pelo prazo todo, não uma promessa.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerNumero, formatar } from '../../lib/numeros';
+  import { reais } from '../../lib/dinheiro';
+  import { rendimentoPoupanca, rendimentoCdb, rendimentoTesouroSelic, diasCorridos, taxaPoupancaMensal, type Rendimento } from '../../lib/investimentos';
+
+  const ISENCAO_CUSTODIA = 10000;
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const ler = (id: string) => lerNumero($<HTMLInputElement>(id).value);
+  const form = $<HTMLFormElement>('qr');
+  const info = $('qr-info');
+  const saidas = { poupanca: $('qr-poupanca'), cdb: $('qr-cdb'), tesouro: $('qr-tesouro') };
+
+  function cartao(nome: string, r: Rendimento, melhor: boolean) {
+    const linhas = [`Rendimento bruto: ${reais(r.bruto)}`];
+    linhas.push(r.aliquota ? `Imposto (${formatar(r.aliquota, 1)}%): −${reais(r.ir)}` : 'Imposto: isento');
+    if (r.custodia > 0.004) linhas.push(`Custódia B3: −${reais(r.custodia)}`);
+    linhas.push(`Ganho líquido: ${reais(r.liquido)} (${formatar(r.rentabilidade, 2)}%)`);
+    return `<span class="nome">${nome}${melhor ? ' <span class="selo">rende mais</span>' : ''}</span><strong>${reais(r.final)}</strong>${linhas.join('<br>')}`;
+  }
+
+  function calcular() {
+    const valor = ler('qr-valor'), prazo = ler('qr-prazo');
+    const selic = ler('qr-selic'), cdi = ler('qr-cdi'), tr = ler('qr-tr') ?? 0;
+    const pct = ler('qr-pct'), adic = ler('qr-adic') ?? 0, cust = ler('qr-cust') ?? 0;
+    const emAnos = $<HTMLSelectElement>('qr-prazo-un').value === 'ano';
+    const erro = (msg: string) => {
+      info.innerHTML = `<span class="erro">${msg}</span>`;
+      Object.values(saidas).forEach((s) => { s.innerHTML = ''; s.classList.remove('melhor'); });
+    };
+    if (valor === null || prazo === null || selic === null || cdi === null || pct === null) return erro('Preencha valor, prazo e as taxas com números.');
+    if (valor <= 0) return erro('O valor investido precisa ser maior que zero.');
+    if (selic < 0 || cdi < 0 || pct < 0 || cust < 0) return erro('Use taxas positivas.');
+    const meses = Math.round(emAnos ? prazo * 12 : prazo);
+    if (meses < 1) return erro('O prazo precisa ter pelo menos 1 mês.');
+    if (meses > 600) return erro('O prazo máximo é de 50 anos.');
+
+    const r = {
+      poupanca: rendimentoPoupanca(valor, meses, selic, tr),
+      cdb: rendimentoCdb(valor, meses, cdi, pct),
+      tesouro: rendimentoTesouroSelic(valor, meses, cdi, adic, cust, ISENCAO_CUSTODIA),
+    };
+    const melhor = (Object.keys(r) as (keyof typeof r)[]).reduce((a, b) => (r[b].final > r[a].final ? b : a));
+    info.textContent = `${meses} ${meses === 1 ? 'mês' : 'meses'} ≈ ${diasCorridos(meses)} dias corridos. Poupança rendendo ${formatar(taxaPoupancaMensal(selic, tr), 4)}% ao mês.`;
+    saidas.poupanca.innerHTML = cartao('Poupança', r.poupanca, melhor === 'poupanca');
+    saidas.cdb.innerHTML = cartao(`CDB ${formatar(pct, 2)}% do CDI`, r.cdb, melhor === 'cdb');
+    saidas.tesouro.innerHTML = cartao('Tesouro Selic', r.tesouro, melhor === 'tesouro');
+    (Object.keys(saidas) as (keyof typeof saidas)[]).forEach((k) => saidas[k].classList.toggle('melhor', k === melhor));
+  }
+
+  form.addEventListener('input', calcular);
+  form.addEventListener('change', calcular);
+  form.addEventListener('submit', (e) => e.preventDefault());
+  calcular();
+</script>
+
+<style>
+  .linhas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+  .par { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+  .par select { width: auto; }
+  .taxas { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .taxas legend { font-weight: 700; padding: 0 6px; }
+  .nota { font-size: 0.9rem; }
+  .taxas-grade { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); align-items: start; }
+  .cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+  .cartao { display: block; min-height: 190px; border: 2px solid transparent; transition: transform 0.25s var(--mola); }
+  .cartao.melhor { border-color: var(--brand-ink); transform: translateY(-2px); }
+  .cartao :global(.nome) { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 700; }
+  .cartao :global(.selo) { font-size: 0.75rem; font-weight: 700; background: var(--brand); color: var(--brand-ink); padding: 1px 8px; border-radius: 999px; }
+  @media (prefers-color-scheme: dark) { :global(:root:not([data-theme='light'])) .cartao.melhor { border-color: var(--brand); } }
+  :global(:root[data-theme='dark']) .cartao.melhor { border-color: var(--brand); }
+</style>
