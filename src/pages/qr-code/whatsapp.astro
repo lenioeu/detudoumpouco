@@ -1,0 +1,45 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import GeradorQr from '../../components/GeradorQr.astro';
+---
+<Ferramenta
+  secao="qr-code"
+  slug="whatsapp"
+  titulo="QR Code para WhatsApp"
+  subtitulo="Crie um QR Code que abre uma conversa com o seu WhatsApp, com uma mensagem já escrita. O cliente aponta a câmera e fala com você, sem salvar o seu número. Grátis e sem cadastro."
+  tituloSeo="QR Code para WhatsApp grátis, com mensagem pronta"
+  descricao="Gere um QR Code que abre conversa no seu WhatsApp ou WhatsApp Business, com mensagem pronta. Ideal para vitrine e cartão de visita. Grátis, PNG e SVG."
+  passos={[
+    'Digite o número do WhatsApp com DDD, como (11) 91234-5678. O 55 do Brasil é colocado sozinho.',
+    'Escreva a mensagem que vai aparecer pronta para o cliente, como "Olá! Quero fazer um pedido.". Pode deixar em branco.',
+    'Confira o QR Code apontando a câmera de outro celular para a tela: a conversa deve abrir com o seu número.',
+    'Baixe em PNG para redes sociais e WhatsApp, ou em SVG para cartão de visita, adesivo e banner.',
+  ]}
+  perguntas={[
+    { p: 'Como criar um QR Code para o WhatsApp do meu negócio?', r: 'Digite o número do WhatsApp da empresa com DDD, escreva uma mensagem de abertura e baixe o QR Code. Coloque na vitrine, no balcão, no cardápio, na embalagem ou no cartão de visita. Quem ler o código cai direto numa conversa com você.' },
+    { p: 'Funciona com o WhatsApp Business?', r: 'Funciona. O QR Code abre um link do tipo wa.me, que vale para o WhatsApp comum e para o WhatsApp Business. Basta usar o número em que o aplicativo está instalado.' },
+    { p: 'O cliente precisa ter o meu número salvo?', r: 'Não. A conversa abre direto, mesmo sem o número estar na agenda. Se o cliente quiser, ele salva depois.' },
+    { p: 'A mensagem pronta é enviada sozinha?', r: 'Não. A mensagem aparece escrita na caixa de texto e o cliente decide se envia, se muda ou se apaga. Uma mensagem como "Olá! Vi o cartaz da loja." ajuda você a saber de onde o contato veio.' },
+    { p: 'Como fazer QR Code de WhatsApp de outro país?', r: 'Comece o número com + e o código do país, como +351 912 345 678 para Portugal ou +1 415 555 0100 para os Estados Unidos. Sem o +, números com DDD são tratados como do Brasil.' },
+    { p: 'O QR Code do WhatsApp expira?', r: 'Não. O número e a mensagem ficam gravados no desenho do código, que funciona enquanto o número tiver WhatsApp. Se trocar de número, gere um QR Code novo.' },
+  ]}
+>
+  <GeradorQr tipos={['whatsapp']} arquivo="qrcode-whatsapp" />
+
+  <Fragment slot="texto">
+    <h2>Como funciona o QR Code de WhatsApp</h2>
+    <p>O WhatsApp tem um endereço oficial para abrir conversas: <code>wa.me/</code> seguido do número com o código do país, sem espaços nem traços. Se você colocar <code>?text=</code> no fim, a mensagem vem escrita. Esta ferramenta monta esse endereço para você e transforma em QR Code. O link completo aparece embaixo do código, e você pode copiá-lo para usar na bio do Instagram, no site ou numa assinatura de e-mail.</p>
+    <p>É diferente do QR Code que o próprio aplicativo mostra em Configurações. Aquele serve para adicionar o contato e pode ser trocado pelo aplicativo. O daqui abre a conversa na hora, aceita mensagem pronta e não muda nunca.</p>
+    <h2>Ideias para o seu negócio</h2>
+    <ul>
+      <li><strong>Vitrine e porta da loja:</strong> "Fechado? Chame no WhatsApp" com o QR Code embaixo atende fora do horário.</li>
+      <li><strong>Delivery e marmita:</strong> no folheto ou no ímã de geladeira, com a mensagem "Olá! Quero fazer um pedido.".</li>
+      <li><strong>Cartão de visita:</strong> o cliente fala com você sem digitar número, e o contato não se perde.</li>
+      <li><strong>Embalagem e etiqueta:</strong> para pós-venda, troca e novos pedidos.</li>
+      <li><strong>Prestador de serviço:</strong> no adesivo do carro ou no uniforme, com "Olá! Quero um orçamento.".</li>
+    </ul>
+    <h2>Dicas para mais contatos</h2>
+    <p>Use mensagens diferentes em cada lugar, como "Vi o panfleto" e "Vi o adesivo do carro". Assim você descobre qual divulgação traz mais clientes. Escreva perto do código o que vai acontecer, por exemplo "Aponte a câmera e fale com a gente", porque muita gente ainda não sabe que dá para ler QR Code com a câmera comum.</p>
+    <p>Para imprimir, deixe o código com pelo menos 2,5 cm de lado num cartão de visita e mais que isso em cartazes vistos de longe. O número e a mensagem não são enviados para nenhum servidor: tudo é gerado no seu navegador. Se precisar de um QR Code para link, texto ou Wi-Fi, use o <a href="/qr-code/gerador">gerador de QR Code</a> completo, e para receber pagamentos, o <a href="/qr-code/pix">QR Code Pix</a>.</p>
+  </Fragment>
+</Ferramenta>

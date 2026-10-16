@@ -1,0 +1,271 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="qr-code"
+  slug="leitor"
+  titulo="Leitor de QR Code online"
+  subtitulo="Leia um QR Code de uma foto, de um print ou pela câmera, sem instalar aplicativo. Veja o link completo antes de abrir e descubra se é Pix, Wi-Fi ou WhatsApp."
+  tituloSeo="Leitor de QR Code online: ler por imagem ou câmera"
+  descricao="Leia QR Code online por imagem, print (Ctrl+V) ou câmera. Veja o link completo antes de abrir, a senha do Wi-Fi e os dados do Pix. Grátis e sem enviar nada."
+  passos={[
+    'Escolha uma imagem com o QR Code, arraste o arquivo para a área indicada ou cole um print com Ctrl+V.',
+    'No celular ou no notebook, você também pode tocar em "Usar a câmera" e apontar para o QR Code.',
+    'Veja o conteúdo lido e o que ele faz: abrir um site, conectar no Wi-Fi, iniciar uma conversa no WhatsApp ou pagar um Pix.',
+    'Se for link, confira o endereço completo antes de tocar em "Abrir link".',
+    'Use "Copiar conteúdo" para colar o texto onde precisar, como o Pix copia e cola no aplicativo do banco.',
+  ]}
+  perguntas={[
+    { p: 'Como ler um QR Code que está numa foto ou print do celular?', r: 'Abra esta página, toque em "Escolher imagem" e selecione a foto ou o print na galeria. O conteúdo aparece em seguida, com botão para copiar. No computador, dá para copiar a imagem e colar aqui com Ctrl+V.' },
+    { p: 'Como ler QR Code pelo computador?', r: 'Se o notebook tiver câmera, toque em "Usar a câmera" e mostre o QR Code para ela. Se o QR Code estiver na própria tela, tire um print (no Windows, Win+Shift+S) e cole aqui com Ctrl+V. Não precisa instalar programa.' },
+    { p: 'Ler QR Code é perigoso?', r: 'Ler não é: aqui o conteúdo só aparece na tela e nada é aberto sozinho. O perigo está em abrir o link sem conferir. Golpistas colam QR Codes falsos em cartazes, boletos e mesas de restaurante. Veja o endereço completo, desconfie de links encurtados e nunca digite senha ou cartão num site aberto por QR Code sem ter certeza.' },
+    { p: 'Por que o site pede permissão para usar a câmera?', r: 'Todo navegador pede permissão antes de ligar a câmera, para proteger você. As imagens são analisadas no seu aparelho e não são gravadas nem enviadas. Se você recusou sem querer, toque no cadeado ao lado do endereço do site, libere a câmera e recarregue a página.' },
+    { p: 'Dá para ver a senha do Wi-Fi pelo QR Code?', r: 'Sim. O QR Code de Wi-Fi guarda o nome da rede e a senha em texto. Ao ler aqui, os dois aparecem na tela, com botão para copiar a senha. É útil para conectar um notebook ou uma TV que não tem câmera.' },
+    { p: 'Por que o QR Code não é lido?', r: 'As causas mais comuns são foto tremida, reflexo, QR Code cortado ou muito pequeno na imagem. Tente uma foto mais de perto, com boa luz, e com a margem branca em volta do código aparecendo. Imagens HEIC do iPhone precisam ser convertidas para JPG antes.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="image/*" texto="Escolher imagem" dica="ou arraste e solte aqui · Ctrl+V cola um print" />
+
+    <div class="camera">
+      <div class="camera-texto">
+        <p class="rotulo">Ler pela câmera</p>
+        <p class="muted">Ao tocar no botão, o navegador vai pedir permissão para usar a câmera: toque em <strong>Permitir</strong>. A imagem é analisada só no seu aparelho, sem gravar nem enviar nada.</p>
+      </div>
+      <button id="abrir-camera" type="button" class="btn btn-sec">Usar a câmera</button>
+    </div>
+    <div id="visor" class="visor" hidden>
+      <video id="video" playsinline muted></video>
+      <div class="mira" aria-hidden="true"></div>
+      <button id="parar" type="button" class="btn parar">Parar câmera</button>
+    </div>
+    <p id="camera-msg" class="muted" role="status"></p>
+
+    <p id="msg-erro" class="erro" role="alert" hidden></p>
+    <div id="resultados" class="stack" aria-live="polite"></div>
+  </div>
+
+  <template id="modelo">
+    <div class="lido stack">
+      <div class="lido-topo">
+        <span class="selo" data-titulo></span>
+        <span class="muted origem" data-origem></span>
+      </div>
+      <p data-explicacao></p>
+      <textarea class="conteudo" rows="3" readonly spellcheck="false" aria-label="Conteúdo lido do QR Code" data-conteudo></textarea>
+      <dl class="detalhes" data-detalhes></dl>
+      <p class="aviso" data-aviso hidden></p>
+      <div class="acoes">
+        <button type="button" class="btn" data-copiar>Copiar conteúdo</button>
+        <button type="button" class="btn btn-sec" data-copiar-senha hidden>Copiar senha</button>
+        <a class="btn btn-sec" data-abrir target="_blank" rel="noopener noreferrer nofollow" hidden>Abrir link</a>
+        <span class="muted" role="status" data-status></span>
+      </div>
+    </div>
+  </template>
+
+  <Fragment slot="texto">
+    <h2>Para que serve um leitor de QR Code online</h2>
+    <p>A câmera do celular já lê QR Code, mas nem sempre ajuda. Ela não lê um código que chegou como foto no WhatsApp, num e-mail ou num PDF aberto no próprio celular. Também costuma abrir o link direto, sem mostrar o endereço inteiro. Este leitor resolve os dois casos: lê de uma imagem salva, de um print colado com Ctrl+V ou da câmera, e mostra tudo o que está dentro do código antes de qualquer coisa ser aberta.</p>
+    <p>No computador ele é ainda mais útil. Recebeu um QR Code de acesso, de boleto ou de Wi-Fi na tela do notebook? Tire um print, cole aqui e copie o conteúdo, sem precisar pegar o celular.</p>
+    <h2>O que o leitor reconhece</h2>
+    <ul>
+      <li><strong>Links:</strong> mostra o nome do site e o endereço completo, e avisa quando é um link encurtado, em que não dá para saber o destino antes de abrir.</li>
+      <li><strong>Pix:</strong> mostra a chave, o nome de quem recebe, a cidade, o valor e se o código de verificação está correto. O conteúdo copiado serve como Pix copia e cola.</li>
+      <li><strong>Wi-Fi:</strong> mostra o nome da rede e a senha, com um botão para copiar só a senha.</li>
+      <li><strong>WhatsApp:</strong> mostra o número e a mensagem que já vem escrita.</li>
+      <li><strong>Outros:</strong> e-mail, telefone, SMS, cartão de contato (vCard), localização no mapa e texto simples.</li>
+    </ul>
+    <h2>Golpes com QR Code: como se proteger</h2>
+    <p>O golpe mais comum é simples: alguém cola um adesivo com outro QR Code por cima do verdadeiro, num cardápio, num cartaz de estacionamento ou numa maquininha. Quem lê vai parar num site falso, parecido com o de um banco ou loja, que pede senha, dados do cartão ou um Pix. Outra versão chega por mensagem ou carta, com um QR Code para "regularizar" uma dívida ou "liberar" uma entrega.</p>
+    <p>Antes de abrir um link, leia o nome do site com calma. Desconfie de letras trocadas, de domínios estranhos e de links encurtados. Num Pix, confira o nome do recebedor na tela do banco antes de confirmar. Se o QR Code veio de alguém que você não conhece, prefira entrar no site digitando o endereço que você já conhece.</p>
+    <p>Esta página não envia a imagem para lugar nenhum. A leitura é feita no seu navegador, e a câmera é desligada assim que o código é lido ou quando você toca em "Parar câmera".</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { lerQr, prepararLeitor } from '../../lib/qr-decodificar';
+  import { interpretar, lerWifi } from '../../lib/qr-leitura';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $<HTMLDivElement>('entrada');
+  const erro = $<HTMLParagraphElement>('msg-erro');
+  const resultados = $<HTMLDivElement>('resultados');
+  const modelo = $<HTMLTemplateElement>('modelo');
+  const abrirCamera = $<HTMLButtonElement>('abrir-camera');
+  const visor = $<HTMLDivElement>('visor');
+  const video = $<HTMLVideoElement>('video');
+  const parar = $<HTMLButtonElement>('parar');
+  const cameraMsg = $<HTMLParagraphElement>('camera-msg');
+
+  function mostrarErro(msg: string) { erro.textContent = msg; erro.hidden = false; }
+
+  async function copiar(texto: string, status: HTMLElement, campo?: HTMLTextAreaElement) {
+    try { await navigator.clipboard.writeText(texto); status.textContent = 'Copiado.'; }
+    catch { campo?.select(); status.textContent = 'Selecionado. Use Ctrl+C ou "Copiar" do celular.'; }
+  }
+
+  function mostrar(textos: string[], origem: string) {
+    erro.hidden = true;
+    resultados.replaceChildren(...textos.map((texto) => {
+      const no = modelo.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      const q = <T extends HTMLElement>(s: string) => no.querySelector(`[data-${s}]`) as T;
+      const l = interpretar(texto);
+      no.dataset.tipo = l.tipo;
+      q('titulo').textContent = l.titulo;
+      q('origem').textContent = origem;
+      q('explicacao').textContent = l.explicacao;
+      const area = q<HTMLTextAreaElement>('conteudo');
+      area.value = texto;
+      area.rows = Math.min(6, Math.max(2, Math.ceil(texto.length / 40)));
+      q('detalhes').replaceChildren(...l.detalhes.flatMap(([k, v]) => {
+        const dt = document.createElement('dt'); dt.textContent = k;
+        const dd = document.createElement('dd'); dd.textContent = v;
+        return [dt, dd];
+      }));
+      if (l.aviso) { q('aviso').textContent = l.aviso; q('aviso').hidden = false; }
+      const status = q('status');
+      q('copiar').addEventListener('click', () => copiar(texto, status, area));
+      const senha = l.tipo === 'wifi' ? lerWifi(texto.trim())?.senha : '';
+      if (senha) {
+        q('copiar-senha').hidden = false;
+        q('copiar-senha').addEventListener('click', () => copiar(senha, status));
+      }
+      if (l.abrir) {
+        const a = q<HTMLAnchorElement>('abrir');
+        a.href = l.abrir; a.hidden = false;
+        if (l.tipo === 'whatsapp') a.textContent = 'Abrir no WhatsApp';
+        else if (l.tipo === 'local') a.textContent = 'Abrir no mapa';
+      }
+      return no;
+    }));
+    resultados.firstElementChild?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  async function lerArquivo(file: File) {
+    if (!file.type.startsWith('image/') && !/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name)) {
+      mostrarErro('Escolha uma imagem (JPG, PNG, WebP ou print da tela).'); return;
+    }
+    erro.hidden = true;
+    resultados.replaceChildren();
+    cameraMsg.textContent = 'Procurando o QR Code na imagem...';
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      const textos = await lerQr(img);
+      cameraMsg.textContent = '';
+      if (textos.length) mostrar(textos, `Imagem: ${file.name || 'colada'}`);
+      else mostrarErro('Não encontramos um QR Code nesta imagem. Tente cortar a imagem deixando só o código, ou use uma foto mais nítida, com boa luz e sem reflexo.');
+    } catch {
+      cameraMsg.textContent = '';
+      mostrarErro('Não foi possível abrir esta imagem. Se for HEIC do iPhone, converta para JPG antes.');
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => {
+    const files = (e as CustomEvent<File[]>).detail;
+    if (files[0]) { pararCamera(); void lerArquivo(files[0]); }
+  });
+
+  // ---------- Câmera ----------
+  let fluxo: MediaStream | null = null;
+  let rodando = false;
+
+  function pararCamera() {
+    rodando = false;
+    fluxo?.getTracks().forEach((t) => t.stop());
+    fluxo = null;
+    video.srcObject = null;
+    visor.hidden = true;
+    abrirCamera.hidden = false;
+  }
+
+  async function varrer() {
+    if (!rodando) return;
+    if (video.readyState >= 2) {
+      try {
+        const textos = await lerQr(video, { rapido: true });
+        if (textos.length && rodando) {
+          pararCamera();
+          cameraMsg.textContent = 'QR Code lido. A câmera foi desligada.';
+          navigator.vibrate?.(60);
+          mostrar(textos, 'Câmera');
+          return;
+        }
+      } catch { /* quadro ruim: tenta o próximo */ }
+    }
+    setTimeout(varrer, 120);
+  }
+
+  abrirCamera.addEventListener('click', async () => {
+    erro.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      mostrarErro('Este navegador não deixa usar a câmera aqui. Tire uma foto do QR Code e envie a imagem acima.');
+      return;
+    }
+    cameraMsg.textContent = 'Aguardando a permissão da câmera...';
+    prepararLeitor();
+    try {
+      fluxo = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+    } catch (e) {
+      cameraMsg.textContent = '';
+      const nome = (e as DOMException)?.name;
+      if (nome === 'NotAllowedError' || nome === 'SecurityError') {
+        mostrarErro('A câmera não foi liberada. Para permitir, toque no cadeado ao lado do endereço do site, ative a câmera e tente de novo. Se preferir, tire uma foto do QR Code e envie a imagem acima.');
+      } else if (nome === 'NotFoundError' || nome === 'OverconstrainedError') {
+        mostrarErro('Nenhuma câmera foi encontrada neste aparelho. Envie uma foto ou um print do QR Code.');
+      } else if (nome === 'NotReadableError') {
+        mostrarErro('A câmera está sendo usada por outro aplicativo. Feche o outro aplicativo e tente de novo.');
+      } else {
+        mostrarErro('Não foi possível ligar a câmera. Envie uma foto ou um print do QR Code.');
+      }
+      return;
+    }
+    video.srcObject = fluxo;
+    visor.hidden = false;
+    abrirCamera.hidden = true;
+    resultados.replaceChildren();
+    cameraMsg.textContent = 'Aponte a câmera para o QR Code e segure firme por um instante.';
+    try { await video.play(); } catch { /* alguns navegadores tocam sozinhos */ }
+    rodando = true;
+    void varrer();
+  });
+
+  parar.addEventListener('click', () => { pararCamera(); cameraMsg.textContent = 'Câmera desligada.'; });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && rodando) { pararCamera(); cameraMsg.textContent = 'Câmera desligada.'; } });
+  window.addEventListener('pagehide', pararCamera);
+</script>
+
+<style>
+  .camera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .camera-texto { flex: 1 1 260px; display: flex; flex-direction: column; gap: 4px; }
+  .camera-texto .muted { font-size: 0.9rem; }
+  .visor { position: relative; width: 100%; max-width: 420px; margin-inline: auto; aspect-ratio: 3 / 4; border-radius: 18px; overflow: hidden; background: var(--brand-ink); animation: entrar 0.25s var(--suave); }
+  .visor video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mira { position: absolute; inset: 18%; border: 3px solid var(--brand); border-radius: 18px; box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--brand-ink) 35%, transparent); pointer-events: none; }
+  .parar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); }
+  .parar:hover { transform: translateX(-50%) translateY(-1px); }
+  .parar:active { transform: translateX(-50%) translateY(1px); }
+  #camera-msg:empty { display: none; }
+  .lido { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; gap: 12px; animation: entrar 0.28s var(--suave); }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+  .lido-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .selo { background: var(--brand); color: var(--brand-ink); font: 700 0.95rem var(--f-display); padding: 4px 10px; border-radius: 999px; }
+  .origem { font-size: 0.85rem; overflow-wrap: anywhere; }
+  .conteudo { font: 0.9rem/1.4 var(--f-mono); resize: vertical; word-break: break-all; }
+  .detalhes { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 0.95rem; }
+  .detalhes:empty { display: none; }
+  .detalhes :global(dt) { color: var(--muted); }
+  .detalhes :global(dd) { margin: 0; overflow-wrap: anywhere; font-weight: 600; }
+  @media (max-width: 480px) {
+    .detalhes { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .detalhes :global(dd) { margin-bottom: 8px; }
+  }
+  .aviso { border-left: 4px solid var(--erro); background: var(--surface); border-radius: 0 var(--radius) var(--radius) 0; padding: 10px 14px; font-size: 0.95rem; }
+  .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+</style>
