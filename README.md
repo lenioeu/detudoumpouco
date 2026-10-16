@@ -131,6 +131,46 @@ Rotas:
 
 Desenvolvimento: `npm run dev` (recarrega ao salvar), `npm test` e `npm run typecheck`.
 
+## Colocar no ar
+
+Recomendado: um **servidor próprio (VPS) no Brasil**, com Docker. Os documentos e dados pessoais ficam em território nacional e sob controle do escritório.
+
+### 1. Contratar o servidor e apontar o domínio
+
+1. Contrate uma VPS com **Ubuntu 24.04**, 1 vCPU e 1 a 2 GB de RAM, em data center no Brasil (ex.: Hostinger, Locaweb, Magalu Cloud, AWS São Paulo).
+2. No painel do domínio do escritório, crie um registro **A** para um subdomínio (ex.: `assinaturas.seuescritorio.com.br`) apontando para o IP da VPS.
+
+### 2. Instalar e subir o bot
+
+Acesse a VPS por SSH e rode:
+
+```bash
+curl -fsSL https://get.docker.com | sh          # instala o Docker
+git clone https://github.com/<usuario>/<repositorio>.git assinabot
+cd assinabot
+cp .env.example .env
+nano .env                                       # preencha tudo (veja abaixo)
+docker compose up -d --build
+```
+
+No `.env`, além das chaves do WhatsApp e da Anthropic, preencha `DOMINIO` e `PUBLIC_URL` com o subdomínio, uma `CERTIFICATE_PASSWORD` forte e `AUTHORIZED_SENDERS` com o seu número e nome. Para usar o certificado A1 do escritório, copie o `.pfx` para `data/certificado.p12` e informe a senha dele.
+
+O Caddy obtém o HTTPS sozinho. Confira em `https://<seu-subdomínio>/saude`: deve aparecer `{"ok":true}`.
+
+### 3. Ligar o WhatsApp
+
+Na Meta, cadastre o webhook `https://<seu-subdomínio>/webhook/whatsapp` com o `WHATSAPP_VERIFY_TOKEN` do `.env` (passo a passo em "Instalação", acima).
+
+### Manutenção
+
+- **Atualizar:** `git pull && docker compose up -d --build`
+- **Ver o que está acontecendo:** `docker compose logs -f bot`
+- **Backup:** a pasta `data/` tem o banco (documentos, assinaturas, selfies) e o certificado. Copie-a com frequência para fora do servidor, por exemplo com um `cron` diário. Sem ela, as vias e as provas se perdem.
+
+### Alternativa sem administrar servidor
+
+Serviços como o **Railway** constroem a imagem direto do GitHub a partir do `Dockerfile`, cuidam do HTTPS e cobram por uso (alguns dólares por mês). Crie o projeto apontando para o repositório, adicione um **volume** montado em `/app/data` e preencha as mesmas variáveis do `.env` no painel. A ressalva: os dados ficam em data center fora do Brasil, o que pede atenção às regras de transferência internacional da LGPD.
+
 ## Segurança
 
 - Só os números em `AUTHORIZED_SENDERS` podem enviar documentos. Os botões de assinatura só valem no WhatsApp da pessoa convidada.

@@ -1,0 +1,28 @@
+# Servidor próprio (VPS): o bot e o Caddy, que cuida do HTTPS automaticamente.
+# Uso: preencha o .env (incluindo DOMINIO) e rode `docker compose up -d`.
+services:
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      PORT: "3000"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_dados:/data
+    depends_on:
+      - bot
+    restart: unless-stopped
+
+volumes:
+  caddy_dados:
