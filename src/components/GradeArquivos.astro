@@ -1,0 +1,55 @@
+---
+// Grade de cartões de arquivo que dá para reordenar (juntar PDF, JPG para PDF...).
+// Os cartões são criados no navegador com criarCartao() de src/lib/cartao-arquivo.ts
+// e a ordenação é ligada com ordenavel() de src/lib/ordenavel.ts.
+interface Props { id: string; rotulo: string; }
+const { id, rotulo } = Astro.props;
+---
+<ol class="grade-arquivos" id={id} aria-label={rotulo}></ol>
+
+<style>
+  .grade-arquivos {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 12px;
+  }
+  .grade-arquivos:empty { display: none; }
+  .grade-arquivos :global(li) {
+    position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    animation: entrar 0.3s var(--suave) backwards; cursor: grab; user-select: none; -webkit-user-select: none;
+  }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+  .grade-arquivos :global(li.arrastando) {
+    z-index: 2; cursor: grabbing; box-shadow: var(--sombra-alta); border-color: var(--brand-ink); opacity: 0.95;
+  }
+  .grade-arquivos :global(li.com-erro) { border-color: var(--erro); }
+  .grade-arquivos :global(.mini) {
+    position: relative; aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden;
+    background: var(--bg); border-radius: 6px;
+  }
+  .grade-arquivos :global(.mini canvas), .grade-arquivos :global(.mini img) {
+    max-width: 100%; max-height: 100%; width: auto; height: auto; display: block;
+    box-shadow: 0 0 0 1px var(--line); transition: transform 0.3s var(--mola); pointer-events: none;
+  }
+  .grade-arquivos :global(.numero) {
+    position: absolute; top: 6px; left: 6px; z-index: 1; min-width: 26px; height: 26px; padding: 0 6px;
+    display: grid; place-items: center; border-radius: 13px;
+    font: 700 0.85rem var(--f-display); background: var(--brand); color: var(--brand-ink); border: 2px solid var(--brand-ink);
+  }
+  .grade-arquivos :global(.nome) {
+    font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .grade-arquivos :global(.detalhe) { font-size: 0.82rem; line-height: 1.35; min-height: 2.7em; }
+  .grade-arquivos :global(.detalhe.erro) { color: var(--erro); }
+  .grade-arquivos :global(.acoes) { display: flex; justify-content: space-between; gap: 2px; }
+  .grade-arquivos :global(.acao) {
+    display: grid; place-items: center; flex: 1 1 0; min-width: 0; max-width: 36px; height: 34px; padding: 0; cursor: pointer;
+    border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--fg);
+    transition: transform 0.18s var(--mola), background-color 0.15s;
+  }
+  .grade-arquivos :global(.acao:hover) { background: var(--bg); border-color: var(--line); }
+  .grade-arquivos :global(.acao:active) { transform: scale(0.9); }
+  .grade-arquivos :global(.acao:disabled) { opacity: 0.3; cursor: default; transform: none; background: transparent; border-color: transparent; }
+  .grade-arquivos :global([data-alca]) { cursor: grab; touch-action: none; color: var(--muted); }
+  .grade-arquivos :global([data-acao='remover']:hover) { color: var(--erro); }
+</style>

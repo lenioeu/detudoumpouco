@@ -1,0 +1,222 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import GradeArquivos from '../../components/GradeArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="juntar-pdf"
+  titulo="Juntar PDF"
+  subtitulo="Una vários PDFs em um arquivo só, na ordem que você quiser. Tudo acontece no seu navegador: os arquivos não são enviados para nenhum servidor."
+  tituloSeo="Juntar PDF online grátis e sem enviar arquivos"
+  descricao="Junte vários PDFs em um só arquivo, grátis e sem cadastro. Arraste para escolher a ordem. Os arquivos ficam no seu aparelho, nada é enviado."
+  passos={[
+    'Escolha os PDFs que quer juntar, ou arraste os arquivos para a área indicada. Dá para adicionar mais depois.',
+    'Confira a ordem pelas miniaturas. Arraste um cartão (ou use as setas) para mudar a posição.',
+    'Clique em "Juntar PDF" e espere alguns segundos.',
+    'Clique em "Baixar PDF" para salvar o arquivo único.',
+  ]}
+  perguntas={[
+    { p: 'É seguro juntar PDF online aqui?', r: 'Sim. Os arquivos são lidos e juntados dentro do seu navegador, no seu próprio computador ou celular. Nada é enviado para servidores, então documentos pessoais, contratos e extratos continuam só com você.' },
+    { p: 'Como juntar PDF pelo celular?', r: 'Abra esta página no navegador do celular, toque em "Escolher PDFs" e selecione os arquivos (no Android, segure o dedo sobre um arquivo para marcar vários). Para mudar a ordem, use as setas ou arraste pela alça de pontinhos. Depois toque em "Juntar PDF" e em "Baixar PDF".' },
+    { p: 'Juntar PDF diminui a qualidade?', r: 'Não. As páginas são copiadas como estão, sem virar imagem e sem compressão. Textos continuam selecionáveis e as imagens mantêm a mesma qualidade dos arquivos originais.' },
+    { p: 'Por que meu PDF dá erro de senha?', r: 'Alguns PDFs, como extratos de banco e documentos oficiais, vêm com senha para abrir ou com bloqueio de edição. Esses arquivos não podem ser copiados para outro PDF sem antes tirar a proteção com a senha correta.' },
+    { p: 'Tem limite de arquivos ou de tamanho?', r: 'Não colocamos limite. O que conta é a memória do seu aparelho: num computador, juntar centenas de páginas funciona bem; num celular simples, arquivos muito grandes (acima de 200 MB somados) podem deixar o navegador lento.' },
+    { p: 'Os links, marcadores e formulários são mantidos?', r: 'O conteúdo das páginas, incluindo anotações e links externos, é mantido. O sumário lateral (marcadores) e campos de formulário preenchíveis dos arquivos originais podem não ser levados para o PDF final.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" multiple texto="Escolher PDFs" />
+
+    <div id="barra" class="barra" hidden>
+      <span id="contagem" class="muted"></span>
+      <span class="espaco"></span>
+      <button id="ordenar" type="button" class="btn btn-sec">Ordenar por nome</button>
+      <button id="limpar" type="button" class="btn btn-sec">Limpar</button>
+    </div>
+
+    <GradeArquivos id="lista" rotulo="PDFs na ordem em que serão juntados" />
+
+    <div class="enviar">
+      <button id="juntar" type="button" class="btn" disabled>Juntar PDF</button>
+      <span id="status" class="muted" aria-live="polite">Escolha pelo menos dois PDFs.</span>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div>
+        <strong id="saida-titulo"></strong>
+        <span id="saida-info"></span>
+      </div>
+      <a id="baixar" class="btn" download="pdf-juntado.pdf" href="#">Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve juntar PDF</h2>
+    <p>Muita gente precisa mandar vários documentos de uma vez e o sistema só aceita um arquivo. É o caso de inscrições em concurso, matrícula na faculdade, pedido de financiamento, processo de visto e reembolso do plano de saúde. Em vez de anexar RG, comprovante de residência e holerite separados, você junta tudo num PDF só, na ordem que o atendente vai ler.</p>
+    <p>Também é útil para organizar a vida: unir as faturas do ano para o Imposto de Renda, juntar os capítulos de um TCC que cada colega escreveu num arquivo, ou montar uma apostila com as listas de exercício do semestre.</p>
+    <h2>Como a ordem funciona</h2>
+    <p>O PDF final segue a ordem dos cartões, da esquerda para a direita e de cima para baixo. O número amarelo em cada miniatura mostra a posição. Todas as páginas de cada arquivo entram em sequência: se o primeiro tem 3 páginas e o segundo tem 2, o resultado tem 5 páginas, com as do primeiro arquivo no começo. Se precisar só de algumas páginas de um documento, use antes o <a href="/pdf/dividir-pdf">Dividir PDF</a> para separar o trecho certo.</p>
+    <h2>Dicas para o arquivo não ficar pesado</h2>
+    <ul>
+      <li>Documentos escaneados como foto costumam ser os mais pesados. Se o resultado passar do limite do site onde você vai enviar, reduza as imagens antes de transformar em PDF.</li>
+      <li>Se o documento é uma foto, use o <a href="/pdf/jpg-para-pdf">JPG para PDF</a> e escolha o tamanho "Menor": a foto fica legível e o arquivo cai bastante.</li>
+      <li>Dê um nome claro ao arquivo final antes de enviar, como "documentos-joao-silva.pdf". Isso evita confusão do outro lado.</li>
+    </ul>
+    <h2>Privacidade de verdade</h2>
+    <p>Sites comuns de PDF recebem seus arquivos num servidor, juntam lá e devolvem o resultado. Aqui o trabalho é feito pelo próprio navegador, com uma biblioteca de código aberto. Você pode até desligar a internet depois que a página carregar e a ferramenta continua funcionando.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, miniatura, novoPdf, paraBlob, filaDeTrabalho, ErroPdf } from '../../lib/pdf-navegador';
+  import { criarCartao, numerar } from '../../lib/cartao-arquivo';
+  import { animarTroca, mover, ordenavel } from '../../lib/ordenavel';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const lista = $('lista');
+  const barra = $('barra');
+  const contagem = $('contagem');
+  const botao = $<HTMLButtonElement>('juntar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  interface Item { id: string; file: File; dados?: ArrayBuffer; paginas?: number; erro?: string; li: HTMLLIElement; }
+  let itens: Item[] = [];
+  let contador = 0;
+  let urlSaida = '';
+  let trabalhando = false;
+  const fila = filaDeTrabalho();
+
+  function invalidarSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function atualizar() {
+    numerar(lista);
+    itens.forEach((it, i) => {
+      it.li.querySelector<HTMLButtonElement>('[data-acao="antes"]')!.disabled = i === 0;
+      it.li.querySelector<HTMLButtonElement>('[data-acao="depois"]')!.disabled = i === itens.length - 1;
+    });
+    const validos = itens.filter((it) => it.paginas);
+    const abrindo = itens.some((it) => !it.paginas && !it.erro);
+    const paginas = validos.reduce((s, it) => s + (it.paginas ?? 0), 0);
+    barra.hidden = itens.length === 0;
+    contagem.textContent = `${itens.length} ${itens.length === 1 ? 'arquivo' : 'arquivos'}` + (paginas ? ` · ${paginas} ${paginas === 1 ? 'página' : 'páginas'}` : '');
+    botao.disabled = trabalhando || abrindo || validos.length < 2;
+    if (trabalhando) return;
+    if (abrindo) status.textContent = 'Abrindo os arquivos…';
+    else if (validos.length < 2) status.textContent = itens.length ? 'Adicione mais um PDF para juntar.' : 'Escolha pelo menos dois PDFs.';
+    else if (validos.length < itens.length) status.textContent = 'Os arquivos com erro ficam de fora.';
+    else status.textContent = 'Tudo pronto. Confira a ordem e clique em Juntar PDF.';
+  }
+
+  async function abrir(it: Item) {
+    try {
+      it.dados = await it.file.arrayBuffer();
+      const doc = await abrirParaEditar(it.dados);
+      it.paginas = doc.getPageCount();
+      it.li.querySelector('.detalhe')!.textContent = `${it.paginas} ${it.paginas === 1 ? 'página' : 'páginas'} · ${tamanho(it.file.size)}`;
+    } catch (e) {
+      it.erro = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este arquivo.';
+      const d = it.li.querySelector('.detalhe')!;
+      d.textContent = it.erro; d.classList.add('erro');
+      it.li.classList.add('com-erro');
+    }
+    atualizar();
+    if (!it.paginas || !it.dados) return;
+    const dados = it.dados;
+    fila(async () => {
+      if (!itens.includes(it)) return;
+      const doc = await abrirParaVer(dados);
+      try { it.li.querySelector('.mini')!.append(await miniatura(doc, 1, 140)); }
+      finally { doc.destroy(); }
+    }).catch(() => { /* sem miniatura, o arquivo ainda pode ser juntado */ });
+  }
+
+  function adicionar(files: File[]) {
+    invalidarSaida();
+    const pdfs = files.filter((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+    for (const file of pdfs) {
+      const { li } = criarCartao(`a${++contador}`, file.name);
+      const it: Item = { id: li.dataset.id!, file, li };
+      itens.push(it);
+      lista.append(li);
+      abrir(it);
+    }
+    atualizar();
+    if (pdfs.length < files.length) status.textContent = 'Alguns arquivos não são PDF e foram ignorados.';
+  }
+
+  function reordenar(novos: Item[]) {
+    animarTroca(lista, () => { itens = novos; lista.replaceChildren(...itens.map((it) => it.li)); });
+    invalidarSaida();
+    atualizar();
+  }
+
+  lista.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-acao]');
+    if (!b || trabalhando) return;
+    const i = itens.findIndex((it) => it.li.contains(b));
+    if (i < 0) return;
+    const acao = b.dataset.acao;
+    if (acao === 'antes' && i > 0) reordenar(mover(itens, i, i - 1));
+    else if (acao === 'depois' && i < itens.length - 1) reordenar(mover(itens, i, i + 1));
+    else if (acao === 'remover') reordenar(itens.filter((_, k) => k !== i));
+  });
+
+  ordenavel(lista, (de, para) => { itens = mover(itens, de, para); invalidarSaida(); atualizar(); });
+
+  $('ordenar').addEventListener('click', () => {
+    const col = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
+    reordenar([...itens].sort((a, b) => col.compare(a.file.name, b.file.name)));
+  });
+  $('limpar').addEventListener('click', () => { reordenar([]); });
+
+  entrada.addEventListener('arquivos', (e) => adicionar((e as CustomEvent<File[]>).detail));
+
+  botao.addEventListener('click', async () => {
+    const validos = itens.filter((it) => it.paginas && it.dados);
+    if (validos.length < 2) return;
+    trabalhando = true;
+    invalidarSaida();
+    atualizar();
+    try {
+      const final = await novoPdf();
+      let n = 0;
+      for (const it of validos) {
+        status.textContent = `Juntando ${++n} de ${validos.length}…`;
+        const doc = await abrirParaEditar(it.dados!);
+        const paginas = await final.copyPages(doc, doc.getPageIndices());
+        paginas.forEach((p) => final.addPage(p));
+      }
+      status.textContent = 'Gerando o arquivo…';
+      const blob = await paraBlob(final);
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      const total = final.getPageCount();
+      $('saida-titulo').textContent = `${validos.length} arquivos juntados`;
+      $('saida-info').textContent = `${total} páginas · ${tamanho(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível juntar os arquivos. Pode faltar memória no aparelho; tente com menos arquivos.';
+    } finally {
+      trabalhando = false;
+      botao.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .barra .espaco { flex: 1; }
+  .barra .btn { padding: 6px 12px; font-size: 0.9rem; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { color: var(--muted); }
+</style>

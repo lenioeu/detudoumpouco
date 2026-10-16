@@ -1,7 +1,7 @@
 import type { Ferramenta } from '../tipos';
 
 export default [
-  { slug: 'juntar-pdf', nome: 'Juntar PDF', resumo: 'Una vários PDFs em um só arquivo.', status: 'planejada' },
+  { slug: 'juntar-pdf', nome: 'Juntar PDF', resumo: 'Una vários PDFs em um só arquivo.', status: 'pronta' },
   { slug: 'jpg-para-pdf', nome: 'JPG para PDF', resumo: 'Transforme fotos e imagens em PDF.', status: 'planejada' },
   { slug: 'dividir-pdf', nome: 'Dividir PDF', resumo: 'Separe páginas ou intervalos em novos arquivos.', status: 'planejada' },
   { slug: 'pdf-para-jpg', nome: 'PDF para JPG', resumo: 'Salve cada página do PDF como imagem.', status: 'planejada' },
