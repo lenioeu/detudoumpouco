@@ -21,8 +21,7 @@ Você é o responsável pela seção **Texto** do Quebragalho (oquebragalho.app)
 - Qualquer outro arquivo compartilhado: só se for indispensável, com mudança mínima explicada no commit.
 
 ## Notas desta seção
-- QR Code: biblioteca `qrcode`, com opção de baixar em PNG e SVG.
-- QR Code Pix: siga o padrão BR Code (EMV) do Banco Central, com CRC16-CCITT. Teste com códigos de exemplo conhecidos antes de publicar; um Pix errado é um problema sério para quem usa.
+- QR Code e Pix ficam na seção própria `qr-code` (agente `secao-qr-code`), não aqui.
 - Fontes para Instagram: tabelas de caracteres Unicode; botão de copiar em cada estilo.
 - Validador de CPF e CNPJ: só valida. **Não crie gerador de CPF/CNPJ** (risco no AdSense).
 
