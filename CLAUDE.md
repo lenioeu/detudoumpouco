@@ -19,6 +19,7 @@ src/config.ts                  nome, URL, e-mail, ID do AdSense
 src/data/secoes.ts             as seções do menu (ordem = ordem do menu)
 src/data/ferramentas/<secao>.ts lista de ferramentas da seção, em ordem de prioridade
 src/data/index.ts              junta tudo; não precisa editar
+src/data/destaques.ts          blocos da página inicial (seções e ferramentas mais usadas), na ordem
 src/layouts/Ferramenta.astro   molde de TODA página de ferramenta
 src/components/                Header, Footer, AdSlot, AvisoCookies, SoltarArquivos, CartaoFerramenta
 src/lib/                       funções puras (cálculos, formatação) usadas pelas páginas

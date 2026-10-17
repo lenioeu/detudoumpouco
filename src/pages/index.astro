@@ -1,87 +1,79 @@
 ---
 import Base from '../layouts/Base.astro';
-import CartaoFerramenta from '../components/CartaoFerramenta.astro';
-import Icone from '../components/Icone.astro';
+import Bloco from '../components/Bloco.astro';
 import { SITE } from '../config';
-import { prontas, secoesAtivas } from '../data';
+import { ferramenta, prontas, secaoPorSlug, secoesAtivas } from '../data';
+import { DESTAQUES } from '../data/destaques';
+
+const blocos = DESTAQUES.flatMap((d) => {
+  if (d.tipo === 'secao') {
+    const s = secaoPorSlug(d.slug);
+    const n = prontas(d.slug).length;
+    return s && n ? [{ href: `/${s.slug}`, icone: s.slug, nome: s.nome, descricao: d.descricao, selo: `${n} ${n === 1 ? 'ferramenta' : 'ferramentas'}` }] : [];
+  }
+  const f = ferramenta(d.secao, d.slug);
+  return f && f.status === 'pronta'
+    ? [{ href: f.url, icone: d.icone, nome: f.nome, descricao: d.descricao, selo: 'Mais usada', vt: `vt-${f.secao}-${f.slug}` }]
+    : [];
+});
 const secoes = secoesAtivas();
+const total = prontas().length;
 ---
 <Base titulo={SITE.slogan} descricao={SITE.descricao}
   jsonLd={[{ '@context': 'https://schema.org', '@type': 'WebSite', name: SITE.nome, url: SITE.url, inLanguage: 'pt-BR' }]}>
   <section class="hero">
-    <div class="bolhas" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="bolhas" aria-hidden="true"><span></span><span></span></div>
     <div class="container conteudo">
-      <h1>Quebrou o galho.<br />Ferramentas grátis que resolvem na hora.</h1>
-      <p class="sub">Calculadoras, conversores e ferramentas de PDF, imagem, vídeo e áudio. Sem cadastro, sem instalar nada, e seus arquivos não saem do seu aparelho.</p>
-      <label class="busca">
-        <Icone nome="busca" tamanho={22} />
-        <span class="sr">Buscar ferramenta</span>
-        <input id="busca" type="search" placeholder="O que você precisa fazer?" autocomplete="off" />
-      </label>
+      <h1>Ferramentas grátis que resolvem na hora</h1>
+      <p class="sub">{total} ferramentas para o dia a dia. Sem cadastro, sem instalar nada, e seus arquivos não saem do seu aparelho.</p>
     </div>
-    <svg class="onda" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 60V22C240 52 480 60 720 40S1200 0 1440 18V60z" /></svg>
   </section>
 
-  <div class="container secoes">
-    {secoes.map((s) => (
-      <section class="secao" data-secao>
-        <div class="titulo-secao">
-          <h2><a href={`/${s.slug}`}><Icone nome={s.slug} />{s.nome}</a></h2>
-          <span class="muted">{s.resumo}</span>
-        </div>
-        <ul>{prontas(s.slug).map((f) => <li><CartaoFerramenta f={f} /></li>)}</ul>
-      </section>
-    ))}
-    <p id="nada" class="muted" hidden>Nenhuma ferramenta encontrada. Tente outra palavra.</p>
+  <div class="container corpo">
+    <ul class="grade" aria-label="Ferramentas e categorias">
+      {blocos.map((b) => <li><Bloco {...b} /></li>)}
+    </ul>
+
+    <section class="todas" aria-labelledby="todas-titulo">
+      <h2 id="todas-titulo">Todas as ferramentas</h2>
+      <div class="colunas">
+        {secoes.map((s) => (
+          <div class="coluna">
+            <h3><a href={`/${s.slug}`}>{s.nome}</a></h3>
+            <ul>{prontas(s.slug).map((f) => <li><a href={f.url}>{f.nome}</a></li>)}</ul>
+          </div>
+        ))}
+      </div>
+    </section>
   </div>
 </Base>
 
-<script>
-  const campo = document.getElementById('busca') as HTMLInputElement;
-  const secoes = document.querySelectorAll<HTMLElement>('[data-secao]');
-  const nada = document.getElementById('nada')!;
-  const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  campo.addEventListener('input', () => {
-    const q = norm(campo.value.trim());
-    let total = 0;
-    secoes.forEach((s) => {
-      let n = 0;
-      s.querySelectorAll<HTMLElement>('li').forEach((li) => {
-        const ok = !q || norm(li.querySelector('a')!.dataset.busca!).includes(q);
-        li.hidden = !ok; if (ok) n++;
-      });
-      s.hidden = n === 0; total += n;
-    });
-    nada.hidden = total > 0;
-  });
-</script>
-
 <style>
-  .hero { position: relative; overflow: hidden; background: var(--brand); color: var(--brand-ink); padding-block: clamp(36px, 7vw, 72px) clamp(56px, 8vw, 88px); }
-  .conteudo { position: relative; display: flex; flex-direction: column; gap: 18px; }
-  .hero h1 { max-width: 20ch; font-size: clamp(2rem, 5.2vw, 3.2rem); }
-  .sub { font-size: 1.1rem; max-width: 58ch; }
-  .busca {
-    display: flex; align-items: center; gap: 10px; max-width: 560px; margin-top: 6px;
-    background: #fff; color: #16181d; border: 2px solid var(--brand-ink); border-radius: 14px; padding: 4px 6px 4px 14px;
-    box-shadow: 0 4px 0 var(--brand-ink); transition: transform 0.2s var(--mola), box-shadow 0.2s var(--suave);
-  }
-  .busca:focus-within { transform: translateY(-2px); box-shadow: 0 6px 0 var(--brand-ink); }
-  .busca input { border: 0; box-shadow: none !important; background: transparent; color: #16181d; padding: 12px 8px; font-size: 1.05rem; }
-  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .onda { position: absolute; left: 0; bottom: -1px; width: 100%; height: 40px; fill: var(--bg); }
-
-  /* Formas de fundo que flutuam devagar (só transform: custo quase zero) */
+  .hero { position: relative; overflow: hidden; background: var(--brand); color: var(--brand-ink); padding-block: clamp(32px, 6vw, 56px) clamp(72px, 9vw, 104px); }
+  .conteudo { position: relative; display: flex; flex-direction: column; gap: 14px; }
+  .hero h1 { max-width: 18ch; font-size: clamp(2rem, 5vw, 3rem); }
+  .sub { font-size: 1.1rem; max-width: 56ch; }
   .bolhas span { position: absolute; border-radius: 50%; background: #fff; opacity: 0.18; animation: flutuar 14s ease-in-out infinite alternate; }
-  .bolhas span:nth-child(1) { width: 380px; height: 380px; right: -90px; top: -120px; }
-  .bolhas span:nth-child(2) { width: 180px; height: 180px; right: 22%; bottom: -60px; animation-duration: 18s; opacity: 0.12; }
-  .bolhas span:nth-child(3) { width: 90px; height: 90px; right: 12%; top: 46%; animation-duration: 11s; background: var(--brand-ink); opacity: 0.08; }
+  .bolhas span:nth-child(1) { width: 380px; height: 380px; right: -90px; top: -140px; }
+  .bolhas span:nth-child(2) { width: 160px; height: 160px; right: 24%; bottom: -70px; animation-duration: 18s; opacity: 0.12; }
   @keyframes flutuar { to { transform: translate(-30px, 24px) scale(1.06); } }
 
-  .secoes { display: flex; flex-direction: column; gap: 44px; padding-block: 28px 0; }
-  .secao { display: flex; flex-direction: column; gap: 14px; }
-  .titulo-secao { display: flex; align-items: baseline; gap: 6px 14px; flex-wrap: wrap; }
-  .titulo-secao a { display: inline-flex; align-items: center; gap: 10px; color: var(--fg); text-decoration: none; }
-  .titulo-secao a:hover { text-decoration: underline; text-decoration-color: var(--brand); text-decoration-thickness: 3px; text-underline-offset: 4px; }
-  ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .corpo { display: flex; flex-direction: column; gap: 56px; }
+  /* Os blocos sobem por cima da faixa amarela. */
+  .grade {
+    list-style: none; margin: clamp(-64px, -6vw, -44px) 0 0; padding: 0; position: relative;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 16px;
+  }
+  .grade li { min-width: 0; }
+  @media (max-width: 560px) { .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+
+  .todas { display: flex; flex-direction: column; gap: 18px; }
+  .todas h2 { font-size: 1.35rem; }
+  .colunas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 24px 20px; }
+  .coluna h3 { font-size: 1rem; margin-bottom: 8px; }
+  .coluna h3 a { color: var(--fg); text-decoration: none; }
+  .coluna h3 a:hover { text-decoration: underline; text-decoration-color: var(--brand); text-decoration-thickness: 3px; }
+  .coluna ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; }
+  .coluna li a { color: var(--muted); text-decoration: none; }
+  .coluna li a:hover { color: var(--fg); text-decoration: underline; }
 </style>

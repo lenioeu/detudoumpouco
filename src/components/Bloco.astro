@@ -1,0 +1,40 @@
+---
+// Bloco grande da página inicial: ícone, nome e uma linha de descrição.
+import Icone from './Icone.astro';
+interface Props { href: string; icone: string; nome: string; descricao: string; selo: string; vt?: string; }
+const { href, icone, nome, descricao, selo, vt } = Astro.props;
+---
+<a class="bloco" href={href}>
+  <span class="icone"><Icone nome={icone} tamanho={30} /></span>
+  <strong style={vt ? `view-transition-name:${vt}` : undefined}>{nome}</strong>
+  <span class="descricao">{descricao}</span>
+  <span class="selo">{selo}</span>
+</a>
+
+<style>
+  .bloco {
+    display: flex; flex-direction: column; gap: 8px; height: 100%; padding: 22px 20px 18px;
+    background: var(--surface); color: var(--fg); text-decoration: none;
+    border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--sombra);
+    transition: transform 0.22s var(--mola), box-shadow 0.22s var(--suave), border-color 0.22s;
+  }
+  .bloco:hover { transform: translateY(-4px); box-shadow: var(--sombra-alta); border-color: var(--brand); }
+  .bloco:active { transform: translateY(-1px) scale(0.99); }
+  .icone {
+    display: grid; place-items: center; width: 60px; height: 60px; border-radius: 18px; margin-bottom: 6px;
+    background: var(--brand); color: var(--brand-ink); box-shadow: 0 3px 0 var(--brand-ink);
+    transition: transform 0.3s var(--mola);
+  }
+  .bloco:hover .icone { transform: rotate(-6deg) scale(1.06); }
+  strong { font-family: var(--f-display); font-size: 1.2rem; line-height: 1.2; width: fit-content; }
+  .descricao { color: var(--muted); font-size: 0.95rem; line-height: 1.45; flex: 1; }
+  @media (max-width: 560px) {
+    .bloco { padding: 16px 14px 14px; gap: 6px; border-radius: 16px; }
+    .icone { width: 48px; height: 48px; border-radius: 14px; margin-bottom: 4px; }
+    .icone :global(svg) { width: 24px; height: 24px; }
+    strong { font-size: 1.02rem; }
+    .descricao { font-size: 0.84rem; line-height: 1.4; }
+    .selo { font-size: 0.7rem; }
+  }
+  .selo { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+</style>
