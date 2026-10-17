@@ -9,7 +9,7 @@ const blocos = DESTAQUES.flatMap((d) => {
   if (d.tipo === 'secao') {
     const s = secaoPorSlug(d.slug);
     const n = prontas(d.slug).length;
-    return s && n ? [{ href: `/${s.slug}`, icone: s.slug, nome: s.nome, descricao: d.descricao, selo: `${n} ${n === 1 ? 'ferramenta' : 'ferramentas'}` }] : [];
+    return s && n ? [{ href: `/${s.slug}`, icone: s.slug, nome: d.nome ?? s.nome, descricao: d.descricao, selo: `${n} ${n === 1 ? 'ferramenta' : 'ferramentas'}` }] : [];
   }
   const f = ferramenta(d.secao, d.slug);
   return f && f.status === 'pronta'
