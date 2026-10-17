@@ -1,0 +1,598 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import Comparar from '../../components/Comparar.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="comprimir-pdf"
+  titulo="Comprimir PDF"
+  subtitulo="Diminua o tamanho do PDF para mandar por e-mail, WhatsApp ou enviar em sites com limite. Antes de comprimir, você já vê quanto cada nível deve reduzir. Tudo no seu navegador."
+  tituloSeo="Comprimir PDF online grátis: reduzir tamanho sem enviar"
+  descricao="Reduza o tamanho do PDF grátis e veja antes quanto vai diminuir. Escolha o nível ou digite o tamanho máximo, como 2 MB. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha um ou mais PDFs, ou arraste os arquivos para a área indicada.',
+    'Veja a análise de cada arquivo: quanto dele é imagem e quanto é texto. É a parte de imagem que dá para reduzir.',
+    'Escolha um nível. Cada cartão mostra o tamanho que o arquivo deve ficar. Se o site pede um limite, use "Tamanho alvo" e digite o máximo em MB.',
+    'Clique em "Comprimir PDF" e baixe o resultado. Com vários arquivos, dá para baixar tudo num .zip.',
+    'Se quiser conferir a qualidade, use "Comparar 1ª página" para ver o original e o comprimido lado a lado.',
+  ]}
+  perguntas={[
+    { p: 'Por que meu PDF é tão grande?', r: 'Quase sempre por causa das imagens. Uma foto de celular tem 12 megapixels ou mais, e o PDF guarda tudo isso mesmo quando a foto aparece pequena na página. Documentos escaneados em alta resolução e apresentações cheias de fotos também pesam. Texto e desenhos ocupam pouco.' },
+    { p: 'Qual nível de compressão escolher?', r: 'Comece pela Recomendada: serve para e-mail e WhatsApp e mantém o documento legível. Use a Leve se o PDF vai ser impresso ou tem fotos que precisam de detalhe. Use a Forte quando um site limita o tamanho. A Máxima transforma cada página em imagem e é a melhor para documento escaneado, mas o texto deixa de ser selecionável.' },
+    { p: 'Como deixar o PDF com menos de 2 MB?', r: 'Escolha o cartão "Tamanho alvo", digite 2 e clique em Comprimir PDF. A ferramenta testa níveis diferentes e entrega o arquivo mais bonito que fica abaixo de 2 MB. Se não for possível, ela avisa qual foi o menor tamanho alcançado. Para sites que pedem menos de 1 MB, digite 1.' },
+    { p: 'Comprimir o PDF perde qualidade?', r: 'Só nas imagens, e o quanto depende do nível. O texto, as fontes, as tabelas e os desenhos ficam exatamente como estavam, com o texto ainda selecionável e pesquisável. As fotos são reduzidas para a resolução em que aparecem na página, então na tela a diferença costuma ser pequena. A exceção é o modo Máxima, que vira imagem.' },
+    { p: 'Por que um PDF só de texto quase não diminui?', r: 'Porque não há o que tirar. Texto é guardado como letras e fontes, que já ocupam pouquíssimo espaço: um contrato de 30 páginas costuma ter menos de 1 MB. A ferramenta mostra quanto do arquivo é imagem antes de você comprimir, e avisa quando há pouco a reduzir.' },
+    { p: 'Meu PDF é enviado para algum servidor?', r: 'Não. A compressão acontece inteira no seu navegador, no seu computador ou celular. O arquivo não é enviado para lugar nenhum, então dá para comprimir extratos, contratos e documentos pessoais com tranquilidade.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" multiple texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <ul id="lista" class="lista" aria-label="Arquivos escolhidos"></ul>
+
+      <fieldset class="niveis">
+        <legend class="rotulo">Nível de compressão</legend>
+        <div class="cartoes">
+          <label class="nivel" data-nivel="leve">
+            <input type="radio" name="nivel" value="leve" />
+            <span class="n-titulo">Leve</span>
+            <span class="n-desc">Fotos a 200 dpi, qualidade alta. Quase sem diferença visível.</span>
+            <span class="previsao" aria-live="polite"></span>
+          </label>
+          <label class="nivel" data-nivel="recomendada">
+            <input type="radio" name="nivel" value="recomendada" checked />
+            <span class="n-titulo">Recomendada</span>
+            <span class="n-desc">Fotos a 150 dpi. Bom para e-mail e WhatsApp.</span>
+            <span class="previsao" aria-live="polite"></span>
+          </label>
+          <label class="nivel" data-nivel="forte">
+            <input type="radio" name="nivel" value="forte" />
+            <span class="n-titulo">Forte</span>
+            <span class="n-desc">Fotos a 100 dpi, qualidade menor. Para sites com limite de tamanho.</span>
+            <span class="previsao" aria-live="polite"></span>
+          </label>
+          <label class="nivel" data-nivel="maxima">
+            <input type="radio" name="nivel" value="maxima" />
+            <span class="n-titulo">Máxima (vira imagem)</span>
+            <span class="n-desc">Cada página vira uma foto. O texto deixa de ser selecionável. Boa para PDF escaneado.</span>
+            <span class="previsao" aria-live="polite"></span>
+          </label>
+          <label class="nivel" data-nivel="alvo">
+            <input type="radio" name="nivel" value="alvo" />
+            <span class="n-titulo">Tamanho alvo</span>
+            <span class="n-desc alvo-linha">Até <input id="alvo" type="text" inputmode="decimal" value="2" autocomplete="off" aria-label="Tamanho máximo em MB" /> MB por arquivo</span>
+            <span class="previsao" aria-live="polite"></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <p id="nota-maxima" class="nota" hidden>Na Máxima, cada página vira uma imagem: o texto deixa de ser selecionável e pesquisável, e links e campos de formulário somem. Guarde o original.</p>
+
+      <div class="enviar">
+        <button id="comprimir" type="button" class="btn" disabled>Comprimir PDF</button>
+        <button id="cancelar" type="button" class="btn btn-sec" hidden>Cancelar</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+      <div class="barra-progresso" id="progresso" hidden><span></span></div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong id="saida-titulo"></strong><span id="saida-info" class="muted"></span></div>
+        <a id="zip" class="btn" href="#" download hidden>Baixar todos (.zip)</a>
+      </div>
+      <ul id="arquivos" class="arquivos"></ul>
+      <div id="previa" class="stack" hidden>
+        <p id="previa-titulo" class="rotulo"></p>
+        <Comparar id="comparar" antes="Original" depois="Comprimido" />
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que deixa um PDF pesado</h2>
+    <p>Um PDF guarda dois tipos de conteúdo bem diferentes. O texto, as tabelas e os desenhos são instruções: "escreva esta palavra com esta fonte, trace esta linha". Isso ocupa pouco. Já as imagens são guardadas pixel por pixel, e é aí que mora o peso. Uma foto tirada com o celular e colada num relatório pode ter 4000 × 3000 pixels, mesmo aparecendo do tamanho de um cartão na página. Para ler na tela ou imprimir em casa, 150 pontos por polegada (dpi) bastam; o resto é peso que ninguém vê.</p>
+    <p>Por isso esta ferramenta começa com uma análise: ela mostra quanto do arquivo é imagem e quanto é texto, fontes e desenhos. Se 90% é imagem, dá para reduzir muito. Se o PDF é quase só texto, a ferramenta avisa que há pouco a ganhar, em vez de prometer milagre.</p>
+    <h2>Como funciona a compressão</h2>
+    <p>Nos níveis Leve, Recomendada e Forte, cada foto é reduzida para a resolução em que realmente aparece na página e salva de novo em JPEG. A troca só acontece se a imagem ficar menor. Texto, fontes, tabelas, assinaturas desenhadas e vetores não são tocados, então o texto continua selecionável e a busca dentro do PDF continua funcionando. Imagens com transparência mantêm a transparência.</p>
+    <p>Algumas imagens ficam como estão, de propósito: as de gráfica em CMYK, as de preto e branco de scanner (JBIG2 e fax), as em JPEG 2000 e as com paleta ou máscara de bits. Recomprimir essas no navegador pode mudar cores ou estragar a imagem. A análise conta quantas foram mantidas.</p>
+    <p>O modo Máxima é diferente: ele fotografa cada página e monta um PDF novo só com essas fotos. É o que mais reduz um documento escaneado, mas o texto vira imagem. Use quando só precisa que o documento seja lido, como um RG ou um comprovante escaneado.</p>
+    <h2>A previsão de tamanho</h2>
+    <p>Assim que você escolhe o arquivo, a ferramenta recomprime algumas das maiores imagens em cada nível e calcula, a partir delas, quanto o arquivo inteiro deve ficar. Por isso os cartões mostram "cerca de": é uma estimativa feita em poucos segundos. Depois de comprimir, o tamanho real aparece ao lado.</p>
+    <h2>Dicas para sites com limite</h2>
+    <p>Sites de concurso, vestibular, INSS e prefeituras costumam aceitar PDFs de até 1, 2 ou 5 MB. Use o "Tamanho alvo" e digite o limite: a ferramenta procura o nível mais leve que cabe. Se nem o nível mais forte chega lá, tente a Máxima, separe o documento em partes com o <a href="/pdf/dividir-pdf">Dividir PDF</a> ou escaneie de novo em resolução menor. Se você está montando o PDF a partir de fotos, o <a href="/pdf/jpg-para-pdf">JPG para PDF</a> também ajuda a começar com um arquivo leve.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { ErroPdf } from '../../lib/pdf-navegador';
+  import { lerNumero } from '../../lib/numeros';
+  import { criarZip } from '../../lib/zip';
+  import { DEGRAU_DO_NIVEL } from '../../lib/pdf-conteudo';
+  import type { Analise, Previsao, Saida, Sinal } from '../../lib/comprimir-pdf';
+
+  type Nivel = 'leve' | 'recomendada' | 'forte' | 'maxima' | 'alvo';
+  interface Item {
+    id: number;
+    arquivo: File;
+    li: HTMLLIElement;
+    analise?: Analise;
+    previsao?: Previsao;
+    erro?: string;
+    calculando: boolean;
+  }
+
+  const motor = () => import('../../lib/comprimir-pdf');
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const lista = $('lista');
+  const campoAlvo = $<HTMLInputElement>('alvo');
+  const notaMaxima = $('nota-maxima');
+  const botao = $<HTMLButtonElement>('comprimir');
+  const cancelar = $<HTMLButtonElement>('cancelar');
+  const status = $('status');
+  const progresso = $('progresso');
+  const barra = progresso.querySelector('span')!;
+  const saida = $('saida');
+  const listaSaida = $('arquivos');
+  const zip = $<HTMLAnchorElement>('zip');
+  const previa = $('previa');
+  const comparar = $('comparar');
+
+  const MB = 1024 * 1024;
+  const NIVEIS: Nivel[] = ['leve', 'recomendada', 'forte', 'maxima', 'alvo'];
+  const DEGRAUS = [DEGRAU_DO_NIVEL.leve, DEGRAU_DO_NIVEL.recomendada, DEGRAU_DO_NIVEL.forte];
+  let itens: Item[] = [];
+  let proximoId = 1;
+  let urls: string[] = [];
+  let urlsPrevia: string[] = [];
+  let trabalhando = false;
+  let sinal: Sinal | null = null;
+  /** Tamanho real depois de comprimir, por nível (some quando a lista de arquivos muda). */
+  let reais: Partial<Record<Nivel, number>> = {};
+  /** Uma análise de cada vez: abrir vários PDFs grandes juntos pesa demais no celular. */
+  let fila: Promise<unknown> = Promise.resolve();
+  // Os nomes dos motivos vêm do motor, que só carrega quando há arquivo.
+  let motivos: { NOME_DO_MOTIVO: Record<string, string> } = { NOME_DO_MOTIVO: {} };
+
+  const nivel = () => (document.querySelector<HTMLInputElement>('input[name="nivel"]:checked')?.value ?? 'recomendada') as Nivel;
+  /** Redução em %. Não mostra 100% enquanto sobrar algum byte (99,7% vira 99%). */
+  const pct = (antes: number, depois: number) => {
+    const v = Math.round((1 - depois / antes) * 100);
+    return depois > 0 ? Math.min(v, 99) : v;
+  };
+  const alvoBytes = () => { const v = lerNumero(campoAlvo.value); return v && v > 0 ? v * MB : null; };
+  const prontos = () => itens.filter((i) => i.analise);
+
+  function limparSaida() {
+    saida.hidden = true;
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    limparPrevia();
+    listaSaida.innerHTML = '';
+  }
+  function limparPrevia() {
+    previa.hidden = true;
+    comparar.hidden = true;
+    urlsPrevia.forEach(URL.revokeObjectURL); urlsPrevia = [];
+  }
+
+  // ------------------------------------------------------------------ lista de arquivos
+
+  function plural(n: number, um: string, varios: string) { return `${n} ${n === 1 ? um : varios}`; }
+
+  function desenharItem(item: Item) {
+    const li = item.li;
+    li.innerHTML = '';
+    const topo = document.createElement('div'); topo.className = 'item-topo';
+    const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = item.arquivo.name; nome.title = item.arquivo.name;
+    const remover = document.createElement('button');
+    remover.type = 'button'; remover.className = 'remover'; remover.dataset.remover = String(item.id);
+    remover.setAttribute('aria-label', `Tirar ${item.arquivo.name} da lista`); remover.title = 'Tirar da lista';
+    remover.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    remover.disabled = trabalhando;
+    topo.append(nome, remover);
+    li.append(topo);
+
+    const det = document.createElement('p'); det.className = 'muted det';
+    li.append(det);
+    if (item.erro) { det.className = 'erro det'; det.textContent = item.erro; return; }
+    const a = item.analise;
+    if (!a) { det.textContent = `${tamanho(item.arquivo.size)} · analisando…`; return; }
+
+    det.textContent = `${plural(a.paginas, 'página', 'páginas')} · ${tamanho(a.tamanhoOriginal)} · ${plural(a.quantidadeImagens, 'imagem', 'imagens')}`;
+    const parteImg = Math.min(1, a.bytesImagens / a.tamanhoOriginal);
+    const barraEl = document.createElement('div'); barraEl.className = 'composicao';
+    barraEl.setAttribute('role', 'img');
+    barraEl.setAttribute('aria-label', `Imagens: ${Math.round(parteImg * 100)}% do arquivo`);
+    barraEl.innerHTML = `<span style="width:${(parteImg * 100).toFixed(1)}%"></span>`;
+    const legenda = document.createElement('p'); legenda.className = 'legenda';
+    const resto = Math.max(0, a.tamanhoOriginal - a.bytesImagens);
+    legenda.innerHTML = `<span class="par"><span class="ponto img"></span>Imagens: ${tamanho(a.bytesImagens)} (${Math.round(parteImg * 100)}%)</span><span class="par"><span class="ponto txt"></span>Texto, fontes e desenhos: ${tamanho(resto)}</span>`;
+    li.append(barraEl, legenda);
+
+    const notas: string[] = [];
+    if (parteImg < 0.2) notas.push('Este PDF é quase todo texto e desenho. Há pouco a reduzir: texto já ocupa pouco espaço, e só as imagens podem ser comprimidas.');
+    const puladas = Object.entries(a.puladas).filter(([, n]) => n > 0);
+    if (puladas.length) {
+      const total = puladas.reduce((s, [, n]) => s + n, 0);
+      const { NOME_DO_MOTIVO } = motivos;
+      notas.push(`${plural(total, 'imagem fica', 'imagens ficam')} como está (${tamanho(a.bytesPulados)}), por segurança: ${puladas.map(([m, n]) => `${n} ${NOME_DO_MOTIVO[m as keyof typeof NOME_DO_MOTIVO]}`).join(', ')}.`);
+    }
+    for (const n of notas) {
+      const p = document.createElement('p'); p.className = 'nota'; p.textContent = n;
+      li.append(p);
+    }
+  }
+
+  async function adicionar(files: File[]) {
+    aviso.hidden = true;
+    const pdfs = files.filter((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+    if (!pdfs.length) { aviso.textContent = 'Escolha um arquivo PDF.'; aviso.hidden = false; return; }
+    if (pdfs.length < files.length) { aviso.textContent = 'Alguns arquivos não são PDF e ficaram de fora.'; aviso.hidden = false; }
+    limparSaida();
+    reais = {};
+    painel.hidden = false;
+    for (const arquivo of pdfs) {
+      const li = document.createElement('li');
+      const item: Item = { id: proximoId++, arquivo, li, calculando: true };
+      itens.push(item);
+      lista.append(li);
+      desenharItem(item);
+      fila = fila.then(() => processar(item));
+    }
+    atualizar();
+  }
+
+  async function processar(item: Item) {
+    if (!itens.includes(item)) return;
+    try {
+      const m = await motor();
+      motivos = m;
+      const dados = await item.arquivo.arrayBuffer();
+      const sinalItem: Sinal = { cancelado: false };
+      (item as Item & { sinal?: Sinal }).sinal = sinalItem;
+      const a = await m.analisar(dados, item.arquivo.name, sinalItem);
+      if (!itens.includes(item)) { m.fecharAnalise(a); return; }
+      item.analise = a;
+      desenharItem(item);
+      atualizar();
+      item.previsao = await m.prever(a, DEGRAUS, (p) => { item.previsao = p; atualizar(); }, sinalItem);
+    } catch (e) {
+      const m = await motor().catch(() => null);
+      if (m && e instanceof m.Cancelado) return;
+      if (!item.analise) {
+        item.erro = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF. Ele pode estar corrompido.';
+        desenharItem(item);
+      }
+    } finally {
+      item.calculando = false;
+      atualizar();
+    }
+  }
+
+  lista.addEventListener('click', async (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-remover]');
+    if (!b || trabalhando) return;
+    const item = itens.find((i) => i.id === Number(b.dataset.remover));
+    if (!item) return;
+    const s = (item as Item & { sinal?: Sinal }).sinal;
+    if (s) s.cancelado = true;
+    itens = itens.filter((i) => i !== item);
+    item.li.remove();
+    if (item.analise) (await motor()).fecharAnalise(item.analise);
+    limparSaida();
+    reais = {};
+    if (!itens.length) painel.hidden = true;
+    atualizar();
+  });
+
+  // ------------------------------------------------------------------ previsões nos cartões
+
+  interface Estimativa { pendente: boolean; tamanho?: number; original: number; texto?: string; semGanho?: boolean; }
+
+  function estimar(n: Nivel): Estimativa {
+    const ok = prontos();
+    const original = ok.reduce((s, i) => s + i.analise!.tamanhoOriginal, 0);
+    if (!ok.length || itens.some((i) => !i.analise && !i.erro)) return { pendente: true, original };
+    if (n === 'alvo') {
+      const alvo = alvoBytes();
+      if (!alvo) return { pendente: false, original, texto: 'Digite o tamanho em MB, como 2 ou 1,5.' };
+      let total = 0, falham = 0, menor = 0;
+      for (const i of ok) {
+        const esc = i.previsao?.escada;
+        if (!esc || esc.some((t) => t === undefined)) return { pendente: true, original };
+        const t = esc as number[];
+        const orig = i.analise!.tamanhoOriginal;
+        const idx = t.findIndex((x) => x <= alvo * 0.985);
+        const fica = Math.min(orig, idx >= 0 ? t[idx] : t[t.length - 1]);
+        if (idx < 0 && orig > alvo) { falham++; menor = Math.max(menor, Math.min(orig, t[t.length - 1])); }
+        total += fica;
+      }
+      if (falham) {
+        const txt = ok.length === 1
+          ? `não deve chegar a ${tamanho(alvo)}: o menor é cerca de ${tamanho(menor)}`
+          : `${falham} de ${ok.length} não devem chegar a ${tamanho(alvo)}`;
+        return { pendente: false, original, tamanho: total, texto: txt };
+      }
+      return { pendente: false, original, tamanho: total, semGanho: total >= original * 0.97 };
+    }
+    let total = 0;
+    for (const i of ok) {
+      const p = i.previsao;
+      const t = n === 'maxima' ? p?.maxima : p?.escada[DEGRAU_DO_NIVEL[n]];
+      if (t === undefined) {
+        // Máxima pode falhar na amostra (pdf.js); quando a previsão acabou, mostramos sem número.
+        if (n === 'maxima' && !i.calculando) { total += i.analise!.tamanhoOriginal; continue; }
+        return { pendente: true, original };
+      }
+      total += Math.min(t, i.analise!.tamanhoOriginal);
+    }
+    return { pendente: false, original, tamanho: total, semGanho: total >= original * 0.97 };
+  }
+
+  function atualizar() {
+    const temArquivo = prontos().length > 0;
+    let atual = nivel();
+    for (const n of NIVEIS) {
+      const cartao = document.querySelector<HTMLElement>(`.nivel[data-nivel="${n}"]`)!;
+      const radio = cartao.querySelector<HTMLInputElement>('input[type="radio"]')!;
+      const prev = cartao.querySelector<HTMLElement>('.previsao')!;
+      const e = estimar(n);
+      let texto = '', classe = 'previsao';
+      if (!itens.length) texto = '';
+      else if (e.pendente) { texto = 'calculando…'; classe += ' calculando'; }
+      else if (e.semGanho) { texto = 'sem ganho'; classe += ' sem-ganho'; }
+      else if (e.texto && e.tamanho === undefined) texto = e.texto;
+      else if (e.tamanho !== undefined) {
+        texto = e.texto ?? `fica com cerca de ${tamanho(e.tamanho)} (−${Math.max(0, pct(e.original, e.tamanho))}%)`;
+        if (e.texto) classe += ' alerta';
+      }
+      const real = reais[n];
+      prev.className = classe;
+      prev.textContent = texto;
+      prev.dataset.bytes = e.tamanho !== undefined && !e.pendente ? String(Math.round(e.tamanho)) : '';
+      if (real !== undefined && !e.pendente) {
+        const r = document.createElement('span'); r.className = 'real';
+        r.textContent = `real: ${tamanho(real)}`;
+        prev.append(' · ', r);
+      }
+      const desligar = !!e.semGanho && !trabalhando;
+      radio.disabled = desligar || trabalhando;
+      cartao.classList.toggle('desligado', desligar);
+    }
+    // Se o nível escolhido ficou sem ganho, passa para o mais leve que reduz.
+    const escolhido = document.querySelector<HTMLInputElement>(`input[name="nivel"][value="${atual}"]`)!;
+    if (escolhido.disabled && !trabalhando) {
+      const outro = (['recomendada', 'forte', 'leve', 'alvo', 'maxima'] as Nivel[])
+        .map((n) => document.querySelector<HTMLInputElement>(`input[name="nivel"][value="${n}"]`)!)
+        .find((r) => !r.disabled);
+      if (outro) { outro.checked = true; atual = outro.value as Nivel; }
+    }
+    campoAlvo.disabled = trabalhando;
+    notaMaxima.hidden = atual !== 'maxima';
+    const algumLigado = NIVEIS.some((n) => !document.querySelector<HTMLInputElement>(`input[name="nivel"][value="${n}"]`)!.disabled);
+    const analisando = itens.some((i) => !i.analise && !i.erro);
+    botao.disabled = trabalhando || !temArquivo || analisando || !algumLigado || (atual === 'alvo' && !alvoBytes());
+    if (!trabalhando) {
+      if (analisando) status.textContent = 'Analisando o arquivo…';
+      else if (temArquivo && !algumLigado) status.textContent = 'Este PDF já está bem compacto: nenhum nível reduz o tamanho.';
+      else if (status.dataset.fixo !== '1') status.textContent = '';
+    }
+    for (const b of lista.querySelectorAll<HTMLButtonElement>('button[data-remover]')) b.disabled = trabalhando;
+  }
+
+  // ------------------------------------------------------------------ comprimir
+
+  function mostrarProgresso(fracao: number) {
+    progresso.hidden = false;
+    barra.style.transform = `scaleX(${Math.max(0, Math.min(1, fracao))})`;
+  }
+
+  async function comprimir() {
+    const n = nivel();
+    const ok = prontos();
+    if (!ok.length || trabalhando) return;
+    const m = await motor();
+    const alvo = alvoBytes();
+    if (n === 'alvo' && !alvo) return;
+    limparSaida();
+    trabalhando = true;
+    sinal = { cancelado: false };
+    const s = sinal;
+    status.dataset.fixo = '';
+    cancelar.hidden = false;
+    atualizar();
+    const feitos: { item: Item; saida: Saida & { degrau?: number }; nome: string; previsto?: number }[] = [];
+    try {
+      for (const [k, item] of ok.entries()) {
+        const a = item.analise!;
+        const prefixo = ok.length > 1 ? `Arquivo ${k + 1} de ${ok.length} · ` : '';
+        const prog = (f: number, t: string) => {
+          status.textContent = `${prefixo}${t}…`;
+          mostrarProgresso((k + f) / ok.length);
+        };
+        let r: Saida & { degrau?: number };
+        if (n === 'maxima') r = await m.comprimirMaxima(a, prog, s);
+        else if (n === 'alvo') r = await m.comprimirParaAlvo(a, alvo!, item.previsao ?? null, prog, s);
+        else r = await m.comprimirNoDegrau(a, DEGRAU_DO_NIVEL[n], prog, s);
+        const p = item.previsao;
+        let previsto = n === 'maxima' ? p?.maxima : n === 'alvo' ? (r.degrau !== undefined ? p?.escada[r.degrau] : undefined) : p?.escada[DEGRAU_DO_NIVEL[n]];
+        if (previsto !== undefined) previsto = Math.min(previsto, a.tamanhoOriginal);
+        feitos.push({ item, saida: r, nome: `${a.nome.replace(/\.pdf$/i, '') || 'documento'}-comprimido.pdf`, previsto });
+      }
+      mostrarProgresso(1);
+      mostrarResultado(feitos, n, alvo);
+      reais[n] = feitos.reduce((t, f) => t + f.saida.bytes.length, 0);
+      status.textContent = 'Pronto!';
+      status.dataset.fixo = '1';
+    } catch (e) {
+      if (e instanceof m.Cancelado) status.textContent = 'Cancelado.';
+      else status.textContent = 'Não foi possível comprimir. Pode faltar memória no aparelho: tente um arquivo de cada vez.';
+      status.dataset.fixo = '1';
+    } finally {
+      trabalhando = false;
+      sinal = null;
+      cancelar.hidden = true;
+      progresso.hidden = true;
+      atualizar();
+    }
+  }
+
+  function mostrarResultado(feitos: { item: Item; saida: Saida & { degrau?: number }; nome: string; previsto?: number }[], n: Nivel, alvo: number | null) {
+    const antes = feitos.reduce((t, f) => t + f.item.analise!.tamanhoOriginal, 0);
+    const depois = feitos.reduce((t, f) => t + f.saida.bytes.length, 0);
+    for (const f of feitos) {
+      const a = f.item.analise!;
+      const blob = new Blob([f.saida.bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob); urls.push(url);
+      const li = document.createElement('li');
+      const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = f.nome;
+      const det = document.createElement('span'); det.className = 'det';
+      const reducao = pct(a.tamanhoOriginal, f.saida.bytes.length);
+      const forte = document.createElement('strong');
+      forte.textContent = `${tamanho(a.tamanhoOriginal)} → ${tamanho(f.saida.bytes.length)}`;
+      det.append(forte, f.saida.original ? ' (sem mudança)' : ` (−${reducao}%)`);
+      const extra = document.createElement('span'); extra.className = 'muted extra';
+      const partes: string[] = [];
+      if (f.previsto !== undefined && !f.saida.original) partes.push(`previsto: cerca de ${tamanho(f.previsto)}`);
+      if (f.saida.original) partes.push('Comprimido, ele ficaria maior que o original. Por isso este é o arquivo original, sem mudança.');
+      if (n === 'alvo' && alvo) {
+        if (f.saida.atingiu || f.saida.bytes.length <= alvo) partes.push(`abaixo de ${tamanho(alvo)}`);
+        else partes.push(`Não deu para chegar a ${tamanho(alvo)}: este é o menor tamanho possível sem virar imagem. Tente a Máxima ou divida o PDF.`);
+      }
+      extra.textContent = partes.join(' · ');
+      const acoes = document.createElement('div'); acoes.className = 'acoes';
+      const ver = document.createElement('button'); ver.type = 'button'; ver.className = 'btn btn-sec'; ver.textContent = 'Comparar 1ª página';
+      ver.addEventListener('click', () => mostrarPrevia(a, f.saida.bytes, f.nome));
+      const baixar = document.createElement('a'); baixar.className = 'btn'; baixar.href = url; baixar.download = f.nome; baixar.textContent = 'Baixar';
+      acoes.append(ver, baixar);
+      li.append(nome, det, extra, acoes);
+      listaSaida.append(li);
+    }
+    const varios = feitos.length > 1;
+    zip.hidden = !varios;
+    if (varios) {
+      const url = URL.createObjectURL(new Blob([criarZip(feitos.map((f) => ({ nome: f.nome, dados: f.saida.bytes }))) as Uint8Array<ArrayBuffer>], { type: 'application/zip' }));
+      urls.push(url);
+      zip.href = url;
+      zip.download = 'pdfs-comprimidos.zip';
+    }
+    $('saida-titulo').textContent = depois < antes ? `${tamanho(antes)} → ${tamanho(depois)} (−${pct(antes, depois)}%)` : 'Sem redução';
+    $('saida-info').textContent = varios ? `${feitos.length} arquivos prontos. Baixe um por um ou todos juntos.` : 'Arquivo pronto para baixar.';
+    saida.hidden = false;
+  }
+
+  async function mostrarPrevia(a: Analise, bytes: Uint8Array, nome: string) {
+    limparPrevia();
+    previa.hidden = false;
+    $('previa-titulo').textContent = `Carregando a 1ª página de ${nome}…`;
+    try {
+      const m = await motor();
+      const largura = Math.round(Math.min(1400, previa.clientWidth * Math.min(window.devicePixelRatio || 1, 2)));
+      const [antes, depois] = [await m.previaPrimeiraPagina(a.dados.slice(0), largura), await m.previaPrimeiraPagina(bytes.slice().buffer as ArrayBuffer, largura)];
+      const ua = URL.createObjectURL(antes), ud = URL.createObjectURL(depois);
+      urlsPrevia.push(ua, ud);
+      comparar.querySelector<HTMLImageElement>('.antes')!.src = ua;
+      comparar.querySelector<HTMLImageElement>('.depois')!.src = ud;
+      comparar.querySelector('.rotulo-antes')!.textContent = `Original · ${tamanho(a.tamanhoOriginal)}`;
+      comparar.querySelector('.rotulo-depois')!.textContent = `Comprimido · ${tamanho(bytes.length)}`;
+      comparar.hidden = false;
+      $('previa-titulo').textContent = `1ª página de ${nome}: arraste o divisor para comparar`;
+    } catch {
+      $('previa-titulo').textContent = 'Não foi possível mostrar a página.';
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => adicionar((e as CustomEvent<File[]>).detail));
+  document.querySelectorAll('input[name="nivel"]').forEach((r) => r.addEventListener('change', () => { status.dataset.fixo = ''; atualizar(); }));
+  campoAlvo.addEventListener('input', () => {
+    document.querySelector<HTMLInputElement>('input[name="nivel"][value="alvo"]')!.checked = true;
+    atualizar();
+  });
+  campoAlvo.addEventListener('focus', () => {
+    const r = document.querySelector<HTMLInputElement>('input[name="nivel"][value="alvo"]')!;
+    if (!r.disabled) { r.checked = true; atualizar(); }
+  });
+  botao.addEventListener('click', comprimir);
+  cancelar.addEventListener('click', () => { if (sinal) sinal.cancelado = true; status.textContent = 'Cancelando…'; });
+</script>
+
+<style>
+  .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .lista :global(li) {
+    display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; min-width: 0;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    animation: entrar 0.3s var(--suave) backwards;
+  }
+  .lista :global(.item-topo) { display: flex; align-items: center; gap: 8px; }
+  .lista :global(.nome) { font-weight: 700; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .lista :global(.det) { font-size: 0.92rem; }
+  .lista :global(.remover) {
+    flex: none; display: grid; place-items: center; width: 34px; height: 34px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--fg);
+    transition: transform 0.2s var(--mola);
+  }
+  .lista :global(.remover:active) { transform: scale(0.92); }
+  .lista :global(.remover:disabled) { opacity: 0.4; cursor: not-allowed; }
+  .lista :global(.composicao) { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+  .lista :global(.composicao span) { display: block; height: 100%; background: var(--brand); border-right: 2px solid var(--brand-ink); min-width: 2px; }
+  .lista :global(.legenda) { font-size: 0.85rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
+  .lista :global(.legenda .par) { display: inline-flex; align-items: center; gap: 6px; }
+  .lista :global(.ponto) { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+  .lista :global(.ponto.img) { background: var(--brand); border: 1.5px solid var(--brand-ink); }
+  .lista :global(.ponto.txt) { background: var(--line); border: 1.5px solid var(--muted); }
+  .nota, .lista :global(.nota) {
+    font-size: 0.9rem; padding: 8px 12px; border-radius: 8px; background: var(--brand-soft); border-left: 3px solid var(--brand);
+  }
+
+  .niveis { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .niveis legend { margin-bottom: 8px; }
+  .cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .nivel {
+    position: relative; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px 12px 40px; cursor: pointer; min-width: 0;
+    border: 2px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    transition: border-color 0.15s, background-color 0.15s, transform 0.2s var(--mola), opacity 0.2s var(--suave);
+  }
+  .nivel:hover { transform: translateY(-2px); }
+  .nivel:active { transform: scale(0.98); }
+  .nivel:has(input[type='radio']:checked) { border-color: var(--fg); background: var(--brand-soft); }
+  .nivel:has(input[type='radio']:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
+  .nivel input[type='radio'] { position: absolute; left: 14px; top: 15px; margin: 0; width: 18px; height: 18px; accent-color: var(--fg); }
+  .nivel.desligado { opacity: 0.55; cursor: not-allowed; }
+  .nivel.desligado:hover { transform: none; }
+  .n-titulo { font: 700 1.02rem var(--f-display); }
+  .n-desc { font-size: 0.88rem; color: var(--muted); }
+  .alvo-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .alvo-linha input { width: 4.2em; padding: 4px 8px; }
+  .previsao { font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: auto; padding-top: 4px; min-height: 1.6em; }
+  .previsao.calculando { color: var(--muted); font-weight: 600; animation: piscar 1.1s var(--suave) infinite alternate; }
+  .previsao.sem-ganho { color: var(--muted); }
+  .previsao.alerta { color: var(--erro); }
+  .previsao :global(.real) { color: var(--ok); }
+  @keyframes piscar { from { opacity: 1; } to { opacity: 0.45; } }
+
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .barra-progresso { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .barra-progresso span { display: block; height: 100%; background: var(--brand); transform-origin: left; transform: scaleX(0); transition: transform 0.25s var(--suave); }
+
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+  .arquivos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .arquivos :global(li) {
+    display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; min-width: 0;
+    border: 1px solid var(--line); border-radius: var(--radius); animation: entrar 0.3s var(--suave) backwards;
+  }
+  .arquivos :global(.nome) { font-weight: 700; overflow-wrap: anywhere; }
+  .arquivos :global(.det) { font-variant-numeric: tabular-nums; }
+  .arquivos :global(.extra) { font-size: 0.88rem; }
+  .arquivos :global(.extra:empty) { display: none; }
+  .arquivos :global(.acoes) { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .arquivos :global(.btn) { padding: 7px 14px; font-size: 0.95rem; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+</style>

@@ -8,7 +8,7 @@ export type Destaque =
 
 export const DESTAQUES: Destaque[] = [
   { tipo: 'secao', slug: 'calculadoras', descricao: 'Porcentagem, juros, investimentos, combustível e mais.' },
-  { tipo: 'secao', slug: 'pdf', nome: 'Ferramentas de PDF', descricao: 'Juntar, dividir e converter PDF, direto no navegador.' },
+  { tipo: 'secao', slug: 'pdf', nome: 'Ferramentas de PDF', descricao: 'Juntar, dividir, comprimir e converter PDF, direto no navegador.' },
   { tipo: 'ferramenta', secao: 'calculadoras', slug: 'financiamento', icone: 'financiamento', descricao: 'Parcelas pela tabela Price e SAC, com gráfico do saldo.' },
   { tipo: 'ferramenta', secao: 'calculadoras', slug: 'amortizacao', icone: 'amortizacao', descricao: 'Veja quanto economiza pagando a mais no financiamento.' },
   { tipo: 'ferramenta', secao: 'qr-code', slug: 'gerador', icone: 'qr-code', descricao: 'QR Code grátis para link, texto, Wi-Fi ou WhatsApp.' },

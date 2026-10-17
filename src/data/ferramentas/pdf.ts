@@ -10,7 +10,7 @@ export default [
   { slug: 'organizar-pdf', nome: 'Organizar PDF', resumo: 'Mude a ordem das páginas arrastando.', status: 'planejada' },
   { slug: 'marca-dagua', nome: "Marca d'água em PDF", resumo: 'Adicione um texto em todas as páginas.', status: 'planejada' },
   { slug: 'numerar-paginas', nome: 'Numerar páginas', resumo: 'Coloque número nas páginas do PDF.', status: 'planejada' },
-  { slug: 'comprimir-pdf', nome: 'Comprimir PDF', resumo: 'Diminua o tamanho do arquivo.', status: 'planejada' },
+  { slug: 'comprimir-pdf', nome: 'Comprimir PDF', resumo: 'Diminua o tamanho do arquivo.', status: 'pronta' },
   { slug: 'proteger-pdf', nome: 'Proteger PDF com senha', resumo: 'Coloque senha no seu PDF.', status: 'planejada' },
   { slug: 'remover-senha-pdf', nome: 'Remover senha de PDF', resumo: 'Tire a senha de um PDF que você sabe abrir.', status: 'planejada' },
 ] satisfies Ferramenta[];
