@@ -1,0 +1,796 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import { CORES, FONTES, REDES } from '../../lib/assinatura-email';
+
+const modelos = [
+  { id: 'classico', nome: 'Clássico', dica: 'Foto à esquerda e linha colorida' },
+  { id: 'compacto', nome: 'Compacto', dica: 'Tudo em poucas linhas' },
+  { id: 'faixa', nome: 'Com faixa', dica: 'Nome sobre uma faixa colorida' },
+  { id: 'minimalista', nome: 'Minimalista', dica: 'Só texto, sem imagens' },
+];
+const campos = [
+  { id: 'nome', rotulo: 'Nome', tipo: 'text', ph: 'Seu nome', auto: 'name' },
+  { id: 'cargo', rotulo: 'Cargo', tipo: 'text', ph: 'Ex.: Analista financeira', auto: 'organization-title' },
+  { id: 'empresa', rotulo: 'Empresa', tipo: 'text', ph: 'Nome da empresa', auto: 'organization' },
+  { id: 'telefone', rotulo: 'Telefone', tipo: 'tel', ph: '(11) 3000-0000', auto: 'tel' },
+  { id: 'whatsapp', rotulo: 'WhatsApp', tipo: 'tel', ph: '(11) 90000-0000', auto: 'off' },
+  { id: 'email', rotulo: 'E-mail', tipo: 'email', ph: 'voce@empresa.com.br', auto: 'email' },
+  { id: 'site', rotulo: 'Site', tipo: 'text', ph: 'www.empresa.com.br', auto: 'url' },
+  { id: 'endereco', rotulo: 'Endereço curto', tipo: 'text', ph: 'Rua, número, cidade', auto: 'off' },
+];
+const placeholders: Record<string, string> = {
+  linkedin: 'linkedin.com/in/seu-nome', instagram: '@seuperfil', facebook: 'facebook.com/suapagina',
+  x: '@seuperfil', youtube: '@seucanal', tiktok: '@seuperfil',
+};
+---
+<Ferramenta
+  secao="documentos"
+  slug="assinatura-de-email"
+  titulo="Gerador de assinatura de e-mail"
+  subtitulo="Monte uma assinatura profissional com foto ou logo, telefone, WhatsApp e redes sociais. Copie e cole no Gmail, no Outlook ou no Apple Mail. Grátis e sem cadastro."
+  tituloSeo="Gerador de assinatura de e-mail grátis, com foto e logo"
+  descricao="Crie sua assinatura de e-mail grátis: foto ou logo, WhatsApp, redes sociais e 4 modelos. Copie e cole no Gmail, Outlook e Apple Mail. Sem cadastro."
+  passos={[
+    'Preencha seus dados. A prévia ao lado muda enquanto você digita, e o rascunho fica salvo neste navegador.',
+    'Se quiser, adicione as redes sociais e uma foto ou logo. O jeito mais seguro é colar o endereço de uma imagem que já está na internet.',
+    'Escolha o modelo, a cor e a fonte.',
+    'Clique em "Copiar assinatura" e cole no campo de assinatura do seu e-mail. As abas logo abaixo mostram onde fica esse campo em cada programa.',
+  ]}
+  perguntas={[
+    { p: 'Como colocar assinatura no Gmail?', r: 'No computador, abra o Gmail, clique na engrenagem e em "Ver todas as configurações". Na aba Geral, desça até "Assinatura", clique em "Criar nova", dê um nome e cole a assinatura copiada aqui. Depois escolha a assinatura em "Para novos e-mails" e "Para respostas" e clique em "Salvar alterações", no fim da página.' },
+    { p: 'Por que a imagem da minha assinatura não aparece no Gmail?', r: 'O Gmail não aceita imagens que vêm grudadas no próprio texto da assinatura, como acontece quando você envia a foto do computador. Ele só mostra imagens que estão num endereço da internet. Use a opção "Endereço da imagem" com o link do logo do site da empresa, ou cole a assinatura e insira a foto pelo botão de imagem do próprio editor de assinatura do Gmail.' },
+    { p: 'Qual o tamanho ideal da imagem na assinatura de e-mail?', r: 'Entre 70 e 100 pixels de lado para foto e até 160 pixels de largura para logo. A imagem pode ter o dobro disso em pixels, para ficar nítida em telas de celular, mas deve pesar pouco: até uns 50 KB. Imagens grandes deixam o e-mail pesado e podem ir parar no spam.' },
+    { p: 'Dá para ter mais de uma assinatura?', r: 'Dá. Gmail, Outlook, Apple Mail e Thunderbird permitem salvar várias assinaturas e escolher qual usar em cada e-mail. Uma ideia é ter uma completa para o primeiro contato e uma curta, só com nome e telefone, para as respostas.' },
+    { p: 'Preciso colocar aviso de confidencialidade ou de LGPD na assinatura?', r: 'Não existe um texto de assinatura que resolva a LGPD por si só: a lei trata de como os dados pessoais são coletados, guardados e usados. Muitas empresas usam um aviso curto de confidencialidade ou um link para a política de privacidade. Se a sua empresa tem um texto padrão, use-o no campo "Frase". Em caso de dúvida, fale com o jurídico ou com o encarregado de dados da empresa.' },
+    { p: 'Meus dados ficam salvos em algum servidor?', r: 'Não. A assinatura é montada no seu navegador, e o rascunho fica guardado só neste aparelho, para você não perder o que digitou. O botão "Começar de novo" apaga tudo.' },
+  ]}
+>
+  <div class="editor">
+    <form id="form" class="form" novalidate autocomplete="on">
+      <fieldset class="bloco">
+        <legend>Seus dados</legend>
+        <div class="grade2">
+          {campos.map((c) => (
+            <div class="campo">
+              <label for={`f-${c.id}`}>{c.rotulo}</label>
+              <input id={`f-${c.id}`} name={c.id} type={c.tipo === 'email' ? 'email' : 'text'} inputmode={c.tipo === 'tel' ? 'tel' : c.tipo === 'email' ? 'email' : c.id === 'site' ? 'url' : undefined} placeholder={c.ph} autocomplete={c.auto} />
+            </div>
+          ))}
+        </div>
+        <p id="aviso-dados" class="aviso" hidden></p>
+        <div class="campo">
+          <label for="f-frase">Frase (opcional)</label>
+          <textarea id="f-frase" name="frase" rows="2" maxlength="300" placeholder="Um slogan, o horário de atendimento ou um aviso curto"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset class="bloco">
+        <legend>Redes sociais <span class="muted">(opcional)</span></legend>
+        <p class="muted pequeno">Cole o link do perfil ou escreva só o @usuario.</p>
+        <div class="grade2">
+          {REDES.map((r) => (
+            <div class="campo">
+              <label for={`f-rede-${r.id}`}>{r.nome}</label>
+              <input id={`f-rede-${r.id}`} name={`rede-${r.id}`} type="text" inputmode="url" placeholder={placeholders[r.id]} autocomplete="off" />
+            </div>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="bloco">
+        <legend>Foto ou logo</legend>
+        <div class="seg seg3" role="radiogroup" aria-label="De onde vem a imagem">
+          <label><input type="radio" name="imagemModo" value="nenhuma" /><span>Sem imagem</span></label>
+          <label><input type="radio" name="imagemModo" value="url" /><span>Endereço da imagem <small>recomendado</small></span></label>
+          <label><input type="radio" name="imagemModo" value="arquivo" /><span>Enviar do computador</span></label>
+        </div>
+
+        <div class="painel stack" data-painel="url" hidden>
+          <div class="campo">
+            <label for="f-imagemUrl">Endereço (link) da imagem</label>
+            <input id="f-imagemUrl" name="imagemUrl" type="text" inputmode="url" placeholder="https://www.suaempresa.com.br/logo.png" autocomplete="off" />
+            <small>Funciona em todos os programas de e-mail, inclusive no Gmail, porque a imagem fica na internet e o e-mail só aponta para ela.</small>
+          </div>
+          <p id="erro-url" class="erro" role="alert" hidden></p>
+          <details class="dica">
+            <summary>Como conseguir o endereço de uma imagem</summary>
+            <ol>
+              <li><strong>Logo do site da empresa:</strong> abra o site no computador, clique com o botão direito sobre o logo e escolha "Copiar endereço da imagem". Cole aqui.</li>
+              <li><strong>Foto do LinkedIn:</strong> abra o seu perfil, clique na sua foto para ampliar, clique com o botão direito e copie o endereço da imagem. Esses links do LinkedIn costumam parar de funcionar depois de alguns meses; se a foto sumir, gere de novo.</li>
+              <li><strong>Imagem que só está no seu computador:</strong> peça para quem cuida do site da empresa publicar o arquivo e mandar o link. Links do Google Drive, do Google Fotos e do WhatsApp geralmente não funcionam, porque abrem uma página e não a imagem.</li>
+            </ol>
+            <p>Um bom teste: cole o link na barra do navegador. Se aparecer só a imagem, sem mais nada em volta, o link serve.</p>
+          </details>
+        </div>
+
+        <div class="painel stack" data-painel="arquivo" hidden>
+          <p class="aviso"><strong>Atenção, usuários do Gmail:</strong> a imagem enviada do computador vai junto no código da assinatura. O Outlook e o Apple Mail mostram normalmente, mas o Gmail apaga esse tipo de imagem. No Gmail, cole a assinatura e depois coloque a foto pelo botão de imagem do próprio editor de assinatura (veja a aba Gmail mais abaixo).</p>
+          <SoltarArquivos id="entrada-imagem" accept="image/jpeg,image/png,image/webp,image/gif" texto="Escolher foto ou logo" dica="ou arraste e solte aqui" />
+          <p id="info-arquivo" class="muted pequeno" hidden></p>
+          <p id="erro-arquivo" class="erro" role="alert" hidden></p>
+        </div>
+
+        <div id="opcoes-imagem" class="stack" hidden>
+          <div class="campo">
+            <span class="rotulo" id="rot-formato">Formato</span>
+            <div class="seg seg3" role="radiogroup" aria-labelledby="rot-formato">
+              <label><input type="radio" name="formato" value="redondo" /><span>Redondo</span></label>
+              <label><input type="radio" name="formato" value="arredondado" /><span>Cantos arredondados</span></label>
+              <label><input type="radio" name="formato" value="original" /><span>Original</span></label>
+            </div>
+            <small id="aviso-quadrada" hidden>A imagem não é quadrada e vai ficar esticada nesse formato. Escolha "Original" ou use uma imagem quadrada.</small>
+          </div>
+          <div class="campo">
+            <label for="f-tamanho">Tamanho: <span id="tamanho-valor">88 px</span></label>
+            <input id="f-tamanho" name="tamanho" type="range" min="40" max="160" step="4" value="88" />
+          </div>
+        </div>
+        <p id="aviso-minimalista" class="muted pequeno" hidden>O modelo Minimalista não mostra imagens. Escolha outro modelo para ver a foto ou o logo.</p>
+      </fieldset>
+
+      <fieldset class="bloco">
+        <legend>Visual</legend>
+        <div class="campo">
+          <span class="rotulo" id="rot-modelo">Modelo</span>
+          <div class="modelos" role="radiogroup" aria-labelledby="rot-modelo">
+            {modelos.map((m) => (
+              <label class="modelo">
+                <input type="radio" name="modelo" value={m.id} />
+                <span class="cartao">
+                  <svg viewBox="0 0 80 44" width="80" height="44" aria-hidden="true">
+                    {m.id === 'classico' && (<>
+                      <circle cx="13" cy="15" r="9" class="m-img" />
+                      <rect x="27" y="5" width="2" height="34" class="m-cor" />
+                      <rect x="34" y="7" width="30" height="5" rx="2" class="m-cor" />
+                      <rect x="34" y="16" width="38" height="3" rx="1.5" class="m-txt" />
+                      <rect x="34" y="23" width="28" height="3" rx="1.5" class="m-txt" />
+                      <rect x="34" y="31" width="5" height="5" rx="1" class="m-cor" /><rect x="41" y="31" width="5" height="5" rx="1" class="m-cor" /><rect x="48" y="31" width="5" height="5" rx="1" class="m-cor" />
+                    </>)}
+                    {m.id === 'compacto' && (<>
+                      <circle cx="11" cy="22" r="7" class="m-img" />
+                      <rect x="23" y="13" width="18" height="4" rx="2" class="m-cor" />
+                      <rect x="44" y="13" width="30" height="4" rx="2" class="m-txt" />
+                      <rect x="23" y="21" width="51" height="3" rx="1.5" class="m-txt" />
+                      <rect x="23" y="28" width="4" height="4" rx="1" class="m-cor" /><rect x="29" y="28" width="4" height="4" rx="1" class="m-cor" />
+                    </>)}
+                    {m.id === 'faixa' && (<>
+                      <rect x="2" y="2" width="76" height="13" rx="2" class="m-cor" />
+                      <rect x="7" y="6" width="26" height="5" rx="2" class="m-faixa" />
+                      <rect x="7" y="20" width="12" height="12" rx="3" class="m-img" />
+                      <rect x="24" y="21" width="40" height="3" rx="1.5" class="m-txt" />
+                      <rect x="24" y="28" width="30" height="3" rx="1.5" class="m-txt" />
+                      <rect x="7" y="36" width="5" height="5" rx="1" class="m-cor" /><rect x="14" y="36" width="5" height="5" rx="1" class="m-cor" />
+                    </>)}
+                    {m.id === 'minimalista' && (<>
+                      <rect x="4" y="7" width="72" height="2" class="m-cor" />
+                      <rect x="4" y="14" width="30" height="5" rx="2" class="m-txt" />
+                      <rect x="4" y="23" width="48" height="3" rx="1.5" class="m-txt" />
+                      <rect x="4" y="30" width="60" height="3" rx="1.5" class="m-txt" />
+                      <rect x="4" y="37" width="34" height="3" rx="1.5" class="m-cor" />
+                    </>)}
+                  </svg>
+                  <strong>{m.nome}</strong>
+                  <small>{m.dica}</small>
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div class="campo">
+          <span class="rotulo" id="rot-cor">Cor de destaque</span>
+          <div class="cores" role="radiogroup" aria-labelledby="rot-cor">
+            {CORES.map((c) => (
+              <label class="amostra" title={c.rotulo}>
+                <input type="radio" name="corSugerida" value={c.hex} aria-label={c.rotulo} />
+                {/* A amostra mostra a cor que vai para o e-mail, por isso a cor vem de fora dos tokens. */}
+                <span style={`background-color:${c.hex}`}></span>
+              </label>
+            ))}
+            <label class="livre">
+              <input id="f-cor" name="cor" type="color" value="#1d5bd6" />
+              <span>Outra cor</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grade2">
+          <div class="campo">
+            <label for="f-fonte">Fonte</label>
+            <select id="f-fonte" name="fonte">
+              {Object.entries(FONTES).map(([id, f]) => <option value={id} style={`font-family:${f.pilha}`}>{f.rotulo}</option>)}
+            </select>
+            <small>Fontes que existem em todos os computadores e celulares.</small>
+          </div>
+          <div class="campo">
+            <span class="rotulo" id="rot-icones">Ícones das redes</span>
+            <div class="seg" role="radiogroup" aria-labelledby="rot-icones">
+              <label><input type="radio" name="icones" value="destaque" /><span>Na cor de destaque</span></label>
+              <label><input type="radio" name="icones" value="cinza" /><span>Cinza</span></label>
+            </div>
+            <small id="aviso-cor-icones" hidden>Com uma cor própria, os ícones usam a cor sugerida mais parecida.</small>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="lado">
+      <div class="previa">
+        <p class="previa-topo"><span class="muted">Prévia</span><span class="muted pequeno">como aparece no e-mail</span></p>
+        <!-- A prévia representa o corpo do e-mail, que é branco nos programas de e-mail:
+             por isso o fundo do quadro é branco fixo, mesmo no modo escuro do site. -->
+        <iframe id="previa" title="Prévia da assinatura de e-mail" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+          srcdoc='<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><base target="_blank"></head><body style="margin:0;padding:20px 16px;background:#ffffff;"></body></html>'></iframe>
+      </div>
+      <div class="acoes">
+        <button id="copiar" type="button" class="btn">Copiar assinatura</button>
+        <button id="copiar-codigo" type="button" class="btn btn-sec">Copiar código HTML</button>
+        <a id="baixar" class="btn btn-sec" href="#" download="assinatura-email.html">Baixar .html</a>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <details class="codigo">
+        <summary>Ver o código HTML</summary>
+        <textarea id="codigo" rows="6" readonly aria-label="Código HTML da assinatura" spellcheck="false"></textarea>
+      </details>
+      <button id="recomecar" type="button" class="btn btn-sec recomecar">Começar de novo</button>
+    </div>
+  </div>
+
+  <section class="instalar" aria-labelledby="titulo-instalar">
+    <h2 id="titulo-instalar">Como instalar a assinatura</h2>
+    <div class="abas" role="tablist" aria-label="Programa de e-mail">
+      <button type="button" class="aba" role="tab" id="aba-gmail" aria-controls="p-gmail" aria-selected="true">Gmail</button>
+      <button type="button" class="aba" role="tab" id="aba-outlook" aria-controls="p-outlook" aria-selected="false" tabindex="-1">Outlook</button>
+      <button type="button" class="aba" role="tab" id="aba-apple" aria-controls="p-apple" aria-selected="false" tabindex="-1">Apple Mail</button>
+      <button type="button" class="aba" role="tab" id="aba-thunderbird" aria-controls="p-thunderbird" aria-selected="false" tabindex="-1">Thunderbird</button>
+    </div>
+
+    <div id="p-gmail" class="aba-painel" role="tabpanel" aria-labelledby="aba-gmail" tabindex="0">
+      <h3>Gmail no computador</h3>
+      <ol>
+        <li>Aqui na página, clique em <strong>Copiar assinatura</strong>.</li>
+        <li>No Gmail, clique na engrenagem (canto de cima, à direita) e depois em <strong>Ver todas as configurações</strong>.</li>
+        <li>Na aba <strong>Geral</strong>, desça até <strong>Assinatura</strong> e clique em <strong>Criar nova</strong>. Dê um nome, como "Trabalho".</li>
+        <li>Clique na caixa em branco e cole com <kbd>Ctrl</kbd> + <kbd>V</kbd> (no Mac, <kbd>Cmd</kbd> + <kbd>V</kbd>).</li>
+        <li>Logo abaixo, em <strong>Padrões de assinatura</strong>, escolha a assinatura para novos e-mails e para respostas.</li>
+        <li>Desça até o fim da página e clique em <strong>Salvar alterações</strong>.</li>
+      </ol>
+      <p><strong>Se você enviou a imagem do computador:</strong> o Gmail vai apagar a imagem ao colar. Clique no lugar onde ela ficaria, use o botão de imagem da barra do editor de assinatura (o ícone de foto), escolha <strong>Fazer upload</strong> e envie o mesmo arquivo. Depois clique na imagem e escolha o tamanho pequeno.</p>
+      <p><strong>No aplicativo do celular,</strong> o Gmail usa outra assinatura, só de texto. Ela fica em Configurações, na sua conta, em "Assinatura para dispositivos móveis". Os e-mails enviados pelo computador continuam com a assinatura completa.</p>
+    </div>
+
+    <div id="p-outlook" class="aba-painel" role="tabpanel" aria-labelledby="aba-outlook" tabindex="0" hidden>
+      <h3>Outlook na web, outlook.com e novo Outlook</h3>
+      <ol>
+        <li>Clique em <strong>Copiar assinatura</strong> aqui na página.</li>
+        <li>No Outlook, clique na engrenagem (Configurações), depois em <strong>Contas</strong> e em <strong>Assinaturas</strong>.</li>
+        <li>Clique em <strong>Nova assinatura</strong>, dê um nome e cole na caixa com <kbd>Ctrl</kbd> + <kbd>V</kbd>.</li>
+        <li>Escolha a assinatura padrão para novas mensagens e para respostas e clique em <strong>Salvar</strong>.</li>
+      </ol>
+      <h3>Outlook clássico para Windows</h3>
+      <ol>
+        <li>Clique em <strong>Arquivo</strong>, <strong>Opções</strong>, <strong>Email</strong> e no botão <strong>Assinaturas</strong>.</li>
+        <li>Clique em <strong>Novo</strong>, dê um nome e cole na caixa <strong>Editar assinatura</strong>.</li>
+        <li>À direita, escolha a assinatura em <strong>Novas mensagens</strong> e em <strong>Respostas/encaminhamentos</strong> e clique em <strong>OK</strong>.</li>
+      </ol>
+      <p>No Outlook para Mac, o caminho é <strong>Outlook</strong>, <strong>Configurações</strong>, <strong>Assinaturas</strong>. O Outlook para Windows não arredonda cantos de imagens que vêm de um endereço da internet; se isso for importante, envie a imagem do computador, que já sai recortada.</p>
+    </div>
+
+    <div id="p-apple" class="aba-painel" role="tabpanel" aria-labelledby="aba-apple" tabindex="0" hidden>
+      <h3>Mail no Mac</h3>
+      <ol>
+        <li>Abra esta página no Safari ou no Chrome do Mac e clique em <strong>Copiar assinatura</strong>.</li>
+        <li>No Mail, abra o menu <strong>Mail</strong> e clique em <strong>Ajustes</strong> (ou Preferências). Vá em <strong>Assinaturas</strong>.</li>
+        <li>Escolha a conta na coluna da esquerda e clique no <strong>+</strong> embaixo da coluna do meio. Dê um nome.</li>
+        <li>Desmarque <strong>Sempre usar minha fonte padrão de mensagem</strong>, clique na área da direita, apague o texto que estiver lá e cole com <kbd>Cmd</kbd> + <kbd>V</kbd>.</li>
+        <li>Feche a janela. A assinatura já fica valendo nos próximos e-mails.</li>
+      </ol>
+      <h3>Mail no iPhone e no iPad</h3>
+      <ol>
+        <li>Abra esta página no iPhone e toque em <strong>Copiar assinatura</strong>.</li>
+        <li>Vá em <strong>Ajustes</strong>, <strong>Apps</strong>, <strong>Mail</strong> e toque em <strong>Assinatura</strong> (em versões mais antigas do iOS, Mail fica direto em Ajustes).</li>
+        <li>Apague o "Enviado do meu iPhone", toque e segure na caixa e escolha <strong>Colar</strong>.</li>
+        <li>Se a formatação sumir, sacuda o iPhone logo depois de colar e toque em <strong>Desfazer</strong>: o iOS costuma devolver as cores e os links.</li>
+      </ol>
+    </div>
+
+    <div id="p-thunderbird" class="aba-painel" role="tabpanel" aria-labelledby="aba-thunderbird" tabindex="0" hidden>
+      <h3>Thunderbird</h3>
+      <ol>
+        <li>Aqui na página, clique em <strong>Copiar código HTML</strong>.</li>
+        <li>No Thunderbird, abra o menu (as três linhas), vá em <strong>Configurações de contas</strong> e clique no seu endereço de e-mail.</li>
+        <li>Em <strong>Texto da assinatura</strong>, marque <strong>Usar HTML</strong> e cole o código na caixa.</li>
+        <li>Clique fora da caixa. A assinatura passa a entrar nos novos e-mails dessa conta.</li>
+      </ol>
+      <p>Outra forma: clique em <strong>Baixar .html</strong>, marque <strong>Anexar assinatura de um arquivo</strong> na mesma tela e escolha o arquivo baixado. Imagens enviadas do computador funcionam nos dois jeitos.</p>
+    </div>
+  </section>
+
+  <Fragment slot="texto">
+    <h2>O que colocar numa assinatura de e-mail profissional</h2>
+    <p>A assinatura responde a três perguntas de quem recebe a mensagem: quem é você, de onde você fala e como chegar até você. Nome completo, cargo e empresa resolvem as duas primeiras. Para a terceira, escolha um ou dois contatos que você realmente atende. Telefone fixo que ninguém atende só gera ligação perdida. O e-mail pode parecer repetido, mas ajuda quando a mensagem é encaminhada ou impressa.</p>
+    <p>Menos é mais. Uma assinatura com seis telefones, três endereços e uma frase motivacional ocupa mais espaço que o próprio e-mail, principalmente no celular. Um bom limite é de quatro a seis linhas. Se precisar de mais coisa, crie duas assinaturas: uma completa para o primeiro contato e uma curta para as respostas de uma conversa que já está andando.</p>
+    <ul>
+      <li><strong>WhatsApp:</strong> vira um link que abre a conversa direto, sem a pessoa salvar o seu número. Coloque só se você atende por lá.</li>
+      <li><strong>Redes sociais:</strong> inclua as que têm relação com o trabalho. Para um advogado, o LinkedIn faz sentido; para uma confeitaria, o Instagram é a vitrine.</li>
+      <li><strong>Frase:</strong> use para algo útil, como o horário de atendimento, o prazo de resposta ou um aviso de que você está de férias.</li>
+    </ul>
+    <h2>Tamanho ideal da foto ou do logo</h2>
+    <p>Na tela, uma foto de 70 a 100 pixels já é bem visível, e um logo raramente precisa passar de 160 pixels de largura. Quando você envia a imagem pelo computador, a ferramenta reduz e comprime o arquivo sozinha, com no máximo 200 pixels, para a assinatura não pesar. Se for usar um link, prefira uma imagem pequena: algumas empresas têm no site um logo de 2.000 pixels que deixa cada e-mail mais lento para abrir.</p>
+    <h2>Por que a imagem às vezes não aparece</h2>
+    <p>Existem dois jeitos de colocar uma imagem num e-mail. No primeiro, ela vai embutida no código da assinatura. O Outlook e o Apple Mail aceitam, mas o Gmail apaga esse tipo de imagem por segurança. No segundo, a imagem fica num site e o e-mail só guarda o endereço dela. Esse funciona em quase todo lugar, por isso é o recomendado. Mesmo assim, alguns programas bloqueiam imagens de remetentes desconhecidos até a pessoa clicar em "mostrar imagens". É por isso que o seu nome e os seus contatos devem estar sempre em texto, e nunca dentro de uma imagem.</p>
+    <h2>Avisos de confidencialidade e LGPD</h2>
+    <p>Muitas empresas colocam no fim da assinatura um parágrafo dizendo que a mensagem é confidencial. Esse texto não é obrigatório e, sozinho, não garante nada: o que a LGPD cobra é o cuidado com os dados pessoais no dia a dia. Se a sua empresa tem um texto padrão ou um link para a política de privacidade, use o campo "Frase" para colocá-lo. Se não tiver certeza do que escrever, pergunte ao jurídico ou ao responsável pela proteção de dados da empresa.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { SITE } from '../../config';
+  import { CORES, documentoHtml, gerarAssinatura, linkSeguro, emailValido, linkTelefone, textoSimples,
+    type Dados, type ImagemPronta, type Rede, REDES } from '../../lib/assinatura-email';
+  import { linkWhatsapp } from '../../lib/qr-conteudo';
+
+  type ModoImagem = 'nenhuma' | 'url' | 'arquivo';
+  type FormatoImagem = 'redondo' | 'arredondado' | 'original';
+  interface Estado extends Dados {
+    imagemModo: ModoImagem; imagemUrl: string; formato: FormatoImagem; tamanho: number;
+    /** Imagem enviada do computador, já reduzida (data URI JPG ou PNG). */
+    arquivo: string; arquivoNome: string; arquivoAlfa: boolean;
+  }
+
+  const CHAVE = 'qg-assinatura-email';
+  const TEXTOS = ['nome', 'cargo', 'empresa', 'telefone', 'whatsapp', 'email', 'site', 'endereco', 'frase'] as const;
+  const redesVazias = () => Object.fromEntries(REDES.map((r) => [r.id, ''])) as Record<Rede, string>;
+
+  const EXEMPLO: Estado = {
+    nome: 'Ana Exemplo', cargo: 'Gerente de Projetos', empresa: 'Empresa Exemplo Ltda.',
+    telefone: '(11) 3000-0000', whatsapp: '(11) 90000-0000', email: 'ana@example.com', site: 'www.example.com',
+    endereco: 'Av. Exemplo, 100, São Paulo, SP',
+    redes: { ...redesVazias(), linkedin: 'ana-exemplo', instagram: '@empresaexemplo' },
+    frase: 'Exemplo de frase: atendimento de segunda a sexta, das 9h às 18h.',
+    modelo: 'classico', cor: CORES[0].hex, fonte: 'arial', icones: 'destaque',
+    imagemModo: 'url', imagemUrl: `${SITE.url}/email/exemplo-foto.png`, formato: 'redondo', tamanho: 88,
+    arquivo: '', arquivoNome: '', arquivoAlfa: false,
+  };
+  const VAZIO: Estado = {
+    ...EXEMPLO, nome: '', cargo: '', empresa: '', telefone: '', whatsapp: '', email: '', site: '', endereco: '',
+    redes: redesVazias(), frase: '', imagemModo: 'nenhuma', imagemUrl: '', arquivo: '', arquivoNome: '', arquivoAlfa: false,
+  };
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('form');
+  const iframe = $<HTMLIFrameElement>('previa');
+  const status = $('status');
+  const codigo = $<HTMLTextAreaElement>('codigo');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const campo = (nome: string) => form.elements.namedItem(nome) as HTMLInputElement | RadioNodeList | null;
+
+  let estado: Estado = structuredClone(EXEMPLO);
+  /** Proporção (altura ÷ largura) da imagem atual e a versão já recortada da imagem do computador. */
+  let proporcaoUrl = 1;
+  let urlMedida = '';
+  let urlComErro = false;
+  let proporcaoArquivo = 1;
+  let arquivoFinal = '';
+  let urlDownload = '';
+
+  // ---------- formulário <-> estado ----------
+  function preencher(e: Estado) {
+    for (const k of TEXTOS) (campo(k) as HTMLInputElement).value = e[k] ?? '';
+    for (const r of REDES) (campo(`rede-${r.id}`) as HTMLInputElement).value = e.redes?.[r.id] ?? '';
+    (campo('imagemUrl') as HTMLInputElement).value = e.imagemUrl;
+    (campo('tamanho') as HTMLInputElement).value = String(e.tamanho);
+    (campo('fonte') as HTMLInputElement).value = e.fonte;
+    (campo('cor') as HTMLInputElement).value = e.cor;
+    for (const k of ['imagemModo', 'formato', 'modelo', 'icones'] as const) (campo(k) as RadioNodeList).value = e[k];
+    marcarCorSugerida();
+  }
+
+  function ler(): Estado {
+    const v = (k: string) => (campo(k) as HTMLInputElement | RadioNodeList).value;
+    const novo = { ...estado, redes: { ...estado.redes } };
+    for (const k of TEXTOS) novo[k] = v(k);
+    for (const r of REDES) novo.redes[r.id] = v(`rede-${r.id}`);
+    novo.imagemUrl = v('imagemUrl');
+    novo.tamanho = Number(v('tamanho')) || 88;
+    novo.fonte = v('fonte') as Estado['fonte'];
+    novo.cor = v('cor');
+    novo.imagemModo = (v('imagemModo') || 'nenhuma') as ModoImagem;
+    novo.formato = (v('formato') || 'redondo') as FormatoImagem;
+    novo.modelo = (v('modelo') || 'classico') as Estado['modelo'];
+    novo.icones = (v('icones') || 'destaque') as Estado['icones'];
+    return novo;
+  }
+
+  function marcarCorSugerida() {
+    const cor = (campo('cor') as HTMLInputElement).value.toLowerCase();
+    form.querySelectorAll<HTMLInputElement>('input[name="corSugerida"]').forEach((r) => { r.checked = r.value === cor; });
+  }
+
+  // ---------- rascunho ----------
+  function carregarRascunho(): Estado | null {
+    try {
+      const s = JSON.parse(localStorage.getItem(CHAVE) || 'null');
+      if (!s || typeof s !== 'object') return null;
+      return { ...VAZIO, ...s, redes: { ...redesVazias(), ...(s.redes ?? {}) } };
+    } catch { return null; }
+  }
+  let timerSalvar = 0;
+  function salvar() {
+    clearTimeout(timerSalvar);
+    timerSalvar = window.setTimeout(() => {
+      try { localStorage.setItem(CHAVE, JSON.stringify(estado)); }
+      catch {
+        // Sem espaço (imagem grande) ou armazenamento bloqueado: salva sem a imagem.
+        try { localStorage.setItem(CHAVE, JSON.stringify({ ...estado, arquivo: '' })); } catch { /* sem rascunho */ }
+      }
+    }, 300);
+  }
+
+  // ---------- imagem ----------
+  /** Lado maior em pixels e o tamanho exibido (largura x altura). */
+  function medidas(prop: number, formato: FormatoImagem, tamanho: number) {
+    if (formato !== 'original') return { largura: tamanho, altura: tamanho };
+    return prop > 1 ? { largura: Math.max(1, Math.round(tamanho / prop)), altura: tamanho }
+      : { largura: tamanho, altura: Math.max(1, Math.round(tamanho * prop)) };
+  }
+  const raio = (f: FormatoImagem) => (f === 'redondo' ? '50%' : f === 'arredondado' ? '14%' : '0');
+
+  function imagemPronta(e: Estado, previa: boolean): ImagemPronta | null {
+    if (e.modelo === 'minimalista') return null;
+    if (e.imagemModo === 'url') {
+      let src = linkSeguro(e.imagemUrl);
+      if (!src) return null;
+      // A foto de exemplo fica no próprio site: na prévia, carrega do endereço em que a página está aberta.
+      if (previa && src.startsWith(SITE.url + '/')) src = location.origin + src.slice(SITE.url.length);
+      return { src, ...medidas(proporcaoUrl, e.formato, e.tamanho), raio: raio(e.formato) };
+    }
+    if (e.imagemModo === 'arquivo' && arquivoFinal) {
+      return { src: arquivoFinal, ...medidas(proporcaoArquivo, e.formato, e.tamanho), raio: raio(e.formato) };
+    }
+    return null;
+  }
+
+  function medirUrl() {
+    const src = linkSeguro(estado.imagemUrl);
+    const erro = $('erro-url');
+    if (estado.imagemModo !== 'url' || !estado.imagemUrl.trim()) { erro.hidden = true; return; }
+    if (!src) { erro.textContent = 'Esse endereço não parece um link de imagem. Ele deve começar com https://'; erro.hidden = false; return; }
+    if (src === urlMedida) return;
+    urlMedida = src;
+    const local = src.startsWith(SITE.url + '/') ? location.origin + src.slice(SITE.url.length) : src;
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.onload = () => {
+      if (urlMedida !== src) return;
+      proporcaoUrl = img.naturalHeight / img.naturalWidth || 1;
+      urlComErro = false; erro.hidden = true; atualizar(false);
+    };
+    img.onerror = () => {
+      if (urlMedida !== src) return;
+      urlComErro = true;
+      erro.textContent = 'Não foi possível abrir essa imagem. Confira se o link abre só a imagem no navegador (veja as dicas abaixo).';
+      erro.hidden = false; atualizar(false);
+    };
+    img.src = local;
+  }
+
+  /** Reduz a imagem do computador para no máximo 200 px no lado maior e devolve um data URI leve. */
+  async function reduzir(file: File) {
+    const bmp = await createImageBitmap(file);
+    const f = Math.min(1, 200 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(bmp.width * f)); c.height = Math.max(1, Math.round(bmp.height * f));
+    const ctx = c.getContext('2d')!;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    bmp.close();
+    const px = ctx.getImageData(0, 0, c.width, c.height).data;
+    let alfa = false;
+    for (let i = 3; i < px.length; i += 4) if (px[i] < 250) { alfa = true; break; }
+    if (!alfa) { ctx.globalCompositeOperation = 'destination-over'; ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height); }
+    return { uri: alfa ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85), alfa };
+  }
+
+  function abrirImagem(uri: string): Promise<HTMLImageElement> {
+    return new Promise((ok, falha) => { const i = new Image(); i.onload = () => ok(i); i.onerror = falha; i.src = uri; });
+  }
+
+  /**
+   * Recorta a imagem do computador no formato escolhido (redondo ou cantos arredondados).
+   * O recorte vai nos próprios pixels porque o Outlook para Windows ignora border-radius.
+   * Sem transparência, os cantos ficam brancos (JPG, bem mais leve que PNG para fotos).
+   */
+  let pedidoRecorte = 0;
+  async function prepararArquivo() {
+    const pedido = ++pedidoRecorte;
+    if (!estado.arquivo) { arquivoFinal = ''; return; }
+    try {
+      const img = await abrirImagem(estado.arquivo);
+      if (pedido !== pedidoRecorte) return;
+      proporcaoArquivo = img.naturalHeight / img.naturalWidth || 1;
+      if (estado.formato === 'original') { arquivoFinal = estado.arquivo; return; }
+      const menor = Math.min(img.naturalWidth, img.naturalHeight);
+      const lado = Math.max(1, Math.min(200, estado.tamanho * 2, menor));
+      const c = document.createElement('canvas');
+      c.width = c.height = lado;
+      const ctx = c.getContext('2d')!;
+      if (!estado.arquivoAlfa) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, lado, lado); }
+      ctx.beginPath();
+      if (estado.formato === 'redondo') ctx.arc(lado / 2, lado / 2, lado / 2, 0, Math.PI * 2);
+      else if (ctx.roundRect) ctx.roundRect(0, 0, lado, lado, lado * 0.14);
+      else ctx.rect(0, 0, lado, lado);
+      ctx.clip();
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, (img.naturalWidth - menor) / 2, (img.naturalHeight - menor) / 2, menor, menor, 0, 0, lado, lado);
+      arquivoFinal = estado.arquivoAlfa ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85);
+    } catch { arquivoFinal = estado.arquivo; }
+  }
+
+  function tamanhoTexto(uri: string) {
+    const kb = Math.round((uri.length - uri.indexOf(',') - 1) * 0.75 / 1024);
+    return `${kb} KB`;
+  }
+
+  // ---------- desenho ----------
+  function mostrarPaineis() {
+    form.querySelectorAll<HTMLElement>('[data-painel]').forEach((p) => { p.hidden = p.dataset.painel !== estado.imagemModo; });
+    const minimal = estado.modelo === 'minimalista';
+    const temImagem = estado.imagemModo === 'url' || (estado.imagemModo === 'arquivo' && !!estado.arquivo);
+    $('opcoes-imagem').hidden = !temImagem || minimal;
+    $('aviso-minimalista').hidden = !minimal || estado.imagemModo === 'nenhuma';
+    $('tamanho-valor').textContent = `${estado.tamanho} px`;
+    const prop = estado.imagemModo === 'url' ? proporcaoUrl : proporcaoArquivo;
+    $('aviso-quadrada').hidden = !(estado.imagemModo === 'url' && estado.formato !== 'original' && Math.abs(prop - 1) > 0.06);
+    $('aviso-cor-icones').hidden = estado.icones !== 'destaque' || CORES.some((c) => c.hex === estado.cor.toLowerCase());
+    const info = $('info-arquivo');
+    info.hidden = !estado.arquivo;
+    if (estado.arquivo) info.textContent = `Imagem carregada${estado.arquivoNome ? `: ${estado.arquivoNome}` : ''}. Reduzida para a assinatura (${tamanhoTexto(arquivoFinal || estado.arquivo)}).`;
+
+    // Avisos de dados que não viram link.
+    const avisos: string[] = [];
+    if (estado.email.trim() && !emailValido(estado.email)) avisos.push('O e-mail parece incompleto, então não vai virar link.');
+    if (estado.whatsapp.trim() && !linkWhatsapp(estado.whatsapp)) avisos.push('Digite o WhatsApp com DDD, como (11) 91234-5678, para virar link.');
+    if (estado.telefone.trim() && !linkTelefone(estado.telefone)) avisos.push('O telefone parece incompleto.');
+    if (estado.site.trim() && !linkSeguro(estado.site)) avisos.push('O site não parece um endereço válido, então não vai virar link.');
+    const a = $('aviso-dados');
+    a.hidden = !avisos.length;
+    a.textContent = avisos.join(' ');
+  }
+
+  function ajustarAltura() {
+    // Mede o corpo (e não o documento, que nunca fica menor que o próprio quadro) para o quadro também encolher.
+    const body = iframe.contentDocument?.body;
+    if (body) iframe.style.height = `${Math.max(120, Math.ceil(body.getBoundingClientRect().height))}px`;
+  }
+
+  function gerarParaCopiar() {
+    return gerarAssinatura(estado, imagemPronta(estado, false), SITE.url);
+  }
+
+  function desenhar() {
+    mostrarPaineis();
+    const doc = iframe.contentDocument;
+    if (doc?.body) {
+      doc.body.innerHTML = gerarAssinatura(estado, imagemPronta(estado, true), location.origin);
+      doc.querySelectorAll('img').forEach((i) => i.addEventListener('load', ajustarAltura, { once: true }));
+      ajustarAltura();
+    }
+    const html = gerarParaCopiar();
+    codigo.value = html;
+    if (urlDownload) URL.revokeObjectURL(urlDownload);
+    urlDownload = URL.createObjectURL(new Blob([documentoHtml(html)], { type: 'text/html' }));
+    baixar.href = urlDownload;
+  }
+
+  async function atualizar(lerForm = true) {
+    if (lerForm) estado = ler();
+    medirUrl();
+    desenhar();
+    salvar();
+  }
+
+  // ---------- eventos ----------
+  form.addEventListener('submit', (e) => e.preventDefault());
+  form.addEventListener('input', async (e) => {
+    const alvo = e.target as HTMLInputElement;
+    if (alvo.name === 'corSugerida') { (campo('cor') as HTMLInputElement).value = alvo.value; }
+    if (alvo.name === 'cor') marcarCorSugerida();
+    estado = ler();
+    if (estado.imagemModo === 'arquivo' && (alvo.name === 'formato' || alvo.name === 'tamanho' || alvo.name === 'imagemModo')) await prepararArquivo();
+    atualizar(false);
+    status.textContent = '';
+  });
+  form.addEventListener('change', (e) => {
+    // Alguns navegadores só avisam a cor escolhida no "change".
+    if ((e.target as HTMLInputElement).name === 'cor') { marcarCorSugerida(); atualizar(); }
+  });
+
+  $('entrada-imagem').addEventListener('arquivos', async (e) => {
+    const file = (e as CustomEvent<File[]>).detail[0];
+    const erro = $('erro-arquivo');
+    erro.hidden = true;
+    if (!file || !file.type.startsWith('image/')) { erro.textContent = 'Escolha uma imagem JPG, PNG ou WebP.'; erro.hidden = false; return; }
+    try {
+      const { uri, alfa } = await reduzir(file);
+      estado.arquivo = uri; estado.arquivoAlfa = alfa; estado.arquivoNome = file.name;
+      (campo('imagemModo') as RadioNodeList).value = 'arquivo';
+      estado.imagemModo = 'arquivo';
+      await prepararArquivo();
+      atualizar(false);
+    } catch {
+      erro.textContent = 'Não foi possível abrir esta imagem. Tente salvar como JPG ou PNG e enviar de novo.';
+      erro.hidden = false;
+    }
+  });
+
+  function avisar(texto: string, tipo: 'ok' | 'erro' | '' = 'ok') {
+    status.textContent = texto;
+    status.className = `status ${tipo}`;
+  }
+
+  /** Seleciona a prévia (para o Ctrl+C manual) e tenta copiar do jeito antigo. */
+  function copiarSelecionando(): boolean {
+    const doc = iframe.contentDocument, win = iframe.contentWindow;
+    if (!doc || !win) return false;
+    win.getSelection()?.selectAllChildren(doc.body);
+    try { return doc.execCommand('copy'); } catch { return false; }
+  }
+
+  $('copiar').addEventListener('click', async () => {
+    const html = gerarParaCopiar();
+    const gmail = estado.imagemModo === 'arquivo' && estado.modelo !== 'minimalista' && arquivoFinal
+      ? ' No Gmail, a imagem enviada do computador não aparece: coloque-a pelo botão de imagem do editor de assinatura.' : '';
+    try {
+      if (!('ClipboardItem' in window) || !navigator.clipboard?.write) throw new Error('sem suporte');
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([textoSimples(estado)], { type: 'text/plain' }),
+      })]);
+      avisar('Assinatura copiada. Agora cole (Ctrl+V) no campo de assinatura do seu e-mail.' + gmail);
+    } catch {
+      if (copiarSelecionando()) avisar('Assinatura copiada. Agora cole (Ctrl+V) no campo de assinatura do seu e-mail.' + gmail);
+      else avisar('Seu navegador não deixou copiar sozinho. A prévia está selecionada: aperte Ctrl+C (no Mac, Cmd+C) e cole no seu e-mail.', 'erro');
+    }
+  });
+
+  $('copiar-codigo').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(gerarParaCopiar());
+      avisar('Código HTML copiado. Cole no campo de assinatura em HTML do seu programa de e-mail.');
+    } catch {
+      const det = codigo.closest('details')!;
+      det.open = true; codigo.focus(); codigo.select();
+      avisar('Seu navegador não deixou copiar sozinho. O código está selecionado: aperte Ctrl+C (no Mac, Cmd+C).', 'erro');
+    }
+  });
+
+  $('recomecar').addEventListener('click', async () => {
+    if (!confirm('Apagar tudo o que você preencheu e começar uma assinatura em branco?')) return;
+    estado = structuredClone(VAZIO);
+    urlMedida = ''; proporcaoUrl = 1; arquivoFinal = '';
+    preencher(estado);
+    $('erro-url').hidden = true; $('erro-arquivo').hidden = true;
+    atualizar(false);
+    avisar('Pronto, tudo em branco. Comece pelo seu nome.', '');
+    (campo('nome') as HTMLInputElement).focus();
+  });
+
+  // Abas de instalação
+  const abas = Array.from(document.querySelectorAll<HTMLButtonElement>('.instalar [role="tab"]'));
+  function ativarAba(i: number) {
+    abas.forEach((a, j) => {
+      a.setAttribute('aria-selected', String(i === j));
+      a.tabIndex = i === j ? 0 : -1;
+      $(a.getAttribute('aria-controls')!).hidden = i !== j;
+    });
+  }
+  abas.forEach((a, i) => {
+    a.addEventListener('click', () => ativarAba(i));
+    a.addEventListener('keydown', (e) => {
+      const passo = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!passo) return;
+      e.preventDefault();
+      const j = (i + passo + abas.length) % abas.length;
+      ativarAba(j); abas[j].focus();
+    });
+  });
+
+  // ---------- início ----------
+  estado = carregarRascunho() ?? structuredClone(EXEMPLO);
+  preencher(estado);
+  new ResizeObserver(ajustarAltura).observe(iframe);
+  async function iniciar() {
+    await prepararArquivo();
+    atualizar(false);
+  }
+  // O srcdoc do quadro de prévia pode terminar de carregar antes ou depois deste script.
+  if (iframe.contentDocument?.readyState === 'complete' && iframe.contentDocument.body) iniciar();
+  iframe.addEventListener('load', iniciar, { once: true });
+</script>
+
+<style>
+  .editor { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  @media (min-width: 920px) {
+    .editor { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
+    .lado { position: sticky; top: 16px; }
+  }
+  .form { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .bloco { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  legend { font: 700 1.05rem var(--f-display); padding: 0 6px; }
+  .grade2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 12px; }
+  textarea { resize: vertical; }
+  .pequeno { font-size: 0.88rem; }
+  .aviso { font-size: 0.9rem; background: var(--brand-soft); border-radius: 8px; padding: 10px 12px; }
+
+  /* Controle segmentado (rádios com cara de botões) */
+  .seg { border: 0; padding: 4px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; background: var(--bg); border-radius: var(--radius); }
+  .seg3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .seg label { position: relative; cursor: pointer; min-width: 0; display: flex; }
+  .seg input { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+  .seg span { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; padding: 8px 4px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; line-height: 1.25; transition: transform 0.18s var(--mola); }
+  .seg small { font-weight: 500; font-size: 0.75rem; color: var(--muted); }
+  .seg input:checked + span { background: var(--surface); box-shadow: var(--sombra); }
+  .seg input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 1px; }
+  .seg label:active span { transform: scale(0.96); }
+
+  .painel { animation: trocar 0.22s var(--suave); }
+  @keyframes trocar { from { opacity: 0; transform: translateY(4px); } }
+  .dica { font-size: 0.92rem; }
+  .dica summary { cursor: pointer; font-weight: 600; color: var(--link); }
+  .dica ol { margin: 8px 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+
+  /* Modelos */
+  .modelos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 8px; }
+  .modelo { position: relative; cursor: pointer; display: flex; }
+  .modelo input { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+  .cartao { flex: 1; display: flex; flex-direction: column; gap: 2px; padding: 10px; border: 2px solid var(--line); border-radius: var(--radius); transition: transform 0.2s var(--mola), border-color 0.15s; }
+  .cartao svg { width: 80px; height: 44px; margin-bottom: 4px; }
+  .cartao strong { font-size: 0.95rem; }
+  .cartao small { color: var(--muted); font-size: 0.8rem; line-height: 1.3; }
+  .modelo:hover .cartao { transform: translateY(-2px); }
+  .modelo input:checked + .cartao { border-color: var(--fg); background: var(--brand-soft); }
+  .modelo input:focus-visible + .cartao { outline: 3px solid var(--link); outline-offset: 2px; }
+  .m-img { fill: var(--muted); opacity: 0.45; }
+  .m-txt { fill: var(--muted); opacity: 0.6; }
+  .m-cor { fill: var(--link); }
+  .m-faixa { fill: var(--surface); }
+
+  /* Cores */
+  .cores { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .amostra { position: relative; cursor: pointer; }
+  .amostra input { position: absolute; opacity: 0; inset: 0; margin: 0; pointer-events: none; }
+  .amostra span { display: block; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); transition: transform 0.2s var(--mola); }
+  .amostra:hover span { transform: scale(1.08); }
+  .amostra input:checked + span { box-shadow: 0 0 0 3px var(--fg); transform: scale(1.08); }
+  .amostra input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 3px; }
+  .livre { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+  .livre input { width: 44px; height: 36px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+
+  /* Prévia e ações */
+  .lado { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .previa { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .previa-topo { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 14px; border-bottom: 1px solid var(--line); font-weight: 600; font-size: 0.9rem; }
+  /* Fundo branco fixo: representa o corpo do e-mail (ver comentário no HTML). */
+  #previa { display: block; width: 100%; height: 240px; border: 0; background: #ffffff; }
+  .acoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 8px; }
+  .acoes .btn { padding-inline: 12px; }
+  .status { min-height: 1.6em; font-size: 0.92rem; }
+  .status.ok { color: var(--ok); font-weight: 600; }
+  .status.erro { color: var(--erro); font-weight: 600; }
+  .codigo summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+  .codigo textarea { margin-top: 8px; font: 0.8rem/1.4 var(--f-mono); }
+  .recomecar { align-self: flex-start; padding: 7px 14px; font-size: 0.92rem; }
+
+  /* Abas de instalação */
+  .instalar { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+  .abas { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--bg); border-radius: var(--radius); width: fit-content; max-width: 100%; }
+  .aba { font: 600 0.95rem var(--f-body); color: var(--fg); background: transparent; border: 0; border-radius: 8px; padding: 8px 14px; cursor: pointer; transition: transform 0.18s var(--mola); }
+  .aba:active { transform: scale(0.96); }
+  .aba[aria-selected='true'] { background: var(--surface); box-shadow: var(--sombra); }
+  .aba-painel { display: flex; flex-direction: column; gap: 10px; max-width: 70ch; animation: trocar 0.22s var(--suave); }
+  .aba-painel h3 { margin-top: 6px; }
+  .aba-painel ol { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+  kbd { font: 0.85em var(--f-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: var(--bg); }
+</style>
