@@ -8,7 +8,7 @@ export default [
   { slug: 'remover-paginas', nome: 'Remover páginas do PDF', resumo: 'Apague as páginas que você não quer.', status: 'planejada' },
   { slug: 'girar-pdf', nome: 'Girar PDF', resumo: 'Gire páginas tortas ou de cabeça para baixo.', status: 'planejada' },
   { slug: 'organizar-pdf', nome: 'Organizar PDF', resumo: 'Mude a ordem das páginas arrastando.', status: 'planejada' },
-  { slug: 'assinar-pdf', nome: 'Assinar PDF', resumo: 'Desenhe sua assinatura e coloque no documento.', status: 'planejada' },
+  { slug: 'assinar-pdf', nome: 'Assinar PDF', resumo: 'Desenhe sua assinatura e coloque no documento.', status: 'pronta' },
   { slug: 'marca-dagua', nome: "Marca d'água em PDF", resumo: 'Adicione um texto em todas as páginas.', status: 'planejada' },
   { slug: 'numerar-paginas', nome: 'Numerar páginas', resumo: 'Coloque número nas páginas do PDF.', status: 'planejada' },
   { slug: 'comprimir-pdf', nome: 'Comprimir PDF', resumo: 'Diminua o tamanho do arquivo.', status: 'planejada' },

@@ -1,0 +1,989 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import { ESTILOS, TINTAS } from '../../lib/assinatura-tela';
+
+const tinta = (t: keyof typeof TINTAS) => `rgb(${TINTAS[t].join(' ')})`;
+---
+<Ferramenta
+  secao="pdf"
+  slug="assinar-pdf"
+  titulo="Assinar PDF"
+  subtitulo="Desenhe, digite ou use a foto da sua assinatura e coloque onde quiser no documento. O PDF e a assinatura ficam no seu aparelho: nada é enviado."
+  tituloSeo="Assinar PDF online grátis, sem enviar o arquivo"
+  descricao="Assine PDF grátis: desenhe, digite ou use a foto da sua assinatura, coloque nas páginas e baixe. O arquivo e a assinatura não saem do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Crie a assinatura: desenhe com o dedo ou o mouse, digite seu nome e escolha um estilo de letra, ou envie uma foto da assinatura feita no papel.',
+    'Toque na página onde ela deve ficar. Arraste para ajustar e puxe um dos cantos para aumentar ou diminuir. "Rubricar todas as páginas" repete a assinatura no mesmo lugar em cada folha.',
+    'Se precisar, coloque também a data ou um texto curto, como seu nome e CPF.',
+    'Clique em "Gerar PDF assinado" e baixe o arquivo.',
+  ]}
+  perguntas={[
+    { p: 'Assinatura feita aqui tem validade?', r: 'É uma assinatura eletrônica simples: a imagem da sua assinatura colocada no PDF. Ela vale quando quem recebe aceita esse formato, o que é comum em contratos de aluguel entre particulares, propostas, recibos, autorizações de escola e documentos internos de empresa. A Medida Provisória 2.200-2/2001 permite outros meios de assinatura eletrônica desde que as partes os aceitem. Ela não prova sozinha quem assinou nem impede que alguém altere o arquivo depois.' },
+    { p: 'Qual a diferença entre assinatura eletrônica e assinatura digital?', r: 'Assinatura eletrônica é qualquer forma de assinar no meio digital, inclusive colar a imagem da assinatura, como faz esta ferramenta. Assinatura digital (chamada de qualificada na Lei 14.063/2020) usa um certificado ICP-Brasil, como o e-CPF, e grava no arquivo um código que identifica você e acusa qualquer alteração. Ela é exigida em escrituras e registros de imóveis, em vários processos de órgãos públicos e da Justiça e em documentos fiscais de empresas. Na dúvida, pergunte a quem vai receber o documento.' },
+    { p: 'Como assinar um PDF de graça pelo gov.br?', r: 'Quem tem conta gov.br nível prata ou ouro pode usar de graça a assinatura eletrônica avançada do governo, no serviço "Assinatura eletrônica" do portal gov.br (assinador.iti.br). Ela identifica você pela conta gov.br e é aceita por órgãos públicos e por muitas instituições. Nesse caso, o arquivo é enviado ao serviço do governo para ser assinado.' },
+    { p: 'Minha assinatura fica salva em algum lugar?', r: 'Não, a não ser que você marque "Lembrar minha assinatura neste aparelho". Aí ela fica guardada só neste navegador, para você não precisar desenhar de novo da próxima vez. O botão "Apagar assinatura salva" tira de lá na hora. O PDF e a assinatura nunca são enviados para servidor nenhum.' },
+    { p: 'Como assinar PDF pelo celular?', r: 'Abra esta página no navegador do celular, escolha o PDF e assine com o dedo no quadro branco. Virar o celular deitado dá mais espaço para desenhar. Depois, toque na página onde a assinatura deve ficar, ajuste e toque em "Gerar PDF assinado". O arquivo vai para a pasta de downloads.' },
+    { p: 'Por que meu PDF não abre para assinar?', r: 'PDFs com senha para abrir ou com bloqueio de edição, comuns em extratos de banco e documentos emitidos por sistemas, não podem receber a assinatura sem antes tirar a proteção com a senha. Arquivos corrompidos ou que não são PDF de verdade também não abrem.' },
+  ]}
+>
+  <div class="stack">
+    <div id="zona-entrada">
+      <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    </div>
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <div class="linha-arquivo">
+        <p id="info" class="muted"></p>
+        <button id="trocar" type="button" class="btn btn-sec pequeno">Trocar PDF</button>
+      </div>
+
+      <section class="bloco stack" aria-labelledby="t-criar">
+        <h2 id="t-criar" class="passo">1. Crie sua assinatura</h2>
+        <div class="abas" role="tablist" aria-label="Jeito de criar a assinatura">
+          <button type="button" role="tab" id="aba-desenhar" aria-controls="p-desenhar" aria-selected="true">Desenhar</button>
+          <button type="button" role="tab" id="aba-digitar" aria-controls="p-digitar" aria-selected="false" tabindex="-1">Digitar</button>
+          <button type="button" role="tab" id="aba-imagem" aria-controls="p-imagem" aria-selected="false" tabindex="-1">Enviar imagem</button>
+        </div>
+
+        <div role="tabpanel" id="p-desenhar" aria-labelledby="aba-desenhar" class="stack">
+          <div class="pad papel">
+            <canvas id="pad" aria-label="Quadro para desenhar a assinatura com o mouse, o dedo ou a caneta"></canvas>
+            <span class="linha-base" aria-hidden="true"></span>
+            <span id="pad-dica" class="pad-dica" aria-hidden="true">Assine aqui</span>
+          </div>
+          <div class="controles">
+            <div class="campo espessura">
+              <label for="espessura">Espessura</label>
+              <input id="espessura" type="range" min="1" max="5" step="1" value="3" />
+            </div>
+            <button id="limpar" type="button" class="btn btn-sec pequeno">Limpar</button>
+          </div>
+        </div>
+
+        <div role="tabpanel" id="p-digitar" aria-labelledby="aba-digitar" class="stack" hidden>
+          <div class="campo">
+            <label for="nome">Seu nome</label>
+            <input id="nome" type="text" maxlength="60" autocomplete="name" placeholder="Ex.: Maria Souza" />
+          </div>
+          <fieldset class="estilos">
+            <legend class="rotulo">Estilo da letra</legend>
+            {ESTILOS.map((e, i) => (
+              <label class="estilo">
+                <input type="radio" name="estilo" value={e.id} checked={i === 0} />
+                <span class="amostra papel" style={`font-family:"${e.familia}",cursive`} data-escala={e.escala}>Seu nome</span>
+                <span class="nome-fonte">{e.nome}</span>
+              </label>
+            ))}
+          </fieldset>
+        </div>
+
+        <div role="tabpanel" id="p-imagem" aria-labelledby="aba-imagem" class="stack" hidden>
+          <p class="muted">Assine num papel branco com caneta escura e tire uma foto de perto, com boa luz e sem sombra. O fundo branco é removido sozinho.</p>
+          <div>
+            <input id="foto" class="escondido" type="file" accept="image/*" />
+            <label for="foto" class="btn btn-sec">Escolher foto da assinatura</label>
+          </div>
+          <p id="foto-erro" class="erro" role="alert" hidden></p>
+          <div id="foto-ajuste" class="stack" hidden>
+            <div class="campo">
+              <label for="limiar">Remover fundo: <span id="limiar-valor"></span></label>
+              <input id="limiar" type="range" min="60" max="250" step="1" value="190" />
+              <small>Se sobrar sujeira ou sombra, puxe para a esquerda. Se o traço ficar falhado, puxe para a direita.</small>
+            </div>
+            <div class="xadrez"><img id="foto-previa" alt="Assinatura com o fundo removido" /></div>
+          </div>
+        </div>
+
+        <fieldset class="tintas">
+          <legend class="rotulo">Cor da tinta</legend>
+          <label class="opcao"><input type="radio" name="tinta" value="azul" checked /><span class="amostra-cor" style={`background:${tinta('azul')}`}></span> Azul</label>
+          <label class="opcao"><input type="radio" name="tinta" value="preta" /><span class="amostra-cor" style={`background:${tinta('preta')}`}></span> Preta</label>
+        </fieldset>
+
+        <div class="lembrar">
+          <label class="marcar"><input id="lembrar" type="checkbox" /> Lembrar minha assinatura neste aparelho</label>
+          <small class="muted">Fica só neste navegador. Vale para a assinatura desenhada ou digitada.</small>
+          <button id="esquecer" type="button" class="link" hidden>Apagar assinatura salva</button>
+        </div>
+      </section>
+
+      <section class="bloco stack" aria-labelledby="t-colocar">
+        <h2 id="t-colocar" class="passo">2. Coloque no documento</h2>
+        <div class="barra">
+          <fieldset class="colocar">
+            <legend class="rotulo">Tocar na página coloca</legend>
+            <label class="opcao"><input type="radio" name="colocar" value="assinatura" checked /> Assinatura <span class="mini-ass papel" id="mini-ass" hidden><img alt="" /></span></label>
+            <label class="opcao"><input type="radio" name="colocar" value="data" /> Data</label>
+            <label class="opcao"><input type="radio" name="colocar" value="texto" /> Texto</label>
+          </fieldset>
+          <div class="extras">
+            <div class="campo" id="campo-data" hidden>
+              <label for="data">Data</label>
+              <input id="data" type="date" />
+            </div>
+            <div class="campo" id="campo-texto" hidden>
+              <label for="texto">Texto</label>
+              <input id="texto" type="text" maxlength="80" placeholder="Ex.: Maria Souza, CPF 123.456.789-00" />
+            </div>
+          </div>
+          <div class="acoes">
+            <button id="rubricar" type="button" class="btn btn-sec pequeno">Rubricar todas as páginas</button>
+            <label class="ir" id="ir-rotulo">Ir para a página <select id="ir"></select></label>
+          </div>
+          <p id="dica" class="muted" aria-live="polite"></p>
+          <div id="selecao" class="selecao" hidden>
+            <span id="selecao-texto"></span>
+            <button id="sel-remover" type="button" class="link">Remover</button>
+            <button id="sel-remover-grupo" type="button" class="link" hidden>Remover de todas as páginas</button>
+          </div>
+        </div>
+        <ol id="paginas" class="paginas" aria-label="Páginas do PDF"></ol>
+      </section>
+
+      <div class="enviar">
+        <button id="gerar" type="button" class="btn" disabled>Gerar PDF assinado</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+      <div id="saida" class="resultado saida" hidden>
+        <div><strong>PDF assinado pronto</strong><span id="saida-info" class="muted"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve uma assinatura no PDF</h2>
+    <p>Muita coisa do dia a dia chega por e-mail ou WhatsApp e precisa voltar assinada: o contrato de aluguel de temporada, a autorização para o passeio da escola, o recibo de um serviço, a proposta de um fornecedor, o termo de entrega de um equipamento da empresa. Imprimir, assinar com caneta, escanear e mandar de volta leva tempo e gasta papel. Aqui você coloca a assinatura direto no arquivo e devolve em um minuto.</p>
+    <p>O que esta ferramenta faz é uma <strong>assinatura eletrônica simples</strong>: a imagem da sua assinatura vai para dentro do PDF, no lugar que você escolher, como se você tivesse colado um adesivo. O texto original continua igual, e o arquivo abre em qualquer leitor de PDF.</p>
+    <h2>Quando a imagem da assinatura não basta</h2>
+    <p>A assinatura simples vale quando quem recebe aceita. Ela não traz nenhuma prova técnica de quem assinou, e o arquivo pode ser alterado depois sem deixar rastro. Por isso, alguns documentos pedem mais:</p>
+    <ul>
+      <li><strong>Assinatura digital com certificado ICP-Brasil</strong> (e-CPF, e-CNPJ, token ou certificado em nuvem): exigida, por exemplo, em escrituras e registros de imóveis em cartório, em muitos processos na Justiça e em órgãos públicos e em documentos fiscais e contábeis de empresas. O certificado é pago e emitido por uma autoridade certificadora.</li>
+      <li><strong>Assinatura avançada do gov.br</strong>: grátis para quem tem conta prata ou ouro. É aceita por órgãos públicos e por muitas instituições, como universidades e conselhos profissionais. Ela é feita no site do governo, para onde o arquivo precisa ser enviado.</li>
+    </ul>
+    <p>Se o documento vai para um órgão público, um banco ou um cartório, confira antes que tipo de assinatura eles aceitam.</p>
+    <h2>Dicas para a assinatura ficar bonita</h2>
+    <ul>
+      <li>No computador, desenhar com o mouse costuma sair tremido. A aba "Enviar imagem" resolve: assine no papel, fotografe e o fundo some sozinho.</li>
+      <li>Tinta azul ajuda a mostrar que o documento foi assinado, e não fotocopiado. A preta fica mais discreta em documentos formais.</li>
+      <li>Uma assinatura de uns 5 cm de largura fica natural numa folha A4. Rubricas nas outras páginas ficam bem com 2 a 3 cm, no canto inferior direito.</li>
+      <li>Depois de gerar, abra o PDF e confira cada página antes de enviar.</li>
+    </ul>
+    <h2>Seu documento não sai daqui</h2>
+    <p>O PDF é aberto e assinado pelo próprio navegador. Nem o arquivo nem a imagem da sua assinatura são enviados para servidor algum. Só se você marcar "Lembrar minha assinatura neste aparelho" a assinatura fica guardada, e apenas neste navegador. Para outras tarefas com o arquivo, veja o <a href="/pdf/juntar-pdf">Juntar PDF</a> e o <a href="/pdf/dividir-pdf">Dividir PDF</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, carregarPdfLib, desenharPagina, fecharPdf, filaDeTrabalho, paraBlob, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import {
+    caixaCentrada, caixaNoPdf, dataBrasileira, espessuraRelativa, hojeIso, limitarCaixa, mesmaPosicao,
+    normalizarRotacao, redimensionar, tamanhoVisto, type Caixa, type PaginaPdf, type Ponto,
+  } from '../../lib/assinatura';
+  import {
+    ESTILOS, abrirFoto, carregarFontesManuscritas, corCss, desenharTracos, fotoParaImagem, imagemDeDataUrl,
+    paraDataUrl, textoParaImagem, tracosParaImagem, type Foto, type Imagem, type Tinta,
+  } from '../../lib/assinatura-tela';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CHAVE = 'qg-assinatura';
+  const ICONE_X = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+
+  type Aba = 'desenhar' | 'digitar' | 'imagem';
+  type Tipo = 'assinatura' | 'data' | 'texto';
+  interface Item { id: number; pagina: number; tipo: Tipo; img: Imagem; caixa: Caixa; grupo?: number; el: HTMLElement; }
+
+  const entrada = $('entrada');
+  const zonaEntrada = $('zona-entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const lista = $('paginas');
+  const dica = $('dica');
+  const botaoGerar = $<HTMLButtonElement>('gerar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  // ---------- Estado ----------
+  let dadosPdf: ArrayBuffer | null = null;
+  let nomeBase = 'documento';
+  let paginas: PaginaPdf[] = [];
+  let visor: DocumentoPdfJs | null = null;
+  let rodada = 0;
+  let fila = filaDeTrabalho();
+  let itens: Item[] = [];
+  let selecionado: Item | null = null;
+  let proximoId = 1;
+  let urlSaida = '';
+
+  let aba: Aba = 'desenhar';
+  const resultado: Record<Aba, Imagem | null> = { desenhar: null, digitar: null, imagem: null };
+  let salva: Imagem | null = null;
+  const tintaAtual = () => document.querySelector<HTMLInputElement>('input[name="tinta"]:checked')!.value as Tinta;
+  const modoColocar = () => document.querySelector<HTMLInputElement>('input[name="colocar"]:checked')!.value as Tipo;
+  const assinatura = () => resultado[aba] ?? salva;
+  const vista = (i: number) => tamanhoVisto(paginas[i]);
+  const folhaDe = (i: number) => lista.querySelector<HTMLElement>(`.folha[data-i="${i}"]`)!;
+
+  // ---------- Abas ----------
+  const abas: Aba[] = ['desenhar', 'digitar', 'imagem'];
+  function abrirAba(nova: Aba, foco = false) {
+    aba = nova;
+    for (const a of abas) {
+      const botao = $(`aba-${a}`);
+      botao.setAttribute('aria-selected', String(a === nova));
+      botao.tabIndex = a === nova ? 0 : -1;
+      $(`p-${a}`).hidden = a !== nova;
+    }
+    if (foco) $(`aba-${nova}`).focus();
+    if (nova === 'desenhar') ajustarPad();
+    if (nova === 'digitar') { carregarFontesManuscritas().then(atualizarAmostras); atualizarAmostras(); }
+    assinaturaMudou();
+  }
+  for (const a of abas) {
+    const botao = $(`aba-${a}`);
+    botao.addEventListener('click', () => abrirAba(a));
+    botao.addEventListener('keydown', (e) => {
+      const i = abas.indexOf(a);
+      const alvo = e.key === 'ArrowRight' ? abas[(i + 1) % 3] : e.key === 'ArrowLeft' ? abas[(i + 2) % 3] : e.key === 'Home' ? abas[0] : e.key === 'End' ? abas[2] : null;
+      if (alvo) { e.preventDefault(); abrirAba(alvo, true); }
+    });
+  }
+
+  // ---------- Desenhar ----------
+  const pad = $<HTMLCanvasElement>('pad');
+  const padCtx = pad.getContext('2d')!;
+  const padDica = $('pad-dica');
+  const espessura = $<HTMLInputElement>('espessura');
+  let tracos: Ponto[][] = [];
+  let tracoAtual: Ponto[] | null = null;
+  let ultimo: { x: number; y: number; t: number } | null = null;
+  let quadroPedido = false;
+  const grossura = () => 1 + Number(espessura.value) * 0.8; // px de tela
+
+  function ajustarPad() {
+    const r = pad.getBoundingClientRect();
+    if (!r.width) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    pad.width = Math.round(r.width * dpr);
+    pad.height = Math.round(r.height * dpr);
+    redesenharPad();
+  }
+  function redesenharPad() {
+    padCtx.clearRect(0, 0, pad.width, pad.height);
+    const dpr = pad.width / Math.max(1, pad.getBoundingClientRect().width);
+    desenharTracos(padCtx, tracos, pad.width, grossura() * dpr, corCss(tintaAtual()));
+    padDica.hidden = tracos.length > 0;
+  }
+  function pedirQuadro() {
+    if (quadroPedido) return;
+    quadroPedido = true;
+    requestAnimationFrame(() => { quadroPedido = false; redesenharPad(); });
+  }
+  function pontoDoPad(e: PointerEvent): Ponto {
+    const r = pad.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.width;
+    const agora = e.timeStamp;
+    let vel = 0;
+    if (ultimo) vel = (Math.hypot((x - ultimo.x) * r.width, (y - ultimo.y) * r.width)) / Math.max(1, agora - ultimo.t);
+    const anterior = tracoAtual?.length ? tracoAtual[tracoAtual.length - 1].f : null;
+    const f = espessuraRelativa(vel, e.pointerType === 'pen' ? e.pressure : null, anterior);
+    ultimo = { x, y, t: agora };
+    return { x, y, f };
+  }
+  pad.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    e.preventDefault();
+    pad.setPointerCapture(e.pointerId);
+    ultimo = null;
+    tracoAtual = [];
+    tracoAtual.push(pontoDoPad(e));
+    tracos.push(tracoAtual);
+    pedirQuadro();
+  });
+  pad.addEventListener('pointermove', (e) => {
+    if (!tracoAtual) return;
+    e.preventDefault();
+    const eventos = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
+    for (const ev of eventos.length ? eventos : [e]) {
+      const p = pontoDoPad(ev);
+      const u = tracoAtual[tracoAtual.length - 1];
+      if (Math.hypot(p.x - u.x, p.y - u.y) > 0.0015) tracoAtual.push(p);
+    }
+    pedirQuadro();
+  });
+  const terminarTraco = () => {
+    if (!tracoAtual) return;
+    tracoAtual = null;
+    atualizarDesenho();
+  };
+  pad.addEventListener('pointerup', terminarTraco);
+  pad.addEventListener('pointercancel', terminarTraco);
+  // No celular, o dedo no quadro não pode rolar a página (o CSS também tem touch-action: none).
+  pad.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+  new ResizeObserver(() => { if (aba === 'desenhar') ajustarPad(); }).observe(pad);
+
+  $('limpar').addEventListener('click', () => { tracos = []; redesenharPad(); atualizarDesenho(); });
+  espessura.addEventListener('input', () => { redesenharPad(); atualizarDesenho(); });
+
+  let versaoDesenho = 0;
+  async function atualizarDesenho() {
+    const minha = ++versaoDesenho;
+    const img = tracos.length ? await tracosParaImagem(tracos, pad.getBoundingClientRect().width || 400, grossura(), tintaAtual()) : null;
+    if (minha !== versaoDesenho) return;
+    resultado.desenhar = img;
+    assinaturaMudou();
+  }
+
+  // ---------- Digitar ----------
+  const nome = $<HTMLInputElement>('nome');
+  const amostras = Array.from(document.querySelectorAll<HTMLElement>('.estilo .amostra'));
+  const estiloAtual = () => document.querySelector<HTMLInputElement>('input[name="estilo"]:checked')!.value;
+  function atualizarAmostras() {
+    const texto = nome.value.trim() || 'Seu nome';
+    for (const a of amostras) { a.textContent = texto; a.style.color = corCss(tintaAtual()); }
+  }
+  let versaoTexto = 0;
+  let esperaTexto = 0;
+  function atualizarTexto(esperar = true) {
+    clearTimeout(esperaTexto);
+    esperaTexto = window.setTimeout(async () => {
+      const minha = ++versaoTexto;
+      const estilo = ESTILOS.find((e) => e.id === estiloAtual()) ?? ESTILOS[0];
+      let img: Imagem | null = null;
+      if (nome.value.trim()) {
+        await carregarFontesManuscritas();
+        img = await textoParaImagem(nome.value, `"${estilo.familia}", cursive`, tintaAtual(), Math.round(110 * estilo.escala));
+      }
+      if (minha !== versaoTexto) return;
+      resultado.digitar = img;
+      assinaturaMudou();
+    }, esperar ? 200 : 0);
+  }
+  nome.addEventListener('input', () => { atualizarAmostras(); atualizarTexto(); });
+  document.querySelectorAll('input[name="estilo"]').forEach((r) => r.addEventListener('change', () => atualizarTexto(false)));
+
+  // ---------- Enviar imagem ----------
+  const foto = $<HTMLInputElement>('foto');
+  const fotoErro = $('foto-erro');
+  const fotoAjuste = $('foto-ajuste');
+  const fotoPrevia = $<HTMLImageElement>('foto-previa');
+  const limiar = $<HTMLInputElement>('limiar');
+  const limiarValor = $('limiar-valor');
+  let fotoAberta: Foto | null = null;
+  let versaoFoto = 0;
+  let fotoPedida = false;
+
+  async function processarFoto() {
+    if (!fotoAberta) return;
+    const minha = ++versaoFoto;
+    limiarValor.textContent = String(limiar.value);
+    const img = await fotoParaImagem(fotoAberta, Number(limiar.value), tintaAtual());
+    if (minha !== versaoFoto) return;
+    resultado.imagem = img;
+    if (img) { fotoPrevia.src = img.url; fotoPrevia.hidden = false; fotoErro.hidden = true; }
+    else { fotoPrevia.hidden = true; fotoErro.textContent = 'Não sobrou nada da imagem. Puxe o controle para a direita.'; fotoErro.hidden = false; }
+    assinaturaMudou();
+  }
+  async function receberFoto(file: File) {
+    if (aba !== 'imagem') abrirAba('imagem');
+    fotoErro.hidden = true;
+    try {
+      fotoAberta = await abrirFoto(file);
+      limiar.value = String(fotoAberta.limiar);
+      fotoAjuste.hidden = false;
+      await processarFoto();
+    } catch (e) {
+      fotoErro.textContent = (e as Error).message;
+      fotoErro.hidden = false;
+    }
+  }
+  foto.addEventListener('change', () => { const f = foto.files?.[0]; foto.value = ''; if (f) receberFoto(f); });
+  limiar.addEventListener('input', () => {
+    limiarValor.textContent = String(limiar.value);
+    if (fotoPedida) return;
+    fotoPedida = true;
+    requestAnimationFrame(() => { fotoPedida = false; processarFoto(); });
+  });
+
+  // ---------- Cor ----------
+  document.querySelectorAll('input[name="tinta"]').forEach((r) => r.addEventListener('change', () => {
+    redesenharPad();
+    atualizarAmostras();
+    if (tracos.length) atualizarDesenho();
+    if (nome.value.trim()) atualizarTexto(false);
+    if (fotoAberta) processarFoto();
+  }));
+
+  // ---------- Lembrar no aparelho ----------
+  const lembrar = $<HTMLInputElement>('lembrar');
+  const esquecer = $('esquecer');
+  function lerSalva(): string | null { try { return localStorage.getItem(CHAVE); } catch { return null; } }
+  function apagarSalva() { try { localStorage.removeItem(CHAVE); } catch { /* sem armazenamento */ } }
+  let versaoSalvar = 0;
+  async function salvarSeMarcado() {
+    const atual = resultado[aba];
+    if (!lembrar.checked || !atual || aba === 'imagem') return;
+    const minha = ++versaoSalvar;
+    const url = await paraDataUrl(atual.blob);
+    if (minha !== versaoSalvar || !lembrar.checked) return;
+    try {
+      localStorage.setItem(CHAVE, url);
+      salva = atual;
+      esquecer.hidden = false;
+    } catch { /* armazenamento cheio ou bloqueado: segue sem lembrar */ }
+  }
+  lembrar.addEventListener('change', () => {
+    if (lembrar.checked) salvarSeMarcado();
+    else { apagarSalva(); salva = null; esquecer.hidden = true; assinaturaMudou(); }
+  });
+  esquecer.addEventListener('click', () => {
+    apagarSalva(); salva = null; lembrar.checked = false; esquecer.hidden = true;
+    dica.textContent = 'A assinatura salva foi apagada deste aparelho.';
+    assinaturaMudou();
+  });
+  (async () => {
+    const guardada = lerSalva();
+    if (!guardada) return;
+    const img = await imagemDeDataUrl(guardada);
+    if (!img) { apagarSalva(); return; }
+    salva = img;
+    lembrar.checked = true;
+    esquecer.hidden = false;
+    assinaturaMudou();
+  })();
+
+  // ---------- Assinatura atual ----------
+  const miniAss = $('mini-ass');
+  function assinaturaMudou() {
+    const a = assinatura();
+    miniAss.hidden = !a;
+    if (a) miniAss.querySelector('img')!.src = a.url;
+    salvarSeMarcado();
+    atualizarDica();
+  }
+
+  // ---------- O que colocar ----------
+  const campoData = $('campo-data');
+  const campoTexto = $('campo-texto');
+  const data = $<HTMLInputElement>('data');
+  const texto = $<HTMLInputElement>('texto');
+  data.value = hojeIso();
+  document.querySelectorAll('input[name="colocar"]').forEach((r) => r.addEventListener('change', () => {
+    campoData.hidden = modoColocar() !== 'data';
+    campoTexto.hidden = modoColocar() !== 'texto';
+    atualizarDica();
+  }));
+  texto.addEventListener('input', atualizarDica);
+  data.addEventListener('input', atualizarDica);
+
+  function atualizarDica() {
+    if (!paginas.length) return;
+    const m = modoColocar();
+    if (selecionado) { dica.textContent = 'Arraste para mover, puxe um canto para mudar o tamanho. Toque fora para soltar.'; return; }
+    if (m === 'assinatura' && !assinatura()) dica.textContent = 'Crie sua assinatura no passo 1. Depois, toque na página onde ela deve ficar.';
+    else if (m === 'data' && !dataBrasileira(data.value)) dica.textContent = 'Escolha a data.';
+    else if (m === 'texto' && !texto.value.trim()) dica.textContent = 'Digite o texto. Depois, toque na página onde ele deve ficar.';
+    else dica.textContent = `Toque na página onde quer colocar ${m === 'assinatura' ? 'a assinatura' : m === 'data' ? 'a data' : 'o texto'}.`;
+  }
+
+  /** A imagem que vai para a página agora, conforme o que está escolhido. */
+  async function imagemParaColocar(): Promise<{ img: Imagem; tipo: Tipo } | null> {
+    const m = modoColocar();
+    if (m === 'assinatura') { const a = assinatura(); return a ? { img: a, tipo: m } : null; }
+    const conteudo = m === 'data' ? dataBrasileira(data.value) : texto.value.trim();
+    if (!conteudo) return null;
+    const img = await textoParaImagem(conteudo, 'Arial, Helvetica, sans-serif', tintaAtual(), 96, '500');
+    return img ? { img, tipo: m } : null;
+  }
+
+  /** Tamanho inicial em pontos: assinatura com uns 6 cm de largura; data e texto com letra de 11 pt. */
+  function tamanhoInicial(img: Imagem, tipo: Tipo, v: { largura: number; altura: number }) {
+    const prop = img.largura / img.altura;
+    if (tipo === 'assinatura') {
+      let w = Math.min(170, v.largura * 0.45), h = w / prop;
+      if (h > 70) { h = 70; w = h * prop; }
+      return { w, h };
+    }
+    const h = (img.altura / 96) * 11; // a imagem foi escrita com letra de 96 px
+    return { w: h * prop, h };
+  }
+
+  // ---------- Itens na página ----------
+  function posicionar(item: Item) {
+    const v = vista(item.pagina);
+    const s = item.el.style;
+    s.left = `${(item.caixa.u / v.largura) * 100}%`;
+    s.top = `${(item.caixa.v / v.altura) * 100}%`;
+    s.width = `${(item.caixa.w / v.largura) * 100}%`;
+    s.height = `${(item.caixa.h / v.altura) * 100}%`;
+  }
+  const nomeTipo = (t: Tipo) => (t === 'assinatura' ? 'Assinatura' : t === 'data' ? 'Data' : 'Texto');
+
+  function adicionar(pagina: number, tipo: Tipo, img: Imagem, caixa: Caixa, grupo?: number): Item {
+    const el = document.createElement('div');
+    el.className = 'carimbo';
+    el.tabIndex = 0;
+    el.setAttribute('role', 'group');
+    el.setAttribute('aria-label', `${nomeTipo(tipo)} na página ${pagina + 1}. Use as setas para mover e Delete para remover.`);
+    el.innerHTML = `<img alt="" draggable="false"><button type="button" class="tirar" aria-label="Remover">${ICONE_X}</button>`
+      + ['-1,-1', '1,-1', '-1,1', '1,1'].map((c) => { const [sx, sy] = c.split(','); return `<span class="canto" data-sx="${sx}" data-sy="${sy}" aria-hidden="true"></span>`; }).join('');
+    el.querySelector('img')!.src = img.url;
+    const item: Item = { id: proximoId++, pagina, tipo, img, caixa: limitarCaixa(caixa, vista(pagina)), grupo, el };
+    el.dataset.id = String(item.id);
+    folhaDe(pagina).append(el);
+    posicionar(item);
+    itens.push(item);
+    mudou();
+    return item;
+  }
+
+  function remover(item: Item) {
+    item.el.remove();
+    itens = itens.filter((i) => i !== item);
+    if (selecionado === item) selecionar(null);
+    mudou();
+  }
+
+  function selecionar(item: Item | null, focar = true) {
+    if (selecionado && selecionado !== item) selecionado.el.classList.remove('ativo');
+    selecionado = item;
+    const barra = $('selecao');
+    if (item) {
+      item.el.classList.add('ativo');
+      if (focar && document.activeElement !== item.el) item.el.focus({ preventScroll: true });
+      const doGrupo = item.grupo ? itens.filter((i) => i.grupo === item.grupo).length : 0;
+      $('selecao-texto').textContent = `${nomeTipo(item.tipo)} selecionada na página ${item.pagina + 1}.`.replace('Texto selecionada', 'Texto selecionado');
+      const g = $('sel-remover-grupo');
+      g.hidden = doGrupo < 2;
+      g.textContent = `Remover das ${doGrupo} páginas`;
+      barra.hidden = false;
+    } else {
+      barra.hidden = true;
+    }
+    atualizarDica();
+  }
+  $('sel-remover').addEventListener('click', () => { if (selecionado) remover(selecionado); });
+  $('sel-remover-grupo').addEventListener('click', () => {
+    const g = selecionado?.grupo;
+    if (!g) return;
+    itens.filter((i) => i.grupo === g).forEach(remover);
+  });
+
+  function itemDe(el: Element | null): Item | null {
+    const c = el?.closest<HTMLElement>('.carimbo');
+    return c ? itens.find((i) => i.id === Number(c.dataset.id)) ?? null : null;
+  }
+
+  function mudou() {
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+    saida.hidden = true;
+    const n = itens.length;
+    const pags = new Set(itens.map((i) => i.pagina)).size;
+    botaoGerar.disabled = !n || !dadosPdf;
+    status.textContent = n ? `${n} ${n === 1 ? 'item' : 'itens'} em ${pags} ${pags === 1 ? 'página' : 'páginas'}.` : '';
+  }
+
+  // Tocar numa parte vazia da página: coloca (ou, se algo estava selecionado, só solta a seleção).
+  lista.addEventListener('click', async (e) => {
+    const alvo = e.target as HTMLElement;
+    const folha = alvo.closest<HTMLElement>('.folha');
+    if (!folha || alvo.closest('.carimbo')) return;
+    if (selecionado) { selecionar(null); return; }
+    const i = Number(folha.dataset.i);
+    const r = folha.getBoundingClientRect();
+    const v = vista(i);
+    const cu = ((e.clientX - r.left) / r.width) * v.largura;
+    const cv = ((e.clientY - r.top) / r.height) * v.altura;
+    const o = await imagemParaColocar();
+    if (!o) {
+      atualizarDica();
+      if (modoColocar() === 'assinatura') $('t-criar').scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'start' });
+      else (modoColocar() === 'data' ? data : texto).focus();
+      return;
+    }
+    const { w, h } = tamanhoInicial(o.img, o.tipo, v);
+    selecionar(adicionar(i, o.tipo, o.img, caixaCentrada(cu, cv, w, h, v)));
+  });
+
+  lista.addEventListener('click', (e) => {
+    const botao = (e.target as HTMLElement).closest('.tirar');
+    const item = itemDe(botao);
+    if (item) remover(item);
+  });
+
+  // Arrastar e redimensionar (mouse, dedo ou caneta).
+  lista.addEventListener('pointerdown', (e) => {
+    const alvo = e.target as HTMLElement;
+    if (alvo.closest('.tirar') || e.button > 0) return;
+    const item = itemDe(alvo);
+    if (!item) return;
+    e.preventDefault();
+    selecionar(item);
+    const el = item.el;
+    const folha = el.parentElement!;
+    const v = vista(item.pagina);
+    const fator = v.largura / folha.clientWidth;
+    const inicio = { ...item.caixa };
+    const x0 = e.clientX, y0 = e.clientY;
+    const canto = alvo.closest<HTMLElement>('.canto');
+    const sx = Number(canto?.dataset.sx ?? 1) as 1 | -1, sy = Number(canto?.dataset.sy ?? 1) as 1 | -1;
+    el.setPointerCapture(e.pointerId);
+    el.classList.add('arrastando');
+    let andou = false;
+    const mover = (ev: PointerEvent) => {
+      const du = (ev.clientX - x0) * fator, dv = (ev.clientY - y0) * fator;
+      if (!andou && Math.hypot(ev.clientX - x0, ev.clientY - y0) < 2) return;
+      andou = true;
+      item.caixa = canto ? redimensionar(inicio, sx, sy, du, dv, v) : limitarCaixa({ ...inicio, u: inicio.u + du, v: inicio.v + dv }, v);
+      posicionar(item);
+    };
+    const fim = () => {
+      el.removeEventListener('pointermove', mover);
+      el.removeEventListener('pointerup', fim);
+      el.removeEventListener('pointercancel', fim);
+      el.classList.remove('arrastando');
+      if (andou) mudou();
+    };
+    el.addEventListener('pointermove', mover);
+    el.addEventListener('pointerup', fim);
+    el.addEventListener('pointercancel', fim);
+  });
+
+  lista.addEventListener('keydown', (e) => {
+    const item = itemDe(e.target as HTMLElement);
+    if (!item || (e.target as HTMLElement).closest('.tirar')) return;
+    const passo = e.shiftKey ? 10 : 2;
+    const v = vista(item.pagina);
+    const c = item.caixa;
+    let nova: Caixa | null = null;
+    if (e.key === 'ArrowLeft') nova = { ...c, u: c.u - passo };
+    else if (e.key === 'ArrowRight') nova = { ...c, u: c.u + passo };
+    else if (e.key === 'ArrowUp') nova = { ...c, v: c.v - passo };
+    else if (e.key === 'ArrowDown') nova = { ...c, v: c.v + passo };
+    else if (e.key === '+' || e.key === '=') nova = redimensionar(c, 1, 1, passo, 0, v);
+    else if (e.key === '-') nova = redimensionar(c, 1, 1, -passo, 0, v);
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); remover(item); return; }
+    else if (e.key === 'Escape') { selecionar(null, false); item.el.blur(); return; }
+    if (!nova) return;
+    e.preventDefault();
+    item.caixa = limitarCaixa(nova, v);
+    posicionar(item);
+    mudou();
+  });
+  lista.addEventListener('focusin', (e) => { const item = itemDe(e.target as HTMLElement); if (item && item !== selecionado) selecionar(item, false); });
+
+  // ---------- Rubricar todas as páginas ----------
+  $('rubricar').addEventListener('click', () => {
+    if (!paginas.length) return;
+    let base = selecionado;
+    if (!base) {
+      const a = assinatura();
+      if (!a) { dica.textContent = 'Crie sua assinatura no passo 1 para rubricar as páginas.'; $('t-criar').scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth' }); return; }
+      // Rubrica pequena (uns 3 cm) no canto inferior direito da primeira página.
+      const v = vista(0);
+      let w = Math.min(85, v.largura * 0.25), h = w / (a.largura / a.altura);
+      if (h > 40) { h = 40; w = h * (a.largura / a.altura); }
+      const margem = 28;
+      base = itens.find((i) => i.pagina === 0 && i.img === a && i.grupo) ?? adicionar(0, 'assinatura', a, { u: v.largura - margem - w, v: v.altura - margem - h, w, h });
+    }
+    const grupo = base.grupo ?? proximoId++;
+    base.grupo = grupo;
+    let novas = 0;
+    for (let i = 0; i < paginas.length; i++) {
+      if (itens.some((it) => it.grupo === grupo && it.pagina === i)) continue;
+      adicionar(i, base.tipo, base.img, mesmaPosicao(base.caixa, vista(base.pagina), vista(i)), grupo);
+      novas++;
+    }
+    selecionar(base, false);
+    dica.textContent = novas ? `Colocada em mais ${novas} ${novas === 1 ? 'página' : 'páginas'}, no mesmo lugar. Cada uma pode ser ajustada ou removida.` : 'Todas as páginas já têm esta rubrica.';
+  });
+
+  // ---------- Páginas ----------
+  let perto: IntersectionObserver | null = null;
+  let longe: IntersectionObserver | null = null;
+  const ir = $<HTMLSelectElement>('ir');
+
+  function montarPaginas() {
+    perto?.disconnect(); longe?.disconnect();
+    lista.innerHTML = '';
+    ir.innerHTML = '';
+    const minha = rodada;
+    const total = paginas.length;
+    perto = new IntersectionObserver((entradas) => {
+      for (const e of entradas) {
+        if (!e.isIntersecting || !visor) continue;
+        const folha = e.target as HTMLElement;
+        if (folha.dataset.estado !== 'vazia') continue;
+        folha.dataset.estado = 'desenhando';
+        const i = Number(folha.dataset.i);
+        fila(async () => {
+          if (minha !== rodada || !visor || folha.dataset.estado !== 'desenhando') { if (folha.dataset.estado === 'desenhando') folha.dataset.estado = 'vazia'; return; }
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const escala = (Math.max(folha.clientWidth, 200) * dpr) / vista(i).largura;
+          const { canvas } = await desenharPagina(visor, i + 1, escala);
+          if (minha !== rodada || folha.dataset.estado !== 'desenhando') { canvas.width = canvas.height = 0; return; }
+          canvas.className = 'render';
+          canvas.setAttribute('aria-hidden', 'true');
+          folha.prepend(canvas);
+          folha.dataset.estado = 'pronta';
+        }).catch(() => { if (folha.dataset.estado === 'desenhando') folha.dataset.estado = 'erro'; });
+      }
+    }, { rootMargin: '600px 0px' });
+    // Páginas muito longe da tela soltam a imagem para não pesar na memória do celular.
+    longe = new IntersectionObserver((entradas) => {
+      for (const e of entradas) {
+        if (e.isIntersecting) continue;
+        const folha = e.target as HTMLElement;
+        const c = folha.querySelector<HTMLCanvasElement>('canvas.render');
+        if (c) { c.width = c.height = 0; c.remove(); }
+        if (folha.dataset.estado !== 'erro') folha.dataset.estado = 'vazia';
+      }
+    }, { rootMargin: '3000px 0px' });
+
+    for (let i = 0; i < total; i++) {
+      const v = vista(i);
+      const li = document.createElement('li');
+      li.className = 'pagina';
+      const n = document.createElement('p');
+      n.className = 'num';
+      n.textContent = `Página ${i + 1} de ${total}`;
+      const folha = document.createElement('div');
+      folha.className = 'folha';
+      folha.dataset.i = String(i);
+      folha.dataset.estado = 'vazia';
+      folha.style.aspectRatio = `${v.largura} / ${v.altura}`;
+      // Páginas deitadas usam toda a largura; em pé, ficam com no máximo 760 px (uma A4).
+      folha.style.maxWidth = v.largura > v.altura ? '100%' : `${Math.round(Math.min(760, (1075 * v.largura) / v.altura))}px`;
+      li.append(n, folha);
+      lista.append(li);
+      perto.observe(folha);
+      longe.observe(folha);
+      const op = document.createElement('option');
+      op.value = String(i);
+      op.textContent = String(i + 1);
+      ir.append(op);
+    }
+    $('ir-rotulo').hidden = total < 2;
+    $('rubricar').hidden = total < 2;
+  }
+  ir.addEventListener('change', () => {
+    folhaDe(Number(ir.value)).parentElement!.scrollIntoView({ behavior: reduzirMovimento ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  // ---------- Abrir o PDF ----------
+  async function carregar(file: File) {
+    // Uma imagem colada (Ctrl+V) com o PDF já aberto vira a foto da assinatura.
+    if (file.type.startsWith('image/') && dadosPdf) { receberFoto(file); return; }
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = file.type.startsWith('image/') ? 'Escolha primeiro o PDF. Depois você pode enviar a foto da assinatura.' : 'Este arquivo não é um PDF.';
+      aviso.hidden = false;
+      return;
+    }
+    const minha = ++rodada;
+    aviso.hidden = true;
+    fecharPdf(visor); visor = null;
+    fila = filaDeTrabalho();
+    itens = []; selecionado = null; dadosPdf = null; paginas = [];
+    mudou();
+    status.textContent = 'Abrindo o PDF…';
+    try {
+      const dados = await file.arrayBuffer();
+      const doc = await abrirParaEditar(dados);
+      if (minha !== rodada) return;
+      paginas = doc.getPages().map((p) => {
+        const c = p.getCropBox();
+        return { x0: c.x, y0: c.y, largura: c.width, altura: c.height, rotacao: normalizarRotacao(p.getRotation().angle) };
+      });
+      dadosPdf = dados;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      const total = paginas.length;
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      zonaEntrada.hidden = true;
+      painel.hidden = false;
+      status.textContent = '';
+      montarPaginas();
+      selecionar(null);
+      mudou();
+      if (aba === 'desenhar') ajustarPad();
+      const v = await abrirParaVer(dados);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v;
+      // As páginas que já estavam visíveis entram agora que o visor abriu.
+      for (const f of Array.from(lista.querySelectorAll('.folha'))) { perto!.unobserve(f); perto!.observe(f); }
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      zonaEntrada.hidden = false;
+      painel.hidden = true;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  $('trocar').addEventListener('click', () => $<HTMLInputElement>('entrada-input').click());
+
+  // ---------- Gerar o PDF assinado ----------
+  botaoGerar.addEventListener('click', async () => {
+    if (!dadosPdf || !itens.length) return;
+    const minha = rodada;
+    botaoGerar.disabled = true;
+    status.textContent = 'Gerando o PDF assinado…';
+    try {
+      const [doc, { degrees }] = await Promise.all([abrirParaEditar(dadosPdf), carregarPdfLib()]);
+      const embutidas = new Map<Imagem, Awaited<ReturnType<typeof doc.embedPng>>>();
+      for (const item of itens) {
+        let png = embutidas.get(item.img);
+        if (!png) {
+          png = await doc.embedPng(new Uint8Array(await item.img.blob.arrayBuffer()));
+          embutidas.set(item.img, png);
+        }
+        const r = caixaNoPdf(paginas[item.pagina], item.caixa);
+        doc.getPage(item.pagina).drawImage(png, { x: r.x, y: r.y, width: r.width, height: r.height, rotate: degrees(r.rotate) });
+      }
+      const blob = await paraBlob(doc);
+      if (minha !== rodada) return;
+      mudou();
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = `${nomeBase}-assinado.pdf`;
+      $('saida-info').textContent = `${baixar.download} · ${tamanho(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível gerar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      botaoGerar.disabled = !itens.length;
+    }
+  });
+</script>
+
+<style>
+  .linha-arquivo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .linha-arquivo p { overflow-wrap: anywhere; min-width: 0; }
+  .pequeno { padding: 7px 14px; font-size: 0.95rem; }
+  .passo { font-size: 1.15rem; }
+  .bloco { border-top: 1px solid var(--line); padding-top: 16px; }
+  .escondido { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .escondido:focus-visible + label { outline: 3px solid var(--link); outline-offset: 2px; }
+  /* "Papel": representa a folha onde se assina. Fica branco também no modo escuro, como a página do PDF. */
+  .papel { background: #fff; }
+
+  .abas { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .abas button {
+    font: 600 0.98rem var(--f-body); color: var(--muted); background: none; cursor: pointer;
+    padding: 10px 14px; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .abas button[aria-selected='true'] { color: var(--fg); border-bottom-color: var(--brand); }
+  .abas button:hover { color: var(--fg); }
+  [role='tabpanel'] { animation: trocar 0.25s var(--suave); }
+  @keyframes trocar { from { opacity: 0; transform: translateY(4px); } }
+
+  .pad { position: relative; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .pad canvas { display: block; width: 100%; aspect-ratio: 5 / 2; max-height: 260px; touch-action: none; cursor: crosshair; user-select: none; -webkit-user-select: none; }
+  .linha-base { position: absolute; left: 8%; right: 8%; bottom: 24%; border-top: 1.5px dashed var(--line); pointer-events: none; }
+  .pad-dica { position: absolute; left: 8%; bottom: calc(24% + 6px); color: var(--muted); font-size: 0.9rem; pointer-events: none; opacity: 0.8; }
+  .controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; }
+  .espessura { flex: 1 1 180px; max-width: 280px; }
+
+  .estilos, .tintas, .colocar { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .estilos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .estilos legend, .tintas legend, .colocar legend { margin-bottom: 8px; }
+  .estilo {
+    position: relative; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; cursor: pointer; min-width: 0;
+    border: 2px solid var(--line); border-radius: var(--radius); transition: border-color 0.15s, transform 0.2s var(--mola);
+  }
+  .estilo:has(input:checked) { border-color: var(--brand-ink); box-shadow: 0 0 0 2px var(--brand); }
+  .estilo:has(input:focus-visible) { outline: 3px solid var(--link); outline-offset: 2px; }
+  .estilo:active { transform: scale(0.97); }
+  .estilo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .amostra { display: block; padding: 0 8px; border-radius: 6px; font-size: 1.9rem; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 2.7rem; }
+  .nome-fonte { font-size: 0.78rem; color: var(--muted); }
+
+  .tintas, .colocar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opcao {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+    transition: border-color 0.15s, background-color 0.15s, transform 0.2s var(--mola);
+  }
+  .opcao:has(input:checked) { border-color: var(--fg); background: var(--brand-soft); font-weight: 600; }
+  .opcao:active { transform: scale(0.97); }
+  .opcao input { accent-color: var(--fg); margin: 0; }
+  .amostra-cor { width: 16px; height: 16px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1px var(--line); }
+  .mini-ass { display: inline-flex; align-items: center; height: 26px; max-width: 90px; padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line); }
+  .mini-ass img { max-height: 100%; max-width: 100%; display: block; }
+
+  .lembrar { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+  .lembrar small { font-size: 0.85rem; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--fg); flex: none; }
+  .link { font: inherit; font-size: 0.92rem; color: var(--link); background: none; border: 0; padding: 2px 0; cursor: pointer; text-decoration: underline; }
+
+  .xadrez {
+    display: grid; place-items: center; min-height: 120px; padding: 12px; border-radius: var(--radius); border: 1px solid var(--line);
+    background: repeating-conic-gradient(var(--line) 0% 25%, var(--surface) 0% 50%) 0 0 / 18px 18px;
+  }
+  .xadrez img { max-height: 180px; width: auto; }
+
+  .barra { display: flex; flex-direction: column; gap: 10px; }
+  /* Em telas grandes a barra acompanha a rolagem; no celular ela ocuparia metade da tela. */
+  @media (min-width: 760px) and (min-height: 640px) {
+    .barra { position: sticky; top: 0; z-index: 3; margin-inline: -4px; padding: 10px 4px; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .paginas :global(.pagina) { scroll-margin-top: 220px; }
+  }
+  .extras { display: flex; flex-wrap: wrap; gap: 12px; }
+  .extras .campo { flex: 1 1 220px; max-width: 420px; }
+  .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+  .ir { display: inline-flex; align-items: center; gap: 8px; font-size: 0.95rem; }
+  .ir select { width: auto; padding: 6px 10px; }
+  #dica { font-size: 0.92rem; }
+  .selecao { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 0.92rem; animation: trocar 0.2s var(--suave); }
+
+  .paginas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 22px; }
+  .paginas :global(.pagina) { display: flex; flex-direction: column; align-items: center; gap: 6px; scroll-margin-top: 16px; }
+  .paginas :global(.num) { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  .paginas :global(.folha) {
+    position: relative; width: 100%; background: var(--bg); border-radius: 2px; cursor: copy;
+    box-shadow: 0 0 0 1px var(--line), var(--sombra); -webkit-tap-highlight-color: transparent;
+  }
+  .paginas :global(canvas.render) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; animation: surgir 0.25s var(--suave); }
+
+  .paginas :global(.carimbo) {
+    position: absolute; z-index: 1; touch-action: none; cursor: grab; border-radius: 3px;
+    outline: 1.5px dashed transparent; outline-offset: 2px; transition: outline-color 0.15s;
+    animation: pousar 0.28s var(--mola);
+  }
+  @keyframes pousar { from { opacity: 0.4; transform: scale(0.88); } }
+  .paginas :global(.carimbo:hover), .paginas :global(.carimbo.ativo) { outline-color: var(--link); }
+  .paginas :global(.carimbo:focus-visible) { outline: 2px solid var(--link); }
+  .paginas :global(.carimbo.arrastando) { cursor: grabbing; }
+  .paginas :global(.carimbo img) { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; -webkit-user-select: none; }
+  .paginas :global(.canto) {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--link);
+    opacity: 0; transform: scale(0.6); transition: opacity 0.15s, transform 0.2s var(--mola); pointer-events: none;
+  }
+  .paginas :global(.canto)::before { content: ''; position: absolute; inset: -12px; }
+  .paginas :global(.carimbo.ativo .canto) { opacity: 1; transform: none; pointer-events: auto; }
+  .paginas :global(.canto[data-sx='-1'][data-sy='-1']) { left: -9px; top: -9px; cursor: nwse-resize; }
+  .paginas :global(.canto[data-sx='1'][data-sy='-1']) { right: -9px; top: -9px; cursor: nesw-resize; }
+  .paginas :global(.canto[data-sx='-1'][data-sy='1']) { left: -9px; bottom: -9px; cursor: nesw-resize; }
+  .paginas :global(.canto[data-sx='1'][data-sy='1']) { right: -9px; bottom: -9px; cursor: nwse-resize; }
+  .paginas :global(.tirar) {
+    position: absolute; left: 50%; top: -38px; margin-left: -15px; width: 30px; height: 30px; padding: 0; cursor: pointer;
+    display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--brand-ink); background: var(--brand); color: var(--brand-ink);
+    opacity: 0; transform: scale(0.6); pointer-events: none; transition: opacity 0.15s, transform 0.2s var(--mola);
+  }
+  .paginas :global(.carimbo.ativo .tirar) { opacity: 1; transform: none; pointer-events: auto; }
+
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; overflow-wrap: anywhere; }
+</style>
