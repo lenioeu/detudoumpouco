@@ -1,0 +1,337 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import GradeArquivos from '../../components/GradeArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="jpg-para-pdf"
+  titulo="JPG para PDF"
+  subtitulo="Transforme fotos e imagens em um PDF, uma por página. Funciona com JPG, PNG, WebP e fotos do iPhone, sem enviar nada para a internet."
+  tituloSeo="JPG para PDF: converter fotos em PDF online grátis"
+  descricao="Converta fotos JPG, PNG e HEIC em um único PDF, grátis. Escolha A4, ordem e margem. Suas imagens não saem do aparelho, nada é enviado."
+  passos={[
+    'Escolha as fotos ou imagens, ou arraste para a área indicada. Pode escolher várias de uma vez.',
+    'Arraste os cartões (ou use as setas) para acertar a ordem. Use o botão de girar se alguma foto estiver de lado.',
+    'Escolha o tamanho da página, a margem e se quer o arquivo menor para mandar por e-mail ou WhatsApp.',
+    'Clique em "Criar PDF" e depois em "Baixar PDF".',
+  ]}
+  perguntas={[
+    { p: 'Como transformar uma foto em PDF pelo celular?', r: 'Abra esta página no navegador do celular, toque em "Escolher imagens" e selecione as fotos da galeria. Confira a ordem, toque em "Criar PDF" e depois em "Baixar PDF". O arquivo vai para a pasta de downloads do celular.' },
+    { p: 'Dá para juntar várias fotos em um PDF só?', r: 'Sim. Cada imagem vira uma página, na ordem dos cartões. É o jeito mais rápido de mandar a frente e o verso de um documento, ou várias páginas fotografadas, como um arquivo único.' },
+    { p: 'As fotos perdem qualidade?', r: 'Com a opção "Qualidade original", fotos JPG entram no PDF exatamente como estão, sem compressão nova. Com a opção "Menor", as fotos são reduzidas para no máximo 2000 pixels no lado maior, o que deixa o texto legível e o arquivo várias vezes menor.' },
+    { p: 'Funciona com foto HEIC do iPhone?', r: 'Sim. No Safari a foto abre direto; em outros navegadores a página baixa um conversor na primeira vez e transforma a foto antes de colocar no PDF. Tudo continua acontecendo no seu aparelho.' },
+    { p: 'Minha foto ficou deitada no PDF. Como arrumar?', r: 'Use o botão de girar no cartão da foto antes de criar o PDF. Cada toque gira 90 graus no sentido do relógio. Fotos tiradas com o celular de lado normalmente já entram na posição certa, porque a página lê a orientação gravada pela câmera.' },
+    { p: 'Minhas fotos são enviadas para algum servidor?', r: 'Não. O PDF é montado pelo próprio navegador, no seu computador ou celular. As imagens nunca saem do seu aparelho.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,.heic,.heif" multiple texto="Escolher imagens" />
+
+    <GradeArquivos id="lista" rotulo="Imagens na ordem das páginas do PDF" />
+
+    <div class="opcoes">
+      <div class="campo">
+        <label for="tamanho">Tamanho da página</label>
+        <select id="tamanho">
+          <option value="a4" selected>A4 (210 × 297 mm)</option>
+          <option value="carta">Carta (216 × 279 mm)</option>
+          <option value="imagem">Igual ao da imagem</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="orientacao">Orientação</label>
+        <select id="orientacao">
+          <option value="auto" selected>Automática (segue a foto)</option>
+          <option value="retrato">Em pé (retrato)</option>
+          <option value="paisagem">Deitada (paisagem)</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="margem">Margem</label>
+        <select id="margem">
+          <option value="nenhuma" selected>Sem margem</option>
+          <option value="pequena">Pequena (1 cm)</option>
+          <option value="grande">Grande (2,5 cm)</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="peso">Tamanho do arquivo</label>
+        <select id="peso">
+          <option value="original" selected>Qualidade original</option>
+          <option value="menor">Menor (para e-mail e WhatsApp)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="enviar">
+      <button id="criar" type="button" class="btn" disabled>Criar PDF</button>
+      <span id="status" class="muted" aria-live="polite">Escolha uma ou mais imagens.</span>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div>
+        <strong id="saida-titulo"></strong>
+        <span id="saida-info"></span>
+      </div>
+      <a id="baixar" class="btn" download="imagens.pdf" href="#">Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Quando converter imagem em PDF</h2>
+    <p>Fotografar um documento com o celular é rápido, mas muitos sistemas só aceitam PDF. Acontece no envio de RG e CNH para abrir conta, de comprovante de residência para o RH, de atestado médico para a escola e de nota fiscal para reembolso. Com a foto em PDF, o arquivo abre igual em qualquer computador, imprime no tamanho certo da folha e pode juntar várias páginas num envio só.</p>
+    <h2>Como escolher as opções</h2>
+    <ul>
+      <li><strong>A4</strong> é o tamanho da folha comum no Brasil. Escolha quando o PDF puder ser impresso, como em documentos e trabalhos. <strong>Igual ao da imagem</strong> faz cada página ter o formato exato da foto, sem bordas brancas, o que fica melhor para prints de tela e artes.</li>
+      <li>A <strong>orientação automática</strong> deixa a página deitada quando a foto é mais larga do que alta. Assim uma foto de paisagem não fica pequena no meio de uma folha em pé.</li>
+      <li>A <strong>margem</strong> deixa uma borda branca em volta da imagem. Para documentos que vão ser impressos, a margem pequena evita que a impressora corte as bordas.</li>
+      <li>O <strong>arquivo menor</strong> reduz as fotos para até 2000 pixels no lado maior. Uma foto de celular de 4 MB costuma cair para menos de 500 KB e o texto continua fácil de ler.</li>
+    </ul>
+    <h2>Dicas para fotografar documentos</h2>
+    <p>Apoie o papel numa superfície escura e lisa, como uma mesa, para o contorno ficar claro. Fotografe de cima, com o celular paralelo à folha, perto de uma janela e sem flash, que cria reflexo e deixa partes estouradas. Antes de converter, recorte as sobras com o <a href="/imagem/recortar-imagem">Recortar imagem</a>. Se já tiver outros PDFs para enviar junto, use o <a href="/pdf/juntar-pdf">Juntar PDF</a> depois.</p>
+    <p>Os formatos aceitos são JPG, PNG, WebP, GIF, BMP e HEIC. Imagens PNG com fundo transparente ficam com fundo branco quando a opção "Menor" está marcada.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho, trocarExtensao } from '../../lib/arquivos';
+  import { ehHeic } from '../../lib/imagem';
+  import { desenhar, codificar, novoCanvas } from '../../lib/canvas';
+  import { novoPdf, paraBlob } from '../../lib/pdf-navegador';
+  import { MARGENS, orientacaoJpeg, posicionarImagem, type Margem, type Orientacao, type TamanhoPagina } from '../../lib/pdf-pagina';
+  import { criarCartao, numerar } from '../../lib/cartao-arquivo';
+  import { animarTroca, mover, ordenavel } from '../../lib/ordenavel';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const lista = $('lista');
+  const tamanhoPag = $<HTMLSelectElement>('tamanho');
+  const orientacao = $<HTMLSelectElement>('orientacao');
+  const margem = $<HTMLSelectElement>('margem');
+  const peso = $<HTMLSelectElement>('peso');
+  const botao = $<HTMLButtonElement>('criar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  /** Lado maior das fotos na opção "Menor". */
+  const LADO_MENOR = 2000;
+
+  interface Item {
+    id: string; file: File; li: HTMLLIElement;
+    largura?: number; altura?: number; rot: number; miniatura?: HTMLCanvasElement; erro?: string;
+  }
+  let itens: Item[] = [];
+  let contador = 0;
+  let urlSaida = '';
+  let trabalhando = false;
+
+  // ---------- Abrir imagens (com HEIC) ----------
+  type Heic2any = (o: { blob: Blob; toType?: string; quality?: number }) => Promise<Blob | Blob[]>;
+  let conversor: Promise<Heic2any> | null = null;
+  function carregarConversor(): Promise<Heic2any> {
+    if (!conversor) {
+      conversor = import('heic2any').then((m) => m.default as unknown as Heic2any);
+      conversor.catch(() => { conversor = null; });
+    }
+    return conversor;
+  }
+
+  /** Abre a imagem já na posição certa (o navegador aplica a orientação da câmera). */
+  async function decodificar(file: File): Promise<ImageBitmap> {
+    try { return await createImageBitmap(file); } catch { /* pode ser HEIC */ }
+    if (!ehHeic(file.name, file.type)) throw new Error('Não foi possível abrir esta imagem.');
+    status.textContent = 'Carregando o conversor de HEIC (só na primeira vez)…';
+    const heic2any = await carregarConversor();
+    const r = await heic2any({ blob: file, toType: 'image/png' });
+    return createImageBitmap(Array.isArray(r) ? r[0] : r);
+  }
+
+  // ---------- Lista ----------
+  function invalidarSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function atualizar() {
+    numerar(lista);
+    itens.forEach((it, i) => {
+      it.li.querySelector<HTMLButtonElement>('[data-acao="antes"]')!.disabled = i === 0;
+      it.li.querySelector<HTMLButtonElement>('[data-acao="depois"]')!.disabled = i === itens.length - 1;
+    });
+    const validos = itens.filter((it) => it.largura);
+    const abrindo = itens.some((it) => !it.largura && !it.erro);
+    botao.disabled = trabalhando || abrindo || validos.length === 0;
+    orientacao.disabled = tamanhoPag.value === 'imagem';
+    if (trabalhando) return;
+    if (abrindo) status.textContent = 'Abrindo as imagens…';
+    else if (!itens.length) status.textContent = 'Escolha uma ou mais imagens.';
+    else if (!validos.length) status.textContent = 'Nenhuma das imagens pôde ser aberta.';
+    else status.textContent = `${validos.length} ${validos.length === 1 ? 'imagem vai virar 1 página' : `imagens vão virar ${validos.length} páginas`}.`
+      + (validos.length < itens.length ? ' As imagens com erro ficam de fora.' : '');
+  }
+
+  function desenharMiniatura(it: Item) {
+    const base = it.miniatura;
+    if (!base) return;
+    const virar = it.rot % 180 !== 0;
+    const c = novoCanvas(virar ? base.height : base.width, virar ? base.width : base.height);
+    const ctx = c.getContext('2d')!;
+    ctx.translate(c.width / 2, c.height / 2);
+    ctx.rotate((it.rot * Math.PI) / 180);
+    ctx.drawImage(base, -base.width / 2, -base.height / 2);
+    const mini = it.li.querySelector('.mini')!;
+    mini.querySelector('canvas')?.remove();
+    mini.append(c);
+    return c;
+  }
+
+  let fila: Promise<unknown> = Promise.resolve();
+  function abrir(it: Item) {
+    fila = fila.then(async () => {
+      if (!itens.includes(it)) return;
+      const detalhe = it.li.querySelector('.detalhe')!;
+      try {
+        const bitmap = await decodificar(it.file);
+        it.largura = bitmap.width; it.altura = bitmap.height;
+        const escala = Math.min(1, 240 / Math.max(bitmap.width, bitmap.height));
+        it.miniatura = desenhar(bitmap, Math.max(1, Math.round(bitmap.width * escala)), Math.max(1, Math.round(bitmap.height * escala)));
+        bitmap.close();
+        desenharMiniatura(it);
+        detalhe.textContent = `${it.largura} × ${it.altura} px · ${tamanho(it.file.size)}`;
+      } catch {
+        it.erro = 'Não foi possível abrir esta imagem.';
+        detalhe.textContent = it.erro; detalhe.classList.add('erro');
+        it.li.classList.add('com-erro');
+      }
+      atualizar();
+    });
+  }
+
+  function adicionar(files: File[]) {
+    invalidarSaida();
+    for (const file of files) {
+      const { li } = criarCartao(`i${++contador}`, file.name, { girar: true });
+      const it: Item = { id: li.dataset.id!, file, li, rot: 0 };
+      itens.push(it);
+      lista.append(li);
+      abrir(it);
+    }
+    atualizar();
+  }
+
+  function reordenar(novos: Item[]) {
+    animarTroca(lista, () => { itens = novos; lista.replaceChildren(...itens.map((it) => it.li)); });
+    invalidarSaida();
+    atualizar();
+  }
+
+  lista.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-acao]');
+    if (!b || trabalhando) return;
+    const i = itens.findIndex((it) => it.li.contains(b));
+    if (i < 0) return;
+    const it = itens[i];
+    const acao = b.dataset.acao;
+    if (acao === 'antes' && i > 0) reordenar(mover(itens, i, i - 1));
+    else if (acao === 'depois' && i < itens.length - 1) reordenar(mover(itens, i, i + 1));
+    else if (acao === 'remover') reordenar(itens.filter((_, k) => k !== i));
+    else if (acao === 'girar' && it.miniatura) {
+      it.rot = (it.rot + 90) % 360;
+      const c = desenharMiniatura(it);
+      if (c && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        c.animate([{ transform: 'rotate(-90deg)', opacity: 0.6 }, { transform: 'none', opacity: 1 }], { duration: 280, easing: 'cubic-bezier(0.34, 1.4, 0.64, 1)' });
+      }
+      const virar = it.rot % 180 !== 0;
+      it.li.querySelector('.detalhe')!.textContent = `${virar ? it.altura : it.largura} × ${virar ? it.largura : it.altura} px · ${tamanho(it.file.size)}`;
+      invalidarSaida();
+    }
+  });
+
+  ordenavel(lista, (de, para) => { itens = mover(itens, de, para); invalidarSaida(); atualizar(); });
+  entrada.addEventListener('arquivos', (e) => adicionar((e as CustomEvent<File[]>).detail));
+  for (const sel of [tamanhoPag, orientacao, margem, peso]) sel.addEventListener('change', () => { invalidarSaida(); atualizar(); });
+
+  // ---------- Criar o PDF ----------
+  interface Pronta { bytes: Uint8Array; tipo: 'jpg' | 'png'; largura: number; altura: number; }
+
+  /** Prepara a imagem para o PDF. JPG e PNG sem giro entram do jeito que estão (sem perder qualidade). */
+  async function preparar(it: Item, menor: boolean, redesenhar = false): Promise<Pronta> {
+    const rot = it.rot;
+    const original = new Uint8Array(await it.file.arrayBuffer());
+    const ehJpg = original[0] === 0xff && original[1] === 0xd8;
+    const ehPng = original[0] === 0x89 && original[1] === 0x50;
+    if (!menor && !redesenhar && rot === 0 && ((ehJpg && orientacaoJpeg(original) === 1) || ehPng)) {
+      return { bytes: original, tipo: ehJpg ? 'jpg' : 'png', largura: it.largura!, altura: it.altura! };
+    }
+    const bitmap = await decodificar(it.file);
+    const escala = menor ? Math.min(1, LADO_MENOR / Math.max(bitmap.width, bitmap.height)) : 1;
+    const w = Math.max(1, Math.round(bitmap.width * escala)), h = Math.max(1, Math.round(bitmap.height * escala));
+    const manterPng = !menor && (ehPng || it.file.type === 'image/png' || it.file.type === 'image/webp' || it.file.type === 'image/gif');
+    let canvas = desenhar(bitmap, w, h, manterPng ? {} : { fundo: '#ffffff' });
+    bitmap.close();
+    if (rot) {
+      const virar = rot % 180 !== 0;
+      const girado = novoCanvas(virar ? h : w, virar ? w : h);
+      const ctx = girado.getContext('2d')!;
+      ctx.translate(girado.width / 2, girado.height / 2);
+      ctx.rotate((rot * Math.PI) / 180);
+      ctx.drawImage(canvas, -w / 2, -h / 2);
+      canvas = girado;
+    }
+    const blob = await codificar(canvas, manterPng ? 'image/png' : 'image/jpeg', menor ? 0.8 : 0.92);
+    return { bytes: new Uint8Array(await blob.arrayBuffer()), tipo: manterPng ? 'png' : 'jpg', largura: canvas.width, altura: canvas.height };
+  }
+
+  botao.addEventListener('click', async () => {
+    const validos = itens.filter((it) => it.largura);
+    if (!validos.length) return;
+    trabalhando = true;
+    invalidarSaida();
+    atualizar();
+    const menor = peso.value === 'menor';
+    try {
+      const doc = await novoPdf();
+      let n = 0;
+      for (const it of validos) {
+        status.textContent = `Colocando a imagem ${++n} de ${validos.length}…`;
+        let p = await preparar(it, menor);
+        let img;
+        try {
+          img = p.tipo === 'jpg' ? await doc.embedJpg(p.bytes) : await doc.embedPng(p.bytes);
+        } catch {
+          // Alguns JPG e PNG fora do padrão não entram direto; redesenhamos a imagem e tentamos de novo.
+          p = await preparar(it, menor, true);
+          img = p.tipo === 'jpg' ? await doc.embedJpg(p.bytes) : await doc.embedPng(p.bytes);
+        }
+        const pos = posicionarImagem(p.largura, p.altura, tamanhoPag.value as TamanhoPagina,
+          orientacao.value as Orientacao, MARGENS[margem.value as Margem]);
+        const pagina = doc.addPage([pos.largura, pos.altura]);
+        pagina.drawImage(img, { x: pos.x, y: pos.y, width: pos.w, height: pos.h });
+      }
+      status.textContent = 'Gerando o arquivo…';
+      const blob = await paraBlob(doc);
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = validos.length === 1 ? trocarExtensao(validos[0].file.name, 'pdf') : 'imagens.pdf';
+      $('saida-titulo').textContent = `PDF com ${validos.length} ${validos.length === 1 ? 'página' : 'páginas'}`;
+      $('saida-info').textContent = tamanho(blob.size);
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch {
+      status.textContent = 'Não foi possível criar o PDF. Pode faltar memória no aparelho; tente com menos imagens ou com a opção "Menor".';
+    } finally {
+      trabalhando = false;
+      botao.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { color: var(--muted); }
+  select:disabled { opacity: 0.55; }
+</style>

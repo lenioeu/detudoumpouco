@@ -17,7 +17,7 @@ const { id, accept, multiple = false, texto = 'Escolher arquivo', dica = 'ou arr
   <input type="file" id={`${id}-input`} accept={accept} multiple={multiple} />
   <label for={`${id}-input`} class="btn">{texto}</label>
   <span class="muted">{dica}</span>
-  <span class="privado">🔒 O arquivo é processado no seu aparelho e não é enviado para lugar nenhum.</span>
+  <span class="privado"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>O arquivo é processado no seu aparelho e não é enviado para lugar nenhum.</span>
 </div>
 
 <script>
@@ -54,5 +54,6 @@ const { id, accept, multiple = false, texto = 'Escolher arquivo', dica = 'ou arr
   @keyframes pulo { to { transform: translateY(-12px) scale(1.08); } }
   input { position: absolute; width: 1px; height: 1px; opacity: 0; }
   input:focus-visible + label { outline: 3px solid var(--link); outline-offset: 2px; }
-  .privado { font-size: 0.85rem; color: var(--ok); font-weight: 600; }
+  .privado { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--ok); font-weight: 600; }
+  .privado svg { flex: none; }
 </style>

@@ -1,10 +1,10 @@
 import type { Ferramenta } from '../tipos';
 
 export default [
-  { slug: 'juntar-pdf', nome: 'Juntar PDF', resumo: 'Una vários PDFs em um só arquivo.', status: 'planejada' },
-  { slug: 'jpg-para-pdf', nome: 'JPG para PDF', resumo: 'Transforme fotos e imagens em PDF.', status: 'planejada' },
-  { slug: 'dividir-pdf', nome: 'Dividir PDF', resumo: 'Separe páginas ou intervalos em novos arquivos.', status: 'planejada' },
-  { slug: 'pdf-para-jpg', nome: 'PDF para JPG', resumo: 'Salve cada página do PDF como imagem.', status: 'planejada' },
+  { slug: 'juntar-pdf', nome: 'Juntar PDF', resumo: 'Una vários PDFs em um só arquivo.', status: 'pronta' },
+  { slug: 'jpg-para-pdf', nome: 'JPG para PDF', resumo: 'Transforme fotos e imagens em PDF.', status: 'pronta' },
+  { slug: 'dividir-pdf', nome: 'Dividir PDF', resumo: 'Separe páginas ou intervalos em novos arquivos.', status: 'pronta' },
+  { slug: 'pdf-para-jpg', nome: 'PDF para JPG', resumo: 'Salve cada página do PDF como imagem.', status: 'pronta' },
   { slug: 'remover-paginas', nome: 'Remover páginas do PDF', resumo: 'Apague as páginas que você não quer.', status: 'planejada' },
   { slug: 'girar-pdf', nome: 'Girar PDF', resumo: 'Gire páginas tortas ou de cabeça para baixo.', status: 'planejada' },
   { slug: 'organizar-pdf', nome: 'Organizar PDF', resumo: 'Mude a ordem das páginas arrastando.', status: 'planejada' },

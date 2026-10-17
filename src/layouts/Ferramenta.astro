@@ -26,6 +26,8 @@ const { secao, slug, titulo, subtitulo, tituloSeo, descricao, passos, perguntas 
 const sec = secaoPorSlug(secao);
 const atual = ferramenta(secao, slug);
 if (!sec || !atual) throw new Error(`Ferramenta ${secao}/${slug} não está cadastrada em src/data/ferramentas/${secao}.ts`);
+// "PDF" e "QR Code" mantêm as siglas: só baixa a caixa das palavras que não são todas maiúsculas.
+const nomeMinusculo = sec.nome.split(' ').map((p) => (p === p.toUpperCase() ? p : p.toLowerCase())).join(' ');
 const relacionadas = prontas(secao).filter((f) => f.slug !== slug).slice(0, 6);
 const url = new URL(atual.url, SITE.url).href;
 
@@ -76,7 +78,7 @@ const jsonLd = [
 
     {relacionadas.length > 0 && (
       <section class="relacionadas">
-        <h2>Outras ferramentas de {sec.nome.toLowerCase()}</h2>
+        <h2>Outras ferramentas de {nomeMinusculo}</h2>
         <ul>
           {relacionadas.map((f) => (
             <li><CartaoFerramenta f={f} /></li>
