@@ -64,7 +64,8 @@ Exemplos completos para copiar o padrão:
   com aprovação do dono do site.
 - **Visual:** use só os tokens de `src/styles/global.css` (`--bg`, `--surface`, `--fg`, `--brand`...) e as classes
   prontas (`.btn`, `.btn-sec`, `.campo`, `.resultado`, `.erro`, `.stack`). Nada de cor solta: o site tem modo escuro.
-  Tem que funcionar em celular de 360px sem rolagem lateral.
+  Tem que funcionar em celular de 360px sem rolagem lateral. O cabeçalho é fixo: elemento `position: sticky`
+  na página usa `top: calc(var(--altura-topo) + 16px)` para não ficar atrás dele.
 - **Movimento** (inspirado no Squoosh): use só `transform` e `opacity`, com as curvas `--mola` (elástica, para
   botões e cartões) e `--suave` (para entradas e trocas). Durações de 0,15 s a 0,35 s. A troca entre páginas é a
   View Transition nativa do navegador (já configurada no CSS, sem JavaScript); não instale biblioteca de animação

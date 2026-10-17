@@ -714,7 +714,7 @@ const placeholders: Record<string, string> = {
   .editor { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
   @media (min-width: 920px) {
     .editor { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; }
-    .lado { position: sticky; top: 16px; }
+    .lado { position: sticky; top: calc(var(--altura-topo) + 16px); }
   }
   .form { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
   .bloco { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px 16px; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 12px; }

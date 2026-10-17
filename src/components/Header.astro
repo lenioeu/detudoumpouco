@@ -20,8 +20,23 @@ const secoes = secoesAtivas();
   </div>
 </header>
 
+<script>
+  // Sombra discreta no cabeçalho depois que a página rola um pouco.
+  const topo = document.querySelector<HTMLElement>('.topo')!;
+  const atualizar = () => topo.classList.toggle('rolou', window.scrollY > 4);
+  addEventListener('scroll', atualizar, { passive: true });
+  atualizar();
+</script>
+
 <style>
-  .topo { background: var(--surface); border-bottom: 1px solid var(--line); }
+  /* Fica preso no topo ao rolar. Altura reservada em --altura-topo (global.css) para outros elementos fixos. */
+  .topo {
+    position: sticky; top: 0; z-index: 40;
+    padding-top: env(safe-area-inset-top, 0px);
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    transition: box-shadow 0.2s var(--suave);
+  }
+  .topo.rolou { box-shadow: 0 4px 18px rgb(0 0 0 / 0.08); }
   .barra { display: flex; align-items: center; gap: 12px 28px; flex-wrap: wrap; padding-block: 12px; }
   .marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--fg); font: 800 1.3rem var(--f-display); letter-spacing: -0.01em; }
   nav { min-width: 0; flex: 1; }
