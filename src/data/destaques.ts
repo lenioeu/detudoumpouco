@@ -16,7 +16,7 @@ export const DESTAQUES: Destaque[] = [
   { tipo: 'secao', slug: 'imagem', descricao: 'Comprima, converta, recorte e redimensione fotos.' },
   { tipo: 'secao', slug: 'qr-code', descricao: 'Gerar e ler QR Code, inclusive Pix, Wi-Fi e WhatsApp.' },
   { tipo: 'secao', slug: 'conversores', descricao: 'Unidades de medida e números por extenso.' },
-  { tipo: 'secao', slug: 'texto', descricao: 'Contador de caracteres e outras ferramentas de texto.' },
+  { tipo: 'ferramenta', secao: 'documentos', slug: 'assinatura-de-email', icone: 'documentos', descricao: 'Assinatura profissional com foto, logo e redes sociais.' },
   { tipo: 'secao', slug: 'sorteios', descricao: 'Sorteie nomes e números de forma justa.' },
   { tipo: 'secao', slug: 'tempo', descricao: 'Cronômetro com voltas e timer com alarme.' },
 ];
