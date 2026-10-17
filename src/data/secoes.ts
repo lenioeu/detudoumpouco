@@ -10,12 +10,12 @@ export interface Secao {
 
 // A ordem aqui é a ordem do menu e da home.
 export const SECOES: Secao[] = [
-  { slug: 'calculadoras', nome: 'Calculadoras', resumo: 'Dinheiro, trabalho, casa e datas',
-    titulo: 'Calculadoras online grátis', descricao: 'Calculadoras de porcentagem, juros, financiamento, salário, combustível, obra e datas. Simples, grátis e sem cadastro.' },
-  { slug: 'qr-code', nome: 'QR Code', resumo: 'Link, Wi-Fi, WhatsApp e Pix',
-    titulo: 'Gerador de QR Code grátis', descricao: 'Crie QR Code grátis para link, texto, Wi-Fi, WhatsApp e Pix. Baixe em PNG ou SVG, sem cadastro e sem marca d\'água.' },
   { slug: 'pdf', nome: 'PDF', resumo: 'Juntar, dividir, converter',
     titulo: 'Ferramentas de PDF grátis', descricao: 'Junte, divida, gire e converta PDFs direto no navegador. Seus arquivos não são enviados para nenhum servidor.' },
+  { slug: 'qr-code', nome: 'QR Code', resumo: 'Link, Wi-Fi, WhatsApp e Pix',
+    titulo: 'Gerador de QR Code grátis', descricao: 'Crie QR Code grátis para link, texto, Wi-Fi, WhatsApp e Pix. Baixe em PNG ou SVG, sem cadastro e sem marca d\'água.' },
+  { slug: 'calculadoras', nome: 'Calculadoras', resumo: 'Dinheiro, trabalho, casa e datas',
+    titulo: 'Calculadoras online grátis', descricao: 'Calculadoras de porcentagem, juros, financiamento, salário, combustível, obra e datas. Simples, grátis e sem cadastro.' },
   { slug: 'imagem', nome: 'Imagem', resumo: 'Comprimir, converter, recortar',
     titulo: 'Ferramentas de imagem grátis', descricao: 'Comprima, converta e redimensione imagens no navegador, sem enviar suas fotos para nenhum servidor.' },
   { slug: 'video', nome: 'Vídeo', resumo: 'Cortar, comprimir, extrair áudio',

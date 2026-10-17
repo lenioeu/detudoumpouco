@@ -7,13 +7,12 @@ export type Destaque =
   | { tipo: 'ferramenta'; secao: string; slug: string; icone: string; descricao: string };
 
 export const DESTAQUES: Destaque[] = [
-  { tipo: 'secao', slug: 'calculadoras', descricao: 'Porcentagem, juros, investimentos, combustível e mais.' },
   { tipo: 'secao', slug: 'pdf', nome: 'Ferramentas de PDF', descricao: 'Juntar, dividir, comprimir e converter PDF, direto no navegador.' },
+  { tipo: 'secao', slug: 'qr-code', nome: 'QR Code e Pix', descricao: 'Gere QR Code de link, Wi-Fi, WhatsApp e Pix, ou leia um QR Code.' },
+  { tipo: 'secao', slug: 'calculadoras', descricao: 'Porcentagem, juros, investimentos, combustível e mais.' },
   { tipo: 'ferramenta', secao: 'calculadoras', slug: 'financiamento', icone: 'financiamento', descricao: 'Parcelas pela tabela Price e SAC, com gráfico do saldo.' },
   { tipo: 'ferramenta', secao: 'calculadoras', slug: 'amortizacao', icone: 'amortizacao', descricao: 'Veja quanto economiza pagando a mais no financiamento.' },
-  { tipo: 'ferramenta', secao: 'qr-code', slug: 'gerador', icone: 'qr-code', descricao: 'QR Code grátis para link, texto, Wi-Fi ou WhatsApp.' },
   { tipo: 'secao', slug: 'imagem', descricao: 'Comprima, converta, recorte e redimensione fotos.' },
-  { tipo: 'secao', slug: 'qr-code', descricao: 'Gerar e ler QR Code, inclusive Pix, Wi-Fi e WhatsApp.' },
   { tipo: 'secao', slug: 'conversores', descricao: 'Unidades de medida e números por extenso.' },
   { tipo: 'ferramenta', secao: 'documentos', slug: 'assinatura-de-email', icone: 'documentos', descricao: 'Assinatura profissional com foto, logo e redes sociais.' },
   { tipo: 'secao', slug: 'texto', descricao: 'Contador de caracteres e outras ferramentas de texto.' },
