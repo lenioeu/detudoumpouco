@@ -58,7 +58,9 @@ Exemplos completos para copiar o padrão:
 - **Bibliotecas pesadas** (pdf-lib, pdfjs-dist, ffmpeg.wasm, tesseract.js, modelos de IA) são carregadas
   com `await import(...)` só quando o usuário usa a ferramenta, para a página abrir rápido.
   Instale com versão exata: `npm install pacote@1.2.3 --save-exact`.
-- **Hospedagem: Cloudflare.** Cabeçalhos HTTP ficam em `public/_headers`. Comece pelas versões
+- **Hospedagem: Cloudflare.** Cabeçalhos HTTP ficam em `public/_headers`. O único código de servidor é `worker/index.js`,
+  que roda só em `/api/*` e hoje serve o contador de visitas do rodapé (um número no banco D1 `quebragalho-visitas`,
+  sem dado nenhum da pessoa). Não use esse Worker para receber arquivos ou textos do usuário. Comece pelas versões
   single-thread de ffmpeg.wasm e afins. A versão multi-thread exige COOP/COEP (`SharedArrayBuffer`), e o COEP
   pode impedir os anúncios de aparecer na página. Só ative, e só no caminho da ferramenta (ex.: `/video/*`),
   com aprovação do dono do site.

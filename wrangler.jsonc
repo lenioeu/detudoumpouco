@@ -1,10 +1,20 @@
 {
-  // Site estático: o Cloudflare só serve os arquivos gerados em ./dist (sem código de servidor).
+  // O Cloudflare serve os arquivos gerados em ./dist. O código em worker/ só roda em /api/*
+  // (hoje, só o contador de visitas do rodapé).
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "quebragalho",
+  "main": "./worker/index.js",
   "compatibility_date": "2026-10-13",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
-  }
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "VISITAS",
+      "database_name": "quebragalho-visitas",
+      "database_id": "bdb9747e-0e98-4482-9e1b-349baa6b748f"
+    }
+  ]
 }

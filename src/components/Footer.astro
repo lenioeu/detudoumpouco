@@ -21,8 +21,30 @@ const ano = new Date().getFullYear();
       </ul>
     </nav>
   </div>
-  <div class="container copy muted">© {ano} {SITE.nome}</div>
+  <div class="container copy muted">
+    <span>© {ano} {SITE.nome}</span>
+    <span id="visitas" class="visitas" hidden></span>
+  </div>
 </footer>
+
+<script>
+  // Contador público: soma 1 por sessão (aba aberta) e mostra o total. Se a API falhar, fica escondido.
+  import { formatar } from '../lib/numeros';
+  const el = document.getElementById('visitas');
+  if (el) {
+    let contada = false;
+    try { contada = sessionStorage.getItem('qg-visita') === '1'; } catch {}
+    fetch('/api/visitas', { method: contada ? 'GET' : 'POST' })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => {
+        if (typeof d.total !== 'number' || d.total < 1) return;
+        try { sessionStorage.setItem('qg-visita', '1'); } catch {}
+        el.textContent = `${formatar(d.total, 0)} ${d.total === 1 ? 'visita' : 'visitas'}`;
+        el.hidden = false;
+      })
+      .catch(() => {});
+  }
+</script>
 
 <style>
   .rodape { margin-top: 64px; border-top: 1px solid var(--line); background: var(--surface); padding-block: 32px 24px; font-size: 0.95rem; }
@@ -31,5 +53,5 @@ const ano = new Date().getFullYear();
   .nome { font: 800 1.15rem var(--f-display); }
   ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
   a { color: var(--fg); }
-  .copy { margin-top: 24px; font-size: 0.85rem; }
+  .copy { margin-top: 24px; font-size: 0.85rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; min-height: 1.4em; }
 </style>
