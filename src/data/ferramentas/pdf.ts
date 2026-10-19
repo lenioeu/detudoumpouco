@@ -20,7 +20,7 @@ export default [
   { slug: 'pdf-para-texto', nome: 'PDF para texto', resumo: 'Copie todo o texto de um PDF.', status: 'pronta' },
   { slug: 'recortar-pdf', nome: 'Recortar PDF', resumo: 'Corte as margens das páginas do PDF.', status: 'planejada' },
   { slug: 'ajustar-a4', nome: 'Ajustar PDF para A4', resumo: 'Deixe todas as páginas no tamanho A4.', status: 'planejada' },
-  { slug: 'achatar-pdf', nome: 'Achatar PDF', resumo: 'Trave formulários e anotações para ninguém editar.', status: 'planejada' },
+  { slug: 'achatar-pdf', nome: 'Achatar PDF', resumo: 'Trave formulários e anotações para ninguém editar.', status: 'pronta' },
   { slug: 'editar-metadados-pdf', nome: 'Editar informações do PDF', resumo: 'Mude título, autor e assunto do arquivo.', status: 'planejada' },
   { slug: 'preencher-formulario-pdf', nome: 'Preencher formulário PDF', resumo: 'Preencha os campos de um PDF e salve.', status: 'planejada' },
   { slug: 'pdf-preto-e-branco', nome: 'PDF em preto e branco', resumo: 'Converta o PDF para tons de cinza.', status: 'planejada' },
