@@ -1,0 +1,406 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import { FORMATOS } from '../../lib/numerar-paginas';
+import { FONTES, CORES } from '../../lib/pdf-desenho';
+
+const posicoes = [
+  { valor: 'topo-esquerda', nome: 'No topo, à esquerda' },
+  { valor: 'topo-centro', nome: 'No topo, no centro' },
+  { valor: 'topo-direita', nome: 'No topo, à direita' },
+  { valor: 'base-esquerda', nome: 'Embaixo, à esquerda' },
+  { valor: 'base-centro', nome: 'Embaixo, no centro' },
+  { valor: 'base-direita', nome: 'Embaixo, à direita' },
+];
+---
+<Ferramenta
+  secao="pdf"
+  slug="numerar-paginas"
+  titulo="Numerar páginas de PDF"
+  subtitulo="Coloque o número em cada página do PDF, no canto que você quiser, e veja como vai ficar antes de baixar. Tudo no seu navegador, sem enviar o arquivo."
+  tituloSeo="Numerar páginas de PDF online grátis e sem enviar"
+  descricao="Coloque número nas páginas do PDF grátis: escolha a posição, o formato (1, Página 1 de 10), pule a capa e veja a prévia. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Clique no lugar da página onde o número deve ficar e escolha o formato, como "1" ou "Página 1 de 10".',
+    'Se a capa não deve ter número, mude "Numerar a partir da página" para 2. Em "Primeiro número" você escolhe com que número começa.',
+    'Confira na prévia, passando pelas páginas com as setas.',
+    'Clique em "Numerar páginas" e baixe o PDF pronto.',
+  ]}
+  perguntas={[
+    { p: 'Como numerar as páginas de um PDF sem a capa?', r: 'Em "Numerar a partir da página", coloque 2. A capa fica sem número e a página seguinte recebe o número 1. Se quiser que ela mostre 2, como em muitos trabalhos acadêmicos, mude "Primeiro número" para 2.' },
+    { p: 'Como colocar "Página 1 de 10" no PDF?', r: 'Escolha o formato "Página 1 de 10" na lista. O total é calculado sozinho: é o último número que aparece no documento.' },
+    { p: 'Dá para numerar no canto de baixo à direita, como no Word?', r: 'Sim. Clique no quadradinho do canto inferior direito da figura da página. Você pode escolher qualquer um dos seis lugares: topo ou rodapé, à esquerda, no centro ou à direita.' },
+    { p: 'O que é a opção de frente e verso?', r: 'Ela troca o lado do número nas páginas pares. Assim, quando o PDF é impresso dos dois lados e encadernado, o número fica sempre na borda de fora da folha, como num livro.' },
+    { p: 'O número vai ficar por cima do texto?', r: 'O número é escrito por cima da página, na distância da borda que você escolher. Se o documento tem rodapé ou texto muito perto da borda, aumente ou diminua essa distância e confira na prévia.' },
+    { p: 'Meu PDF é enviado para algum servidor?', r: 'Não. O número é escrito no PDF dentro do seu navegador. O arquivo não sai do aparelho, e o texto do documento continua selecionável como antes.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+
+      <div class="editor">
+        <div class="opcoes stack">
+          <fieldset class="lugar">
+            <legend class="rotulo">Onde fica o número</legend>
+            <div class="folha">
+              {posicoes.map((p) => (
+                <label class={`pos ${p.valor}`} title={p.nome}>
+                  <input type="radio" name="posicao" value={p.valor} checked={p.valor === 'base-centro'} aria-label={p.nome} />
+                  <span aria-hidden="true">1</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div class="grade-campos">
+            <div class="campo">
+              <label for="formato">Formato</label>
+              <select id="formato">
+                {FORMATOS.map((f) => <option value={f.valor}>{f.nome}</option>)}
+              </select>
+            </div>
+            <div class="campo">
+              <label for="fonte">Letra</label>
+              <select id="fonte">
+                {Object.entries(FONTES).map(([k, f]) => <option value={k}>{f.nome}</option>)}
+              </select>
+            </div>
+            <div class="campo">
+              <label for="tamanho">Tamanho da letra</label>
+              <input id="tamanho" type="number" min="6" max="48" step="1" value="11" inputmode="numeric" />
+            </div>
+            <div class="campo">
+              <label for="cor">Cor</label>
+              <select id="cor">
+                {Object.entries(CORES).map(([k, c]) => <option value={k}>{c.nome}</option>)}
+              </select>
+            </div>
+            <div class="campo">
+              <label for="a-partir">Numerar a partir da página</label>
+              <input id="a-partir" type="number" min="1" step="1" value="1" inputmode="numeric" />
+            </div>
+            <div class="campo">
+              <label for="primeiro">Primeiro número</label>
+              <input id="primeiro" type="number" min="0" step="1" value="1" inputmode="numeric" />
+            </div>
+            <div class="campo">
+              <label for="margem">Distância da borda (mm)</label>
+              <input id="margem" type="number" min="0" max="80" step="1" value="12" inputmode="numeric" />
+            </div>
+          </div>
+          <label class="marcar"><input id="espelhar" type="checkbox" /> Frente e verso: trocar o lado nas páginas pares</label>
+          <p id="resumo" class="muted" aria-live="polite"></p>
+        </div>
+
+        <div class="previa-area">
+          <div class="previa" id="previa"><span class="muted">Carregando a prévia…</span></div>
+          <div class="navegar">
+            <button id="anterior" type="button" class="btn btn-sec" aria-label="Página anterior">‹</button>
+            <span id="qual" class="muted" aria-live="polite"></span>
+            <button id="proxima" type="button" class="btn btn-sec" aria-label="Próxima página">›</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="enviar">
+        <button id="numerar" type="button" class="btn" disabled>Numerar páginas</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div><strong>PDF numerado</strong><span id="saida-info" class="muted"></span></div>
+      <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que numerar um PDF</h2>
+    <p>Número de página parece detalhe até alguém precisar dele. Na banca de TCC, o professor pede para ir "à página 23"; num contrato, a cláusula que vale é a da página 4; num processo, cada folha é citada pelo número. Quem junta vários arquivos num PDF só (por exemplo, com o <a href="/pdf/juntar-pdf">Juntar PDF</a>) acaba com um documento sem numeração nenhuma, ou com números repetidos que recomeçam a cada parte. Aqui você numera tudo de novo, em sequência, em poucos segundos.</p>
+    <h2>Exemplos de uso</h2>
+    <ul>
+      <li><strong>Trabalho acadêmico:</strong> pelas regras mais usadas da ABNT, as páginas são contadas desde a folha de rosto, mas o número só aparece a partir da introdução, no canto superior direito. Se a introdução é a página 7 do arquivo, use "a partir da página 7", "primeiro número 7", a posição no topo, à direita, e 20 mm de distância da borda.</li>
+      <li><strong>Documentos para um processo ou licitação:</strong> use "Página 1 de 30" no rodapé. Quem recebe sabe na hora se alguma folha ficou faltando.</li>
+      <li><strong>Apostila impressa frente e verso:</strong> marque a opção de frente e verso para o número ficar sempre na borda de fora, fácil de ver ao folhear.</li>
+      <li><strong>Continuação de outro volume:</strong> se o volume 1 terminou na página 120, comece este em 121.</li>
+    </ul>
+    <h2>Dicas para o número ficar bonito</h2>
+    <p>Tamanho 10 ou 11 combina com a maioria dos textos. Prefira cinza quando o documento já tem muito conteúdo no rodapé, porque o número aparece sem brigar com o resto. A distância de 12 mm da borda funciona para a maioria das impressoras, que não imprimem nos últimos milímetros da folha; se o número ficar em cima de um rodapé que já existe, mude a distância e confira na prévia. Páginas deitadas (paisagem) e páginas giradas recebem o número na posição certa, do jeito que aparecem na tela. O número entra como texto de verdade, não como imagem: dá para selecionar, e o tamanho do arquivo quase não muda.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho as tamanhoArquivo } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, desenharPagina, fecharPdf, novoPdf, paraBlob, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { FONTES, escreverTexto, filtrarTexto, infoDaPagina, textoNoCanvas, type Cor, type Fonte, type InfoPagina, type TextoVisual } from '../../lib/pdf-desenho';
+  import { paginasNumeradas, posicaoDoNumero, posicaoNaPagina, textoDoNumero, type FormatoNumero, type PosicaoNumero } from '../../lib/numerar-paginas';
+  import { mmParaPt } from '../../lib/pdf-visual';
+  import type { PDFDocument, PDFFont } from 'pdf-lib';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const formato = $<HTMLSelectElement>('formato');
+  const fonteSel = $<HTMLSelectElement>('fonte');
+  const tamanho = $<HTMLInputElement>('tamanho');
+  const corSel = $<HTMLSelectElement>('cor');
+  const aPartir = $<HTMLInputElement>('a-partir');
+  const primeiro = $<HTMLInputElement>('primeiro');
+  const margem = $<HTMLInputElement>('margem');
+  const espelhar = $<HTMLInputElement>('espelhar');
+  const resumo = $('resumo');
+  const previa = $('previa');
+  const qual = $('qual');
+  const anterior = $<HTMLButtonElement>('anterior');
+  const proxima = $<HTMLButtonElement>('proxima');
+  const botao = $<HTMLButtonElement>('numerar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let dados: ArrayBuffer | null = null;
+  let original: PDFDocument | null = null;
+  let visor: DocumentoPdfJs | null = null;
+  let infos: InfoPagina[] = [];
+  let nomeBase = 'documento';
+  let atual = 1;
+  let rodada = 0;
+  let url = '';
+  let base: { pagina: number; canvas: HTMLCanvasElement } | null = null;
+
+  // Fontes para medir o texto (num PDF de rascunho, que nunca é salvo).
+  let medidor: PDFDocument | null = null;
+  const medidas = new Map<Fonte, PDFFont>();
+  async function fonteDeMedida(f: Fonte): Promise<PDFFont> {
+    if (!medidor) medidor = await novoPdf();
+    let fonte = medidas.get(f);
+    if (!fonte) { fonte = await medidor.embedFont(FONTES[f].pdf); medidas.set(f, fonte); }
+    return fonte;
+  }
+
+  const inteiro = (el: HTMLInputElement, padrao: number, min = -Infinity, max = Infinity) => {
+    const n = Math.floor(Number(el.value));
+    return Number.isFinite(n) && el.value.trim() !== '' ? Math.min(max, Math.max(min, n)) : padrao;
+  };
+
+  function opcoes() {
+    return {
+      posicao: document.querySelector<HTMLInputElement>('input[name="posicao"]:checked')!.value as PosicaoNumero,
+      formato: formato.value as FormatoNumero,
+      fonte: fonteSel.value as Fonte,
+      tamanho: inteiro(tamanho, 11, 6, 48),
+      cor: corSel.value as Cor,
+      aPartir: inteiro(aPartir, 1, 1, Math.max(1, infos.length)),
+      primeiro: inteiro(primeiro, 1, 0, 999999),
+      margem: mmParaPt(inteiro(margem, 12, 0, 80)),
+      espelhar: espelhar.checked,
+    };
+  }
+
+  /** O número de uma página (ou null se ela não recebe número), já posicionado. */
+  function numeroDaPagina(pagina: number, fonte: PDFFont, o: ReturnType<typeof opcoes>): TextoVisual | null {
+    const lista = paginasNumeradas(infos.length, o.aPartir, o.primeiro);
+    const item = lista.find((x) => x.pagina === pagina);
+    if (!item) return null;
+    const ultimo = lista[lista.length - 1].numero;
+    const texto = filtrarTexto(textoDoNumero(o.formato, item.numero, ultimo), fonte).texto;
+    const inf = infos[pagina - 1];
+    const largura = fonte.widthOfTextAtSize(texto, o.tamanho);
+    const altura = fonte.heightAtSize(o.tamanho, { descender: false });
+    const pos = posicaoNaPagina(o.posicao, pagina, o.espelhar);
+    const { x, y } = posicaoDoNumero(pos, inf.largura, inf.altura, largura, altura, o.margem);
+    return { texto, x, y, angulo: 0, tamanho: o.tamanho, fonte: o.fonte, cor: o.cor, opacidade: 1 };
+  }
+
+  function atualizarResumo() {
+    const o = opcoes();
+    const lista = paginasNumeradas(infos.length, o.aPartir, o.primeiro);
+    if (!lista.length) { resumo.textContent = 'Nenhuma página vai receber número.'; return; }
+    const pulo = o.aPartir === 2 ? ' A página 1 fica sem número.' : o.aPartir > 2 ? ` As páginas 1 a ${o.aPartir - 1} ficam sem número.` : '';
+    resumo.textContent = `${lista.length} ${lista.length === 1 ? 'página recebe' : 'páginas recebem'} número, de ${lista[0].numero} a ${lista[lista.length - 1].numero}.${pulo}`;
+  }
+
+  let agendado = false;
+  function agendarPrevia() {
+    if (agendado) return;
+    agendado = true;
+    requestAnimationFrame(() => { agendado = false; desenharPrevia().catch(() => undefined); });
+  }
+
+  async function desenharPrevia() {
+    if (!visor || !infos.length) return;
+    const minha = rodada;
+    const pagina = atual;
+    qual.textContent = `Página ${pagina} de ${infos.length}`;
+    anterior.disabled = pagina <= 1;
+    proxima.disabled = pagina >= infos.length;
+    const inf = infos[pagina - 1];
+    if (!base || base.pagina !== pagina) {
+      const larguraCss = Math.min(previa.clientWidth || 360, 460);
+      const densidade = Math.min(window.devicePixelRatio || 1, 2);
+      const { canvas } = await desenharPagina(visor, pagina, (larguraCss * densidade) / inf.largura);
+      if (minha !== rodada || pagina !== atual) return;
+      base = { pagina, canvas };
+    }
+    const o = opcoes();
+    const fonte = await fonteDeMedida(o.fonte);
+    if (minha !== rodada || pagina !== atual) return;
+    const tela = document.createElement('canvas');
+    tela.width = base.canvas.width; tela.height = base.canvas.height;
+    tela.setAttribute('role', 'img');
+    tela.setAttribute('aria-label', `Prévia da página ${pagina}`);
+    const ctx = tela.getContext('2d')!;
+    ctx.drawImage(base.canvas, 0, 0);
+    const item = numeroDaPagina(pagina, fonte, o);
+    if (item) textoNoCanvas(ctx, tela.width / inf.largura, inf.altura, item);
+    previa.replaceChildren(tela);
+  }
+
+  function mudou() {
+    limparSaida();
+    atualizarResumo();
+    agendarPrevia();
+  }
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (url) { URL.revokeObjectURL(url); url = ''; }
+    status.textContent = '';
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    botao.disabled = true;
+    original = null; dados = null; infos = []; base = null;
+    fecharPdf(visor); visor = null;
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const bytes = await file.arrayBuffer();
+      const doc = await abrirParaEditar(bytes);
+      if (minha !== rodada) return;
+      dados = bytes; original = doc;
+      infos = doc.getPages().map(infoDaPagina);
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      const n = infos.length;
+      info.textContent = `${file.name} · ${n} ${n === 1 ? 'página' : 'páginas'} · ${tamanhoArquivo(file.size)}`;
+      aPartir.max = String(n);
+      if (Number(aPartir.value) > n) aPartir.value = '1';
+      atual = Math.min(Math.max(1, Number(aPartir.value) || 1), n);
+      previa.innerHTML = '<span class="muted">Carregando a prévia…</span>';
+      painel.hidden = false;
+      botao.disabled = false;
+      atualizarResumo();
+      const v = await abrirParaVer(bytes);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v;
+      await desenharPrevia();
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+      painel.hidden = true;
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  document.querySelectorAll('input[name="posicao"]').forEach((el) => el.addEventListener('change', mudou));
+  for (const el of [formato, fonteSel, corSel, espelhar]) el.addEventListener('change', mudou);
+  for (const el of [tamanho, aPartir, primeiro, margem]) el.addEventListener('input', mudou);
+  aPartir.addEventListener('change', () => { atual = opcoes().aPartir; base = null; agendarPrevia(); });
+  anterior.addEventListener('click', () => { if (atual > 1) { atual--; agendarPrevia(); } });
+  proxima.addEventListener('click', () => { if (atual < infos.length) { atual++; agendarPrevia(); } });
+
+  botao.addEventListener('click', async () => {
+    if (!dados || !original) return;
+    const minha = rodada;
+    botao.disabled = true;
+    limparSaida();
+    status.textContent = 'Numerando…';
+    try {
+      const o = opcoes();
+      // Abre de novo a partir dos bytes originais: numerar duas vezes não acumula números.
+      const doc = await abrirParaEditar(dados);
+      const fonte = await doc.embedFont(FONTES[o.fonte].pdf);
+      const medida = await fonteDeMedida(o.fonte);
+      const paginas = doc.getPages();
+      let feitas = 0;
+      for (const { pagina } of paginasNumeradas(infos.length, o.aPartir, o.primeiro)) {
+        const item = numeroDaPagina(pagina, medida, o);
+        if (!item || !item.texto) continue;
+        await escreverTexto(paginas[pagina - 1], infos[pagina - 1], fonte, item);
+        feitas++;
+      }
+      doc.setProducer('oquebragalho.app');
+      const blob = await paraBlob(doc);
+      if (minha !== rodada) return;
+      url = URL.createObjectURL(blob);
+      baixar.href = url;
+      baixar.download = `${nomeBase}-numerado.pdf`;
+      $('saida-info').textContent = `${feitas} ${feitas === 1 ? 'página numerada' : 'páginas numeradas'} · ${tamanhoArquivo(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch {
+      status.textContent = 'Não foi possível numerar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      botao.disabled = !original;
+    }
+  });
+
+  new ResizeObserver(() => { if (base && previa.clientWidth > base.canvas.width / Math.min(window.devicePixelRatio || 1, 2) + 40) { base = null; agendarPrevia(); } }).observe(previa);
+</script>
+
+<style>
+  .editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 760px) { .editor { grid-template-columns: minmax(0, 1fr); } }
+
+  .lugar { border: 0; margin: 0; padding: 0; }
+  .lugar legend { margin-bottom: 8px; }
+  .folha {
+    position: relative; width: 132px; aspect-ratio: 210 / 297; border: 2px solid var(--line); border-radius: 6px;
+    background: var(--bg); display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: auto 1fr auto; padding: 6px; gap: 4px;
+    background-image: repeating-linear-gradient(to bottom, transparent 0 9px, var(--line) 9px 11px);
+    background-clip: content-box; background-origin: content-box;
+  }
+  .folha .pos { cursor: pointer; display: grid; place-items: center; }
+  .folha .pos.base-esquerda, .folha .pos.base-centro, .folha .pos.base-direita { grid-row: 3; }
+  .folha input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .folha span {
+    width: 30px; height: 30px; display: grid; place-items: center; border-radius: 6px; font: 700 0.8rem var(--f-display);
+    background: var(--surface); color: var(--muted); border: 2px solid var(--line); transition: transform 0.2s var(--mola), background-color 0.15s, border-color 0.15s;
+  }
+  .folha label:hover span { transform: scale(1.08); }
+  .folha label:active span { transform: scale(0.94); }
+  .folha input:checked + span { background: var(--brand); color: var(--brand-ink); border-color: var(--brand-ink); }
+  .folha input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px; }
+
+  .grade-campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--fg); flex: none; }
+
+  .previa-area { display: flex; flex-direction: column; gap: 10px; align-items: center; position: sticky; top: calc(var(--altura-topo) + 16px); }
+  @media (max-width: 760px) { .previa-area { position: static; order: -1; } .previa { min-height: 240px; } .previa :global(canvas) { max-height: 55vh; } }
+  .previa {
+    width: 100%; min-height: 320px; display: grid; place-items: center; padding: 12px;
+    background: var(--bg); border-radius: var(--radius); border: 1px solid var(--line);
+  }
+  .previa :global(canvas) { display: block; max-width: 100%; max-height: 70vh; width: auto; height: auto; box-shadow: var(--sombra); }
+  .navegar { display: flex; align-items: center; gap: 12px; }
+  .navegar .btn { padding: 6px 14px; font-size: 1.2rem; line-height: 1; }
+  .navegar span { min-width: 9em; text-align: center; font-variant-numeric: tabular-nums; }
+
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+</style>

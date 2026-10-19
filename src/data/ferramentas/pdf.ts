@@ -11,7 +11,7 @@ export default [
   { slug: 'girar-pdf', nome: 'Girar PDF', resumo: 'Gire páginas tortas ou de cabeça para baixo.', status: 'planejada' },
   { slug: 'proteger-pdf', nome: 'Proteger PDF com senha', resumo: 'Coloque senha no seu PDF.', status: 'planejada' },
   { slug: 'remover-senha-pdf', nome: 'Remover senha de PDF', resumo: 'Tire a senha de um PDF que você sabe abrir.', status: 'planejada' },
-  { slug: 'numerar-paginas', nome: 'Numerar páginas', resumo: 'Coloque número nas páginas do PDF.', status: 'planejada' },
+  { slug: 'numerar-paginas', nome: 'Numerar páginas', resumo: 'Coloque número nas páginas do PDF.', status: 'pronta' },
   { slug: 'marca-dagua', nome: "Marca d'água em PDF", resumo: 'Adicione um texto ou logo em todas as páginas.', status: 'planejada' },
   { slug: 'editar-pdf', nome: 'Editar PDF', resumo: 'Escreva, coloque imagens, desenhe e destaque no PDF.', status: 'planejada' },
   { slug: 'escanear-para-pdf', nome: 'Escanear para PDF', resumo: 'Fotografe documentos com o celular e salve em PDF.', status: 'planejada' },
