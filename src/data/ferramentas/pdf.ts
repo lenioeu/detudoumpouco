@@ -6,7 +6,7 @@ export default [
   { slug: 'dividir-pdf', nome: 'Dividir PDF', resumo: 'Separe páginas ou intervalos em novos arquivos.', status: 'pronta' },
   { slug: 'pdf-para-jpg', nome: 'PDF para JPG', resumo: 'Salve cada página do PDF como imagem.', status: 'pronta' },
   { slug: 'comprimir-pdf', nome: 'Comprimir PDF', resumo: 'Diminua o tamanho do arquivo.', status: 'pronta' },
-  { slug: 'organizar-pdf', nome: 'Organizar PDF', resumo: 'Mude a ordem das páginas arrastando.', status: 'planejada' },
+  { slug: 'organizar-pdf', nome: 'Organizar PDF', resumo: 'Mude a ordem das páginas arrastando.', status: 'pronta' },
   { slug: 'remover-paginas', nome: 'Remover páginas do PDF', resumo: 'Apague as páginas que você não quer.', status: 'planejada' },
   { slug: 'girar-pdf', nome: 'Girar PDF', resumo: 'Gire páginas tortas ou de cabeça para baixo.', status: 'planejada' },
   { slug: 'proteger-pdf', nome: 'Proteger PDF com senha', resumo: 'Coloque senha no seu PDF.', status: 'planejada' },
