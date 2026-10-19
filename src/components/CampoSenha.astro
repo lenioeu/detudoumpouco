@@ -1,0 +1,47 @@
+---
+// Campo de senha com botão "Mostrar". Usado pelas ferramentas de PDF com senha.
+// A senha fica só na página: nada é enviado.
+interface Props { id: string; rotulo: string; autocomplete?: string; dica?: string; }
+const { id, rotulo, autocomplete = 'off', dica } = Astro.props;
+---
+<div class="campo campo-senha" data-campo-senha>
+  <label for={id}>{rotulo}</label>
+  <div class="linha">
+    <input type="password" id={id} autocomplete={autocomplete} autocapitalize="off" autocorrect="off" spellcheck="false" aria-describedby={dica ? `${id}-dica` : undefined} />
+    <button type="button" class="ver" aria-controls={id} aria-pressed="false">Mostrar</button>
+  </div>
+  {dica && <small id={`${id}-dica`}>{dica}</small>}
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-campo-senha]').forEach((campo) => {
+    const input = campo.querySelector('input')!;
+    const botao = campo.querySelector<HTMLButtonElement>('.ver')!;
+    botao.addEventListener('click', () => {
+      const mostrar = input.type === 'password';
+      input.type = mostrar ? 'text' : 'password';
+      botao.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      botao.setAttribute('aria-pressed', String(mostrar));
+      input.focus();
+    });
+  });
+</script>
+
+<style>
+  .linha {
+    display: flex; min-width: 0;
+    border: 1px solid var(--line); border-radius: 8px; background: var(--surface);
+    transition: border-color 0.15s var(--suave);
+  }
+  .linha:focus-within { border-color: var(--link); box-shadow: 0 0 0 3px color-mix(in srgb, var(--link) 25%, transparent); }
+  .linha input {
+    flex: 1; min-width: 0; font: inherit; color: var(--fg); background: transparent;
+    border: 0; border-radius: 8px 0 0 8px; padding: 10px 12px; width: 100%;
+  }
+  .linha input:focus { box-shadow: none; outline: none; }
+  .ver {
+    flex: none; font: 600 0.9rem var(--f-body); color: var(--link); background: transparent;
+    border: 0; border-left: 1px solid var(--line); border-radius: 0 8px 8px 0; padding: 0 14px; cursor: pointer;
+  }
+  .ver:focus-visible { outline: 3px solid var(--link); outline-offset: -3px; }
+</style>
