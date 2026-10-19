@@ -1,0 +1,575 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="ocr-pdf"
+  titulo="OCR em PDF"
+  subtitulo="Reconheça o texto de um PDF escaneado ou de uma foto de documento. Copie o texto ou baixe um PDF pesquisável, em que dá para buscar e selecionar as palavras. Tudo no seu navegador."
+  tituloSeo="OCR em PDF online grátis: texto de PDF escaneado"
+  descricao="Faça OCR em PDF escaneado ou foto, grátis e em português. Copie o texto, baixe .txt ou um PDF pesquisável. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF escaneado ou as fotos do documento (JPG, PNG ou WebP).',
+    'Confira as páginas nas miniaturas. Toque numa página para tirar ou incluir no OCR.',
+    'Escolha o idioma do documento: português, inglês ou os dois.',
+    'Clique em "Reconhecer texto" e acompanhe o andamento de cada página.',
+    'Copie o texto, baixe o .txt ou baixe o PDF pesquisável.',
+  ]}
+  perguntas={[
+    { p: 'Como transformar PDF escaneado em texto?', r: 'Escolha o PDF nesta página, deixe o idioma em português e clique em "Reconhecer texto". Cada página é lida como imagem e o texto aparece numa caixa, pronto para copiar ou baixar em .txt. Se quiser, baixe também o PDF pesquisável, que é o mesmo documento com o texto por baixo da imagem.' },
+    { p: 'O que é um PDF pesquisável?', r: 'É um PDF que continua com a mesma aparência do escaneado, mas tem uma camada de texto invisível por cima de cada palavra. Com ela dá para usar o Ctrl+F, selecionar e copiar trechos e o arquivo passa a ser encontrado pela busca do computador ou do Google Drive.' },
+    { p: 'O OCR online envia meu documento para algum servidor?', r: 'Não. O reconhecimento roda dentro do seu navegador. Na primeira vez a página baixa do próprio Quebragalho o programa de OCR e o arquivo do idioma, que são iguais para todo mundo. A imagem do seu documento nunca é enviada.' },
+    { p: 'Por que o OCR demora?', r: 'Ler o texto de uma imagem é um trabalho pesado, feito pelo processador do seu aparelho. Num computador, cada página leva de 3 a 10 segundos; num celular simples, pode passar de 30 segundos. Na primeira vez também há o download de cerca de 3 MB. Deixe a aba aberta até terminar.' },
+    { p: 'O OCR funciona com letra de mão?', r: 'Funciona mal. O reconhecimento foi feito para texto impresso, como contratos, livros, notas fiscais e documentos digitados. Letra cursiva, carimbos e assinaturas costumam sair com muitos erros ou nem aparecer.' },
+    { p: 'Como melhorar o resultado do OCR?', r: 'Use um escaneamento ou foto nítida, bem iluminada, com a folha reta e sem sombra. Texto pequeno demais ou borrado vira erro. Se o documento tiver trechos em inglês, escolha "Português e inglês". Páginas de cabeça para baixo devem ser giradas antes.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf,image/jpeg,image/png,image/webp" multiple texto="Escolher PDF ou imagens" dica="ou arraste e solte aqui · PDF, JPG, PNG ou WebP" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <div class="barra">
+        <p id="info" class="muted"></p>
+        <span class="espaco"></span>
+        <button id="todas" type="button" class="btn btn-sec">Marcar todas</button>
+        <button id="limpar" type="button" class="btn btn-sec">Trocar arquivo</button>
+      </div>
+      <p id="nota-texto" class="muted" hidden></p>
+      <ol id="miniaturas" class="miniaturas" aria-label="Páginas: toque para incluir ou tirar do OCR"></ol>
+
+      <div class="opcoes">
+        <div class="campo">
+          <label for="idioma">Idioma do documento</label>
+          <select id="idioma">
+            <option value="por" selected>Português</option>
+            <option value="eng">Inglês</option>
+            <option value="por+eng">Português e inglês</option>
+          </select>
+        </div>
+        <label class="marca"><input id="gerar-pdf" type="checkbox" checked /> Gerar também o PDF pesquisável</label>
+      </div>
+      <p id="nota-download" class="nota muted"></p>
+
+      <div class="enviar">
+        <button id="reconhecer" type="button" class="btn">Reconhecer texto</button>
+        <button id="parar" type="button" class="btn btn-sec" hidden>Parar</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+      <div class="barra-progresso" id="progresso" hidden><span></span></div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong id="saida-titulo"></strong><span id="saida-info" class="muted"></span></div>
+        <div class="botoes">
+          <button id="copiar" type="button" class="btn btn-sec">Copiar texto</button>
+          <a id="baixar-txt" class="btn btn-sec" href="#" download>Baixar .txt</a>
+          <a id="baixar-pdf" class="btn" href="#" download hidden>Baixar PDF pesquisável</a>
+        </div>
+      </div>
+      <p id="saida-nota" class="muted" hidden></p>
+      <div class="campo">
+        <label for="texto">Texto reconhecido <span class="muted">(dá para corrigir aqui antes de copiar)</span></label>
+        <textarea id="texto" rows="14" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que é OCR</h2>
+    <p>OCR é a sigla em inglês para reconhecimento óptico de caracteres. Quando você escaneia um documento ou tira foto dele, o resultado é só uma imagem: para o computador, cada letra é um conjunto de pontos pretos e brancos. O OCR olha esses pontos, descobre quais são letras, palavras e linhas e devolve o texto de verdade, que dá para copiar, editar e pesquisar.</p>
+    <p>Esta ferramenta usa o Tesseract, um dos programas de OCR gratuitos mais conhecidos do mundo, rodando dentro do seu navegador. O modelo de português reconhece acentos, cedilha e til, então "atenção", "pão" e "três" saem do jeito certo na maioria das vezes.</p>
+    <h2>Quando usar</h2>
+    <ul>
+      <li>Copiar um trecho de um contrato, certidão ou laudo que chegou escaneado, sem digitar tudo de novo.</li>
+      <li>Transformar a foto de uma página de livro ou apostila em texto para estudar, fazer resumo ou ler em voz alta com o leitor de tela.</li>
+      <li>Deixar pesquisáveis os documentos guardados em PDF, como notas fiscais, recibos e boletos antigos, para achar um valor ou um nome com o Ctrl+F.</li>
+      <li>Preparar um PDF escaneado para o <a href="/pdf/comparar-pdf">Comparar PDF</a>, que precisa de texto para mostrar o que mudou entre duas versões.</li>
+    </ul>
+    <h2>Como o PDF pesquisável é montado</h2>
+    <p>Quando o arquivo de entrada é um PDF, as páginas originais são mantidas exatamente como estavam e o texto reconhecido entra por cima, invisível, no lugar de cada palavra. O tamanho do arquivo quase não muda. Quando a entrada é uma foto, ou um PDF com bloqueio de edição, cada página vira uma imagem dentro de um PDF novo, com a mesma camada de texto.</p>
+    <p>Páginas que já têm texto selecionável (como as de um PDF gerado pelo Word) começam desmarcadas, porque ali o OCR não acrescenta nada. Toque na miniatura para incluir mesmo assim.</p>
+    <h2>Sobre privacidade e download</h2>
+    <p>Na primeira vez, o navegador baixa o programa de OCR e o arquivo do idioma: cerca de 3 MB para português e mais 3 MB se incluir inglês. Esses arquivos são públicos, iguais para todo mundo, e vêm do próprio Quebragalho. Eles ficam guardados no navegador, então nas próximas vezes o OCR começa bem mais rápido. A imagem do seu documento nunca sai do aparelho.</p>
+    <p>Nenhum OCR é perfeito. Números de documentos, valores e nomes próprios merecem uma conferida antes de você usar o texto em algo importante.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { codificar } from '../../lib/canvas';
+  import {
+    abrirParaVer, abrirParaEditar, desenharPagina, fecharPdf, miniatura, filaDeTrabalho, novoPdf, paraBlob, carregarPdfLib,
+    ErroPdf, type DocumentoPdfJs,
+  } from '../../lib/pdf-navegador';
+  import { posicionarPalavras, limparParaFonte, juntarTexto, type Colocacao, type Converter } from '../../lib/ocr-camada';
+  import { prepararOcr, reconhecer, encerrarOcr, DOWNLOAD_MB, type Idioma } from '../../lib/ocr-navegador';
+  import { PONTOS_POR_PIXEL } from '../../lib/pdf-pagina';
+  import type { PDFDocument } from 'pdf-lib';
+
+  /** Resolução usada para ler as páginas do PDF: 300 dpi é o padrão de escaneamento para OCR. */
+  const DPI_OCR = 300;
+  /** Imagens maiores que isso são reduzidas antes do OCR (mais rápido e sem perder a leitura). */
+  const AREA_MAXIMA_IMAGEM = 12_000_000;
+  const CHAVE_BAIXADO = 'quebragalho-ocr-baixado';
+
+  interface Pagina {
+    numero: number;
+    /** Para imagens: o arquivo. */
+    arquivo?: File;
+    jaTemTexto: boolean;
+    marcada: boolean;
+    li: HTMLLIElement;
+  }
+  interface Feita {
+    numero: number;
+    texto: string;
+    confianca: number;
+    colocacoes: Colocacao[];
+    /** Só no PDF montado com imagens: a página como imagem e o tamanho em pontos. */
+    imagem?: { bytes: Uint8Array; png: boolean; largura: number; altura: number };
+  }
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const notaTexto = $('nota-texto');
+  const lista = $('miniaturas');
+  const idioma = $<HTMLSelectElement>('idioma');
+  const gerarPdf = $<HTMLInputElement>('gerar-pdf');
+  const notaDownload = $('nota-download');
+  const botao = $<HTMLButtonElement>('reconhecer');
+  const parar = $<HTMLButtonElement>('parar');
+  const status = $('status');
+  const progresso = $('progresso');
+  const barra = progresso.querySelector('span')!;
+  const saida = $('saida');
+  const texto = $<HTMLTextAreaElement>('texto');
+  const baixarTxt = $<HTMLAnchorElement>('baixar-txt');
+  const baixarPdf = $<HTMLAnchorElement>('baixar-pdf');
+
+  let visor: DocumentoPdfJs | null = null;
+  let bytesPdf: ArrayBuffer | null = null;
+  let paginas: Pagina[] = [];
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let trabalhando = false;
+  let urls: string[] = [];
+  let urlsMini: string[] = [];
+  let observador: IntersectionObserver | null = null;
+  const fila = filaDeTrabalho();
+
+  const plural = (n: number, um: string, varios: string) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`;
+
+  function lerBaixados(): string[] {
+    try { return JSON.parse(localStorage.getItem(CHAVE_BAIXADO) || '[]'); } catch { return []; }
+  }
+  function marcarBaixado(i: Idioma) {
+    try { localStorage.setItem(CHAVE_BAIXADO, JSON.stringify([...new Set([...lerBaixados(), ...i.split('+')])])); } catch { /* sem armazenamento: só mostra o aviso de novo */ }
+  }
+  function atualizarNotaDownload() {
+    const i = idioma.value as Idioma;
+    const baixados = lerBaixados();
+    const faltam = i.split('+').filter((x) => !baixados.includes(x));
+    notaDownload.hidden = !faltam.length;
+    const nomes = i === 'por' ? 'português' : i === 'eng' ? 'inglês' : 'português e inglês';
+    notaDownload.textContent = `Na primeira vez, o navegador baixa cerca de ${DOWNLOAD_MB[i].toLocaleString('pt-BR')} MB (o programa de OCR e o idioma ${nomes}), do próprio Quebragalho. Depois fica guardado. Seu arquivo não é enviado.`;
+  }
+
+  function limparSaida() {
+    saida.hidden = true;
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    baixarPdf.hidden = true;
+    texto.value = '';
+    $('saida-nota').hidden = true;
+    lista.querySelectorAll('li').forEach((li) => li.classList.remove('feita', 'atual'));
+  }
+
+  function resetar() {
+    rodada++;
+    if (trabalhando) encerrarOcr();
+    trabalhando = false;
+    limparSaida();
+    observador?.disconnect(); observador = null;
+    fecharPdf(visor); visor = null; bytesPdf = null;
+    urlsMini.forEach(URL.revokeObjectURL); urlsMini = [];
+    paginas = [];
+    lista.replaceChildren();
+    painel.hidden = true;
+    aviso.hidden = true;
+    status.textContent = '';
+    progresso.hidden = true;
+    parar.hidden = true;
+    entrada.hidden = false;
+  }
+
+  function atualizar() {
+    const n = paginas.filter((p) => p.marcada).length;
+    botao.disabled = trabalhando || !n;
+    botao.textContent = n ? `Reconhecer texto (${plural(n, 'página', 'páginas')})` : 'Escolha pelo menos uma página';
+    $('todas').hidden = paginas.every((p) => p.marcada);
+  }
+
+  function criarItem(numero: number, legenda: string): HTMLLIElement {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-pressed', 'true');
+    b.innerHTML = `<span class="mini"></span><span class="num">${legenda}</span><span class="det muted"></span>` +
+      '<svg class="ok" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="var(--ok)"/><path d="m7 12.5 3.2 3.2L17 9" fill="none" stroke="var(--surface)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    b.addEventListener('click', () => {
+      if (trabalhando) return;
+      const p = paginas.find((x) => x.numero === numero)!;
+      p.marcada = !p.marcada;
+      marcar(p);
+      if (!saida.hidden) limparSaida();
+      atualizar();
+    });
+    li.append(b);
+    return li;
+  }
+  function marcar(p: Pagina) {
+    p.li.classList.toggle('desmarcada', !p.marcada);
+    p.li.querySelector('button')!.setAttribute('aria-pressed', String(p.marcada));
+    p.li.querySelector('.det')!.textContent = p.jaTemTexto ? 'já tem texto' : p.marcada ? '' : 'fora do OCR';
+  }
+
+  async function carregar(files: File[]) {
+    resetar();
+    const minha = rodada;
+    const pdf = files.find((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+    const imagens = files.filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type) || /\.(jpe?g|png|webp)$/i.test(f.name));
+    if (!pdf && !imagens.length) {
+      aviso.textContent = /\.hei[cf]$/i.test(files[0]?.name ?? '')
+        ? 'Fotos HEIC do iPhone ainda não são aceitas aqui. Converta antes para JPG.'
+        : 'Escolha um PDF ou imagens JPG, PNG ou WebP.';
+      aviso.hidden = false; return;
+    }
+    try {
+      if (pdf) {
+        if (files.length > 1) { aviso.textContent = 'Foi usado só o PDF. Para fazer OCR de várias fotos, escolha só as imagens.'; aviso.hidden = false; }
+        status.textContent = 'Abrindo o PDF…';
+        const dados = await pdf.arrayBuffer();
+        const v = await abrirParaVer(dados);
+        if (minha !== rodada) { fecharPdf(v); return; }
+        visor = v; bytesPdf = dados;
+        nomeBase = pdf.name.replace(/\.pdf$/i, '') || 'documento';
+        info.textContent = `${pdf.name} · ${plural(v.numPages, 'página', 'páginas')} · ${tamanho(pdf.size)}`;
+        for (let n = 1; n <= v.numPages; n++) {
+          const pg = await v.getPage(n);
+          const conteudo = await pg.getTextContent();
+          const letras = conteudo.items.reduce((s, it) => s + ('str' in it ? it.str.trim().length : 0), 0);
+          if (minha !== rodada) return;
+          const jaTemTexto = letras > 30;
+          const p: Pagina = { numero: n, jaTemTexto, marcada: !jaTemTexto, li: criarItem(n, `Página ${n}`) };
+          paginas.push(p); marcar(p); lista.append(p.li);
+        }
+        // Se todas já têm texto, deixa todas marcadas (a pessoa escolheu fazer OCR mesmo assim).
+        if (paginas.every((p) => p.jaTemTexto)) paginas.forEach((p) => { p.marcada = true; marcar(p); });
+        const comTexto = paginas.filter((p) => p.jaTemTexto).map((p) => p.numero);
+        notaTexto.hidden = !comTexto.length;
+        notaTexto.textContent = comTexto.length === paginas.length
+          ? 'Este PDF já tem texto selecionável. O OCR não é necessário para copiar o texto, mas você pode fazer mesmo assim.'
+          : `${comTexto.length === 1 ? 'A página' : 'As páginas'} ${comTexto.join(', ')} já ${comTexto.length === 1 ? 'tem' : 'têm'} texto selecionável e ${comTexto.length === 1 ? 'ficou desmarcada' : 'ficaram desmarcadas'}. Toque para incluir.`;
+        // Miniaturas: desenhadas só quando aparecem na tela, uma de cada vez.
+        observador = new IntersectionObserver((itens) => {
+          for (const it of itens) {
+            if (!it.isIntersecting) continue;
+            observador?.unobserve(it.target);
+            const n = Number((it.target as HTMLElement).dataset.n);
+            fila(async () => {
+              if (minha !== rodada || !visor) return;
+              const c = await miniatura(visor, n, 132);
+              if (minha !== rodada) return;
+              it.target.querySelector('.mini')!.append(c);
+            }).catch(() => undefined);
+          }
+        }, { rootMargin: '200px' });
+        paginas.forEach((p) => { p.li.dataset.n = String(p.numero); observador!.observe(p.li); });
+      } else {
+        nomeBase = imagens.length === 1 ? imagens[0].name.replace(/\.[^.]+$/, '') || 'imagem' : 'imagens';
+        const soma = imagens.reduce((s, f) => s + f.size, 0);
+        info.textContent = `${plural(imagens.length, 'imagem', 'imagens')} · ${tamanho(soma)}`;
+        imagens.forEach((f, i) => {
+          const p: Pagina = { numero: i + 1, arquivo: f, jaTemTexto: false, marcada: true, li: criarItem(i + 1, imagens.length === 1 ? f.name : `${i + 1}. ${f.name}`) };
+          const url = URL.createObjectURL(f); urlsMini.push(url);
+          const img = document.createElement('img'); img.src = url; img.alt = ''; img.decoding = 'async';
+          p.li.querySelector('.mini')!.append(img);
+          paginas.push(p); marcar(p); lista.append(p.li);
+        });
+        notaTexto.hidden = true;
+      }
+      status.textContent = '';
+      entrada.hidden = true;
+      painel.hidden = false;
+      atualizarNotaDownload();
+      atualizar();
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este arquivo.';
+      aviso.hidden = false;
+    }
+  }
+
+  /** Desenha uma imagem escolhida num canvas, já virada do jeito certo (EXIF) e reduzida se for enorme. */
+  async function imagemNoCanvas(file: File): Promise<{ canvas: HTMLCanvasElement; largura: number; altura: number }> {
+    let bmp: ImageBitmap;
+    try { bmp = await createImageBitmap(file); } catch { throw new Error('Não foi possível abrir a imagem ' + file.name + '.'); }
+    const reducao = Math.min(1, Math.sqrt(AREA_MAXIMA_IMAGEM / (bmp.width * bmp.height)));
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(bmp.width * reducao));
+    c.height = Math.max(1, Math.round(bmp.height * reducao));
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(bmp, 0, 0, c.width, c.height);
+    const largura = bmp.width, altura = bmp.height;
+    bmp.close();
+    return { canvas: c, largura, altura };
+  }
+
+  function mostrarProgresso(feitas: number, total: number, fracao: number) {
+    progresso.hidden = false;
+    barra.style.transform = `scaleX(${Math.min(1, (feitas + fracao) / total)})`;
+  }
+
+  async function executar() {
+    const escolhidas = paginas.filter((p) => p.marcada);
+    if (!escolhidas.length || trabalhando) return;
+    limparSaida();
+    const minha = ++rodada;
+    trabalhando = true;
+    atualizar();
+    parar.hidden = false;
+    const lang = idioma.value as Idioma;
+    const querPdf = gerarPdf.checked;
+    const feitas: Feita[] = [];
+    let editavel: PDFDocument | null = null;
+    let usouImagens = !visor; // fotos sempre viram páginas de imagem
+    let paginaAtual = 0;
+
+    try {
+      if (visor && querPdf && bytesPdf) {
+        try { editavel = await abrirParaEditar(bytesPdf); }
+        catch { usouImagens = true; } // PDF com bloqueio de edição: o PDF pesquisável sai com as páginas como imagem
+      }
+      status.textContent = 'Carregando o OCR…';
+      mostrarProgresso(0, escolhidas.length, 0);
+      const worker = await prepararOcr(lang, (a) => {
+        if (minha !== rodada) return;
+        if (a.reconhecendo) {
+          status.textContent = `Página ${paginaAtual} de ${escolhidas.length}: reconhecendo o texto ${Math.round(a.progresso * 100)}%`;
+          mostrarProgresso(feitas.length, escolhidas.length, a.progresso);
+        } else if (!feitas.length) {
+          status.textContent = `${a.etapa}… ${a.progresso ? Math.round(a.progresso * 100) + '%' : ''}`;
+        }
+      });
+      if (minha !== rodada) return;
+      marcarBaixado(lang);
+      atualizarNotaDownload();
+
+      for (const [i, p] of escolhidas.entries()) {
+        paginaAtual = i + 1;
+        lista.querySelectorAll('li.atual').forEach((li) => li.classList.remove('atual'));
+        p.li.classList.add('atual');
+        p.li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        status.textContent = `Página ${i + 1} de ${escolhidas.length}: preparando a imagem…`;
+        let canvas: HTMLCanvasElement;
+        let converter: Converter;
+        let tamanhoPt: { largura: number; altura: number };
+        if (visor) {
+          const { canvas: c } = await desenharPagina(visor, p.numero, DPI_OCR / 72);
+          canvas = c;
+          const pg = await visor.getPage(p.numero);
+          const base = pg.getViewport({ scale: 1 });
+          const vp = pg.getViewport({ scale: canvas.width / base.width });
+          tamanhoPt = { largura: base.width, altura: base.height };
+          if (editavel) converter = (x, y) => vp.convertToPdfPoint(x, y) as [number, number];
+          else { const s = canvas.width / base.width; converter = (x, y) => [x / s, base.height - y / s]; }
+        } else {
+          const img = await imagemNoCanvas(p.arquivo!);
+          canvas = img.canvas;
+          // Página com o tamanho original da imagem a 96 pixels por polegada, como no "JPG para PDF".
+          tamanhoPt = { largura: img.largura * PONTOS_POR_PIXEL, altura: img.altura * PONTOS_POR_PIXEL };
+          const s = canvas.width / tamanhoPt.largura;
+          converter = (x, y) => [x / s, tamanhoPt.altura - y / s];
+        }
+        if (minha !== rodada) return;
+        const r = await reconhecer(worker, canvas);
+        if (minha !== rodada) return;
+        const feita: Feita = { numero: p.numero, texto: r.texto, confianca: r.confianca, colocacoes: querPdf ? posicionarPalavras(r.linhas, converter) : [] };
+        if (querPdf && usouImagens) {
+          const png = p.arquivo?.type === 'image/png';
+          const blob = await codificar(canvas, png ? 'image/png' : 'image/jpeg', 0.85);
+          feita.imagem = { bytes: new Uint8Array(await blob.arrayBuffer()), png, ...tamanhoPt };
+        }
+        canvas.width = canvas.height = 0; // libera a memória
+        feitas.push(feita);
+        p.li.classList.remove('atual');
+        p.li.classList.add('feita');
+        mostrarProgresso(feitas.length, escolhidas.length, 0);
+        // Mostra o texto à medida que as páginas ficam prontas.
+        mostrarTexto(feitas, escolhidas.length, false);
+      }
+
+      let pdfFinal: Blob | null = null;
+      if (querPdf) {
+        status.textContent = 'Montando o PDF pesquisável…';
+        pdfFinal = await montarPdf(feitas, editavel);
+        if (minha !== rodada) return;
+      }
+      mostrarTexto(feitas, escolhidas.length, true);
+      if (pdfFinal) {
+        const url = URL.createObjectURL(pdfFinal); urls.push(url);
+        baixarPdf.href = url;
+        baixarPdf.download = `${nomeBase}-pesquisavel.pdf`;
+        baixarPdf.hidden = false;
+        const nota = $('saida-nota');
+        nota.hidden = false;
+        nota.textContent = editavel
+          ? `PDF pesquisável com as páginas originais e o texto invisível por cima: ${tamanho(pdfFinal.size)}.`
+          : visor
+            ? `Este PDF tem bloqueio de edição, então o PDF pesquisável foi montado com as páginas como imagem: ${tamanho(pdfFinal.size)}.`
+            : `PDF pesquisável com ${plural(feitas.length, 'página', 'páginas')} (uma por imagem): ${tamanho(pdfFinal.size)}.`;
+      }
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      if (minha !== rodada) return;
+      console.warn(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      status.textContent = /fetch|network|carregar|import|Failed/i.test(msg)
+        ? 'Não foi possível baixar o programa de OCR. Confira a internet e tente de novo.'
+        : /navegador|imagem/.test(msg) ? msg : 'Não foi possível reconhecer o texto. Tente de novo ou com menos páginas.';
+      encerrarOcr();
+    } finally {
+      if (minha === rodada) {
+        trabalhando = false;
+        parar.hidden = true;
+        progresso.hidden = true;
+        lista.querySelectorAll('li.atual').forEach((li) => li.classList.remove('atual'));
+        atualizar();
+      }
+    }
+  }
+
+  function mostrarTexto(feitas: Feita[], total: number, fim: boolean) {
+    const completo = juntarTexto(feitas.map((f) => ({ numero: f.numero, texto: f.texto })));
+    texto.value = completo;
+    saida.hidden = false;
+    const vazias = feitas.filter((f) => !f.texto.trim()).length;
+    const confianca = feitas.length ? Math.round(feitas.reduce((s, f) => s + f.confianca, 0) / feitas.length) : 0;
+    $('saida-titulo').textContent = fim
+      ? (completo.trim() ? `Texto reconhecido em ${plural(feitas.length - vazias, 'página', 'páginas')}` : 'Nenhum texto encontrado')
+      : `${feitas.length} de ${total} ${total === 1 ? 'página pronta' : 'páginas prontas'}…`;
+    const palavras = completo.split(/\s+/).filter((w) => w && !/^---$/.test(w)).length;
+    $('saida-info').textContent = completo.trim()
+      ? `${plural(palavras, 'palavra', 'palavras')} · confiança média de ${confianca}%` + (vazias ? ` · ${plural(vazias, 'página', 'páginas')} sem texto` : '')
+      : 'Confira se a imagem tem texto impresso e está nítida e na posição certa.';
+    urls.filter((u) => u === baixarTxt.href).forEach(URL.revokeObjectURL);
+    const url = URL.createObjectURL(new Blob([completo], { type: 'text/plain;charset=utf-8' })); urls.push(url);
+    baixarTxt.href = url;
+    baixarTxt.download = `${nomeBase}.txt`;
+  }
+
+  async function montarPdf(feitas: Feita[], editavel: PDFDocument | null): Promise<Blob> {
+    const lib = await carregarPdfLib();
+    const { StandardFonts, pushGraphicsState, popGraphicsState, beginText, endText, setFontAndSize, setTextRenderingMode, TextRenderingMode, setCharacterSqueeze, setTextMatrix, showText } = lib;
+    const doc = editavel ?? await novoPdf();
+    const fonte = await doc.embedFont(StandardFonts.Helvetica);
+    const aceitos = new Set(fonte.getCharacterSet());
+    for (const f of feitas) {
+      let pagina;
+      if (f.imagem) {
+        const img = f.imagem.png ? await doc.embedPng(f.imagem.bytes) : await doc.embedJpg(f.imagem.bytes);
+        pagina = doc.addPage([f.imagem.largura, f.imagem.altura]);
+        pagina.drawImage(img, { x: 0, y: 0, width: f.imagem.largura, height: f.imagem.altura });
+      } else {
+        pagina = doc.getPage(f.numero - 1);
+      }
+      const ops = [];
+      const chave = pagina.node.newFontDictionary('OCR', fonte.ref);
+      for (const c of f.colocacoes) {
+        const t = limparParaFonte(c.texto, aceitos);
+        if (!t) continue;
+        const natural = fonte.widthOfTextAtSize(t, c.tamanho);
+        if (!(natural > 0)) continue;
+        ops.push(
+          setFontAndSize(chave, c.tamanho),
+          setCharacterSqueeze(Math.max(1, Math.min(1000, (c.largura / natural) * 100))),
+          setTextMatrix(...c.matriz),
+          showText(fonte.encodeText(t)),
+        );
+      }
+      if (ops.length) pagina.pushOperators(pushGraphicsState(), beginText(), setTextRenderingMode(TextRenderingMode.Invisible), ...ops, endText(), popGraphicsState());
+    }
+    doc.setProducer('oquebragalho.app');
+    return paraBlob(doc);
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail));
+  botao.addEventListener('click', executar);
+  parar.addEventListener('click', () => {
+    rodada++;
+    encerrarOcr();
+    trabalhando = false;
+    parar.hidden = true;
+    progresso.hidden = true;
+    status.textContent = 'OCR interrompido.';
+    lista.querySelectorAll('li.atual').forEach((li) => li.classList.remove('atual'));
+    atualizar();
+  });
+  $('limpar').addEventListener('click', () => { resetar(); document.getElementById('entrada-input')?.click(); });
+  $('todas').addEventListener('click', () => { paginas.forEach((p) => { p.marcada = true; marcar(p); }); limparSaida(); atualizar(); });
+  idioma.addEventListener('change', () => { atualizarNotaDownload(); if (!trabalhando) limparSaida(); });
+  gerarPdf.addEventListener('change', () => { if (!trabalhando) limparSaida(); });
+  $('copiar').addEventListener('click', async () => {
+    const b = $('copiar');
+    try { await navigator.clipboard.writeText(texto.value); b.textContent = 'Copiado!'; }
+    catch { texto.select(); document.execCommand('copy'); b.textContent = 'Copiado!'; }
+    setTimeout(() => { b.textContent = 'Copiar texto'; }, 1600);
+  });
+</script>
+
+<style>
+  .barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .barra .espaco { flex: 1; }
+  .barra .btn { padding: 6px 14px; font-size: 0.9rem; }
+  .barra p { min-width: 0; overflow-wrap: anywhere; }
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 16px; align-items: end; }
+  .marca { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; padding-block: 10px; }
+  .marca input { width: 18px; height: 18px; accent-color: var(--brand); margin: 0; }
+  .nota { font-size: 0.9rem; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .barra-progresso { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .barra-progresso span { display: block; height: 100%; background: var(--brand); transform: scaleX(0); transform-origin: left; transition: transform 0.3s var(--suave); }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+  .saida strong { font-size: 1.3rem; }
+  .botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+  textarea { font: 0.95rem/1.55 var(--f-body); resize: vertical; min-height: 200px; }
+  .miniaturas {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px;
+    max-height: 520px; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .miniaturas :global(li) { min-width: 0; animation: entrar 0.3s var(--suave) backwards; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+  .miniaturas :global(button) {
+    position: relative; width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 6px; text-align: left;
+    border: 2px solid var(--brand); border-radius: var(--radius); background: var(--surface); color: var(--fg); font: inherit; cursor: pointer;
+    transition: transform 0.18s var(--mola), opacity 0.2s var(--suave);
+  }
+  .miniaturas :global(button:active) { transform: scale(0.96); }
+  .miniaturas :global(li.desmarcada button) { opacity: 0.45; border-color: var(--line); }
+  .miniaturas :global(li.atual button) { border-color: var(--link); box-shadow: 0 0 0 3px color-mix(in srgb, var(--link) 30%, transparent); }
+  .miniaturas :global(.mini) { aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden; background: var(--bg); border-radius: 6px; }
+  .miniaturas :global(.mini canvas), .miniaturas :global(.mini img) { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; box-shadow: 0 0 0 1px var(--line); object-fit: contain; }
+  .miniaturas :global(.num) { font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .miniaturas :global(.det) { font-size: 0.78rem; min-height: 1.2em; }
+  .miniaturas :global(.ok) { position: absolute; top: 10px; right: 10px; opacity: 0; transform: scale(0.6); transition: opacity 0.25s var(--suave), transform 0.3s var(--mola); }
+  .miniaturas :global(li.feita .ok) { opacity: 1; transform: scale(1); }
+</style>

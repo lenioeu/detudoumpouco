@@ -1,0 +1,10 @@
+Arquivos do OCR (usado em /pdf/ocr-pdf), servidos pelo próprio site para nada depender de CDN.
+
+worker.min.js                       tesseract.js 7.0.0 (node_modules/tesseract.js/dist), sem o comentário sourceMappingURL
+tesseract-core-simd-lstm.wasm.js    tesseract.js-core 7.0.0 (navegadores com WebAssembly SIMD)
+tesseract-core-lstm.wasm.js         tesseract.js-core 7.0.0 (navegadores sem SIMD)
+lang/por.traineddata.gz             @tesseract.js-data/por 1.0.0, pasta 4.0.0_best_int
+lang/eng.traineddata.gz             @tesseract.js-data/eng 1.0.0, pasta 4.0.0_best_int
+
+Licença: Apache 2.0 (LICENSE.txt). Ao atualizar o tesseract.js, crie uma pasta nova com a versão
+no nome e mude VERSAO em src/lib/ocr-navegador.ts.

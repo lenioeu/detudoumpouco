@@ -27,5 +27,5 @@ export default [
   { slug: 'extrair-imagens-pdf', nome: 'Extrair imagens do PDF', resumo: 'Baixe todas as imagens de dentro do PDF.', status: 'planejada' },
   { slug: 'ocultar-dados-pdf', nome: 'Ocultar informações do PDF', resumo: 'Cubra dados sensíveis com tarja preta de verdade.', status: 'planejada' },
   { slug: 'comparar-pdf', nome: 'Comparar PDF', resumo: 'Veja o que mudou entre duas versões de um PDF.', status: 'pronta' },
-  { slug: 'ocr-pdf', nome: 'OCR em PDF', resumo: 'Torne pesquisável o texto de um PDF escaneado.', status: 'planejada' },
+  { slug: 'ocr-pdf', nome: 'OCR em PDF', resumo: 'Torne pesquisável o texto de um PDF escaneado.', status: 'pronta' },
 ] satisfies Ferramenta[];
