@@ -1,0 +1,295 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import Comparar from '../../components/Comparar.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="pdf-preto-e-branco"
+  titulo="PDF em preto e branco"
+  subtitulo="Tire as cores do PDF: deixe em tons de cinza ou só em preto e branco, para imprimir sem gastar tinta colorida. A conversão é feita no seu navegador."
+  tituloSeo="PDF em preto e branco ou cinza online grátis"
+  descricao="Converta PDF colorido para tons de cinza ou preto e branco, grátis, e economize tinta na impressão. Escolha a qualidade. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Escolha "Tons de cinza" (mantém fotos e sombras) ou "Preto e branco" (só preto e branco, ideal para texto).',
+    'Escolha a qualidade e confira a prévia da primeira página, arrastando o divisor.',
+    'Clique em "Converter" e depois em "Baixar PDF".',
+  ]}
+  perguntas={[
+    { p: 'Como deixar um PDF em preto e branco?', r: 'Escolha o arquivo nesta página, marque "Tons de cinza" ou "Preto e branco" e clique em "Converter". Em alguns segundos aparece o botão para baixar o PDF novo, sem nenhuma cor. Funciona no computador e no celular.' },
+    { p: 'Qual a diferença entre tons de cinza e preto e branco?', r: 'Tons de cinza troca cada cor por um cinza de mesmo brilho, então fotos, gráficos e marcas d\'água continuam visíveis. Preto e branco usa só duas cores, como uma fotocópia: o texto fica bem nítido e o arquivo fica leve, mas fotos perdem os detalhes.' },
+    { p: 'Vou conseguir selecionar e copiar o texto depois?', r: 'Não. Para garantir que nada fique colorido, cada página vira uma imagem. O texto continua legível e imprime bem, mas deixa de ser selecionável e pesquisável, e links e campos de formulário somem. Guarde o arquivo original se precisar do texto.' },
+    { p: 'Preciso converter o PDF só para imprimir sem cor?', r: 'Nem sempre. Quase toda impressora tem a opção "Preto e branco" ou "Escala de cinza" na janela de impressão, e ela mantém o arquivo como está. Converter vale a pena quando você vai mandar o PDF para uma gráfica, para outra pessoa imprimir ou para um sistema que exige o documento sem cor.' },
+    { p: 'O arquivo fica maior ou menor?', r: 'Depende. PDFs de texto feitos no computador costumam ficar maiores, porque o texto vira imagem. PDFs escaneados ou cheios de fotos coloridas normalmente diminuem, principalmente no modo preto e branco. A página mostra o tamanho do resultado antes de você baixar.' },
+    { p: 'Meu PDF é enviado para algum servidor?', r: 'Não. As páginas são desenhadas e convertidas pelo seu próprio navegador. O arquivo não sai do seu computador ou celular.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <p class="nota" id="nota">
+        <strong>Importante:</strong> cada página vira uma imagem. O texto continua legível, mas deixa de ser selecionável e pesquisável, e links e campos de formulário somem.
+        <span id="nota-texto" hidden> Este PDF tem texto selecionável: guarde o original se precisar copiar o texto.</span>
+        Se você só quer imprimir sem cor, a opção "Preto e branco" da janela de impressão mantém o texto.
+      </p>
+      <div class="opcoes">
+        <div class="campo">
+          <label for="modo">Cores</label>
+          <select id="modo">
+            <option value="cinza" selected>Tons de cinza (mantém fotos)</option>
+            <option value="pb">Preto e branco (só texto, arquivo leve)</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="qualidade">Qualidade</label>
+          <select id="qualidade">
+            <option value="leve">Leve (100 dpi)</option>
+            <option value="normal" selected>Normal (150 dpi)</option>
+            <option value="alta">Alta (200 dpi)</option>
+            <option value="maxima">Máxima, para gráfica (300 dpi)</option>
+          </select>
+        </div>
+        <div class="campo" id="campo-limite" hidden>
+          <label for="limite">Vira preto o que for mais escuro que <span id="limite-valor">60%</span></label>
+          <input id="limite" type="range" min="30" max="85" step="5" value="60" />
+          <small>Aumente se o texto sair fraco; diminua se o fundo sair manchado.</small>
+        </div>
+      </div>
+
+      <Comparar id="comparar" antes="Original" depois="Sem cor" />
+
+      <div class="enviar">
+        <button id="converter" type="button" class="btn">Converter</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div>
+        <strong id="saida-titulo"></strong>
+        <span id="saida-info"></span>
+      </div>
+      <a id="baixar" class="btn" download href="#">Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que tirar as cores de um PDF</h2>
+    <p>O motivo mais comum é economizar. Cartucho colorido custa caro, e muita impressora usa tinta colorida até para imprimir um cinza se o arquivo tiver cor. Um PDF sem nenhuma cor garante que só o preto vai ser usado. Também ajuda quando a gráfica cobra a impressão colorida por página, mesmo que a cor seja só um logotipo no cabeçalho, ou quando um concurso, uma faculdade ou um cartório pede o documento "em preto e branco".</p>
+    <p>Outro uso é melhorar a leitura de documentos escaneados com papel amarelado ou manchado. No modo preto e branco, o fundo vira branco e as letras ficam bem pretas, como numa fotocópia nova.</p>
+    <h2>Tons de cinza ou preto e branco?</h2>
+    <ul>
+      <li><strong>Tons de cinza</strong> é o mais seguro. Cada cor vira um cinza com o mesmo brilho, então fotos, gráficos e destaques continuam aparecendo. Use para apostilas, relatórios e apresentações.</li>
+      <li><strong>Preto e branco</strong> deixa só duas cores. É ótimo para contratos, provas e documentos escaneados, e gera arquivos bem leves. Ajuste o controle se o texto ficar fraco ou se aparecerem manchas no fundo. Evite em páginas com fotos: elas viram borrões pretos.</li>
+    </ul>
+    <h2>O que acontece com o texto</h2>
+    <p>Para ter certeza de que não sobra nenhuma cor, cada página é desenhada como uma imagem e o PDF novo é montado com essas imagens, no mesmo tamanho de página do original. A consequência, que é bom saber antes, é que não dá mais para selecionar, copiar ou buscar palavras no PDF convertido, e links e campos de formulário deixam de funcionar. Por isso, guarde sempre o arquivo original.</p>
+    <p>A qualidade Normal (150 dpi) imprime texto bem legível em folha A4. Para letras muito pequenas, plantas e gráficos detalhados, escolha Alta ou Máxima. Se o arquivo ficar pesado demais, tente o modo preto e branco ou passe o resultado pelo <a href="/pdf/comprimir-pdf">Comprimir PDF</a>. Para salvar as páginas como imagem, use o <a href="/pdf/pdf-para-jpg">PDF para JPG</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { codificar, novoCanvas } from '../../lib/canvas';
+  import { abrirParaVer, carregarPdfLib, desenharPagina, fecharPdf, novoPdf, paraBlob, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { brilho, empacotar1Bit, limiarizar, limiteDoControle, paraCinza } from '../../lib/cinza';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const modo = $<HTMLSelectElement>('modo');
+  const qualidade = $<HTMLSelectElement>('qualidade');
+  const limite = $<HTMLInputElement>('limite');
+  const campoLimite = $('campo-limite');
+  const comparar = $('comparar');
+  const botao = $<HTMLButtonElement>('converter');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  const QUALIDADES = {
+    leve: { dpi: 100, jpg: 0.7 },
+    normal: { dpi: 150, jpg: 0.8 },
+    alta: { dpi: 200, jpg: 0.86 },
+    maxima: { dpi: 300, jpg: 0.9 },
+  } as const;
+
+  let visor: DocumentoPdfJs | null = null;
+  let arquivo: File | null = null;
+  let rodada = 0;
+  let convertendo = false;
+  let urlSaida = '';
+  let urlAntes = '', urlDepois = '';
+  let previaBase: HTMLCanvasElement | null = null;
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function aplicar(px: Uint8ClampedArray) {
+    if (modo.value === 'pb') limiarizar(px, limiteDoControle(Number(limite.value)));
+    else paraCinza(px);
+  }
+
+  // ---------- Prévia da primeira página ----------
+  let espera = 0;
+  async function atualizarPrevia() {
+    if (!previaBase) return;
+    const c = novoCanvas(previaBase.width, previaBase.height);
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    ctx.drawImage(previaBase, 0, 0);
+    const d = ctx.getImageData(0, 0, c.width, c.height);
+    aplicar(d.data);
+    ctx.putImageData(d, 0, 0);
+    const blob = await codificar(c, 'image/png');
+    if (urlDepois) URL.revokeObjectURL(urlDepois);
+    urlDepois = URL.createObjectURL(blob);
+    comparar.querySelector<HTMLImageElement>('.depois')!.src = urlDepois;
+    comparar.querySelector('.rotulo-depois')!.textContent = modo.value === 'pb' ? 'Preto e branco' : 'Tons de cinza';
+  }
+  const agendarPrevia = () => { clearTimeout(espera); espera = window.setTimeout(atualizarPrevia, 120); };
+
+  function atualizar() {
+    campoLimite.hidden = modo.value !== 'pb';
+    $('limite-valor').textContent = `${limite.value}%`;
+    botao.disabled = convertendo || !visor;
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    convertendo = false;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    comparar.hidden = true;
+    status.textContent = '';
+    fecharPdf(visor); visor = null; previaBase = null;
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const v = await abrirParaVer(await file.arrayBuffer());
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v; arquivo = file;
+      info.textContent = `${file.name} · ${v.numPages} ${v.numPages === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      // Tem texto de verdade? Olha as 3 primeiras páginas para avisar com clareza.
+      let temTexto = false;
+      for (let n = 1; n <= Math.min(3, v.numPages) && !temTexto; n++) {
+        const conteudo = await (await v.getPage(n)).getTextContent();
+        temTexto = conteudo.items.some((it) => 'str' in it && it.str.trim() !== '');
+      }
+      if (minha !== rodada) return;
+      $('nota-texto').hidden = !temTexto;
+      painel.hidden = false;
+      atualizar();
+      // Prévia da página 1, com uns 600 px de largura.
+      const p1 = await v.getPage(1);
+      const largura = p1.getViewport({ scale: 1 }).width;
+      const { canvas } = await desenharPagina(v, 1, Math.min(4, 600 / largura));
+      if (minha !== rodada) return;
+      previaBase = canvas;
+      const blob = await codificar(canvas, 'image/png');
+      if (urlAntes) URL.revokeObjectURL(urlAntes);
+      urlAntes = URL.createObjectURL(blob);
+      comparar.querySelector<HTMLImageElement>('.antes')!.src = urlAntes;
+      comparar.querySelector('.rotulo-antes')!.textContent = 'Original';
+      await atualizarPrevia();
+      // Só mostra quando as duas imagens já estão prontas (evita ver a colorida dos dois lados).
+      await Promise.all(Array.from(comparar.querySelectorAll('img')).map((i) => i.decode().catch(() => undefined)));
+      if (minha === rodada) comparar.hidden = false;
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  async function converter() {
+    if (!visor || !arquivo) return;
+    limparSaida();
+    const minha = rodada;
+    convertendo = true;
+    atualizar();
+    const doc = visor;
+    const pb = modo.value === 'pb';
+    const q = QUALIDADES[qualidade.value as keyof typeof QUALIDADES];
+    const corte = limiteDoControle(Number(limite.value));
+    const total = doc.numPages;
+    try {
+      const lib = await carregarPdfLib();
+      const novo = await novoPdf();
+      for (let n = 1; n <= total; n++) {
+        status.textContent = `Convertendo a página ${n} de ${total}…`;
+        const pagina = await doc.getPage(n);
+        const vp = pagina.getViewport({ scale: 1 });
+        const { canvas } = await desenharPagina(doc, n, q.dpi / 72);
+        if (minha !== rodada) return;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+        const dados = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const w = canvas.width, h = canvas.height;
+        const folha = novo.addPage([vp.width, vp.height]);
+        if (pb) {
+          // 1 bit por pixel, sem perda, comprimido: o jeito mais leve de guardar preto e branco.
+          const bits = empacotar1Bit(brilho(dados.data), w, h, corte);
+          const fluxo = novo.context.flateStream(bits, {
+            Type: 'XObject', Subtype: 'Image', Width: w, Height: h, ColorSpace: 'DeviceGray', BitsPerComponent: 1,
+          });
+          const nome = folha.node.newXObject('Img', novo.context.register(fluxo));
+          folha.pushOperators(
+            lib.pushGraphicsState(),
+            lib.concatTransformationMatrix(vp.width, 0, 0, vp.height, 0, 0),
+            lib.drawObject(nome),
+            lib.popGraphicsState(),
+          );
+        } else {
+          paraCinza(dados.data);
+          ctx.putImageData(dados, 0, 0);
+          const blob = await codificar(canvas, 'image/jpeg', q.jpg);
+          const img = await novo.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+          folha.drawImage(img, { x: 0, y: 0, width: vp.width, height: vp.height });
+        }
+        canvas.width = canvas.height = 0;
+        pagina.cleanup();
+      }
+      status.textContent = 'Gerando o arquivo…';
+      const blob = await paraBlob(novo);
+      if (minha !== rodada) return;
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = arquivo.name.replace(/\.pdf$/i, '') + (pb ? '-preto-e-branco.pdf' : '-cinza.pdf');
+      $('saida-titulo').textContent = `PDF ${pb ? 'em preto e branco' : 'em tons de cinza'} pronto`;
+      const dif = blob.size - arquivo.size;
+      $('saida-info').textContent = `${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(blob.size)} `
+        + (Math.abs(dif) < arquivo.size * 0.05 ? '(quase o mesmo tamanho do original)'
+          : dif < 0 ? `(${Math.round((-dif / arquivo.size) * 100)}% menor que o original)` : `(o original tinha ${tamanho(arquivo.size)})`);
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch {
+      if (minha !== rodada) return;
+      status.textContent = 'Não foi possível converter. Tente uma qualidade menor; o aparelho pode estar sem memória.';
+    } finally {
+      if (minha === rodada) { convertendo = false; atualizar(); }
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  botao.addEventListener('click', converter);
+  modo.addEventListener('change', () => { limparSaida(); atualizar(); agendarPrevia(); });
+  qualidade.addEventListener('change', limparSaida);
+  limite.addEventListener('input', () => { limparSaida(); atualizar(); agendarPrevia(); });
+</script>
+
+<style>
+  .nota { border-left: 4px solid var(--brand); background: var(--bg); border-radius: 0 var(--radius) var(--radius) 0; padding: 10px 14px; font-size: 0.95rem; }
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { color: var(--muted); }
+</style>
