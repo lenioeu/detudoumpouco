@@ -1,0 +1,553 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="preencher-formulario-pdf"
+  titulo="Preencher formulário PDF"
+  subtitulo="Abra um PDF com campos de formulário, preencha tudo numa lista organizada e baixe o arquivo pronto. Se quiser, trave os campos para ninguém mais mudar. Sem enviar nada."
+  tituloSeo="Preencher formulário PDF online grátis e sem enviar"
+  descricao="Preencha campos de formulário PDF grátis: texto, caixas de marcar, opções e listas. Trave as respostas ao salvar se quiser. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF do formulário ou arraste o arquivo para a área indicada.',
+    'Os campos aparecem numa lista, na ordem das páginas. No computador, a página ao lado mostra onde fica cada campo.',
+    'Preencha os textos, marque as caixas e escolha as opções. O que já vinha preenchido aparece no lugar.',
+    'Se o formulário vai ser enviado e não deve mais mudar, marque "Travar os campos ao salvar".',
+    'Clique em "Salvar PDF preenchido" e baixe o arquivo.',
+  ]}
+  perguntas={[
+    { p: 'Como preencher um formulário PDF no computador sem imprimir?', r: 'Abra o PDF aqui, digite as respostas nos campos da lista e clique em "Salvar PDF preenchido". O arquivo baixado já sai com as respostas e pode ser mandado por e-mail ou anexado num site, sem imprimir nem escanear.' },
+    { p: 'Por que aparece que o PDF não tem campos?', r: 'Porque muitos formulários são só desenhos de linhas e caixas, sem campos de verdade por baixo. Isso é comum em PDFs escaneados ou exportados de editores de texto. Nesses casos, use o Editar PDF: ele deixa escrever em qualquer ponto da página.' },
+    { p: 'O que é achatar ou travar o formulário?', r: 'É transformar as respostas em parte fixa da página. Os campos deixam de existir e ninguém consegue apagar ou mudar o que foi digitado sem um editor de PDF. É o recomendado quando o formulário vai para um órgão público, uma escola ou uma empresa.' },
+    { p: 'Consigo preencher formulário PDF pelo celular?', r: 'Sim. A lista de campos foi feita para a tela do celular: toque em cada campo, digite e use o teclado normalmente. No fim, salve e o PDF preenchido vai para a pasta de downloads.' },
+    { p: 'Os acentos e o ç aparecem no PDF?', r: 'Sim. Letras do português, como á, ã, ê, ç e õ, funcionam normalmente. Só emoji e letras de alfabetos que a fonte padrão do PDF não tem são trocados, e a ferramenta avisa quando isso acontece.' },
+    { p: 'Meus dados são enviados para algum lugar?', r: 'Não. O formulário é lido e preenchido no seu navegador. Nome, CPF, endereço e qualquer outro dado digitado ficam só no seu aparelho.' },
+  ]}
+>
+  <div class="stack">
+    <div id="zona"><SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" /></div>
+    <p id="aviso" class="erro" role="alert" hidden></p>
+    <p id="carregando" class="muted" aria-live="polite" hidden>Lendo o formulário…</p>
+
+    <div id="sem-campos" class="resultado stack" hidden>
+      <p><strong class="titulo-sem">Este PDF não tem campos para preencher</strong></p>
+      <p>O formulário parece ser só um desenho de linhas e caixas. Use o <a href="/pdf/editar-pdf">Editar PDF</a> para escrever as respostas em qualquer ponto da página.</p>
+      <p><button id="outro-sem" type="button" class="btn btn-sec">Escolher outro PDF</button></p>
+    </div>
+
+    <div id="painel" class="stack" hidden>
+      <div class="topo-f">
+        <p id="info" class="muted"></p>
+        <button id="outro" type="button" class="btn btn-sec">Abrir outro PDF</button>
+      </div>
+      <p id="xfa" class="muted aviso-xfa" hidden>Este formulário também tinha uma versão "dinâmica" (XFA), que só o Adobe Reader mostra. Ela será removida ao salvar, para que as respostas apareçam em qualquer leitor de PDF.</p>
+
+      <div class="duas">
+        <form id="campos" class="campos" autocomplete="off" novalidate></form>
+        <aside class="previa" aria-label="Onde fica o campo">
+          <div class="previa-caixa">
+            <div id="previa-pagina" class="previa-pagina"><span id="destaque" class="destaque" hidden></span></div>
+            <p id="previa-rotulo" class="muted">Toque num campo para ver onde ele fica.</p>
+          </div>
+        </aside>
+      </div>
+
+      <label class="marcar"><input id="achatar" type="checkbox" /> Travar os campos ao salvar (achatar: ninguém mais consegue mudar as respostas)</label>
+      <div class="enviar">
+        <button id="salvar" type="button" class="btn">Salvar PDF preenchido</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+      <div id="saida" class="resultado saida" hidden>
+        <div><strong>Formulário pronto</strong><span id="saida-info" class="muted"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Formulário com campos x formulário desenhado</h2>
+    <p>Existem dois tipos de "formulário em PDF". O primeiro tem campos de verdade, criados no Acrobat, no LibreOffice ou no sistema que gerou o arquivo: ao abrir num leitor de PDF, dá para clicar e digitar. Fichas de matrícula, requerimentos de prefeitura, declarações de bolsa e muitos formulários de bancos e convênios são assim. É esse tipo que esta ferramenta preenche, listando cada campo com o nome que o próprio arquivo dá a ele.</p>
+    <p>O segundo tipo é só a imagem do formulário: linhas, caixas e textos, sem nada clicável. Acontece com papel escaneado e com documentos exportados do Word sem preparo. Para eles, a ferramenta avisa que não encontrou campos e indica o <a href="/pdf/editar-pdf">Editar PDF</a>, onde você escreve por cima em qualquer posição.</p>
+    <h2>Tipos de campo que aparecem na lista</h2>
+    <ul>
+      <li><strong>Texto:</strong> nome, CPF, endereço, datas. Se o campo tem limite de caracteres, como as caixinhas de CPF, a lista respeita o mesmo limite.</li>
+      <li><strong>Caixa de marcar:</strong> "aceito os termos", "possui dependentes", "sim/não".</li>
+      <li><strong>Opções (botões de rádio):</strong> só uma resposta por grupo, como estado civil ou turno.</li>
+      <li><strong>Listas:</strong> menus de escolha, como estado ou curso. Algumas listas também aceitam digitar uma resposta que não está entre as opções.</li>
+    </ul>
+    <p>Campos de assinatura digital e botões que executam ações no Acrobat ficam de fora, porque não guardam respostas.</p>
+    <h2>Quando travar as respostas</h2>
+    <p>Sem travar, o PDF continua sendo um formulário: quem receber pode corrigir uma resposta, o que é bom para rascunhos e para quem vai revisar com você. Travado (achatado), o texto vira parte da página, como se tivesse sido impresso. Faça isso na versão final que vai para o órgão ou a empresa, e guarde uma cópia sem travar caso precise mudar algo depois.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, carregarPdfLib, desenharPagina, fecharPdf, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { compararPosicao, nomeDoCampo, normalizarGiro, retanguloParaTela, tamanhoNaTela, textoSuportado, type GeometriaPagina } from '../../lib/editor-pdf';
+  import type { PDFDocument, PDFField } from 'pdf-lib';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const zona = $('zona');
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const carregando = $('carregando');
+  const semCampos = $('sem-campos');
+  const painel = $('painel');
+  const form = $<HTMLFormElement>('campos');
+  const previa = $('previa-pagina');
+  const destaque = $('destaque');
+  const previaRotulo = $('previa-rotulo');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  type Tipo = 'texto' | 'marcar' | 'opcoes' | 'lista' | 'listaMultipla';
+  interface Campo {
+    nome: string;
+    rotulo: string;
+    tipo: Tipo;
+    pagina: number; // começa em 0; -1 = sem posição conhecida
+    rect: { x: number; y: number; width: number; height: number } | null;
+    somenteLeitura: boolean;
+    opcoes: string[];
+    multilinha: boolean;
+    limite?: number;
+    editavel: boolean;
+    el?: HTMLElement;
+  }
+
+  let dados: ArrayBuffer | null = null;
+  let visor: DocumentoPdfJs | null = null;
+  let geometrias: GeometriaPagina[] = [];
+  let campos: Campo[] = [];
+  let nomeBase = 'formulario';
+  let rodada = 0;
+  let urlSaida = '';
+  let paginaNaPrevia = -1;
+  let ignorados = 0;
+  const desenhos = new Map<number, HTMLCanvasElement>();
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+    status.textContent = '';
+  }
+
+  function textoDe(obj: unknown): string | undefined {
+    const o = obj as { decodeText?: () => string } | undefined;
+    try { return o?.decodeText?.(); } catch { return undefined; }
+  }
+
+  /** Lê os campos com o pdf-lib: tipo, rótulo, valor atual e onde ficam na página. */
+  async function lerCampos(doc: PDFDocument) {
+    const lib = await carregarPdfLib();
+    const { PDFTextField, PDFCheckBox, PDFRadioGroup, PDFDropdown, PDFOptionList, PDFName } = lib;
+    const paginas = doc.getPages();
+    const indicePorRef = new Map<string, number>();
+    paginas.forEach((p, i) => indicePorRef.set(p.ref.toString(), i));
+    // Para widgets sem /P: procura nas anotações de cada página.
+    const anotacoes = new Map<string, number>();
+    paginas.forEach((p, i) => {
+      const annots = p.node.Annots();
+      if (!annots) return;
+      for (let k = 0; k < annots.size(); k++) anotacoes.set(String(annots.get(k)), i);
+    });
+
+    const valores = new Map<string, unknown>();
+    const lista: Campo[] = [];
+    let xfa = false;
+    const acro = doc.catalog.getAcroForm();
+    if (acro?.dict.has(PDFName.of('XFA'))) xfa = true;
+    const f = doc.getForm();
+    ignorados = 0;
+    for (const campo of f.getFields() as PDFField[]) {
+      let tipo: Tipo;
+      const c: Partial<Campo> = { opcoes: [], multilinha: false, editavel: false };
+      if (campo instanceof PDFTextField) {
+        tipo = 'texto';
+        c.multilinha = campo.isMultiline();
+        c.limite = campo.getMaxLength();
+        valores.set(campo.getName(), campo.getText() ?? '');
+      } else if (campo instanceof PDFCheckBox) {
+        tipo = 'marcar';
+        valores.set(campo.getName(), campo.isChecked());
+      } else if (campo instanceof PDFRadioGroup) {
+        tipo = 'opcoes';
+        c.opcoes = campo.getOptions();
+        valores.set(campo.getName(), campo.getSelected() ?? '');
+      } else if (campo instanceof PDFDropdown) {
+        tipo = campo.isMultiselect() ? 'listaMultipla' : 'lista';
+        c.opcoes = campo.getOptions();
+        c.editavel = campo.isEditable();
+        valores.set(campo.getName(), campo.getSelected());
+      } else if (campo instanceof PDFOptionList) {
+        tipo = campo.isMultiselect() ? 'listaMultipla' : 'lista';
+        c.opcoes = campo.getOptions();
+        valores.set(campo.getName(), campo.getSelected());
+      } else { ignorados++; continue; }
+
+      const widgets = campo.acroField.getWidgets();
+      let pagina = -1;
+      let rect: Campo['rect'] = null;
+      for (const w of widgets) {
+        const p = w.P();
+        let i = p ? indicePorRef.get(p.toString()) : undefined;
+        if (i === undefined) {
+          const ref = doc.context.getObjectRef(w.dict);
+          if (ref) i = anotacoes.get(ref.toString());
+        }
+        if (i !== undefined) { pagina = i; rect = w.getRectangle(); break; }
+      }
+      const tu = textoDe(campo.acroField.dict.lookup(PDFName.of('TU')));
+      lista.push({
+        ...c, nome: campo.getName(), tipo, pagina, rect,
+        rotulo: (tu && tu.trim()) || nomeDoCampo(campo.getName()),
+        somenteLeitura: campo.isReadOnly(),
+      } as Campo);
+    }
+    return { lista, valores, xfa };
+  }
+
+  function ordenar(lista: Campo[]): Campo[] {
+    const pos = (c: Campo) => {
+      if (c.pagina < 0 || !c.rect || !geometrias[c.pagina]) return { pagina: 1e9, x: 0, y: 0 };
+      const r = retanguloParaTela(geometrias[c.pagina], c.rect.x, c.rect.y, c.rect.width, c.rect.height);
+      return { pagina: c.pagina, x: r.x, y: r.y };
+    };
+    return lista.map((c, i) => ({ c, p: pos(c), i }))
+      .sort((a, b) => compararPosicao(a.p, b.p) || a.i - b.i)
+      .map((x) => x.c);
+  }
+
+  let contador = 0;
+  function montarFormulario(valores: Map<string, unknown>) {
+    form.innerHTML = '';
+    let paginaAtual = -2;
+    let grupo: HTMLElement = form;
+    for (const c of campos) {
+      if (c.pagina !== paginaAtual) {
+        paginaAtual = c.pagina;
+        grupo = document.createElement('fieldset');
+        grupo.className = 'pagina-campos';
+        const leg = document.createElement('legend');
+        leg.textContent = c.pagina >= 0 ? `Página ${c.pagina + 1}` : 'Outros campos';
+        grupo.append(leg);
+        form.append(grupo);
+      }
+      const id = `campo-${++contador}`;
+      const v = valores.get(c.nome);
+      const caixa = document.createElement('div');
+      caixa.className = 'campo item';
+      caixa.dataset.nome = c.nome;
+      const rotulo = document.createElement('label');
+      rotulo.htmlFor = id;
+      rotulo.textContent = c.rotulo;
+      let el: HTMLElement;
+      if (c.tipo === 'texto') {
+        const t = c.multilinha ? document.createElement('textarea') : document.createElement('input');
+        if (t instanceof HTMLInputElement) t.type = 'text';
+        else t.rows = 3;
+        t.value = String(v ?? '');
+        if (c.limite) t.maxLength = c.limite;
+        el = t;
+        caixa.append(rotulo, t);
+        if (c.limite) { const s = document.createElement('small'); s.textContent = `Até ${c.limite} caracteres`; caixa.append(s); }
+      } else if (c.tipo === 'marcar') {
+        caixa.classList.add('item-marcar');
+        const ch = document.createElement('input');
+        ch.type = 'checkbox';
+        ch.checked = !!v;
+        el = ch;
+        rotulo.prepend(ch);
+        caixa.append(rotulo);
+      } else if (c.tipo === 'opcoes') {
+        const fs = document.createElement('div');
+        fs.className = 'opcoes';
+        fs.setAttribute('role', 'radiogroup');
+        fs.id = id;
+        const r = document.createElement('span');
+        r.className = 'rotulo';
+        r.textContent = c.rotulo;
+        r.id = `${id}-rot`;
+        fs.setAttribute('aria-labelledby', r.id);
+        c.opcoes.forEach((op, k) => {
+          const l = document.createElement('label');
+          l.className = 'opcao';
+          const i = document.createElement('input');
+          i.type = 'radio'; i.name = id; i.value = op; i.checked = v === op; i.id = `${id}-${k}`;
+          i.disabled = c.somenteLeitura;
+          l.append(i, document.createTextNode(' ' + op));
+          fs.append(l);
+        });
+        const limpar = document.createElement('button');
+        limpar.type = 'button'; limpar.className = 'limpar'; limpar.textContent = 'Limpar';
+        limpar.addEventListener('click', () => { fs.querySelectorAll('input').forEach((i) => { (i as HTMLInputElement).checked = false; }); limparSaida(); });
+        fs.append(limpar);
+        el = fs;
+        caixa.append(r, fs);
+      } else {
+        const sel = (v as string[] | undefined) ?? [];
+        if (c.editavel && c.tipo === 'lista') {
+          const i = document.createElement('input');
+          i.type = 'text'; i.value = sel[0] ?? '';
+          const dl = document.createElement('datalist');
+          dl.id = `${id}-op`;
+          c.opcoes.forEach((op) => { const o = document.createElement('option'); o.value = op; dl.append(o); });
+          i.setAttribute('list', dl.id);
+          el = i;
+          caixa.append(rotulo, i, dl);
+          const s = document.createElement('small'); s.textContent = 'Escolha uma opção ou digite outra.'; caixa.append(s);
+        } else {
+          const s = document.createElement('select');
+          s.multiple = c.tipo === 'listaMultipla';
+          if (!s.multiple) { const o = document.createElement('option'); o.value = ''; o.textContent = '(nenhuma)'; s.append(o); }
+          c.opcoes.forEach((op) => { const o = document.createElement('option'); o.value = op; o.textContent = op; o.selected = sel.includes(op); s.append(o); });
+          if (s.multiple) s.size = Math.min(Math.max(c.opcoes.length, 2), 6);
+          el = s;
+          caixa.append(rotulo, s);
+          if (s.multiple) { const sm = document.createElement('small'); sm.textContent = 'Dá para escolher mais de uma (Ctrl ou toque longo).'; caixa.append(sm); }
+        }
+      }
+      if (el !== caixa && 'id' in el && !el.id) el.id = id;
+      if (c.somenteLeitura) {
+        el.querySelectorAll?.('input').forEach((i) => { i.disabled = true; });
+        (el as HTMLInputElement).disabled = true;
+        const s = document.createElement('small'); s.textContent = 'Campo somente leitura: o próprio PDF não deixa mudar.'; caixa.append(s);
+      }
+      c.el = el;
+      caixa.addEventListener('focusin', () => mostrarCampo(c));
+      grupo.append(caixa);
+    }
+  }
+
+  function valorDe(c: Campo): string | boolean | string[] {
+    const el = c.el!;
+    if (c.tipo === 'texto') return (el as HTMLInputElement).value;
+    if (c.tipo === 'marcar') return (el as HTMLInputElement).checked;
+    if (c.tipo === 'opcoes') return el.querySelector<HTMLInputElement>('input:checked')?.value ?? '';
+    if (el instanceof HTMLInputElement) return el.value ? [el.value] : [];
+    return Array.from((el as HTMLSelectElement).selectedOptions).map((o) => o.value).filter(Boolean);
+  }
+
+  // ------------------------------------------------------------- prévia (computador)
+  async function mostrarCampo(c: Campo) {
+    if (getComputedStyle(previa.closest('.previa')!).display === 'none') return;
+    if (!visor || c.pagina < 0) { destaque.hidden = true; previaRotulo.textContent = c.rotulo; return; }
+    previaRotulo.textContent = `Página ${c.pagina + 1} · ${c.rotulo}`;
+    const g = geometrias[c.pagina];
+    const t = tamanhoNaTela(g);
+    previa.style.aspectRatio = `${t.largura} / ${t.altura}`;
+    if (paginaNaPrevia !== c.pagina) {
+      paginaNaPrevia = c.pagina;
+      let canvas = desenhos.get(c.pagina);
+      if (!canvas) {
+        const dens = Math.min(devicePixelRatio || 1, 2);
+        canvas = (await desenharPagina(visor, c.pagina + 1, (previa.clientWidth * dens) / t.largura)).canvas;
+        desenhos.set(c.pagina, canvas);
+      }
+      if (paginaNaPrevia !== c.pagina) return;
+      previa.querySelector('canvas')?.remove();
+      previa.prepend(canvas);
+    }
+    if (c.rect) {
+      const r = retanguloParaTela(g, c.rect.x, c.rect.y, c.rect.width, c.rect.height);
+      destaque.style.left = `${(r.x / t.largura) * 100}%`;
+      destaque.style.top = `${(r.y / t.altura) * 100}%`;
+      destaque.style.width = `${(r.largura / t.largura) * 100}%`;
+      destaque.style.height = `${(r.altura / t.altura) * 100}%`;
+      destaque.hidden = false;
+      // reinicia a animação de chamar atenção
+      destaque.classList.remove('pulso'); void destaque.offsetWidth; destaque.classList.add('pulso');
+    } else destaque.hidden = true;
+  }
+
+  function fechar() {
+    fecharPdf(visor); visor = null;
+    desenhos.forEach((c) => { c.width = 0; c.height = 0; });
+    desenhos.clear();
+    paginaNaPrevia = -1;
+    previa.querySelector('canvas')?.remove();
+    destaque.hidden = true;
+    previaRotulo.textContent = 'Toque num campo para ver onde ele fica.';
+    dados = null; campos = [];
+    limparSaida();
+  }
+
+  async function carregar(file: File) {
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    const minha = ++rodada;
+    fechar();
+    aviso.hidden = true; painel.hidden = true; semCampos.hidden = true;
+    carregando.hidden = false;
+    try {
+      const buf = await file.arrayBuffer();
+      const doc = await abrirParaEditar(buf);
+      const v = await abrirParaVer(buf);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      const geos: GeometriaPagina[] = [];
+      for (let i = 1; i <= v.numPages; i++) {
+        const p = await v.getPage(i);
+        geos.push({ caixa: [...p.view] as GeometriaPagina['caixa'], giro: normalizarGiro(p.rotate) });
+      }
+      geometrias = geos;
+      let lidos;
+      try { lidos = await lerCampos(doc); }
+      catch { throw new ErroPdf('Não foi possível ler os campos deste formulário. O arquivo pode estar com defeito.'); }
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v; dados = buf;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'formulario';
+      carregando.hidden = true;
+      zona.hidden = true;
+      if (!lidos.lista.length) { semCampos.hidden = false; return; }
+      campos = ordenar(lidos.lista);
+      $('xfa').hidden = !lidos.xfa;
+      const n = campos.length;
+      $('info').textContent = `${file.name} · ${n} ${n === 1 ? 'campo' : 'campos'} · ${v.numPages} ${v.numPages === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`
+        + (ignorados ? ` · ${ignorados} ${ignorados === 1 ? 'botão ou assinatura ignorado' : 'botões ou assinaturas ignorados'}` : '');
+      montarFormulario(lidos.valores);
+      painel.hidden = false;
+      const primeiro = campos.find((c) => c.pagina >= 0);
+      if (primeiro) mostrarCampo(primeiro);
+    } catch (e) {
+      if (minha !== rodada) return;
+      carregando.hidden = true;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  async function salvar() {
+    if (!dados) return;
+    const lib = await carregarPdfLib();
+    const { PDFTextField, PDFCheckBox, PDFRadioGroup, PDFDropdown, PDFOptionList, StandardFonts } = lib;
+    const doc = await abrirParaEditar(dados);
+    const f = doc.getForm();
+    // As aparências dos campos são desenhadas com Helvetica: o que ela não tem é trocado.
+    const tem = new Set((await doc.embedFont(StandardFonts.Helvetica)).getCharacterSet());
+    let trocados = 0;
+    const problemas: string[] = [];
+    for (const c of campos) {
+      if (c.somenteLeitura) continue;
+      const v = valorDe(c);
+      try {
+        const campo = f.getField(c.nome);
+        if (campo instanceof PDFTextField) {
+          const r = textoSuportado(String(v), (cp) => tem.has(cp));
+          trocados += r.trocados;
+          let texto = c.multilinha ? r.texto : r.texto.replace(/\n/g, ' ');
+          const max = campo.getMaxLength();
+          if (max !== undefined && texto.length > max) texto = texto.slice(0, max);
+          campo.setText(texto || undefined);
+        } else if (campo instanceof PDFCheckBox) {
+          if (v) campo.check(); else campo.uncheck();
+        } else if (campo instanceof PDFRadioGroup) {
+          if (v) campo.select(String(v)); else campo.clear();
+        } else if (campo instanceof PDFDropdown || campo instanceof PDFOptionList) {
+          const lista = (v as string[]).map((s) => textoSuportado(s, (cp) => tem.has(cp)).texto);
+          if (lista.length) campo.select(lista); else campo.clear();
+        }
+      } catch {
+        problemas.push(c.rotulo);
+      }
+    }
+    // O pdf-lib redesenha só os campos alterados, com a Helvetica (por isso a troca de caracteres acima).
+    let achatou = false;
+    if ($<HTMLInputElement>('achatar').checked) {
+      try { f.flatten(); achatou = true; }
+      catch { throw new ErroPdf('Não foi possível travar os campos deste formulário. Tente salvar sem travar.'); }
+    }
+    doc.setModificationDate(new Date());
+    const bytes = await doc.save();
+    return { bytes, trocados, problemas, achatou };
+  }
+
+  $('salvar').addEventListener('click', async () => {
+    const botao = $<HTMLButtonElement>('salvar');
+    botao.disabled = true;
+    limparSaida();
+    status.textContent = 'Preenchendo o PDF…';
+    try {
+      const r = await salvar();
+      if (!r) return;
+      urlSaida = URL.createObjectURL(new Blob([r.bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' }));
+      baixar.href = urlSaida;
+      baixar.download = `${nomeBase}-preenchido.pdf`;
+      const partes = [tamanho(r.bytes.length), r.achatou ? 'campos travados' : 'campos ainda editáveis'];
+      if (r.trocados) partes.push(`${r.trocados} ${r.trocados === 1 ? 'caractere sem suporte foi trocado' : 'caracteres sem suporte foram trocados'}`);
+      if (r.problemas.length) partes.push(`não deu para preencher: ${r.problemas.join(', ')}`);
+      $('saida-info').textContent = partes.join(' · ');
+      saida.hidden = false;
+      status.textContent = '';
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível salvar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      botao.disabled = false;
+    }
+  });
+
+  form.addEventListener('input', limparSaida);
+  form.addEventListener('change', limparSaida);
+  $('achatar').addEventListener('change', limparSaida);
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  for (const id of ['outro', 'outro-sem']) $(id).addEventListener('click', () => $<HTMLInputElement>('entrada-input').click());
+</script>
+
+<style>
+  .topo-f { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .topo-f .btn { padding: 7px 14px; font-size: 0.95rem; }
+  .topo-f p { overflow-wrap: anywhere; }
+  .titulo-sem { font-size: 1.25rem; }
+  .aviso-xfa { font-size: 0.9rem; border-left: 3px solid var(--brand); padding-left: 10px; }
+
+  .duas { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+  .previa { display: none; }
+  @media (min-width: 860px) {
+    .duas { grid-template-columns: minmax(0, 1fr) 340px; }
+    .previa { display: block; position: sticky; top: calc(var(--altura-topo) + 16px); }
+  }
+  .previa-caixa { display: flex; flex-direction: column; gap: 8px; }
+  .previa-pagina {
+    position: relative; width: 100%; aspect-ratio: 210 / 297; border-radius: 2px;
+    background: #fff; /* é o papel do PDF: branco também no modo escuro */
+    box-shadow: 0 0 0 1px var(--line), var(--sombra);
+  }
+  .previa-pagina :global(canvas) { display: block; width: 100%; height: 100%; animation: surgir 0.25s var(--suave); }
+  .destaque {
+    position: absolute; border-radius: 3px; pointer-events: none;
+    outline: 2.5px solid var(--link); outline-offset: 2px; background: color-mix(in srgb, var(--brand) 35%, transparent);
+    transition: left 0.25s var(--suave), top 0.25s var(--suave), width 0.25s var(--suave), height 0.25s var(--suave);
+  }
+  .destaque.pulso { animation: pulso 0.35s var(--mola); }
+  @keyframes pulso { from { opacity: 0.3; transform: scale(1.25); } }
+  #previa-rotulo { font-size: 0.9rem; overflow-wrap: anywhere; }
+
+  .campos { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .campos :global(.pagina-campos) { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .campos :global(legend) { font: 700 1.05rem var(--f-display); margin-bottom: 10px; padding: 0; }
+  .campos :global(.item) { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); transition: border-color 0.15s; }
+  .campos :global(.item:focus-within) { border-color: var(--link); }
+  .campos :global(.item label) { overflow-wrap: anywhere; }
+  .campos :global(.item-marcar label) { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 600; }
+  .campos :global(input[type='checkbox']), .campos :global(input[type='radio']) { width: 20px; height: 20px; accent-color: var(--fg); margin: 2px 0 0; flex: none; }
+  .campos :global(.opcoes) { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+  .campos :global(.opcao) {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; font-weight: 400 !important;
+    border: 1px solid var(--line); border-radius: 999px; overflow-wrap: anywhere;
+  }
+  .campos :global(.opcao input) { margin: 0; }
+  .campos :global(.opcao:has(input:checked)) { border-color: var(--fg); background: var(--brand-soft); font-weight: 600 !important; }
+  .campos :global(.limpar) { font: inherit; font-size: 0.85rem; color: var(--link); background: none; border: 0; padding: 4px; cursor: pointer; text-decoration: underline; }
+  .campos :global(textarea) { resize: vertical; }
+  .campos :global(select[multiple]) { padding: 4px; }
+
+  .marcar { display: inline-flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 600; }
+  .marcar input { width: 20px; height: 20px; accent-color: var(--fg); margin: 2px 0 0; flex: none; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida strong { font-size: 1.25rem; }
+  .saida span { display: block; }
+</style>

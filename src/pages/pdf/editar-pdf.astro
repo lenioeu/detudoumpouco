@@ -1,0 +1,576 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import EditorPaginas from '../../components/EditorPaginas.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="editar-pdf"
+  titulo="Editar PDF"
+  subtitulo="Escreva por cima do PDF, coloque imagens, desenhe, faça retângulos e linhas e destaque trechos com marca-texto. Funciona no computador e no celular, sem enviar o arquivo."
+  tituloSeo="Editar PDF online grátis: escrever, desenhar e destacar"
+  descricao="Edite PDF grátis no navegador: adicione texto, imagem, retângulo, linha, desenho livre e marca-texto. Mova e apague o que colocou. Nada sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada. As páginas aparecem uma embaixo da outra.',
+    'Escolha uma ferramenta na barra: Texto, Imagem, Retângulo, Linha, Desenhar ou Destacar. Toque ou arraste na página para usar.',
+    'Ajuste a cor, a fonte, o tamanho e a espessura. Com "Mover", toque no que você colocou para arrastar, mudar o tamanho ou apagar.',
+    'Clique em "Salvar PDF" e baixe o arquivo editado. O original continua intacto no seu aparelho.',
+  ]}
+  perguntas={[
+    { p: 'Como escrever em cima de um PDF?', r: 'Abra o PDF, toque em "Texto" na barra e depois no ponto da página onde a frase deve começar. Digite, ajuste a fonte, o tamanho e a cor, e toque fora para terminar. Para mudar de lugar, escolha "Mover" e arraste. No fim, clique em "Salvar PDF".' },
+    { p: 'Dá para alterar o texto que já existe no PDF?', r: 'Não diretamente. O PDF guarda as letras como desenho em posições fixas, e mexer nelas quase sempre bagunça a página. O jeito seguro é cobrir o trecho com um retângulo preenchido de branco e escrever o texto novo por cima. Lembre que o texto antigo continua no arquivo por baixo do retângulo.' },
+    { p: 'Como colocar uma imagem ou um logotipo no PDF?', r: 'Toque em "Imagem" e escolha uma foto PNG, JPG ou WebP (também dá para colar com Ctrl+V). Ela aparece no meio da página que está na tela. Arraste para posicionar e use a bolinha do canto para mudar o tamanho sem distorcer.' },
+    { p: 'Consigo editar PDF pelo celular?', r: 'Sim. A ferramenta funciona com o dedo: toque para escrever, arraste para desenhar e use a bolinha do canto para aumentar ou diminuir. Enquanto uma ferramenta de desenho estiver ativa, o arrasto desenha na página; para rolar, toque em "Mover" antes.' },
+    { p: 'Como destacar um trecho do PDF com marca-texto?', r: 'Escolha "Destacar", pegue uma das cores e arraste por cima do texto. A cor fica transparente, como um marca-texto de verdade, e as letras continuam aparecendo e podendo ser selecionadas no arquivo salvo.' },
+    { p: 'O PDF é enviado para algum servidor?', r: 'Não. Tudo acontece no seu navegador: as páginas são desenhadas e o arquivo novo é montado no seu computador ou celular. Nada é enviado, então dá para editar contratos e documentos pessoais com tranquilidade.' },
+  ]}
+>
+  <div class="stack">
+    <div id="zona"><SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" /></div>
+    <p id="aviso" class="erro" role="alert" hidden></p>
+    <p id="carregando" class="muted" aria-live="polite" hidden>Abrindo o PDF…</p>
+
+    <div id="editor" class="stack" hidden>
+      <div class="topo-ed">
+        <p id="info" class="muted"></p>
+        <button id="outro" type="button" class="btn btn-sec">Abrir outro PDF</button>
+      </div>
+
+      <div class="barra-ed" role="toolbar" aria-label="Ferramentas de edição">
+        <div class="linha-barra ferramentas">
+          <button type="button" class="ferr" data-ferramenta="mover" aria-pressed="true" title="Mover e selecionar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l13 7.5-5.5 1.5L10 18z"/></svg><span>Mover</span>
+          </button>
+          <button type="button" class="ferr" data-ferramenta="texto" aria-pressed="false" title="Adicionar texto">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7V4h14v3M12 4v16M9 20h6"/></svg><span>Texto</span>
+          </button>
+          <button type="button" class="ferr" data-ferramenta="imagem" title="Adicionar imagem">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-10 9"/></svg><span>Imagem</span>
+          </button>
+          <button type="button" class="ferr" data-ferramenta="retangulo" aria-pressed="false" title="Desenhar retângulo">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="12" rx="1"/></svg><span>Retângulo</span>
+          </button>
+          <button type="button" class="ferr" data-ferramenta="linha" aria-pressed="false" title="Desenhar linha">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5"/></svg><span>Linha</span>
+          </button>
+          <button type="button" class="ferr" data-ferramenta="desenho" aria-pressed="false" title="Desenhar à mão livre">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17c2.5-5 4.5-9 6.5-9 2.5 0 .5 7 3 7 2 0 3-5 5-5 1.5 0 2 1.5 3.5 2.5"/></svg><span>Desenhar</span>
+          </button>
+          <button type="button" class="ferr" data-ferramenta="destaque" aria-pressed="false" title="Destacar com marca-texto">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 14 7.5-7.5 3 3L11 17H8z"/><path d="M4 21h16"/></svg><span>Destacar</span>
+          </button>
+        </div>
+
+        <div class="linha-barra props">
+          <div class="grupo" data-grupo="cor">
+            <span class="rot">Cor</span>
+            <div class="cores" id="cores">
+              <button type="button" class="cor" data-cor="#16181d" style="--c:#16181d" aria-label="Preto"></button>
+              <button type="button" class="cor" data-cor="#1d4ed8" style="--c:#1d4ed8" aria-label="Azul"></button>
+              <button type="button" class="cor" data-cor="#c81e1e" style="--c:#c81e1e" aria-label="Vermelho"></button>
+              <button type="button" class="cor" data-cor="#15803d" style="--c:#15803d" aria-label="Verde"></button>
+              <button type="button" class="cor" data-cor="#ffffff" style="--c:#ffffff" aria-label="Branco"></button>
+            </div>
+            <input id="cor" type="color" value="#1d4ed8" aria-label="Escolher outra cor" />
+          </div>
+          <div class="grupo" data-grupo="texto">
+            <select id="fonte" aria-label="Fonte">
+              <option value="helvetica">Sem serifa</option>
+              <option value="times">Com serifa</option>
+              <option value="courier">Máquina de escrever</option>
+            </select>
+            <input id="tamanho" type="number" min="6" max="160" step="1" value="14" inputmode="numeric" aria-label="Tamanho da letra" />
+            <button id="negrito" type="button" class="alt" aria-pressed="false" aria-label="Negrito" title="Negrito"><b>N</b></button>
+          </div>
+          <div class="grupo" data-grupo="espessura">
+            <label class="rot" for="espessura">Espessura</label>
+            <input id="espessura" type="range" min="0.5" max="12" step="0.5" value="2" />
+          </div>
+          <label class="grupo marcar" data-grupo="preencher"><input id="preencher" type="checkbox" /> Preencher</label>
+          <div class="grupo" data-grupo="destaque">
+            <span class="rot">Cor</span>
+            <div class="cores" id="cores-destaque">
+              <button type="button" class="cor" data-cor="#ffe14d" style="--c:#ffe14d" aria-label="Amarelo"></button>
+              <button type="button" class="cor" data-cor="#7ee787" style="--c:#7ee787" aria-label="Verde-claro"></button>
+              <button type="button" class="cor" data-cor="#ff9ecb" style="--c:#ff9ecb" aria-label="Rosa"></button>
+              <button type="button" class="cor" data-cor="#8ecbff" style="--c:#8ecbff" aria-label="Azul-claro"></button>
+            </div>
+          </div>
+          <span class="espaco"></span>
+          <button id="desfazer" type="button" class="alt" disabled aria-label="Desfazer" title="Desfazer (Ctrl+Z)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          </button>
+          <button id="apagar" type="button" class="alt" disabled aria-label="Apagar o item selecionado" title="Apagar (Delete)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+          </button>
+          <button id="salvar-barra" type="button" class="btn salvar-curto">Salvar PDF</button>
+        </div>
+        <p id="dica" class="dica muted" aria-live="polite"></p>
+      </div>
+
+      <input id="imagem-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" hidden />
+      <EditorPaginas id="paginas" />
+
+      <div class="final">
+        <button id="salvar" type="button" class="btn">Salvar PDF</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+      <div id="saida" class="resultado saida" hidden>
+        <div><strong>PDF editado pronto</strong><span id="saida-info" class="muted"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que dá para fazer aqui</h2>
+    <p>Este editor trabalha por camadas: o que você adiciona fica por cima do conteúdo original, como se você escrevesse numa folha impressa com uma caneta muito precisa. Isso cobre a maior parte do que as pessoas precisam no dia a dia:</p>
+    <ul>
+      <li><strong>Texto:</strong> preencher um formulário que não tem campos clicáveis, colocar a data num requerimento, escrever "pago em 10/05" num boleto ou numerar documentos à mão. Há três fontes (sem serifa, com serifa e máquina de escrever), negrito, qualquer cor e tamanhos de 6 a 160.</li>
+      <li><strong>Imagem:</strong> pôr o logotipo da empresa num orçamento, colar o print de um comprovante numa página em branco ou acrescentar um carimbo digitalizado.</li>
+      <li><strong>Retângulo e linha:</strong> emoldurar uma cláusula importante, sublinhar um valor ou riscar um item que não vale mais. Marque "Preencher" e escolha branco para cobrir um erro e escrever a versão certa por cima.</li>
+      <li><strong>Desenhar:</strong> fazer um círculo em volta de um número, uma seta ou um visto de conferido. Funciona com mouse, caneta ou o dedo.</li>
+      <li><strong>Destacar:</strong> o marca-texto deixa as letras visíveis e selecionáveis. Bom para mandar um contrato para alguém já mostrando o que precisa de atenção.</li>
+    </ul>
+    <h2>Dicas para um resultado limpo</h2>
+    <p>Para alinhar um texto com uma linha impressa do formulário, aumente o zoom do navegador antes de posicionar: as setas do teclado movem o item selecionado de ponto em ponto (com Shift, de dez em dez). O botão de desfazer volta até cem passos. Se o PDF é escaneado, escolha a cor preta e a fonte com serifa: o texto novo fica parecido com o de uma máquina de escrever ou impressora.</p>
+    <h2>O que esta ferramenta não faz</h2>
+    <p>Ela não altera as letras que já estão no PDF, porque o formato não foi feito para isso: cada palavra é desenhada numa posição fixa, e trocar uma frase não faz o resto "andar". Também é importante saber que cobrir algo com um retângulo branco ou preto esconde só na aparência: quem copiar o texto do arquivo ainda consegue ler o que está embaixo. Para apagar de verdade CPF, endereço ou valores antes de compartilhar, use o <a href="/pdf/ocultar-dados-pdf">Ocultar informações do PDF</a>. Se o seu PDF tem campos para clicar e digitar, o <a href="/pdf/preencher-formulario-pdf">Preencher formulário PDF</a> é mais rápido.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, carregarPdfLib, desenharPagina, fecharPdf, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { criarEditor, type Editor, type Ferramenta, type Objeto } from '../../lib/editor-paginas';
+  import { FONTES, ENTRELINHA, corRgb, normalizarGiro, retanguloParaPdf, tamanhoNaTela, telaParaPdf, textoSuportado, type Fonte, type GeometriaPagina } from '../../lib/editor-pdf';
+  import { orientacaoJpeg } from '../../lib/pdf-pagina';
+  import { semExif } from '../../lib/pdf-conteudo';
+  import type { PDFFont, PDFImage, PDFPage } from 'pdf-lib';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const zona = $('zona');
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const carregando = $('carregando');
+  const painel = $('editor');
+  const info = $('info');
+  const dica = $('dica');
+  const raiz = $('paginas');
+  const corInput = $<HTMLInputElement>('cor');
+  const fonte = $<HTMLSelectElement>('fonte');
+  const tam = $<HTMLInputElement>('tamanho');
+  const negrito = $<HTMLButtonElement>('negrito');
+  const espessura = $<HTMLInputElement>('espessura');
+  const preencher = $<HTMLInputElement>('preencher');
+  const btDesfazer = $<HTMLButtonElement>('desfazer');
+  const btApagar = $<HTMLButtonElement>('apagar');
+  const imagemInput = $<HTMLInputElement>('imagem-input');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let editor: Editor | null = null;
+  let visor: DocumentoPdfJs | null = null;
+  let dados: ArrayBuffer | null = null;
+  let geometrias: GeometriaPagina[] = [];
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let urlSaida = '';
+  let sujo = false;
+  const imagens = new Map<string, { bytes: Uint8Array; tipo: 'png' | 'jpg'; url: string }>();
+
+  const DICAS: Record<Ferramenta, string> = {
+    mover: 'Toque num item para selecionar e arrastar. A bolinha do canto muda o tamanho.',
+    texto: 'Toque na página onde o texto deve começar e digite.',
+    retangulo: 'Arraste na página para desenhar. Para rolar, toque em Mover.',
+    linha: 'Arraste de uma ponta à outra. Para rolar, toque em Mover.',
+    desenho: 'Desenhe com o mouse, a caneta ou o dedo. Para rolar, toque em Mover.',
+    destaque: 'Arraste por cima do trecho. Para rolar, toque em Mover.',
+    tarja: '',
+  };
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+    status.textContent = '';
+  }
+
+  /** Mostra só os controles que valem para o item selecionado ou para a ferramenta escolhida. */
+  function atualizarBarra() {
+    if (!editor) return;
+    const sel = editor.selecionado;
+    const f = editor.ferramenta;
+    const tipo = sel?.tipo ?? (f === 'mover' ? null : f);
+    const grupos: Record<string, boolean> = {
+      cor: tipo === 'texto' || tipo === 'retangulo' || tipo === 'linha' || tipo === 'desenho',
+      texto: tipo === 'texto',
+      espessura: tipo === 'retangulo' || tipo === 'linha' || tipo === 'desenho',
+      preencher: tipo === 'retangulo',
+      destaque: tipo === 'destaque',
+    };
+    document.querySelectorAll<HTMLElement>('.barra-ed [data-grupo]').forEach((g) => { g.hidden = !grupos[g.dataset.grupo!]; });
+    document.querySelectorAll<HTMLButtonElement>('.ferr[data-ferramenta]').forEach((b) => {
+      if (b.dataset.ferramenta !== 'imagem') b.setAttribute('aria-pressed', String(b.dataset.ferramenta === f));
+    });
+    const e = editor.estilo;
+    const cor = sel && 'cor' in sel ? sel.cor : e.cor;
+    corInput.value = cor;
+    marcarCor('cores', cor);
+    marcarCor('cores-destaque', sel?.tipo === 'destaque' ? sel.cor : e.corDestaque);
+    if (sel?.tipo === 'texto') { fonte.value = sel.fonte; tam.value = String(sel.tamanho); negrito.setAttribute('aria-pressed', String(sel.negrito)); }
+    else { fonte.value = e.fonte; tam.value = String(e.tamanho); negrito.setAttribute('aria-pressed', String(e.negrito)); }
+    espessura.value = String(sel && 'espessura' in sel ? sel.espessura : e.espessura);
+    preencher.checked = sel?.tipo === 'retangulo' ? sel.preencher : e.preencher;
+    btApagar.disabled = !sel;
+    btDesfazer.disabled = !editor.podeDesfazer;
+    dica.textContent = sel ? (sel.tipo === 'texto' ? 'Toque de novo no texto para editar. Arraste para mover.' : 'Arraste para mover. A bolinha muda o tamanho; o X apaga.') : DICAS[f];
+  }
+
+  function marcarCor(id: string, cor: string) {
+    $(id).querySelectorAll<HTMLButtonElement>('.cor').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.cor === cor.toLowerCase())));
+  }
+
+  function fechar() {
+    editor?.destruir(); editor = null;
+    fecharPdf(visor); visor = null;
+    dados = null;
+    imagens.forEach((i) => URL.revokeObjectURL(i.url));
+    imagens.clear();
+    sujo = false;
+    limparSaida();
+  }
+
+  async function carregar(file: File) {
+    if (editor && /^image\//.test(file.type)) { await adicionarImagem(file); return; }
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    const minha = ++rodada;
+    fechar();
+    aviso.hidden = true;
+    painel.hidden = true;
+    carregando.hidden = false;
+    try {
+      const buf = await file.arrayBuffer();
+      await abrirParaEditar(buf); // confere logo se o pdf-lib consegue abrir (senha, arquivo estragado)
+      const v = await abrirParaVer(buf);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      const geos: GeometriaPagina[] = [];
+      for (let i = 1; i <= v.numPages; i++) {
+        const p = await v.getPage(i);
+        geos.push({ caixa: [...p.view] as GeometriaPagina['caixa'], giro: normalizarGiro(p.rotate) });
+      }
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v; dados = buf; geometrias = geos;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${v.numPages} ${v.numPages === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      zona.hidden = true;
+      carregando.hidden = true;
+      painel.hidden = false;
+      editor = criarEditor({
+        raiz,
+        paginas: geos.map(tamanhoNaTela),
+        desenhar: async (i, larguraPx) => {
+          const t = tamanhoNaTela(geos[i]);
+          return (await desenharPagina(v, i + 1, larguraPx / t.largura)).canvas;
+        },
+        urlDaImagem: (chave) => imagens.get(chave)?.url ?? '',
+        ferramentas: ['mover', 'texto', 'retangulo', 'linha', 'desenho', 'destaque'],
+        aoSelecionar: atualizarBarra,
+        aoMudar: () => { sujo = true; limparSaida(); atualizarBarra(); },
+      });
+      atualizarBarra();
+    } catch (e) {
+      if (minha !== rodada) return;
+      carregando.hidden = true;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  /** Prepara a imagem para o PDF: JPEG e PNG entram como estão; outros formatos (e JPEG girado) viram PNG ou JPEG. */
+  async function adicionarImagem(file: File) {
+    if (!editor) return;
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const ehJpeg = bytes[0] === 0xff && bytes[1] === 0xd8;
+      const ehPng = bytes[0] === 0x89 && bytes[1] === 0x50;
+      const bmp = await createImageBitmap(new Blob([bytes]), { imageOrientation: 'from-image' } as ImageBitmapOptions);
+      let final: Uint8Array, tipo: 'png' | 'jpg';
+      if (ehPng) { final = bytes; tipo = 'png'; }
+      else if (ehJpeg && orientacaoJpeg(bytes) === 1) { final = semExif(bytes); tipo = 'jpg'; }
+      else {
+        const area = bmp.width * bmp.height, max = 16_000_000;
+        const f = area > max ? Math.sqrt(max / area) : 1;
+        const c = document.createElement('canvas');
+        c.width = Math.round(bmp.width * f); c.height = Math.round(bmp.height * f);
+        c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
+        tipo = ehJpeg ? 'jpg' : 'png';
+        const blob = await new Promise<Blob | null>((ok) => c.toBlob(ok, tipo === 'jpg' ? 'image/jpeg' : 'image/png', 0.92));
+        if (!blob) throw new Error();
+        final = new Uint8Array(await blob.arrayBuffer());
+      }
+      const chave = `img${imagens.size + 1}-${Date.now()}`;
+      const url = URL.createObjectURL(new Blob([final as Uint8Array<ArrayBuffer>], { type: tipo === 'jpg' ? 'image/jpeg' : 'image/png' }));
+      imagens.set(chave, { bytes: final, tipo, url });
+      editor.adicionarImagem(chave, bmp.width, bmp.height);
+      bmp.close();
+      aviso.hidden = true;
+    } catch {
+      aviso.textContent = 'Não foi possível usar esta imagem. Tente uma foto em PNG ou JPG.';
+      aviso.hidden = false;
+    }
+  }
+
+  // --------------------------------------------------------------- gravar no PDF
+  const NOMES_FONTE: Record<Fonte, [string, string]> = {
+    helvetica: ['Helvetica', 'Helvetica-Bold'],
+    times: ['Times-Roman', 'Times-Bold'],
+    courier: ['Courier', 'Courier-Bold'],
+  };
+
+  async function salvar() {
+    if (!editor || !dados) return;
+    editor.terminarEdicao();
+    const lib = await carregarPdfLib();
+    const { rgb, degrees, BlendMode, LineCapStyle, LineJoinStyle, pushGraphicsState, popGraphicsState, setLineJoin } = lib;
+    const doc = await abrirParaEditar(dados);
+    const paginas = doc.getPages();
+    const fontes = new Map<string, { fonte: PDFFont; tem: Set<number> }>();
+    const embutidas = new Map<string, PDFImage>();
+    const isoladas = new Set<number>();
+    let trocados = 0;
+
+    /** Põe o conteúdo original entre q e Q: um ajuste de posição esquecido no PDF não desloca o que é novo. */
+    const isolar = (pg: PDFPage, i: number) => {
+      if (isoladas.has(i)) return;
+      isoladas.add(i);
+      const p = pg as unknown as { createContentStream: (...ops: unknown[]) => unknown };
+      pg.node.normalize();
+      const ini = doc.context.register(p.createContentStream(pushGraphicsState()) as never);
+      const fim = doc.context.register(p.createContentStream(popGraphicsState()) as never);
+      pg.node.wrapContentStreams(ini, fim);
+    };
+
+    for (const o of editor.objetos()) {
+      const pg = paginas[o.pagina];
+      const g = geometrias[o.pagina];
+      if (!pg || !g) continue;
+      isolar(pg, o.pagina);
+      const giro = degrees(normalizarGiro(g.giro));
+      const cor = (hex: string) => rgb(...corRgb(hex));
+      switch (o.tipo) {
+        case 'texto': {
+          const nome = NOMES_FONTE[o.fonte][o.negrito ? 1 : 0];
+          let f = fontes.get(nome);
+          if (!f) {
+            const fonte = await doc.embedFont(nome);
+            f = { fonte, tem: new Set(fonte.getCharacterSet()) };
+            fontes.set(nome, f);
+          }
+          const r = textoSuportado(o.texto, (c) => f!.tem.has(c));
+          trocados += r.trocados;
+          r.texto.split('\n').forEach((linha, n) => {
+            if (!linha.trim()) return;
+            const [x, y] = telaParaPdf(g, o.x, o.y + o.tamanho * (FONTES[o.fonte].base + n * ENTRELINHA));
+            pg.drawText(linha, { x, y, size: o.tamanho, font: f!.fonte, color: cor(o.cor), rotate: giro });
+          });
+          break;
+        }
+        case 'imagem': {
+          const img = imagens.get(o.imagem);
+          if (!img) break;
+          let e = embutidas.get(o.imagem);
+          if (!e) { e = img.tipo === 'png' ? await doc.embedPng(img.bytes) : await doc.embedJpg(img.bytes); embutidas.set(o.imagem, e); }
+          const [x, y] = telaParaPdf(g, o.x, o.y + o.h);
+          pg.drawImage(e, { x, y, width: o.w, height: o.h, rotate: giro });
+          break;
+        }
+        case 'retangulo': {
+          const r = retanguloParaPdf(g, o.x, o.y, o.w, o.h);
+          const m = Math.min(o.espessura / 2, r.largura / 2, r.altura / 2);
+          pg.drawRectangle({
+            x: r.x + m, y: r.y + m, width: r.largura - 2 * m, height: r.altura - 2 * m,
+            borderColor: cor(o.cor), borderWidth: o.espessura,
+            ...(o.preencher ? { color: cor(o.cor) } : {}),
+          });
+          break;
+        }
+        case 'destaque': {
+          const r = retanguloParaPdf(g, o.x, o.y, o.w, o.h);
+          pg.drawRectangle({ x: r.x, y: r.y, width: r.largura, height: r.altura, color: cor(o.cor), opacity: 0.5, blendMode: BlendMode.Multiply });
+          break;
+        }
+        case 'linha': {
+          const [x1, y1] = telaParaPdf(g, o.x1, o.y1);
+          const [x2, y2] = telaParaPdf(g, o.x2, o.y2);
+          pg.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: o.espessura, color: cor(o.cor), lineCap: LineCapStyle.Round });
+          break;
+        }
+        case 'desenho': {
+          // O drawSvgPath inverte o eixo y (como no SVG): por isso o "-y".
+          let d = '';
+          for (let k = 0; k + 1 < o.pontos.length; k += 2) {
+            const [x, y] = telaParaPdf(g, o.pontos[k], o.pontos[k + 1]);
+            d += `${k ? 'L' : 'M'}${x.toFixed(2)} ${(-y).toFixed(2)}`;
+          }
+          if (o.pontos.length === 2) d += 'l0.01 0';
+          pg.pushOperators(pushGraphicsState(), setLineJoin(LineJoinStyle.Round));
+          pg.drawSvgPath(d, { x: 0, y: 0, borderColor: cor(o.cor), borderWidth: o.espessura, borderLineCap: LineCapStyle.Round });
+          pg.pushOperators(popGraphicsState());
+          break;
+        }
+      }
+    }
+    doc.setModificationDate(new Date());
+    const bytes = await doc.save();
+    return { bytes, trocados };
+  }
+
+  async function aoSalvar() {
+    if (!editor) return;
+    const botoes = [$<HTMLButtonElement>('salvar'), $<HTMLButtonElement>('salvar-barra')];
+    botoes.forEach((b) => { b.disabled = true; });
+    limparSaida();
+    status.textContent = 'Montando o PDF…';
+    try {
+      const r = await salvar();
+      if (!r) return;
+      urlSaida = URL.createObjectURL(new Blob([r.bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' }));
+      baixar.href = urlSaida;
+      baixar.download = `${nomeBase}-editado.pdf`;
+      const n = editor.objetos().length;
+      $('saida-info').textContent = `${n} ${n === 1 ? 'item adicionado' : 'itens adicionados'} · ${tamanho(r.bytes.length)}`
+        + (r.trocados ? ` · ${r.trocados} ${r.trocados === 1 ? 'caractere sem suporte na fonte foi trocado' : 'caracteres sem suporte na fonte foram trocados'} (emoji e letras de outros alfabetos)` : '');
+      saida.hidden = false;
+      status.textContent = '';
+      sujo = false;
+      if (innerWidth < 900 || saida.getBoundingClientRect().top > innerHeight) saida.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível salvar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      botoes.forEach((b) => { b.disabled = false; });
+    }
+  }
+
+  // --------------------------------------------------------------- eventos
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  $('outro').addEventListener('click', () => $<HTMLInputElement>('entrada-input').click());
+
+  document.querySelectorAll<HTMLButtonElement>('.ferr[data-ferramenta]').forEach((b) => b.addEventListener('click', () => {
+    if (!editor) return;
+    const f = b.dataset.ferramenta!;
+    if (f === 'imagem') { imagemInput.click(); return; }
+    editor.definirFerramenta(f as Ferramenta);
+    atualizarBarra();
+  }));
+  imagemInput.addEventListener('change', () => {
+    const f = imagemInput.files?.[0];
+    imagemInput.value = '';
+    if (f) adicionarImagem(f);
+  });
+
+  const mudarEstilo = (p: Parameters<Editor['definirEstilo']>[0]) => { editor?.definirEstilo(p); atualizarBarra(); };
+  $('cores').addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLElement>('[data-cor]');
+    if (b) mudarEstilo({ cor: b.dataset.cor! });
+  });
+  $('cores-destaque').addEventListener('click', (e) => {
+    const b = (e.target as Element).closest<HTMLElement>('[data-cor]');
+    if (b) mudarEstilo({ corDestaque: b.dataset.cor! });
+  });
+  corInput.addEventListener('input', () => mudarEstilo({ cor: corInput.value }));
+  fonte.addEventListener('change', () => mudarEstilo({ fonte: fonte.value as Fonte }));
+  tam.addEventListener('input', () => {
+    const n = Number(tam.value);
+    if (n >= 6 && n <= 160) { editor?.definirEstilo({ tamanho: n }); btDesfazer.disabled = !editor?.podeDesfazer; }
+  });
+  tam.addEventListener('change', () => { if (!(Number(tam.value) >= 6)) tam.value = '6'; if (Number(tam.value) > 160) tam.value = '160'; mudarEstilo({ tamanho: Number(tam.value) }); });
+  negrito.addEventListener('click', () => mudarEstilo({ negrito: negrito.getAttribute('aria-pressed') !== 'true' }));
+  espessura.addEventListener('input', () => { editor?.definirEstilo({ espessura: Number(espessura.value) }); btDesfazer.disabled = !editor?.podeDesfazer; });
+  preencher.addEventListener('change', () => mudarEstilo({ preencher: preencher.checked }));
+  btDesfazer.addEventListener('click', () => { editor?.desfazer(); atualizarBarra(); });
+  btApagar.addEventListener('click', () => { editor?.apagarSelecionado(); atualizarBarra(); });
+  $('salvar').addEventListener('click', aoSalvar);
+  $('salvar-barra').addEventListener('click', aoSalvar);
+  // A barra não deve roubar a seleção do texto que está sendo editado ao trocar cor ou fonte.
+  document.querySelector('.barra-ed')!.addEventListener('pointerdown', (e) => {
+    const alvo = e.target as HTMLElement;
+    if (alvo.closest('button.cor, #negrito')) e.preventDefault();
+  });
+
+  addEventListener('beforeunload', (e) => {
+    if (sujo && editor && editor.objetos().length) { e.preventDefault(); e.returnValue = ''; }
+  });
+</script>
+
+<style>
+  .topo-ed { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .topo-ed .btn { padding: 7px 14px; font-size: 0.95rem; }
+  .topo-ed p { overflow-wrap: anywhere; }
+
+  .barra-ed {
+    position: sticky; top: calc(var(--altura-topo) + 16px); z-index: 5;
+    display: flex; flex-direction: column; gap: 8px; padding: 8px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--sombra-alta);
+  }
+  .linha-barra { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .ferramentas { gap: 4px; }
+  .ferr, .alt {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-width: 38px; height: 44px; padding: 4px 8px; cursor: pointer;
+    font: 600 0.72rem var(--f-body); color: var(--fg); background: transparent;
+    border: 1.5px solid transparent; border-radius: 8px;
+    transition: transform 0.18s var(--mola), background-color 0.15s, border-color 0.15s;
+  }
+  .alt { height: 36px; min-width: 36px; padding: 4px; }
+  .ferr:hover, .alt:hover:not(:disabled) { background: var(--bg); }
+  .ferr:active, .alt:active:not(:disabled) { transform: scale(0.92); }
+  .ferr[aria-pressed='true'], .alt[aria-pressed='true'] { background: var(--brand-soft); border-color: var(--fg); }
+  .alt:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ferr svg, .alt svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .props { min-height: 36px; }
+  .grupo { display: inline-flex; align-items: center; gap: 6px; }
+  .rot { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+  .cores { display: inline-flex; gap: 4px; }
+  .cor {
+    width: 26px; height: 26px; padding: 0; cursor: pointer; border-radius: 50%;
+    background: var(--c); border: 2px solid var(--line); transition: transform 0.18s var(--mola);
+  }
+  .cor:hover { transform: scale(1.1); }
+  .cor[aria-pressed='true'] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--fg); }
+  input[type='color'] { width: 34px; height: 30px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+  #fonte { width: auto; padding: 6px 8px; }
+  #tamanho { width: 4.2em; padding: 6px 8px; }
+  #espessura { width: 110px; }
+  .marcar { cursor: pointer; font-size: 0.95rem; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--fg); }
+  .espaco { flex: 1; }
+  .salvar-curto { padding: 7px 14px; font-size: 0.95rem; }
+  /* Altura reservada: a dica muda com a ferramenta e não pode empurrar as páginas. */
+  .dica { font-size: 0.85rem; line-height: 1.35; min-height: 1.35em; padding-inline: 4px; }
+
+  .final { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida strong { font-size: 1.25rem; }
+  .saida span { display: block; }
+
+  @media (max-width: 560px) {
+    .ferr span { display: none; }
+    .ferr { min-width: 36px; padding: 4px; height: 40px; }
+    .cores .cor:nth-child(n + 4) { display: none; }
+    .barra-ed { padding: 6px; gap: 6px; }
+    .barra-ed .rot { display: none; }
+    /* No celular: cor, desfazer e apagar na mesma linha; o resto dos ajustes na linha de baixo. */
+    .props > * { order: 4; }
+    .props > [data-grupo='cor'] { order: 0; }
+    .props > .espaco { order: 1; }
+    #desfazer { order: 2; }
+    #apagar { order: 3; }
+    [data-grupo='texto'] { flex: 1 1 100%; }
+    #fonte { flex: 1; min-width: 0; }
+    .salvar-curto { display: none; }
+    .dica { font-size: 0.8rem; min-height: 2.7em; }
+  }
+</style>

@@ -1,0 +1,58 @@
+---
+// Estilos do editor de páginas (src/lib/editor-paginas.ts), usado pelo "Editar PDF"
+// e pelo "Ocultar informações". Coloque <EditorPaginas id="..." /> onde as páginas devem aparecer.
+interface Props { id: string; }
+const { id } = Astro.props;
+---
+<div id={id} class="ep-paginas" aria-label="Páginas do PDF"></div>
+
+<style is:global>
+  /* overflow-x: clip deixa as alças passarem um pouco da página sem criar rolagem lateral. */
+  .ep-paginas { display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; overflow-x: clip; padding-top: 12px; }
+  .ep-caixa { width: calc(100% - 24px); max-width: 860px; display: flex; flex-direction: column; gap: 6px; }
+  .ep-pagina {
+    position: relative; width: 100%; border-radius: 2px;
+    background: #fff; /* é o papel do PDF: branco também no modo escuro */
+    box-shadow: 0 0 0 1px var(--line), var(--sombra);
+  }
+  .ep-fundo, .ep-camada { position: absolute; inset: 0; }
+  .ep-fundo canvas { display: block; width: 100%; height: 100%; animation: surgir 0.25s var(--suave); }
+  .ep-rotulo { font-size: 0.85rem; color: var(--muted); text-align: center; }
+
+  .ep-camada { touch-action: pan-x pan-y pinch-zoom; user-select: none; -webkit-user-select: none; isolation: auto; }
+  .ep-camada.ep-desenhando { touch-action: none; cursor: crosshair; }
+  .ep-camada[data-ferramenta='texto'] { cursor: text; }
+  .ep-camada.ep-desenhando .ep-obj, .ep-camada.ep-desenhando .ep-alvo { pointer-events: none; }
+
+  .ep-obj { position: absolute; touch-action: none; }
+  .ep-forma { inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .ep-forma .ep-alvo { pointer-events: all; cursor: move; }
+  .ep-forma line.ep-alvo, .ep-forma path.ep-alvo { pointer-events: stroke; }
+  .ep-destaque { mix-blend-mode: multiply; opacity: 0.5; }
+  .ep-texto, .ep-imagem { cursor: move; }
+  .ep-texto {
+    white-space: pre; margin: 0; padding: 0; min-width: 0.5em; outline: none; overflow-wrap: normal;
+    user-select: none; -webkit-user-select: none;
+  }
+  .ep-texto.ep-editando { cursor: text; user-select: text; -webkit-user-select: text; outline: 1.5px dashed var(--link); outline-offset: 2px; }
+  .ep-imagem { display: block; object-fit: fill; max-width: none; }
+
+  .ep-moldura {
+    position: absolute; pointer-events: none; outline: 2px solid var(--link); outline-offset: 3px; border-radius: 2px;
+    animation: ep-aparecer 0.15s var(--suave);
+  }
+  .ep-alca, .ep-apagar {
+    position: absolute; z-index: 3; width: 30px; height: 30px; margin: -15px 0 0 -15px; padding: 0; border: 0;
+    background: transparent; display: grid; place-items: center; cursor: nwse-resize; touch-action: none;
+    animation: ep-aparecer 0.2s var(--mola);
+  }
+  .ep-alca::before {
+    content: ''; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--link);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  }
+  .ep-alca:not(.ep-canto) { cursor: move; }
+  .ep-apagar { margin: -32px 0 0 -26px; cursor: pointer; }
+  .ep-apagar svg { width: 24px; height: 24px; padding: 5px; border-radius: 50%; background: var(--erro); color: var(--surface); box-shadow: 0 1px 3px rgb(0 0 0 / 0.3); transition: transform 0.15s var(--mola); }
+  .ep-apagar:hover svg { transform: scale(1.12); }
+  @keyframes ep-aparecer { from { opacity: 0; transform: scale(0.85); } }
+</style>
