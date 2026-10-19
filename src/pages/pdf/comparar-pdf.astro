@@ -1,0 +1,334 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="comparar-pdf"
+  titulo="Comparar PDF"
+  subtitulo="Escolha duas versões de um documento e veja, página por página, o que entrou (em verde) e o que saiu (em vermelho). A comparação é feita no seu navegador."
+  tituloSeo="Comparar PDF online grátis: veja o que mudou"
+  descricao="Compare dois PDFs grátis e veja as diferenças de texto por página: o que foi adicionado em verde e o que foi removido em vermelho. Nada é enviado."
+  passos={[
+    'Em "PDF original", escolha a versão antiga do documento.',
+    'Em "PDF novo", escolha a versão que você recebeu depois, com as mudanças.',
+    'Espere alguns segundos: o resultado aparece sozinho, com o total de palavras adicionadas e removidas.',
+    'Role pelas páginas. O texto em verde entrou na versão nova; o riscado em vermelho saiu. Use "Texto completo" para ler a página inteira.',
+  ]}
+  perguntas={[
+    { p: 'Como saber o que mudou entre duas versões de um PDF?', r: 'Escolha o arquivo antigo em "PDF original" e o novo em "PDF novo". A ferramenta lê o texto dos dois, compara palavra por palavra e mostra em verde o que foi incluído e em vermelho, riscado, o que foi tirado, separado pela página do arquivo novo.' },
+    { p: 'Comparar PDF online é seguro para contratos?', r: 'Aqui, sim. Os dois arquivos são lidos e comparados dentro do seu navegador, no seu computador ou celular. Nenhum dos PDFs é enviado para servidor, então cláusulas, valores e dados pessoais ficam só com você.' },
+    { p: 'A ferramenta compara imagens, cores e formatação?', r: 'Não. A comparação é do texto. Mudanças só de visual, como trocar a fonte, a cor, o negrito ou uma foto, não aparecem. Uma palavra que mudou de lugar na página, mas continua na mesma ordem do texto, também não conta como diferença.' },
+    { p: 'Por que aparece que meu PDF não tem texto?', r: 'Isso acontece com documentos escaneados ou fotografados: cada página é uma imagem, sem letras que o computador consiga ler. Passe o arquivo antes pelo OCR em PDF, que reconhece o texto da imagem, e depois compare as versões.' },
+    { p: 'E se a versão nova tiver mais páginas?', r: 'Não tem problema. O documento é comparado inteiro, então uma página nova no meio aparece toda em verde e as seguintes continuam comparadas com o trecho certo do original. Ao lado de cada página aparece qual página do original corresponde a ela.' },
+    { p: 'Dá para ignorar diferença de maiúsculas e minúsculas?', r: 'Sim. Marque "Ignorar maiúsculas e minúsculas" e palavras como "Contratante" e "CONTRATANTE" passam a contar como iguais. Acentos e pontuação continuam sendo comparados.' },
+  ]}
+>
+  <div class="stack">
+    <div class="duas">
+      <div class="lado" id="lado-a">
+        <p class="rotulo"><span class="letra">1</span> PDF original <span class="muted">(versão antiga)</span></p>
+        <SoltarArquivos id="entrada-a" accept="application/pdf,.pdf" texto="Escolher original" dica="ou arraste e solte aqui" />
+        <div class="carregado" id="card-a" hidden>
+          <div class="nome"><strong id="nome-a"></strong><span id="info-a" class="muted"></span></div>
+          <button type="button" class="btn btn-sec" id="trocar-a">Trocar</button>
+        </div>
+        <p id="aviso-a" class="erro" role="alert" hidden></p>
+      </div>
+      <div class="lado" id="lado-b">
+        <p class="rotulo"><span class="letra">2</span> PDF novo <span class="muted">(com as mudanças)</span></p>
+        <SoltarArquivos id="entrada-b" accept="application/pdf,.pdf" texto="Escolher novo" dica="ou arraste e solte aqui" />
+        <div class="carregado" id="card-b" hidden>
+          <div class="nome"><strong id="nome-b"></strong><span id="info-b" class="muted"></span></div>
+          <button type="button" class="btn btn-sec" id="trocar-b">Trocar</button>
+        </div>
+        <p id="aviso-b" class="erro" role="alert" hidden></p>
+      </div>
+    </div>
+
+    <div class="barra">
+      <label class="marca"><input id="caixa" type="checkbox" /> Ignorar maiúsculas e minúsculas</label>
+      <button type="button" class="btn btn-sec" id="inverter" disabled>Inverter original e novo</button>
+    </div>
+    <p id="status" class="muted" aria-live="polite">Escolha os dois PDFs para comparar.</p>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado resumo">
+        <strong id="resumo"></strong>
+        <span id="resumo-info"></span>
+        <span class="legenda" aria-hidden="true"><ins>adicionado</ins> <del>removido</del></span>
+      </div>
+      <div class="modo" role="radiogroup" aria-label="O que mostrar">
+        <label><input type="radio" name="modo" value="mudancas" checked /> Só as mudanças</label>
+        <label><input type="radio" name="modo" value="tudo" /> Texto completo</label>
+      </div>
+      <p id="iguais" class="muted" hidden></p>
+      <div id="paginas" class="paginas"></div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Quando comparar duas versões de um PDF</h2>
+    <p>O caso mais comum é o contrato que vai e volta. Você manda uma minuta, a outra parte devolve "com pequenos ajustes" e ninguém marcou o que mudou. Ler as duas versões lado a lado, linha por linha, cansa e deixa passar detalhe. Aqui, a troca de "30 dias" por "60 dias" ou uma vírgula a mais numa multa aparece destacada em segundos.</p>
+    <p>Também serve para conferir um edital retificado, a nova versão de um regulamento de condomínio, um orçamento revisado pelo fornecedor, o TCC depois da correção do orientador ou a apólice de seguro renovada. Em todos esses casos, o que interessa é saber o que entrou e o que saiu, sem reler o documento inteiro.</p>
+    <h2>Como a comparação funciona</h2>
+    <p>A ferramenta tira o texto de cada página dos dois arquivos e compara as palavras na ordem em que aparecem, com o mesmo princípio usado por programadores para ver mudanças em código. Ela procura o menor conjunto de palavras incluídas e excluídas que transforma a versão antiga na nova. Por isso, quando uma palavra é trocada por outra, você vê a antiga riscada em vermelho e a nova em verde, uma do lado da outra.</p>
+    <p>O resultado é organizado pelas páginas do PDF novo. No modo "Só as mudanças", os trechos iguais longos ficam escondidos e aparece só um pedaço do texto em volta de cada alteração, para você saber onde ela está. As páginas sem nenhuma mudança são listadas numa linha só.</p>
+    <h2>Dicas</h2>
+    <ul>
+      <li>Coloque sempre a versão mais antiga em "PDF original". Se trocar a ordem, o que foi adicionado aparece como removido. O botão "Inverter" resolve isso sem escolher os arquivos de novo.</li>
+      <li>PDF escaneado não tem texto. Converta antes com o <a href="/pdf/ocr-pdf">OCR em PDF</a>. Como o reconhecimento pode errar uma letra ou outra, confira as diferenças pequenas olhando a página.</li>
+      <li>Mudança de layout, como quebrar um parágrafo em dois ou mudar a ordem das colunas de uma tabela, pode aparecer como texto removido e adicionado, mesmo que as palavras sejam as mesmas.</li>
+      <li>Números e tabelas que estão dentro de uma imagem (um print colado no documento, por exemplo) não entram na comparação. Antes de assinar, dê uma olhada nessas partes. Para ver uma página como imagem, use o <a href="/pdf/pdf-para-jpg">PDF para JPG</a>.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaVer, fecharPdf, ErroPdf } from '../../lib/pdf-navegador';
+  import { compararPaginas, resumirPedacos, listarPaginas, textoDaPagina, type Comparacao } from '../../lib/comparar-pdf';
+
+  type Lado = 'a' | 'b';
+  interface Documento { nome: string; paginas: string[]; tamanho: number; }
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const status = $('status');
+  const saida = $('saida');
+  const caixa = $<HTMLInputElement>('caixa');
+  const inverter = $<HTMLButtonElement>('inverter');
+  const listaPaginas = $('paginas');
+  const docs: Record<Lado, Documento | null> = { a: null, b: null };
+  const rodadas: Record<Lado, number> = { a: 0, b: 0 };
+  let comparacao: Comparacao | null = null;
+
+  const plural = (n: number, um: string, varios: string) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`;
+
+  async function lerTexto(file: File): Promise<string[]> {
+    const doc = await abrirParaVer(await file.arrayBuffer());
+    try {
+      const paginas: string[] = [];
+      for (let i = 1; i <= doc.numPages; i++) {
+        const pagina = await doc.getPage(i);
+        const conteudo = await pagina.getTextContent();
+        paginas.push(textoDaPagina(conteudo.items.flatMap((it) => ('str' in it ? [{
+          str: it.str, x: it.transform[4], y: it.transform[5], largura: it.width,
+          altura: it.height || Math.abs(it.transform[3]), fimDeLinha: it.hasEOL,
+        }] : []))));
+        pagina.cleanup();
+      }
+      return paginas;
+    } finally {
+      fecharPdf(doc);
+    }
+  }
+
+  function mostrarCartao(lado: Lado) {
+    const d = docs[lado];
+    $(`entrada-${lado}`).hidden = !!d;
+    $(`card-${lado}`).hidden = !d;
+    if (d) {
+      $(`nome-${lado}`).textContent = d.nome;
+      $(`info-${lado}`).textContent = `${plural(d.paginas.length, 'página', 'páginas')} · ${tamanho(d.tamanho)}`;
+    }
+  }
+
+  async function carregar(lado: Lado, file: File) {
+    const minha = ++rodadas[lado];
+    const aviso = $(`aviso-${lado}`);
+    aviso.hidden = true;
+    docs[lado] = null;
+    mostrarCartao(lado);
+    limparSaida();
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; atualizar(); return;
+    }
+    status.textContent = `Lendo o texto de ${file.name}…`;
+    try {
+      const paginas = await lerTexto(file);
+      if (minha !== rodadas[lado]) return;
+      if (!paginas.some((t) => t.trim())) {
+        aviso.innerHTML = 'Este PDF não tem texto para comparar: parece escaneado ou feito de imagens. Passe antes pelo <a href="/pdf/ocr-pdf">OCR em PDF</a>.';
+        aviso.hidden = false; atualizar(); return;
+      }
+      docs[lado] = { nome: file.name, paginas, tamanho: file.size };
+      mostrarCartao(lado);
+      atualizar();
+    } catch (e) {
+      if (minha !== rodadas[lado]) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+      atualizar();
+    }
+  }
+
+  function limparSaida() {
+    saida.hidden = true;
+    listaPaginas.replaceChildren();
+    comparacao = null;
+  }
+
+  function atualizar() {
+    inverter.disabled = !docs.a || !docs.b;
+    if (!docs.a || !docs.b) {
+      limparSaida();
+      status.textContent = !docs.a && !docs.b ? 'Escolha os dois PDFs para comparar.' : !docs.a ? 'Agora escolha o PDF original.' : 'Agora escolha o PDF novo.';
+      return;
+    }
+    status.textContent = 'Comparando…';
+    // Deixa o navegador mostrar "Comparando…" antes da conta (que pode levar um instante em PDFs grandes).
+    const a = docs.a, b = docs.b;
+    setTimeout(() => {
+      if (docs.a !== a || docs.b !== b) return;
+      comparacao = compararPaginas(a.paginas, b.paginas, caixa.checked);
+      status.textContent = comparacao.porPagina
+        ? 'Os textos mudaram muito: a comparação foi feita página com página (1 com 1, 2 com 2...).'
+        : '';
+      mostrar();
+    }, 30);
+  }
+
+  function mostrar() {
+    const c = comparacao;
+    if (!c || !docs.a || !docs.b) return;
+    const tudo = (document.querySelector('input[name="modo"]:checked') as HTMLInputElement).value === 'tudo';
+    const mudou = c.paginas.filter((p) => p.adicionadas || p.removidas);
+    const resumo = $('resumo');
+    const info = $('resumo-info');
+    if (!mudou.length) {
+      resumo.textContent = 'O texto dos dois PDFs é igual';
+      info.textContent = caixa.checked ? 'Diferenças de maiúsculas e minúsculas foram ignoradas.' : 'Mudanças de imagem, cor ou formatação não entram na comparação.';
+    } else {
+      resumo.textContent = `${plural(c.adicionadas, 'palavra adicionada', 'palavras adicionadas')}, ${plural(c.removidas, 'removida', 'removidas')}`;
+      info.textContent = `Mudanças em ${plural(mudou.length, 'página', 'páginas')} do PDF novo` +
+        (docs.a.paginas.length !== docs.b.paginas.length ? ` · o original tem ${plural(docs.a.paginas.length, 'página', 'páginas')} e o novo, ${docs.b.paginas.length}` : '') + '.';
+    }
+    const semMudanca = c.paginas.filter((p) => !p.adicionadas && !p.removidas).map((p) => p.pagina);
+    const iguais = $('iguais');
+    iguais.hidden = tudo || !semMudanca.length || !mudou.length;
+    iguais.textContent = `${semMudanca.length === 1 ? 'Página sem mudanças' : 'Páginas sem mudanças'}: ${listarPaginas(semMudanca)}.`;
+
+    const frag = document.createDocumentFragment();
+    for (const p of tudo ? c.paginas : mudou) {
+      const sec = document.createElement('section');
+      sec.className = 'pagina';
+      const cab = document.createElement('header');
+      const h = document.createElement('h3'); h.textContent = `Página ${p.pagina}`;
+      const orig = document.createElement('span'); orig.className = 'muted';
+      orig.textContent = p.paginasOriginal.length
+        ? (p.paginasOriginal.length === 1 && p.paginasOriginal[0] === p.pagina ? '' : `no original: ${p.paginasOriginal.length === 1 ? 'página' : 'páginas'} ${listarPaginas(p.paginasOriginal)}`)
+        : 'página nova';
+      const cont = document.createElement('span'); cont.className = 'contagem';
+      if (p.adicionadas) { const s = document.createElement('span'); s.className = 'mais'; s.textContent = `+${p.adicionadas}`; s.title = plural(p.adicionadas, 'palavra adicionada', 'palavras adicionadas'); cont.append(s); }
+      if (p.removidas) { const s = document.createElement('span'); s.className = 'menos'; s.textContent = `−${p.removidas}`; s.title = plural(p.removidas, 'palavra removida', 'palavras removidas'); cont.append(s); }
+      cab.append(h, orig, cont);
+      const texto = document.createElement('p'); texto.className = 'texto';
+      const pedacos = tudo ? p.pedacos : resumirPedacos(p.pedacos);
+      if (!pedacos.length) { texto.className = 'texto muted'; texto.textContent = 'Página sem texto.'; }
+      pedacos.forEach((pd, i) => {
+        if (i) texto.append(' ');
+        if (pd.tipo === 'igual') texto.append(pd.texto);
+        else {
+          const el = document.createElement(pd.tipo === 'adicionado' ? 'ins' : pd.tipo === 'removido' ? 'del' : 'span');
+          if (pd.tipo === 'corte') el.className = 'corte';
+          el.textContent = pd.tipo === 'corte' ? `… ${pd.texto} …` : pd.texto;
+          texto.append(el);
+        }
+      });
+      sec.append(cab, texto);
+      frag.append(sec);
+    }
+    listaPaginas.replaceChildren(frag);
+    saida.hidden = false;
+  }
+
+  // As duas áreas de arquivo escutam o Ctrl+V da página inteira. Ao colar, o arquivo vai
+  // para o lado que ainda está vazio (e um segundo arquivo colado vai para o outro).
+  let colagem: File[] | null = null;
+  window.addEventListener('paste', () => {
+    colagem = [];
+    setTimeout(() => { colagem = null; }, 0);
+  }, true);
+
+  for (const lado of ['a', 'b'] as Lado[]) {
+    $(`entrada-${lado}`).addEventListener('arquivos', (e) => {
+      const files = (e as CustomEvent<File[]>).detail;
+      if (colagem) {
+        if (colagem.length) return; // já tratado pela outra área
+        colagem.push(...files);
+        const vazio: Lado = !docs.a ? 'a' : !docs.b ? 'b' : 'b';
+        carregar(vazio, files[0]);
+        if (files[1]) carregar(vazio === 'a' ? 'b' : 'a', files[1]);
+        return;
+      }
+      carregar(lado, files[0]);
+      if (files[1] && !docs[lado === 'a' ? 'b' : 'a']) carregar(lado === 'a' ? 'b' : 'a', files[1]);
+    });
+    $(`trocar-${lado}`).addEventListener('click', () => {
+      rodadas[lado]++;
+      docs[lado] = null;
+      mostrarCartao(lado);
+      atualizar();
+      document.getElementById(`entrada-${lado}-input`)?.click();
+    });
+  }
+  inverter.addEventListener('click', () => {
+    [docs.a, docs.b] = [docs.b, docs.a];
+    mostrarCartao('a'); mostrarCartao('b');
+    atualizar();
+  });
+  caixa.addEventListener('change', atualizar);
+  document.querySelectorAll('input[name="modo"]').forEach((r) => r.addEventListener('change', mostrar));
+</script>
+
+<style>
+  .duas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .lado { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .rotulo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .rotulo .muted { font-weight: 400; }
+  .letra {
+    display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--brand); color: var(--brand-ink); border: 2px solid var(--brand-ink); font: 800 0.85rem var(--f-display);
+  }
+  .carregado {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-height: 76px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg);
+    animation: surgir 0.3s var(--suave);
+  }
+  .nome { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .nome strong { overflow-wrap: anywhere; }
+  .nome span { font-size: 0.9rem; }
+  .carregado .btn { padding: 6px 14px; font-size: 0.9rem; }
+  .barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+  .marca { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marca input, .modo input { width: 18px; height: 18px; accent-color: var(--brand); margin: 0; }
+  .resumo { display: flex; flex-direction: column; gap: 4px; animation: surgir 0.3s var(--suave); }
+  .resumo strong { font-size: 1.3rem; }
+  .legenda { display: flex; gap: 10px; margin-top: 4px; font-size: 0.9rem; }
+  .modo { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  .modo label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
+  .paginas { display: flex; flex-direction: column; gap: 12px; }
+  .paginas :global(.pagina) {
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; background: var(--surface);
+    display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    animation: surgir 0.3s var(--suave);
+  }
+  .paginas :global(header) { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .paginas :global(header .muted) { font-size: 0.9rem; }
+  .paginas :global(.contagem) { margin-left: auto; display: inline-flex; gap: 8px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .paginas :global(.mais) { color: var(--ok); }
+  .paginas :global(.menos) { color: var(--erro); }
+  .paginas :global(.texto) { line-height: 1.75; overflow-wrap: anywhere; white-space: pre-wrap; }
+  /* Verde e vermelho saem de --ok e --erro, que já têm versão para o modo escuro. */
+  ins, .paginas :global(ins) {
+    text-decoration: none; color: var(--fg); border-radius: 3px; padding: 1px 2px;
+    background: color-mix(in srgb, var(--ok) 20%, transparent);
+    box-shadow: inset 0 -2px 0 var(--ok);
+  }
+  del, .paginas :global(del) {
+    color: var(--fg); border-radius: 3px; padding: 1px 2px;
+    background: color-mix(in srgb, var(--erro) 16%, transparent);
+    text-decoration: line-through; text-decoration-color: var(--erro); text-decoration-thickness: 2px;
+  }
+  .paginas :global(.corte) { color: var(--muted); font-style: italic; font-size: 0.9rem; white-space: nowrap; }
+</style>
