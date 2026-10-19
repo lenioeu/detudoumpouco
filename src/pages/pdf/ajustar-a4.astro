@@ -1,0 +1,331 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="ajustar-a4"
+  titulo="Ajustar PDF para A4"
+  subtitulo="Deixe todas as páginas do PDF no tamanho A4, sem cortar nem esticar: cada página é ampliada ou reduzida até caber na folha, em pé ou deitada. Tudo no seu navegador."
+  tituloSeo="Ajustar PDF para A4 online grátis: mudar tamanho da página"
+  descricao="Converta as páginas do PDF para A4 grátis: Carta, Ofício, A3 ou A5 viram A4 sem distorcer, em pé ou deitadas. Texto continua selecionável e nada é enviado."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Veja nas miniaturas o tamanho atual de cada página (Carta, A3, A5...).',
+    'Escolha a orientação (automática segue cada página), a margem e se páginas pequenas devem ser ampliadas.',
+    'Clique em "Ajustar para A4", confira o resultado e baixe o PDF.',
+  ]}
+  perguntas={[
+    { p: 'Como mudar o tamanho de um PDF para A4?', r: 'Escolha o PDF e clique em "Ajustar para A4". Cada página vira uma folha A4 (21 x 29,7 cm) com o conteúdo inteiro, sem cortar nada e sem esticar: ele é ampliado ou reduzido na mesma proporção e fica centralizado.' },
+    { p: 'Como converter um PDF tamanho Carta para A4?', r: 'É o caso mais comum, porque o Carta é o padrão dos Estados Unidos e de muitos programas. A Carta é um pouco mais larga e mais curta que o A4, então o conteúdo é reduzido cerca de 3% e sobra uma faixa branca pequena em cima e embaixo. Na impressão quase não se nota.' },
+    { p: 'O que acontece com páginas deitadas?', r: 'Na orientação automática, página deitada vira A4 deitado e página em pé vira A4 em pé, para nada ficar minúsculo. Se o documento precisa ser todo em pé (ou todo deitado), escolha "Sempre em pé" ou "Sempre deitada".' },
+    { p: 'Por que meu PDF não imprime direito em A4?', r: 'Quando o PDF tem outro tamanho, a impressora corta as bordas ou deixa o conteúdo pequeno, dependendo da configuração. Deixando as páginas em A4 antes, o arquivo imprime do mesmo jeito em qualquer impressora, sem precisar mexer em "ajustar à página".' },
+    { p: 'O texto do PDF continua selecionável?', r: 'Sim. As páginas não viram imagem: o conteúdo é só redimensionado. Textos, imagens e links continuam como antes, e o tamanho do arquivo quase não muda.' },
+    { p: 'Meu PDF é enviado para algum servidor?', r: 'Não. O ajuste é feito no seu navegador e o arquivo não sai do aparelho.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <p id="tamanhos" class="tamanhos"></p>
+
+      <div class="opcoes">
+        <fieldset class="pilulas">
+          <legend class="rotulo">Orientação</legend>
+          <label><input type="radio" name="orientacao" value="auto" checked /> <span>Automática</span></label>
+          <label><input type="radio" name="orientacao" value="retrato" /> <span>Sempre em pé</span></label>
+          <label><input type="radio" name="orientacao" value="paisagem" /> <span>Sempre deitada</span></label>
+        </fieldset>
+        <fieldset class="pilulas">
+          <legend class="rotulo">Margem</legend>
+          <label><input type="radio" name="margem" value="nenhuma" checked /> <span>Nenhuma</span></label>
+          <label><input type="radio" name="margem" value="pequena" /> <span>1 cm</span></label>
+          <label><input type="radio" name="margem" value="grande" /> <span>2,5 cm</span></label>
+        </fieldset>
+      </div>
+      <label class="marcar"><input id="ampliar" type="checkbox" checked /> Ampliar páginas menores que o A4 (como A5) para ocupar a folha</label>
+
+      <ol id="miniaturas" class="miniaturas" aria-label="Páginas do PDF"></ol>
+
+      <div class="enviar">
+        <button id="ajustar" type="button" class="btn" disabled>Ajustar para A4</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong>PDF em A4</strong><span id="saida-info" class="muted"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+      <p class="rotulo">Como ficou</p>
+      <ol id="resultado" class="miniaturas" aria-label="Páginas do PDF ajustado"></ol>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que as páginas ficam de tamanhos diferentes</h2>
+    <p>O Brasil usa o A4 (21 x 29,7 cm), mas muitos programas e sites vêm configurados no Carta americano (21,6 x 27,9 cm). Um contrato exportado do Word em inglês, uma fatura de um serviço internacional ou um formulário baixado de um site estrangeiro quase sempre chegam em Carta. Quando você junta esses arquivos com digitalizações em A4, fotos de celular convertidas e planilhas em A3, o resultado é um PDF com cada página de um tamanho. Na tela isso passa despercebido; na impressão, aparecem bordas cortadas, páginas pequenas no meio da folha e reclamação de quem pediu o documento.</p>
+    <h2>Como o ajuste funciona</h2>
+    <p>Cada página vira uma folha A4. O conteúdo é ampliado ou reduzido na mesma proporção na largura e na altura, então nada fica achatado ou esticado, e é centralizado. Uma página Carta é reduzida cerca de 3%; uma A3 é reduzida para 70%, como numa fotocópia; uma A5 é ampliada cerca de 41%, se a opção de ampliar estiver marcada. Se a proporção da página for diferente da do A4, sobram faixas brancas nos lados ou em cima e embaixo. A página não vira imagem: o texto continua nítido e selecionável.</p>
+    <h2>Dicas</h2>
+    <ul>
+      <li>Use a margem de 1 cm se o conteúdo vai até a beira da página: a maioria das impressoras não imprime nos últimos milímetros da folha.</li>
+      <li>Para etiquetas, cupons e recibos pequenos, desmarque "Ampliar páginas menores" para eles ficarem no tamanho original, no meio da folha.</li>
+      <li>Se a página tem bordas brancas grandes, corte antes com o <a href="/pdf/recortar-pdf">Recortar PDF</a>; assim o conteúdo fica maior no A4.</li>
+      <li>Para juntar vários arquivos e já deixar tudo em A4, use primeiro o <a href="/pdf/juntar-pdf">Juntar PDF</a> e depois esta ferramenta.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho as tamanhoArquivo } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, carregarPdfLib, fecharPdf, miniatura, filaDeTrabalho, paraBlob, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { infoDaPagina, type InfoPagina } from '../../lib/pdf-desenho';
+  import { ajustarParaA4, jaEstaEmA4, nomeDoTamanho, type AjusteA4, type OrientacaoA4 } from '../../lib/ajustar-a4';
+  import { MARGENS, type Margem } from '../../lib/pdf-pagina';
+  import type { PDFPage } from 'pdf-lib';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const tamanhos = $('tamanhos');
+  const ampliar = $<HTMLInputElement>('ampliar');
+  const grade = $('miniaturas');
+  const gradeResultado = $('resultado');
+  const botao = $<HTMLButtonElement>('ajustar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let dados: ArrayBuffer | null = null;
+  let visor: DocumentoPdfJs | null = null;
+  let visorResultado: DocumentoPdfJs | null = null;
+  let infos: InfoPagina[] = [];
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let url = '';
+  let fila = filaDeTrabalho();
+  const observadores: IntersectionObserver[] = [];
+
+  const valor = (nome: string) => document.querySelector<HTMLInputElement>(`input[name="${nome}"]:checked`)!.value;
+  const ajuste = (inf: InfoPagina): AjusteA4 =>
+    ajustarParaA4(inf.caixa, inf.rotacao, valor('orientacao') as OrientacaoA4, MARGENS[valor('margem') as Margem], ampliar.checked);
+
+  /** Grade de miniaturas desenhadas sob demanda (só as que aparecem na tela). */
+  function montarGrade(lista: HTMLElement, doc: () => DocumentoPdfJs | null, total: number, legenda: (p: number) => string, larguraDe: (p: number) => [number, number]) {
+    lista.innerHTML = '';
+    const minha = rodada;
+    const obs = new IntersectionObserver((entradas) => {
+      for (const e of entradas) {
+        const d = doc();
+        if (!e.isIntersecting || !d) continue;
+        obs.unobserve(e.target);
+        const li = e.target as HTMLElement;
+        const n = Number(li.dataset.pagina);
+        fila(async () => {
+          if (minha !== rodada) return;
+          const c = await miniatura(d, n, 110);
+          if (minha === rodada) li.querySelector('.mini')!.append(c);
+        }).catch(() => undefined);
+      }
+    }, { rootMargin: '300px 0px' });
+    observadores.push(obs);
+    for (let p = 1; p <= total; p++) {
+      const [w, h] = larguraDe(p);
+      const li = document.createElement('li');
+      li.dataset.pagina = String(p);
+      li.innerHTML = `<span class="mini" style="aspect-ratio:${w}/${h}"></span><span class="num">${p}</span><span class="tam"></span>`;
+      li.querySelector('.tam')!.textContent = legenda(p);
+      lista.append(li);
+      obs.observe(li);
+    }
+    return obs;
+  }
+
+  function atualizarResumo() {
+    const contagem = new Map<string, number>();
+    let prontas = 0;
+    for (const inf of infos) {
+      const nome = nomeDoTamanho(inf.largura, inf.altura);
+      contagem.set(nome, (contagem.get(nome) ?? 0) + 1);
+      if (jaEstaEmA4(inf.caixa, ajuste(inf)) && valor('margem') === 'nenhuma') prontas++;
+    }
+    const partes = [...contagem].map(([nome, n]) => `${n} em ${nome}`);
+    tamanhos.textContent = `Tamanhos agora: ${partes.join(', ')}.` +
+      (prontas === infos.length ? ' Todas já estão em A4 nessa orientação.' : prontas ? ` ${prontas} já ${prontas === 1 ? 'está' : 'estão'} em A4.` : '');
+  }
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (url) { URL.revokeObjectURL(url); url = ''; }
+    fecharPdf(visorResultado); visorResultado = null;
+    gradeResultado.innerHTML = '';
+    status.textContent = '';
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    botao.disabled = true;
+    dados = null; infos = [];
+    observadores.splice(0).forEach((o) => o.disconnect());
+    fecharPdf(visor); visor = null;
+    fila = filaDeTrabalho();
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const bytes = await file.arrayBuffer();
+      const doc = await abrirParaEditar(bytes);
+      if (minha !== rodada) return;
+      dados = bytes;
+      infos = doc.getPages().map(infoDaPagina);
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      const n = infos.length;
+      info.textContent = `${file.name} · ${n} ${n === 1 ? 'página' : 'páginas'} · ${tamanhoArquivo(file.size)}`;
+      atualizarResumo();
+      const obs = montarGrade(grade, () => visor, n, (p) => nomeDoTamanho(infos[p - 1].largura, infos[p - 1].altura), (p) => [infos[p - 1].largura, infos[p - 1].altura]);
+      painel.hidden = false;
+      botao.disabled = false;
+      const v = await abrirParaVer(bytes);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v;
+      for (const li of Array.from(grade.children)) { obs.unobserve(li); obs.observe(li); }
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+      painel.hidden = true;
+    }
+  }
+
+  /** Muda o tamanho da página: o conteúdo ganha uma matriz (escala + deslocamento) e as anotações acompanham. */
+  async function aplicar(pagina: PDFPage, a: AjusteA4) {
+    const lib = await carregarPdfLib();
+    const { PDFArray, PDFDict, PDFName, PDFNumber, pushGraphicsState, popGraphicsState, concatTransformationMatrix } = lib;
+    const ctx = pagina.doc.context;
+    pagina.node.normalize();
+    const inicio = ctx.register(ctx.contentStream([pushGraphicsState(), concatTransformationMatrix(a.escala, 0, 0, a.escala, a.dx, a.dy)]));
+    const fim = ctx.register(ctx.contentStream([popGraphicsState()]));
+    pagina.node.wrapContentStreams(inicio, fim);
+
+    // Anotações (links, campos, comentários): mesmas contas nos pontos x, y.
+    const mover = (arr: InstanceType<typeof PDFArray>, soEscala = false) => {
+      for (let i = 0; i < arr.size(); i++) {
+        const v = arr.lookup(i);
+        if (!(v instanceof PDFNumber)) continue;
+        const d = soEscala ? 0 : i % 2 === 0 ? a.dx : a.dy;
+        arr.set(i, PDFNumber.of(v.asNumber() * a.escala + d));
+      }
+    };
+    const anotacoes = pagina.node.Annots();
+    if (anotacoes) {
+      for (let i = 0; i < anotacoes.size(); i++) {
+        const anot = anotacoes.lookup(i);
+        if (!(anot instanceof PDFDict)) continue;
+        for (const chave of ['Rect', 'QuadPoints', 'Vertices', 'L', 'CL']) {
+          const arr = anot.lookup(PDFName.of(chave));
+          if (arr instanceof PDFArray) mover(arr);
+        }
+        const rd = anot.lookup(PDFName.of('RD'));
+        if (rd instanceof PDFArray) mover(rd, true);
+        const tinta = anot.lookup(PDFName.of('InkList'));
+        if (tinta instanceof PDFArray) for (let k = 0; k < tinta.size(); k++) {
+          const arr = tinta.lookup(k);
+          if (arr instanceof PDFArray) mover(arr);
+        }
+      }
+    }
+    pagina.setMediaBox(0, 0, a.largura, a.altura);
+    pagina.setCropBox(0, 0, a.largura, a.altura);
+    if (pagina.node.TrimBox()) pagina.setTrimBox(0, 0, a.largura, a.altura);
+    if (pagina.node.BleedBox()) pagina.setBleedBox(0, 0, a.largura, a.altura);
+    if (pagina.node.ArtBox()) pagina.setArtBox(0, 0, a.largura, a.altura);
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  document.querySelectorAll('input[name="orientacao"], input[name="margem"]').forEach((el) => el.addEventListener('change', () => { limparSaida(); atualizarResumo(); }));
+  ampliar.addEventListener('change', () => { limparSaida(); atualizarResumo(); });
+
+  botao.addEventListener('click', async () => {
+    if (!dados) return;
+    const minha = rodada;
+    botao.disabled = true;
+    limparSaida();
+    status.textContent = 'Ajustando…';
+    try {
+      const doc = await abrirParaEditar(dados);
+      const paginas = doc.getPages();
+      const ajustes: AjusteA4[] = [];
+      for (const [i, pg] of paginas.entries()) {
+        const a = ajuste(infos[i]);
+        ajustes.push(a);
+        await aplicar(pg, a);
+      }
+      doc.setProducer('oquebragalho.app');
+      const blob = await paraBlob(doc);
+      if (minha !== rodada) return;
+      url = URL.createObjectURL(blob);
+      baixar.href = url;
+      baixar.download = `${nomeBase}-a4.pdf`;
+      const deitadas = ajustes.filter((a) => a.deitada).length;
+      $('saida-info').textContent = `${paginas.length} ${paginas.length === 1 ? 'página' : 'páginas'} em A4` +
+        (deitadas === paginas.length ? ', deitado' : deitadas ? ` (${deitadas} ${deitadas === 1 ? 'deitada' : 'deitadas'})` : '') + ` · ${tamanhoArquivo(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+      // Prévia do resultado.
+      const v = await abrirParaVer(await blob.arrayBuffer());
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visorResultado = v;
+      montarGrade(gradeResultado, () => visorResultado, paginas.length, (p) => `A4 · ${Math.round(ajustes[p - 1].escala * 100)}%`,
+        (p) => (ajustes[p - 1].deitada ? [842, 595] : [595, 842]));
+    } catch {
+      status.textContent = 'Não foi possível ajustar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      botao.disabled = !dados;
+    }
+  });
+</script>
+
+<style>
+  .tamanhos { font-weight: 600; }
+  .opcoes { display: flex; flex-wrap: wrap; gap: 16px 32px; }
+  .pilulas { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .pilulas legend { margin-bottom: 8px; }
+  .pilulas label { cursor: pointer; position: relative; }
+  .pilulas input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .pilulas span {
+    display: inline-block; padding: 7px 16px; border: 2px solid var(--line); border-radius: 999px; font-weight: 600;
+    transition: transform 0.2s var(--mola), background-color 0.15s, border-color 0.15s;
+  }
+  .pilulas label:active span { transform: scale(0.95); }
+  .pilulas input:checked + span { background: var(--brand); border-color: var(--brand-ink); color: var(--brand-ink); }
+  .pilulas input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--fg); flex: none; }
+
+  .miniaturas {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px;
+  }
+  .miniaturas :global(li) {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); animation: surgir 0.25s var(--suave);
+  }
+  .miniaturas :global(.mini) { width: 100%; max-height: 130px; display: grid; place-items: center; overflow: hidden; background: var(--bg); }
+  .miniaturas :global(.mini canvas) { display: block; width: 100%; height: 100%; box-shadow: 0 0 0 1px var(--line); }
+  .miniaturas :global(.num) { font-weight: 600; font-size: 0.85rem; }
+  .miniaturas :global(.tam) { font-size: 0.8rem; color: var(--muted); text-align: center; overflow-wrap: anywhere; }
+
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+</style>
