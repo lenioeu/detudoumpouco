@@ -1,0 +1,278 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="pdf-para-png"
+  titulo="PDF para PNG"
+  subtitulo="Transforme as páginas do PDF em imagens PNG nítidas, sem perda de qualidade, com fundo branco ou transparente. Tudo acontece no seu navegador."
+  tituloSeo="PDF para PNG online grátis, em alta resolução"
+  descricao="Converta PDF em PNG grátis, sem perda de qualidade, em até 400 dpi e com fundo transparente. Baixe as páginas uma a uma ou num .zip. Nada é enviado."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Escolha a resolução: 150 dpi para tela, 300 dpi para imprimir, 400 dpi para dar zoom em detalhes.',
+    'Deixe o fundo branco ou marque transparente, se for usar a imagem sobre outra cor.',
+    'Se quiser só algumas páginas, digite quais (por exemplo, 2, 4-6).',
+    'Clique em "Converter" e baixe cada PNG ou todos juntos num .zip.',
+  ]}
+  perguntas={[
+    { p: 'Como converter PDF em PNG sem perder qualidade?', r: 'PNG é um formato sem perda: cada pixel sai exatamente como foi desenhado. O que define a nitidez é a resolução. Para ler na tela, 150 dpi basta. Para imprimir ou ampliar uma tabela, use 300 ou 400 dpi.' },
+    { p: 'Dá para gerar PNG com fundo transparente a partir do PDF?', r: 'Sim. Marque "Fundo transparente" antes de converter. Funciona em PDFs feitos em programas de desenho e em logotipos exportados para PDF. Se o arquivo veio do Word ou de um scanner, a página costuma ter um retângulo branco por baixo de tudo, e esse branco continua na imagem.' },
+    { p: 'Por que o PNG ficou bem maior que o PDF?', r: 'O PDF guarda o texto como letras e linhas, que ocupam pouco espaço. O PNG guarda cada pixel da página. Uma folha A4 em 300 dpi tem quase 9 milhões de pixels. Se o peso for problema, baixe a resolução ou use o PDF para JPG.' },
+    { p: 'Como transformar só uma página do PDF em PNG?', r: 'Depois de abrir o arquivo, digite o número da página no campo "Páginas", por exemplo 3. Para um trecho, use hífen: 3-5. Com o campo vazio, todas as páginas são convertidas.' },
+    { p: 'Meu PDF é enviado para algum lugar?', r: 'Não. A página é desenhada pelo seu próprio navegador com o pdf.js, o leitor de PDF do Firefox. O arquivo não sai do computador ou do celular, e nada fica guardado depois que você fecha a aba.' },
+    { p: 'Funciona no celular?', r: 'Funciona. Em aparelhos com pouca memória, páginas muito grandes em 400 dpi podem ser reduzidas para o navegador conseguir desenhar. Quando isso acontece, aparece o aviso "reduzida" embaixo da imagem.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <div class="opcoes">
+        <div class="campo">
+          <label for="dpi">Resolução</label>
+          <select id="dpi">
+            <option value="72">72 dpi (miniatura)</option>
+            <option value="150" selected>150 dpi (tela)</option>
+            <option value="300">300 dpi (imprimir)</option>
+            <option value="400">400 dpi (máxima)</option>
+          </select>
+          <small id="dpi-msg"></small>
+        </div>
+        <div class="campo">
+          <span class="rotulo" id="rotulo-fundo">Fundo</span>
+          <label class="marcar"><input id="transparente" type="checkbox" aria-describedby="rotulo-fundo" /> Fundo transparente</label>
+          <small>Sem marcar, o fundo fica branco.</small>
+        </div>
+        <div class="campo">
+          <label for="paginas">Páginas</label>
+          <input id="paginas" type="text" placeholder="Todas (ou ex.: 2, 4-6)" autocomplete="off" />
+          <small id="paginas-msg">Deixe vazio para converter todas.</small>
+        </div>
+      </div>
+      <div class="enviar">
+        <button id="converter" type="button" class="btn">Converter</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong id="saida-titulo"></strong><span id="saida-info" class="muted"></span></div>
+        <a id="zip" class="btn" href="#" download hidden>Baixar todas (.zip)</a>
+      </div>
+      <ol id="imagens" class="imagens" aria-label="Imagens geradas"></ol>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Quando o PNG é a melhor escolha</h2>
+    <p>PNG guarda a imagem sem perda. Letras pequenas, linhas de tabela, gráficos e traços finos saem com bordas limpas, sem aqueles borrões em volta que o JPG cria. Por isso ele é o formato certo para quem vai recortar um gráfico de um relatório, colocar uma planta baixa numa apresentação, guardar a página de um contrato para consulta ou usar um diagrama numa apostila.</p>
+    <p>A troca é o tamanho: um PNG costuma pesar de duas a cinco vezes mais que o JPG da mesma página. Se a página for uma foto, como um folheto colorido ou um catálogo, o <a href="/pdf/pdf-para-jpg">PDF para JPG</a> dá um arquivo bem menor com aparência quase igual.</p>
+    <h2>Fundo transparente: quando funciona</h2>
+    <p>Com a opção marcada, as partes da página onde não há nada desenhado ficam transparentes. É útil para tirar um logotipo, um carimbo ou uma assinatura de um PDF e colocar sobre outro fundo. Isso só dá certo quando o PDF não pinta a página de branco. Arquivos exportados de programas de desenho (Illustrator, Inkscape, Canva) costumam ter fundo vazio. Já documentos do Word, páginas escaneadas e fotos dentro do PDF têm um fundo branco de verdade, e esse branco continua na imagem.</p>
+    <h2>Qual resolução usar</h2>
+    <ul>
+      <li><strong>72 dpi:</strong> uma folha A4 vira 595 por 842 pixels. Bom para miniatura ou pré-visualização.</li>
+      <li><strong>150 dpi:</strong> 1240 por 1754 pixels. Texto confortável de ler na tela do computador e do celular.</li>
+      <li><strong>300 dpi:</strong> 2480 por 3508 pixels. É o padrão de gráfica e de impressão em casa.</li>
+      <li><strong>400 dpi:</strong> 3307 por 4677 pixels. Para recortar um detalhe pequeno e ainda ter boa definição.</li>
+    </ul>
+    <p>Quando há mais de uma página, as imagens recebem o número da página no nome (por exemplo, relatorio-pagina-03.png) e o botão "Baixar todas" junta tudo num .zip, na ordem certa.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { codificar } from '../../lib/canvas';
+  import { abrirParaVer, desenharPagina, fecharPdf, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { lerIntervalos } from '../../lib/intervalos';
+  import { criarZip } from '../../lib/zip';
+  import { desenharComTransparencia } from '../../lib/pdf-png';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const dpi = $<HTMLSelectElement>('dpi');
+  const dpiMsg = $('dpi-msg');
+  const transparente = $<HTMLInputElement>('transparente');
+  const paginas = $<HTMLInputElement>('paginas');
+  const paginasMsg = $('paginas-msg');
+  const botao = $<HTMLButtonElement>('converter');
+  const status = $('status');
+  const saida = $('saida');
+  const imagens = $('imagens');
+  const zip = $<HTMLAnchorElement>('zip');
+
+  let visor: DocumentoPdfJs | null = null;
+  let total = 0;
+  let nomeBase = 'documento';
+  /** Tamanho da 1ª página em pontos (1/72 de polegada), para mostrar quantos pixels vai dar. */
+  let primeira = { w: 0, h: 0 };
+  let rodada = 0;
+  let urls: string[] = [];
+  let convertendo = false;
+
+  function limparSaida() {
+    rodada++;
+    convertendo = false;
+    saida.hidden = true;
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    imagens.innerHTML = '';
+    zip.hidden = true;
+    status.textContent = '';
+  }
+
+  function escolhidas(): { lista: number[]; erro?: string } {
+    if (!paginas.value.trim()) return { lista: Array.from({ length: total }, (_, i) => i + 1) };
+    const r = lerIntervalos(paginas.value, total);
+    return r.erro ? { lista: [], erro: r.erro } : { lista: [...new Set(r.grupos.flat())] };
+  }
+
+  function atualizar() {
+    const e = escolhidas();
+    paginasMsg.textContent = e.erro ?? 'Deixe vazio para converter todas.';
+    paginasMsg.className = e.erro ? 'erro' : '';
+    if (primeira.w) {
+      const k = Number(dpi.value) / 72;
+      dpiMsg.textContent = `Página 1: ${Math.floor(primeira.w * k)} × ${Math.floor(primeira.h * k)} px`;
+    }
+    botao.disabled = convertendo || !visor || !!e.erro || !e.lista.length;
+    botao.textContent = e.lista.length && !e.erro ? `Converter ${e.lista.length} ${e.lista.length === 1 ? 'página' : 'páginas'}` : 'Converter';
+  }
+
+  async function carregar(file: File) {
+    limparSaida();
+    const minha = rodada;
+    aviso.hidden = true;
+    painel.hidden = true;
+    fecharPdf(visor); visor = null; total = 0; primeira = { w: 0, h: 0 };
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const v = await abrirParaVer(await file.arrayBuffer());
+      if (minha !== rodada) { fecharPdf(v); return; }
+      const p1 = (await v.getPage(1)).getViewport({ scale: 1 });
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v;
+      total = v.numPages;
+      primeira = { w: p1.width, h: p1.height };
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      paginas.value = '';
+      painel.hidden = false;
+      atualizar();
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  async function converter() {
+    const e = escolhidas();
+    if (!visor || e.erro || !e.lista.length) return;
+    limparSaida();
+    const minha = rodada;
+    convertendo = true;
+    atualizar();
+    const doc = visor;
+    const escala = Number(dpi.value) / 72;
+    const semFundo = transparente.checked;
+    const digitos = String(total).length;
+    const feitas: { nome: string; blob: Blob }[] = [];
+    saida.hidden = false;
+    $('saida-titulo').textContent = 'Convertendo…';
+    $('saida-info').textContent = '';
+    try {
+      for (const [i, n] of e.lista.entries()) {
+        status.textContent = `Convertendo a página ${n} (${i + 1} de ${e.lista.length})…`;
+        const { canvas, reduzida } = semFundo
+          ? await desenharComTransparencia(doc, n, escala)
+          : await desenharPagina(doc, n, escala);
+        if (minha !== rodada) return;
+        const blob = await codificar(canvas, 'image/png');
+        const largura = canvas.width, altura = canvas.height;
+        canvas.width = canvas.height = 0; // libera a memória do canvas na hora
+        if (minha !== rodada) return;
+        const nome = total === 1 ? `${nomeBase}.png` : `${nomeBase}-pagina-${String(n).padStart(digitos, '0')}.png`;
+        feitas.push({ nome, blob });
+        const url = URL.createObjectURL(blob); urls.push(url);
+
+        const li = document.createElement('li');
+        const mini = document.createElement('span'); mini.className = 'mini' + (semFundo ? ' xadrez' : '');
+        const img = document.createElement('img'); img.src = url; img.alt = `Página ${n}`; img.width = largura; img.height = altura; img.decoding = 'async';
+        mini.append(img);
+        const titulo = document.createElement('span'); titulo.className = 'num'; titulo.textContent = `Página ${n}`;
+        const det = document.createElement('span'); det.className = 'muted det';
+        det.textContent = `${largura} × ${altura} px · ${tamanho(blob.size)}` + (reduzida ? ' · reduzida para caber na memória' : '');
+        const a = document.createElement('a'); a.className = 'btn btn-sec'; a.href = url; a.download = nome; a.textContent = 'Baixar';
+        li.append(mini, titulo, det, a);
+        imagens.append(li);
+      }
+      if (feitas.length > 1) {
+        status.textContent = 'Montando o .zip…';
+        const arquivos = await Promise.all(feitas.map(async (f) => ({ nome: f.nome, dados: new Uint8Array(await f.blob.arrayBuffer()) })));
+        if (minha !== rodada) return;
+        const url = URL.createObjectURL(new Blob([criarZip(arquivos) as Uint8Array<ArrayBuffer>], { type: 'application/zip' }));
+        urls.push(url);
+        zip.href = url;
+        zip.download = `${nomeBase}-png.zip`;
+        zip.hidden = false;
+      }
+      const soma = feitas.reduce((s, f) => s + f.blob.size, 0);
+      $('saida-titulo').textContent = `${feitas.length} ${feitas.length === 1 ? 'PNG pronto' : 'PNGs prontos'}`;
+      $('saida-info').textContent = `${tamanho(soma)} no total`;
+      status.textContent = 'Pronto!';
+    } catch (err) {
+      if (minha !== rodada) return;
+      status.textContent = err instanceof Error && /navegador|imagem/.test(err.message)
+        ? err.message
+        : 'Não foi possível converter. Tente uma resolução menor ou menos páginas.';
+      if (!feitas.length) saida.hidden = true;
+    } finally {
+      if (minha === rodada) { convertendo = false; atualizar(); }
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  botao.addEventListener('click', converter);
+  for (const el of [dpi, transparente]) el.addEventListener('change', () => { limparSaida(); atualizar(); });
+  paginas.addEventListener('input', () => { if (!saida.hidden) limparSaida(); atualizar(); });
+</script>
+
+<style>
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; font-weight: 400; cursor: pointer; min-height: 40px; }
+  .marcar input { width: 20px; height: 20px; accent-color: var(--brand); }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+  .imagens {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+  }
+  .imagens :global(li) {
+    display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 8px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    animation: entrar 0.3s var(--suave) backwards;
+  }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+  .imagens :global(.mini) { aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden; background: var(--bg); border-radius: 6px; }
+  /* Xadrez atrás da imagem transparente, como nos editores de imagem. */
+  .imagens :global(.mini.xadrez) {
+    background-color: var(--surface);
+    background-image: conic-gradient(var(--line) 25%, transparent 0 50%, var(--line) 0 75%, transparent 0);
+    background-size: 14px 14px;
+  }
+  .imagens :global(.mini img) { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; box-shadow: 0 0 0 1px var(--line); }
+  .imagens :global(.num) { font-weight: 600; font-size: 0.9rem; }
+  .imagens :global(.det) { font-size: 0.8rem; line-height: 1.35; overflow-wrap: anywhere; }
+  .imagens :global(.btn) { padding: 6px 12px; font-size: 0.9rem; margin-top: auto; }
+</style>
