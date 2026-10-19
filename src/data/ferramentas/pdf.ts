@@ -17,7 +17,7 @@ export default [
   { slug: 'escanear-para-pdf', nome: 'Escanear para PDF', resumo: 'Fotografe documentos com o celular e salve em PDF.', status: 'planejada' },
   { slug: 'extrair-paginas', nome: 'Extrair páginas do PDF', resumo: 'Salve só as páginas que você escolher num PDF novo.', status: 'planejada' },
   { slug: 'pdf-para-png', nome: 'PDF para PNG', resumo: 'Salve as páginas do PDF como PNG em alta qualidade.', status: 'pronta' },
-  { slug: 'pdf-para-texto', nome: 'PDF para texto', resumo: 'Copie todo o texto de um PDF.', status: 'planejada' },
+  { slug: 'pdf-para-texto', nome: 'PDF para texto', resumo: 'Copie todo o texto de um PDF.', status: 'pronta' },
   { slug: 'recortar-pdf', nome: 'Recortar PDF', resumo: 'Corte as margens das páginas do PDF.', status: 'planejada' },
   { slug: 'ajustar-a4', nome: 'Ajustar PDF para A4', resumo: 'Deixe todas as páginas no tamanho A4.', status: 'planejada' },
   { slug: 'achatar-pdf', nome: 'Achatar PDF', resumo: 'Trave formulários e anotações para ninguém editar.', status: 'planejada' },
