@@ -12,5 +12,5 @@ export default [
   { slug: 'numerar-paginas', nome: 'Numerar páginas', resumo: 'Coloque número nas páginas do PDF.', status: 'planejada' },
   { slug: 'comprimir-pdf', nome: 'Comprimir PDF', resumo: 'Diminua o tamanho do arquivo.', status: 'pronta' },
   { slug: 'proteger-pdf', nome: 'Proteger PDF com senha', resumo: 'Coloque senha no seu PDF.', status: 'pronta' },
-  { slug: 'remover-senha-pdf', nome: 'Remover senha de PDF', resumo: 'Tire a senha de um PDF que você sabe abrir.', status: 'planejada' },
+  { slug: 'remover-senha-pdf', nome: 'Remover senha de PDF', resumo: 'Tire a senha de um PDF que você sabe abrir.', status: 'pronta' },
 ] satisfies Ferramenta[];
