@@ -22,7 +22,7 @@ export default [
   { slug: 'ajustar-a4', nome: 'Ajustar PDF para A4', resumo: 'Deixe todas as páginas no tamanho A4.', status: 'planejada' },
   { slug: 'achatar-pdf', nome: 'Achatar PDF', resumo: 'Trave formulários e anotações para ninguém editar.', status: 'planejada' },
   { slug: 'editar-metadados-pdf', nome: 'Editar informações do PDF', resumo: 'Mude título, autor e assunto do arquivo.', status: 'planejada' },
-  { slug: 'preencher-formulario-pdf', nome: 'Preencher formulário PDF', resumo: 'Preencha os campos de um PDF e salve.', status: 'planejada' },
+  { slug: 'preencher-formulario-pdf', nome: 'Preencher formulário PDF', resumo: 'Preencha os campos de um PDF e salve.', status: 'pronta' },
   { slug: 'pdf-preto-e-branco', nome: 'PDF em preto e branco', resumo: 'Converta o PDF para tons de cinza.', status: 'planejada' },
   { slug: 'extrair-imagens-pdf', nome: 'Extrair imagens do PDF', resumo: 'Baixe todas as imagens de dentro do PDF.', status: 'planejada' },
   { slug: 'ocultar-dados-pdf', nome: 'Ocultar informações do PDF', resumo: 'Cubra dados sensíveis com tarja preta de verdade.', status: 'planejada' },
