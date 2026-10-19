@@ -1,0 +1,242 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import CampoSenha from '../../components/CampoSenha.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="remover-senha-pdf"
+  titulo="Remover senha de PDF"
+  subtitulo="Tire a senha de um PDF que você já sabe abrir e salve uma cópia que abre direto. Você digita a senha; sem ela, a ferramenta não abre o arquivo. Tudo acontece no seu navegador."
+  tituloSeo="Remover senha de PDF grátis: desbloquear PDF online"
+  descricao="Tire a senha de PDF que você sabe abrir, como extrato de banco ou fatura, e salve uma cópia sem senha. Grátis, e o arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF protegido, ou arraste o arquivo para a área indicada.',
+    'Digite a senha que você usa para abrir o arquivo.',
+    'Clique em "Remover senha". Se a senha estiver errada, é só corrigir e tentar de novo.',
+    'Baixe a cópia sem senha. O arquivo original continua do jeito que estava.',
+  ]}
+  perguntas={[
+    { p: 'Como tirar a senha de um PDF que eu sei abrir?', r: 'Escolha o arquivo nesta página, digite a senha e clique em "Remover senha". Em poucos segundos aparece o botão para baixar uma cópia que abre direto, sem pedir nada. Não precisa instalar programa nem criar conta.' },
+    { p: 'Dá para remover a senha sem saber qual é?', r: 'Não, e a ferramenta foi feita assim de propósito. Ela só abre o arquivo com a senha que você digitar. Se você esqueceu, peça a senha ou uma nova cópia a quem enviou: banco, empresa, contador ou órgão público.' },
+    { p: 'Qual é a senha do PDF do extrato ou da fatura?', r: 'Quase sempre está escrita no e-mail ou no aplicativo que enviou o arquivo. Muitos bancos, operadoras e lojas usam os primeiros dígitos do CPF (só números) ou a data de nascimento. Se não achar, procure "senha do PDF" na central de ajuda da empresa.' },
+    { p: 'Por que aparece "senha incorreta" se a senha está certa?', r: 'Confira se o Caps Lock está ligado, se o celular não colocou letra maiúscula no começo e se não há espaço sobrando. Use "Mostrar" para ver o que foi digitado. Senhas com acento ou cedilha também podem dar diferença conforme o programa que criou o PDF.' },
+    { p: 'Meu PDF abre sem senha, mas não deixa imprimir nem copiar. Funciona?', r: 'Funciona, desde que você saiba a senha de permissões (a senha do dono do arquivo, que é diferente da senha de abrir). Digite essa senha e a cópia sai sem bloqueios. Sem ela, a ferramenta não tira as restrições.' },
+    { p: 'É seguro digitar a senha do PDF aqui?', r: 'Sim. A senha e o arquivo ficam no seu aparelho: o desbloqueio é feito pelo navegador, sem enviar nada para servidor. Só lembre que a cópia sem senha pode ser aberta por qualquer pessoa. Guarde em lugar seguro.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+
+    <div id="arquivo" class="arquivo" hidden>
+      <span class="cadeado" id="cadeado" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/><path class="haste" d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+      </span>
+      <div class="dados">
+        <strong id="arq-nome"></strong>
+        <span id="arq-info" class="muted"></span>
+      </div>
+      <button id="trocar" type="button" class="btn btn-sec trocar">Trocar</button>
+    </div>
+
+    <form id="form" class="stack" hidden novalidate>
+      <p id="explica"></p>
+      <div class="linha-senha">
+        <CampoSenha id="senha" rotulo="Senha do PDF" autocomplete="current-password" />
+      </div>
+      <div class="enviar">
+        <button id="remover" type="submit" class="btn">Remover senha</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div class="mini" id="mini" aria-hidden="true"></div>
+      <div class="dados">
+        <strong>Senha removida</strong>
+        <span id="saida-info"></span>
+      </div>
+      <a id="baixar" class="btn" download="sem-senha.pdf" href="#">Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve tirar a senha</h2>
+    <p>Extrato de banco, fatura de cartão, conta de celular, holerite e informe de rendimentos costumam chegar com senha. Faz sentido no envio, mas atrapalha depois: toda vez que você abre, precisa digitar a senha de novo. E muitos sites e sistemas recusam PDF protegido. É o caso de portais de financiamento, do envio de comprovantes para a faculdade, de alguns aplicativos de declaração e de qualquer ferramenta de juntar ou comprimir PDF.</p>
+    <p>Com uma cópia sem senha, você junta os extratos do ano num arquivo só, manda o comprovante para quem pediu e guarda tudo organizado. O arquivo original continua protegido, do jeito que veio.</p>
+    <h2>Por que é preciso saber a senha</h2>
+    <p>A senha de abertura de um PDF não é só um aviso: o conteúdo fica cifrado, e a senha é a chave para decifrar. Por isso esta ferramenta não "quebra" senha nem tenta adivinhar. Ela faz o mesmo que o leitor de PDF faz quando você digita a senha, só que no fim salva o resultado sem a proteção. Se o arquivo não é seu, ou se você não tem a senha, o caminho é pedir para quem enviou.</p>
+    <h2>Senha de abrir e senha de permissões</h2>
+    <p>Um PDF pode ter duas senhas. A de abrir impede ver o conteúdo. A de permissões, também chamada de senha do proprietário, bloqueia ações como imprimir, copiar texto ou editar, mesmo para quem consegue abrir. Quando o arquivo abre direto mas o botão de imprimir fica cinza, é a segunda que está ativa. Esta página percebe qual é o caso e pede a senha certa.</p>
+    <h2>Dicas</h2>
+    <ul>
+      <li>Antes de digitar, procure a senha no e-mail ou na mensagem que trouxe o arquivo. Em geral ela está explicada lá, como "os 5 primeiros dígitos do seu CPF".</li>
+      <li>Se quiser mandar o arquivo para alguém, mas com outra senha, tire a senha aqui e depois use o <a href="/pdf/proteger-pdf">Proteger PDF com senha</a>.</li>
+      <li>Para juntar vários extratos num só, tire a senha de cada um e use o <a href="/pdf/juntar-pdf">Juntar PDF</a>.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaVer, fecharPdf, miniatura, ErroPdf } from '../../lib/pdf-navegador';
+  import { examinar, nomeComSufixo, removerSenha, type Situacao } from '../../lib/pdf-senha';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const cartao = $('arquivo');
+  const info = $('arq-info');
+  const form = $<HTMLFormElement>('form');
+  const explica = $('explica');
+  const senha = $<HTMLInputElement>('senha');
+  const rotulo = form.querySelector<HTMLLabelElement>('label[for="senha"]')!;
+  const botao = $<HTMLButtonElement>('remover');
+  const status = $('status');
+  const saida = $('saida');
+  const mini = $('mini');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let arquivo: File | null = null;
+  let dados: ArrayBuffer | null = null;
+  let situacao: Situacao | null = null;
+  let urlSaida = '';
+  let trabalhando = false;
+  let vez = 0;
+
+  const MSG_ERRADA = 'Senha incorreta. Confira maiúsculas e minúsculas, o Caps Lock e espaços sobrando, e tente de novo.';
+
+  function mostrarStatus(texto: string, erro = false) {
+    status.textContent = texto;
+    status.classList.toggle('erro', erro);
+    status.classList.toggle('muted', !erro);
+    senha.setAttribute('aria-invalid', String(erro));
+  }
+
+  function invalidarSaida() {
+    saida.hidden = true;
+    mini.replaceChildren();
+    cartao.classList.remove('aberto');
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function informar(texto: string, erro = false) {
+    info.textContent = texto;
+    info.classList.toggle('erro', erro);
+  }
+
+  async function abrir(file: File) {
+    const minha = ++vez;
+    invalidarSaida();
+    arquivo = file; dados = null; situacao = null;
+    entrada.hidden = true;
+    cartao.hidden = false;
+    form.hidden = true;
+    senha.value = '';
+    mostrarStatus('');
+    $('arq-nome').textContent = file.name;
+    informar('Abrindo…');
+    try {
+      const buf = await file.arrayBuffer();
+      const s = await examinar(buf);
+      if (minha !== vez) return;
+      situacao = s;
+      if (s.tipo === 'livre') {
+        informar(`Este PDF não tem senha nem restrições. Ele já abre direto, não precisa fazer nada. (${tamanho(file.size)})`);
+        cartao.classList.add('aberto');
+        return;
+      }
+      dados = buf;
+      if (s.tipo === 'senha') {
+        informar(`Pede senha para abrir · ${tamanho(file.size)}`);
+        explica.textContent = 'Digite a senha que você usa para abrir este PDF.';
+        rotulo.textContent = 'Senha do PDF';
+      } else {
+        informar(`Abre sem senha, mas tem restrições · ${tamanho(file.size)}`);
+        explica.textContent = 'Este PDF abre direto, mas bloqueia imprimir, copiar ou editar. Para tirar os bloqueios, digite a senha de permissões (a senha do dono do arquivo, que é diferente da senha de abrir).';
+        rotulo.textContent = 'Senha de permissões';
+      }
+      form.hidden = false;
+      senha.focus();
+    } catch (e) {
+      if (minha !== vez) return;
+      informar(e instanceof ErroPdf ? e.message : 'Não foi possível abrir este arquivo.', true);
+    }
+  }
+
+  $('trocar').addEventListener('click', () => {
+    vez++;
+    invalidarSaida();
+    arquivo = null; dados = null; situacao = null;
+    cartao.hidden = true; form.hidden = true; entrada.hidden = false;
+    mostrarStatus('');
+    $('entrada-input').focus();
+  });
+
+  entrada.addEventListener('arquivos', (e) => {
+    const files = (e as CustomEvent<File[]>).detail;
+    const pdf = files.find((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+    if (pdf) abrir(pdf);
+  });
+
+  senha.addEventListener('input', () => { if (status.classList.contains('erro')) mostrarStatus(''); });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!dados || !arquivo || !situacao || trabalhando) return;
+    if (!senha.value) { mostrarStatus('Digite a senha.', true); senha.focus(); return; }
+    const minha = vez;
+    trabalhando = true;
+    botao.disabled = true;
+    invalidarSaida();
+    mostrarStatus('Conferindo a senha…');
+    try {
+      const { bytes, paginas } = await removerSenha(dados, senha.value);
+      if (minha !== vez) return;
+      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = nomeComSufixo(arquivo.name, 'sem-senha');
+      $('saida-info').textContent = `${paginas} ${paginas === 1 ? 'página' : 'páginas'} · ${tamanho(blob.size)} · abre sem pedir senha`;
+      cartao.classList.add('aberto');
+      saida.hidden = false;
+      mostrarStatus('Pronto!');
+      const doc = await abrirParaVer(await blob.arrayBuffer());
+      try { if (minha === vez && !saida.hidden) mini.append(await miniatura(doc, 1, 64)); }
+      finally { fecharPdf(doc); }
+    } catch (err) {
+      if (minha !== vez) return;
+      if (err instanceof ErroPdf && err.senha) {
+        mostrarStatus(MSG_ERRADA, true);
+        senha.focus();
+        senha.select();
+      } else if (saida.hidden) {
+        mostrarStatus(err instanceof ErroPdf ? err.message : 'Não foi possível tirar a senha. Pode faltar memória no aparelho.', true);
+      }
+    } finally {
+      trabalhando = false;
+      botao.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .arquivo {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px; min-width: 0;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    animation: surgir 0.25s var(--suave);
+  }
+  .cadeado { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--brand-soft); color: var(--fg); }
+  .haste { transition: transform 0.3s var(--mola); transform-origin: 16px 10.5px; }
+  .aberto .cadeado { color: var(--ok); }
+  .aberto .haste { transform: translateY(-2px) rotate(28deg); }
+  .dados { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .dados strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .trocar { flex: none; padding: 6px 12px; font-size: 0.9rem; }
+  .linha-senha { max-width: 420px; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; animation: surgir 0.3s var(--suave); }
+  .saida .dados { flex: 1 1 180px; }
+  .saida span { color: var(--muted); }
+  .mini { flex: none; width: 64px; height: 84px; display: grid; place-items: center; background: var(--surface); border-radius: 6px; overflow: hidden; }
+  .mini :global(canvas) { max-width: 100%; max-height: 100%; width: auto; height: auto; box-shadow: var(--sombra); }
+</style>

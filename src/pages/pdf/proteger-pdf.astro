@@ -1,0 +1,270 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import CampoSenha from '../../components/CampoSenha.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="proteger-pdf"
+  titulo="Proteger PDF com senha"
+  subtitulo="Coloque uma senha no PDF para que só quem souber consiga abrir. A criptografia é AES de 256 bits e é feita no seu navegador: o arquivo e a senha não saem do seu aparelho."
+  tituloSeo="Colocar senha em PDF grátis: proteger PDF online"
+  descricao="Coloque senha em PDF grátis, com criptografia AES-256. Bloqueie também impressão e cópia, se quiser. O arquivo e a senha não saem do seu aparelho."
+  passos={[
+    'Escolha o PDF que quer proteger, ou arraste o arquivo para a área indicada.',
+    'Digite a senha duas vezes. O medidor mostra se ela está fraca ou forte.',
+    'Se quiser, abra "Opções avançadas" para impedir impressão, cópia de texto ou edição.',
+    'Clique em "Proteger PDF" e baixe o arquivo. Ao abrir, ele vai pedir a senha.',
+  ]}
+  perguntas={[
+    { p: 'Como colocar senha em um PDF de graça?', r: 'Escolha o arquivo nesta página, digite a senha duas vezes e clique em "Proteger PDF". O arquivo protegido é baixado na hora, sem cadastro e sem marca d\'água. Funciona no computador e no celular, em qualquer navegador atualizado.' },
+    { p: 'É seguro colocar a senha do PDF em um site?', r: 'Aqui, sim, porque nada é enviado. A criptografia acontece no seu próprio navegador, com uma biblioteca de código aberto. Nem o PDF nem a senha passam por servidor nenhum. Depois que a página carrega, dá até para desligar a internet e continuar usando.' },
+    { p: 'Esqueci a senha do PDF. Vocês conseguem recuperar?', r: 'Não. A senha não fica guardada em lugar nenhum, nem aqui nem dentro do arquivo. Com AES-256, um PDF protegido por uma boa senha não pode ser aberto sem ela. Por isso, guarde a senha num lugar seguro e mantenha uma cópia do arquivo original sem senha, se precisar.' },
+    { p: 'O PDF com senha abre no celular e no WhatsApp?', r: 'Abre. O leitor do celular, o Chrome, o Edge, o Firefox, o Preview do Mac e o Adobe Reader pedem a senha e mostram o documento. A pré-visualização do WhatsApp e do e-mail fica em branco, já que eles não sabem a senha. Quem recebe precisa tocar no arquivo e digitar a senha.' },
+    { p: 'Qual a diferença entre senha de abertura e bloqueio de impressão?', r: 'A senha de abertura impede que alguém veja o conteúdo. O bloqueio de impressão, cópia ou edição é um pedido que o arquivo faz ao programa leitor. Adobe Reader, Chrome e a maioria dos leitores respeitam, mas alguns programas ignoram. Para manter algo em segredo, o que vale é a senha de abertura.' },
+    { p: 'Colocar senha muda a qualidade do PDF?', r: 'Não. Textos, imagens e links continuam iguais, só que cifrados. O tamanho do arquivo quase não muda. A única perda é a assinatura digital: se o PDF era assinado, a assinatura deixa de valer, porque o arquivo foi alterado.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+
+    <div id="arquivo" class="arquivo" hidden>
+      <div class="mini" id="mini" aria-hidden="true"></div>
+      <div class="dados">
+        <strong id="arq-nome"></strong>
+        <span id="arq-info" class="muted"></span>
+      </div>
+      <button id="trocar" type="button" class="btn btn-sec trocar">Trocar</button>
+    </div>
+
+    <form id="form" class="stack" hidden novalidate>
+      <div class="senhas">
+        <div class="stack">
+          <CampoSenha id="senha" rotulo="Senha" autocomplete="new-password" />
+          <div class="forca" id="forca" data-nivel="" aria-live="polite">
+            <div class="barras" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <small id="forca-texto">Use pelo menos 8 caracteres. Uma frase curta é forte e fácil de lembrar.</small>
+          </div>
+        </div>
+        <CampoSenha id="senha2" rotulo="Repita a senha" autocomplete="new-password" />
+      </div>
+
+      <details class="avancado">
+        <summary>Opções avançadas</summary>
+        <div class="stack opcoes">
+          <fieldset>
+            <legend class="rotulo">Quem abrir com a senha pode</legend>
+            <label><input type="checkbox" id="p-imprimir" checked /> Imprimir</label>
+            <label><input type="checkbox" id="p-copiar" checked /> Copiar texto e imagens</label>
+            <label><input type="checkbox" id="p-editar" checked /> Editar, comentar e preencher formulários</label>
+            <small class="muted">Os bloqueios são respeitados pelo Adobe Reader e pela maioria dos leitores, mas alguns programas ignoram. Com algum bloqueio marcado, nem você consegue liberar depois: guarde o original.</small>
+          </fieldset>
+          <div class="campo">
+            <label for="algoritmo">Criptografia</label>
+            <select id="algoritmo">
+              <option value="AES-256" selected>AES 256 bits (recomendado)</option>
+              <option value="AES-128">AES 128 bits (leitores de antes de 2010)</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <div class="enviar">
+        <button id="proteger" type="submit" class="btn">Proteger PDF</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </form>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div>
+        <strong>PDF protegido</strong>
+        <span id="saida-info"></span>
+      </div>
+      <a id="baixar" class="btn" download="protegido.pdf" href="#">Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Quando vale a pena pôr senha no PDF</h2>
+    <p>Todo PDF que leva CPF, salário, exame ou dado de cliente pode cair em mãos erradas: um e-mail encaminhado para a pessoa errada, um pen drive esquecido, um celular roubado. Com senha, o arquivo continua lá, mas ninguém lê o conteúdo sem ela. Exemplos comuns: o contador mandando a declaração do Imposto de Renda, o RH enviando holerites, a clínica entregando resultado de exame, o advogado trocando minutas de contrato e você guardando cópia do RG e do comprovante de residência na nuvem.</p>
+    <h2>Que tipo de proteção é essa</h2>
+    <p>O PDF tem um sistema próprio de senha, que todo leitor conhece. Esta ferramenta usa o modo mais forte dele, o AES de 256 bits, o mesmo padrão adotado por bancos e governos. O conteúdo das páginas é embaralhado com uma chave tirada da sua senha. Sem a senha certa, o arquivo vira só um monte de bytes sem sentido.</p>
+    <p>A força real depende da senha. "123456" é descoberta em segundos por programas que testam as senhas mais usadas. Já uma frase como "girassol-azul-na-janela" levaria séculos. O medidor ao lado do campo dá uma ideia, mas a regra prática é simples: quanto mais longa, melhor.</p>
+    <h2>Como mandar a senha para quem vai abrir</h2>
+    <ul>
+      <li>Nunca mande a senha no mesmo e-mail ou na mesma conversa do arquivo. Se o arquivo vazar, a senha vaza junto.</li>
+      <li>Combine por outro meio: ligação, SMS ou pessoalmente.</li>
+      <li>Para documentos recorrentes, como holerites, muitas empresas usam uma regra conhecida só pelo destinatário. Mas os primeiros dígitos do CPF ou a data de nascimento são fáceis de adivinhar e protegem pouco.</li>
+    </ul>
+    <h2>E se eu precisar tirar a senha depois?</h2>
+    <p>Se você sabe a senha, use o <a href="/pdf/remover-senha-pdf">Remover senha de PDF</a>: ele abre o arquivo com a senha que você digitar e salva uma cópia sem proteção. Para juntar, dividir ou comprimir um PDF protegido, tire a senha antes, faça o que precisa e proteja de novo no final.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaVer, fecharPdf, miniatura, ErroPdf } from '../../lib/pdf-navegador';
+  import { examinar, forcaDaSenha, nomeComSufixo, proteger, type Algoritmo } from '../../lib/pdf-senha';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const cartao = $('arquivo');
+  const mini = $('mini');
+  const form = $<HTMLFormElement>('form');
+  const senha = $<HTMLInputElement>('senha');
+  const senha2 = $<HTMLInputElement>('senha2');
+  const forca = $('forca');
+  const forcaTexto = $('forca-texto');
+  const botao = $<HTMLButtonElement>('proteger');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const DICA_INICIAL = forcaTexto.textContent ?? '';
+
+  let arquivo: File | null = null;
+  let dados: ArrayBuffer | null = null;
+  let urlSaida = '';
+  let trabalhando = false;
+  let vez = 0;
+
+  function mostrarStatus(texto: string, erro = false) {
+    status.textContent = texto;
+    status.classList.toggle('erro', erro);
+    status.classList.toggle('muted', !erro);
+  }
+
+  function invalidarSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  async function abrir(file: File) {
+    const minha = ++vez;
+    invalidarSaida();
+    arquivo = file; dados = null;
+    entrada.hidden = true;
+    cartao.hidden = false;
+    form.hidden = true;
+    mini.replaceChildren();
+    $('arq-nome').textContent = file.name;
+    $('arq-info').textContent = 'Abrindo…';
+    $('arq-info').classList.remove('erro');
+    try {
+      const buf = await file.arrayBuffer();
+      const situacao = await examinar(buf);
+      if (minha !== vez) return;
+      if (situacao.tipo !== 'livre') {
+        throw new ErroPdf(situacao.tipo === 'senha'
+          ? 'Este PDF já tem senha. Para trocar, tire a senha antes no "Remover senha de PDF".'
+          : 'Este PDF já tem restrições de impressão ou cópia. Tire a proteção antes no "Remover senha de PDF".');
+      }
+      dados = buf;
+      $('arq-info').textContent = `${situacao.paginas} ${situacao.paginas === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      form.hidden = false;
+      mostrarStatus('');
+      senha.focus();
+      const doc = await abrirParaVer(buf);
+      try { if (minha === vez) mini.append(await miniatura(doc, 1, 64)); }
+      finally { fecharPdf(doc); }
+    } catch (e) {
+      if (minha !== vez) return;
+      if (!dados) {
+        $('arq-info').textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este arquivo.';
+        $('arq-info').classList.add('erro');
+      }
+      // Sem miniatura o arquivo ainda pode ser protegido.
+    }
+  }
+
+  $('trocar').addEventListener('click', () => {
+    vez++;
+    invalidarSaida();
+    arquivo = null; dados = null;
+    cartao.hidden = true; form.hidden = true; entrada.hidden = false;
+    mostrarStatus('');
+    $('entrada-input').focus();
+  });
+
+  entrada.addEventListener('arquivos', (e) => {
+    const files = (e as CustomEvent<File[]>).detail;
+    const pdf = files.find((f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+    if (pdf) abrir(pdf);
+    else { entrada.hidden = false; cartao.hidden = true; form.hidden = true; }
+  });
+
+  function atualizarForca() {
+    const f = forcaDaSenha(senha.value);
+    forca.dataset.nivel = senha.value ? String(f.nivel) : '';
+    forcaTexto.textContent = senha.value ? `${f.rotulo}. ${f.dica}` : DICA_INICIAL;
+  }
+  senha.addEventListener('input', () => { atualizarForca(); invalidarSaida(); mostrarStatus(''); });
+  senha2.addEventListener('input', () => { invalidarSaida(); mostrarStatus(''); });
+  form.addEventListener('change', invalidarSaida);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!dados || !arquivo || trabalhando) return;
+    if (!senha.value) { mostrarStatus('Digite uma senha.', true); senha.focus(); return; }
+    if (senha.value !== senha2.value) { mostrarStatus('As duas senhas não são iguais. Confira e digite de novo.', true); senha2.focus(); return; }
+    trabalhando = true;
+    botao.disabled = true;
+    invalidarSaida();
+    mostrarStatus('Protegendo…');
+    try {
+      const { bytes, paginas } = await proteger(dados, {
+        senha: senha.value,
+        algoritmo: $<HTMLSelectElement>('algoritmo').value as Algoritmo,
+        permissoes: {
+          imprimir: $<HTMLInputElement>('p-imprimir').checked,
+          copiar: $<HTMLInputElement>('p-copiar').checked,
+          editar: $<HTMLInputElement>('p-editar').checked,
+        },
+      });
+      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = nomeComSufixo(arquivo.name, 'protegido');
+      const alg = $<HTMLSelectElement>('algoritmo').value === 'AES-128' ? 'AES 128 bits' : 'AES 256 bits';
+      $('saida-info').textContent = `${paginas} ${paginas === 1 ? 'página' : 'páginas'} · ${tamanho(blob.size)} · ${alg}. Guarde a senha: sem ela, não há como abrir.`;
+      saida.hidden = false;
+      mostrarStatus('Pronto!');
+    } catch (err) {
+      mostrarStatus(err instanceof ErroPdf ? err.message : 'Não foi possível proteger o arquivo. Pode faltar memória no aparelho.', true);
+    } finally {
+      trabalhando = false;
+      botao.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .arquivo {
+    display: flex; align-items: center; gap: 14px; padding: 12px 14px; min-width: 0;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    animation: surgir 0.25s var(--suave);
+  }
+  .mini { flex: none; width: 64px; height: 84px; display: grid; place-items: center; background: var(--bg); border-radius: 6px; overflow: hidden; }
+  .mini :global(canvas) { max-width: 100%; max-height: 100%; width: auto; height: auto; box-shadow: var(--sombra); }
+  .dados { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .dados strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .trocar { flex: none; padding: 6px 12px; font-size: 0.9rem; }
+  .senhas { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); align-items: start; }
+  .forca { display: flex; flex-direction: column; gap: 6px; margin-top: -8px; }
+  .forca small { color: var(--muted); font-size: 0.85rem; min-height: 2.6em; }
+  .barras { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+  .barras i { height: 5px; border-radius: 3px; background: var(--line); transform-origin: left; transition: background-color 0.2s var(--suave), transform 0.25s var(--mola); }
+  .forca[data-nivel='0'] i:nth-child(-n+1) { background: var(--erro); }
+  .forca[data-nivel='1'] i:nth-child(-n+2) { background: var(--brand); }
+  .forca[data-nivel='2'] i:nth-child(-n+3) { background: var(--ok); }
+  .forca[data-nivel='3'] i { background: var(--ok); }
+  .avancado { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  .avancado summary { cursor: pointer; padding: 12px 14px; font-weight: 600; }
+  .opcoes { padding: 0 14px 14px; }
+  fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  fieldset label { display: flex; align-items: center; gap: 8px; }
+  fieldset input { width: 18px; height: 18px; accent-color: var(--brand); flex: none; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida > div { flex: 1 1 240px; min-width: 0; }
+  .saida span { color: var(--muted); }
+</style>
