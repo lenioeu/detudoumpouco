@@ -1,0 +1,405 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import EditorPaginas from '../../components/EditorPaginas.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="ocultar-dados-pdf"
+  titulo="Ocultar informações do PDF"
+  subtitulo="Cubra CPF, endereço, valores e assinaturas com tarja preta e apague de verdade o que está embaixo, antes de compartilhar o documento. Tudo no seu navegador."
+  tituloSeo="Ocultar dados do PDF: tarja preta que apaga de verdade"
+  descricao="Tarje CPF, telefone, e-mail e outros dados do PDF grátis. O conteúdo coberto é apagado de verdade, não só escondido. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Se quiser, use "Procurar dados" para achar CPF, CNPJ, e-mail, telefone ou uma palavra e cobrir tudo de uma vez.',
+    'Com "Tarja", arraste por cima de cada trecho que deve sumir. Com "Mover", ajuste, aumente ou apague as tarjas.',
+    'Confira as páginas e clique em "Salvar PDF com tarjas". As páginas com tarja viram imagem; as outras ficam como estão.',
+  ]}
+  perguntas={[
+    { p: 'Colocar um retângulo preto no PDF esconde o texto?', r: 'Só na aparência. Na maioria dos editores, a tarja é uma forma desenhada por cima, e o texto continua no arquivo: dá para selecionar, copiar ou buscar e ler tudo. Aqui é diferente: as páginas com tarja são refeitas como imagem já com a tarja, e o texto original delas deixa de existir no arquivo.' },
+    { p: 'Por que a página com tarja vira imagem?', r: 'Porque é o jeito garantido de apagar o que estava embaixo. Remover só as letras cobertas exigiria mexer na estrutura interna de cada PDF, e um erro deixaria dados para trás. Com a página redesenhada, não sobra texto escondido. O lado ruim é que o texto daquela página deixa de ser selecionável.' },
+    { p: 'Como tarjar CPF em PDF?', r: 'Abra o arquivo, deixe marcado "CPF" em "Procurar dados" e clique em Procurar. Cada CPF encontrado ganha uma tarja. Confira as páginas, ajuste o que precisar e salve. Em documentos escaneados a busca não funciona, porque não há texto: nesse caso, desenhe as tarjas à mão.' },
+    { p: 'A busca acha todos os dados?', r: 'Ela acha o que está escrito como texto no PDF, no formato mais comum (como 123.456.789-09 ou (11) 98765-4321). Números quebrados em pedaços, escritos por extenso ou dentro de imagens podem passar. Por isso, olhe todas as páginas antes de salvar.' },
+    { p: 'O arquivo fica maior ou com pior qualidade?', r: 'As páginas com tarja ficam um pouco maiores e perdem a nitidez perfeita do texto, como numa digitalização boa. Na qualidade Alta, a leitura e a impressão ficam ótimas. As páginas sem tarja são copiadas sem nenhuma mudança.' },
+    { p: 'O documento é enviado para algum servidor?', r: 'Não. A busca, as tarjas e o arquivo novo são feitos no seu navegador. É o mais seguro para documentos que você está justamente tentando proteger.' },
+  ]}
+>
+  <div class="stack">
+    <div id="zona"><SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" /></div>
+    <p id="aviso" class="erro" role="alert" hidden></p>
+    <p id="carregando" class="muted" aria-live="polite" hidden>Abrindo o PDF…</p>
+
+    <div id="painel" class="stack" hidden>
+      <div class="topo-o">
+        <p id="info" class="muted"></p>
+        <button id="outro" type="button" class="btn btn-sec">Abrir outro PDF</button>
+      </div>
+
+      <p class="alerta"><strong>Importante:</strong> as páginas que tiverem tarja são refeitas como imagem, para apagar de verdade o que está embaixo. O texto dessas páginas deixa de ser selecionável. As demais páginas ficam como estão.</p>
+
+      <details class="busca" id="busca" open>
+        <summary>Procurar dados</summary>
+        <div class="stack busca-corpo">
+          <div class="tipos" role="group" aria-label="O que procurar">
+            <label class="chip"><input type="checkbox" name="tipo" value="cpf" checked /> CPF</label>
+            <label class="chip"><input type="checkbox" name="tipo" value="cnpj" checked /> CNPJ</label>
+            <label class="chip"><input type="checkbox" name="tipo" value="email" checked /> E-mail</label>
+            <label class="chip"><input type="checkbox" name="tipo" value="telefone" checked /> Telefone</label>
+            <label class="chip"><input type="checkbox" name="tipo" value="rg" /> RG</label>
+            <label class="chip"><input type="checkbox" name="tipo" value="cep" /> CEP</label>
+          </div>
+          <div class="campo">
+            <label for="termo">Palavra ou nome (opcional)</label>
+            <input id="termo" type="text" placeholder="Ex.: Maria Souza, salário, nº da conta" />
+          </div>
+          <div class="enviar">
+            <button id="procurar" type="button" class="btn btn-sec">Procurar e cobrir</button>
+            <span id="achados" class="muted" aria-live="polite"></span>
+          </div>
+        </div>
+      </details>
+
+      <div class="barra-o" role="toolbar" aria-label="Ferramentas de tarja">
+        <button type="button" class="ferr" data-ferramenta="tarja" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="1" class="cheio"/></svg><span>Tarja</span>
+        </button>
+        <button type="button" class="ferr" data-ferramenta="mover" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3l13 7.5-5.5 1.5L10 18z"/></svg><span>Mover</span>
+        </button>
+        <span class="espaco"></span>
+        <button id="desfazer" type="button" class="ferr" disabled aria-label="Desfazer" title="Desfazer (Ctrl+Z)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span>Desfazer</span>
+        </button>
+        <button id="apagar" type="button" class="ferr" disabled aria-label="Apagar a tarja selecionada" title="Apagar (Delete)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg><span>Apagar</span>
+        </button>
+        <p id="dica" class="dica muted" aria-live="polite"></p>
+      </div>
+
+      <EditorPaginas id="paginas" />
+
+      <div class="campo qualidade">
+        <label for="qualidade">Qualidade das páginas com tarja</label>
+        <select id="qualidade">
+          <option value="150">Normal (150 dpi): arquivo menor</option>
+          <option value="220" selected>Alta (220 dpi): boa para imprimir</option>
+          <option value="300">Máxima (300 dpi): arquivo maior</option>
+        </select>
+      </div>
+      <div class="enviar">
+        <button id="salvar" type="button" class="btn">Salvar PDF com tarjas</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+      <div id="saida" class="resultado saida" hidden>
+        <div><strong>PDF com tarjas pronto</strong><span id="saida-info" class="muted"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que uma tarja comum não basta</h2>
+    <p>Já aconteceu com tribunais, empresas e órgãos públicos: alguém cobre o CPF de um documento com um retângulo preto, publica o PDF, e qualquer pessoa seleciona a área, copia e cola o número num bloco de notas. Isso acontece porque, num PDF, a tarja desenhada é só mais uma camada por cima. O texto continua lá, inteiro, para quem souber procurar. Esta ferramenta resolve o problema pela raiz: cada página que recebe tarja é redesenhada como imagem, com as tarjas já aplicadas, e entra no arquivo novo no lugar da original. Não sobra nenhuma letra escondida.</p>
+    <h2>Quando usar</h2>
+    <ul>
+      <li>Mandar um holerite ou extrato como comprovante de renda sem expor o número da conta.</li>
+      <li>Publicar uma ata, um contrato ou um processo com nomes e documentos de terceiros protegidos, como pede a LGPD.</li>
+      <li>Enviar o print de uma conversa ou de um boleto sem mostrar telefone, endereço ou código de barras.</li>
+      <li>Compartilhar uma prova ou um relatório escondendo notas e valores de outras pessoas.</li>
+    </ul>
+    <h2>Dicas</h2>
+    <p>A busca automática ajuda a não esquecer nada, mas confira página por página: um CPF pode estar quebrado em dois pedaços ou escrito sem pontos, e assinaturas e fotos não são texto. Cubra com folga, pegando um pouco além do dado. Use "Alta" se o documento vai ser impresso. O arquivo novo também sai sem as informações internas do original, como autor, título e programa usado, que às vezes revelam mais do que se imagina. Se você só quer destacar ou escrever no PDF, sem esconder nada, use o <a href="/pdf/editar-pdf">Editar PDF</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, desenharPagina, fecharPdf, novoPdf, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { criarEditor, type Editor, type Ferramenta, type ObjTarja } from '../../lib/editor-paginas';
+  import { NOMES_DADOS, acharDados, caixaDoTrecho, normalizarGiro, tamanhoNaTela, type GeometriaPagina, type TipoDado } from '../../lib/editor-pdf';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const zona = $('zona');
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const carregando = $('carregando');
+  const painel = $('painel');
+  const raiz = $('paginas');
+  const dica = $('dica');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const btDesfazer = $<HTMLButtonElement>('desfazer');
+  const btApagar = $<HTMLButtonElement>('apagar');
+
+  let editor: Editor | null = null;
+  let visor: DocumentoPdfJs | null = null;
+  let dados: ArrayBuffer | null = null;
+  let geometrias: GeometriaPagina[] = [];
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let urlSaida = '';
+  let sujo = false;
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+    status.textContent = '';
+  }
+
+  const tarjas = () => (editor?.objetos() ?? []).filter((o): o is ObjTarja => o.tipo === 'tarja');
+
+  function atualizar() {
+    if (!editor) return;
+    const f = editor.ferramenta;
+    document.querySelectorAll<HTMLButtonElement>('.ferr[data-ferramenta]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ferramenta === f)));
+    btDesfazer.disabled = !editor.podeDesfazer;
+    btApagar.disabled = !editor.selecionado;
+    const t = tarjas();
+    const paginas = new Set(t.map((o) => o.pagina)).size;
+    dica.textContent = editor.selecionado ? 'Arraste para mover. A bolinha muda o tamanho; o X apaga.'
+      : f === 'tarja' ? 'Arraste por cima do que deve sumir. Para rolar no celular, toque em Mover.'
+      : 'Toque numa tarja para ajustar ou apagar.';
+    $<HTMLButtonElement>('salvar').textContent = t.length ? `Salvar PDF com ${t.length} ${t.length === 1 ? 'tarja' : 'tarjas'}` : 'Salvar PDF com tarjas';
+    status.textContent = t.length ? `${paginas} ${paginas === 1 ? 'página vai virar imagem' : 'páginas vão virar imagem'}.` : '';
+  }
+
+  function fechar() {
+    editor?.destruir(); editor = null;
+    fecharPdf(visor); visor = null;
+    dados = null; sujo = false;
+    $('achados').textContent = '';
+    limparSaida();
+  }
+
+  async function carregar(file: File) {
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    const minha = ++rodada;
+    fechar();
+    aviso.hidden = true; painel.hidden = true; carregando.hidden = false;
+    try {
+      const buf = await file.arrayBuffer();
+      await abrirParaEditar(buf);
+      const v = await abrirParaVer(buf);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      const geos: GeometriaPagina[] = [];
+      for (let i = 1; i <= v.numPages; i++) {
+        const p = await v.getPage(i);
+        geos.push({ caixa: [...p.view] as GeometriaPagina['caixa'], giro: normalizarGiro(p.rotate) });
+      }
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v; dados = buf; geometrias = geos;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      $('info').textContent = `${file.name} · ${v.numPages} ${v.numPages === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      zona.hidden = true; carregando.hidden = true; painel.hidden = false;
+      editor = criarEditor({
+        raiz,
+        paginas: geos.map(tamanhoNaTela),
+        desenhar: async (i, larguraPx) => (await desenharPagina(v, i + 1, larguraPx / tamanhoNaTela(geos[i]).largura)).canvas,
+        ferramentas: ['mover', 'tarja'],
+        aoSelecionar: atualizar,
+        aoMudar: () => { sujo = true; limparSaida(); atualizar(); },
+      });
+      editor.definirFerramenta('tarja');
+      atualizar();
+    } catch (e) {
+      if (minha !== rodada) return;
+      carregando.hidden = true;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  /**
+   * Em que fração da largura do texto fica o caractere `pos`. Mede com uma fonte parecida
+   * (letras como "i" e "m" têm larguras bem diferentes); sem canvas, conta caracteres.
+   */
+  const medidor = document.createElement('canvas').getContext('2d');
+  function fracao(texto: string, pos: number, familia: string): number {
+    if (pos <= 0) return 0;
+    if (pos >= texto.length) return 1;
+    if (!medidor) return pos / texto.length;
+    medidor.font = `100px ${familia}`;
+    const total = medidor.measureText(texto).width;
+    return total ? medidor.measureText(texto.slice(0, pos)).width / total : pos / texto.length;
+  }
+
+  /** Procura os dados no texto de cada página e põe uma tarja em cada achado. */
+  async function procurar() {
+    if (!editor || !visor) return;
+    const tipos = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="tipo"]:checked')).map((i) => i.value as TipoDado);
+    const termo = $<HTMLInputElement>('termo').value;
+    if (termo.trim()) tipos.push('busca');
+    const saidaAchados = $('achados');
+    if (!tipos.length) { saidaAchados.textContent = 'Marque pelo menos um tipo de dado ou digite uma palavra.'; return; }
+    const botao = $<HTMLButtonElement>('procurar');
+    botao.disabled = true;
+    saidaAchados.textContent = 'Procurando…';
+    const contagem = new Map<TipoDado, number>();
+    // Não repete tarja onde já existe uma igual (procurar duas vezes não duplica).
+    const existentes = new Set(tarjas().map((t) => `${t.pagina}:${Math.round(t.x)}:${Math.round(t.y)}`));
+    let semTexto = 0, novas = 0;
+    try {
+      for (let i = 0; i < visor.numPages; i++) {
+        const pagina = await visor.getPage(i + 1);
+        const conteudo = await pagina.getTextContent();
+        const itens = conteudo.items.filter((it): it is Extract<typeof it, { str: string }> => 'str' in it && !!it.str);
+        if (!itens.length) { semTexto++; continue; }
+        for (const it of itens) {
+          const familia = conteudo.styles[it.fontName]?.fontFamily ?? 'sans-serif';
+          const tam = Math.hypot(it.transform[2], it.transform[3]) || 10;
+          for (const a of acharDados(it.str, tipos, termo)) {
+            const c = caixaDoTrecho(geometrias[i], it.transform, it.width, fracao(it.str, a.inicio, familia), fracao(it.str, a.fim, familia), Math.max(1.5, tam * 0.15));
+            const chave = `${i}:${Math.round(c.x)}:${Math.round(c.y)}`;
+            contagem.set(a.tipo, (contagem.get(a.tipo) ?? 0) + 1);
+            if (existentes.has(chave)) continue;
+            existentes.add(chave);
+            editor.adicionar({ tipo: 'tarja', pagina: i, x: c.x, y: c.y, w: c.w, h: c.h }, novas === 0);
+            novas++;
+          }
+        }
+        pagina.cleanup();
+      }
+      const partes = Array.from(contagem, ([t, n]) => `${n} ${NOMES_DADOS[t]}${n > 1 && t !== 'busca' ? 's' : ''}`);
+      let msg = partes.length ? `Encontrado: ${partes.join(', ')}.` : 'Nada encontrado no texto do PDF.';
+      if (novas) msg += ` ${novas} ${novas === 1 ? 'tarja colocada' : 'tarjas colocadas'}. Confira as páginas.`;
+      else if (partes.length) msg += ' Já estavam cobertos.';
+      if (semTexto === visor.numPages) msg = 'Este PDF não tem texto (parece escaneado). Desenhe as tarjas à mão.';
+      else if (semTexto) msg += ` ${semTexto} ${semTexto === 1 ? 'página não tem' : 'páginas não têm'} texto para procurar.`;
+      saidaAchados.textContent = msg;
+      const primeira = tarjas()[0];
+      if (novas && primeira) editor.pagina(primeira.pagina)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    } catch {
+      saidaAchados.textContent = 'Não foi possível ler o texto deste PDF.';
+    } finally {
+      botao.disabled = false;
+      atualizar();
+    }
+  }
+
+  async function salvar() {
+    if (!editor || !visor || !dados) return;
+    editor.terminarEdicao();
+    const dpi = Number($<HTMLSelectElement>('qualidade').value) || 220;
+    const original = await abrirParaEditar(dados);
+    const novo = await novoPdf();
+    const porPagina = new Map<number, ObjTarja[]>();
+    for (const t of tarjas()) porPagina.set(t.pagina, [...(porPagina.get(t.pagina) ?? []), t]);
+    const total = visor.numPages;
+    let reduzidas = 0;
+    for (let i = 0; i < total; i++) {
+      const lista = porPagina.get(i);
+      if (!lista) {
+        const [copia] = await novo.copyPages(original, [i]);
+        novo.addPage(copia);
+        continue;
+      }
+      status.textContent = `Redesenhando a página ${i + 1} de ${total}…`;
+      const t = tamanhoNaTela(geometrias[i]);
+      const { canvas, reduzida } = await desenharPagina(visor, i + 1, dpi / 72);
+      if (reduzida) reduzidas++;
+      const ctx = canvas.getContext('2d')!;
+      const k = canvas.width / t.largura;
+      ctx.fillStyle = '#000';
+      for (const o of lista) ctx.fillRect(Math.floor(o.x * k), Math.floor(o.y * k), Math.ceil(o.w * k) + 1, Math.ceil(o.h * k) + 1);
+      const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, 'image/jpeg', 0.88));
+      canvas.width = 0; canvas.height = 0;
+      if (!blob) throw new ErroPdf('Não foi possível redesenhar a página. Tente a qualidade Normal.');
+      const img = await novo.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+      const pg = novo.addPage([t.largura, t.altura]);
+      pg.drawImage(img, { x: 0, y: 0, width: t.largura, height: t.altura });
+    }
+    const bytes = await novo.save();
+    return { bytes, paginas: porPagina.size, reduzidas };
+  }
+
+  $('salvar').addEventListener('click', async () => {
+    if (!editor) return;
+    const botao = $<HTMLButtonElement>('salvar');
+    if (!tarjas().length) { status.textContent = 'Desenhe pelo menos uma tarja antes de salvar.'; return; }
+    botao.disabled = true;
+    limparSaida();
+    try {
+      const r = await salvar();
+      if (!r) return;
+      urlSaida = URL.createObjectURL(new Blob([r.bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' }));
+      baixar.href = urlSaida;
+      baixar.download = `${nomeBase}-tarjado.pdf`;
+      $('saida-info').textContent = `${r.paginas} ${r.paginas === 1 ? 'página refeita como imagem' : 'páginas refeitas como imagem'} · ${tamanho(r.bytes.length)}`
+        + (r.reduzidas ? ` · ${r.reduzidas} em resolução menor, por limite de memória do aparelho` : '');
+      saida.hidden = false;
+      status.textContent = '';
+      sujo = false;
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível salvar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      botao.disabled = false;
+    }
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('.ferr[data-ferramenta]').forEach((b) => b.addEventListener('click', () => {
+    editor?.definirFerramenta(b.dataset.ferramenta as Ferramenta);
+    atualizar();
+  }));
+  btDesfazer.addEventListener('click', () => { editor?.desfazer(); atualizar(); });
+  btApagar.addEventListener('click', () => { editor?.apagarSelecionado(); atualizar(); });
+  $('procurar').addEventListener('click', procurar);
+  $('termo').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); procurar(); } });
+  $('qualidade').addEventListener('change', limparSaida);
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  $('outro').addEventListener('click', () => $<HTMLInputElement>('entrada-input').click());
+  addEventListener('beforeunload', (e) => { if (sujo && tarjas().length) { e.preventDefault(); e.returnValue = ''; } });
+</script>
+
+<style>
+  .topo-o { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+  .topo-o .btn { padding: 7px 14px; font-size: 0.95rem; }
+  .topo-o p { overflow-wrap: anywhere; }
+  .alerta { background: var(--brand-soft); border-radius: var(--radius); padding: 12px 14px; font-size: 0.95rem; }
+
+  .busca { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; }
+  .busca summary { cursor: pointer; font-weight: 700; font-family: var(--f-display); }
+  .busca-corpo { padding-top: 12px; }
+  .tipos { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--surface);
+    transition: border-color 0.15s, background-color 0.15s, transform 0.2s var(--mola);
+  }
+  .chip:has(input:checked) { border-color: var(--fg); background: var(--brand-soft); font-weight: 600; }
+  .chip:active { transform: scale(0.97); }
+  .chip input { width: 16px; height: 16px; margin: 0; accent-color: var(--fg); }
+
+  .barra-o {
+    position: sticky; top: calc(var(--altura-topo) + 16px); z-index: 5;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; padding: 6px 8px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--sombra-alta);
+  }
+  .ferr {
+    display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 4px 12px; cursor: pointer;
+    font: 600 0.9rem var(--f-body); color: var(--fg); background: transparent;
+    border: 1.5px solid transparent; border-radius: 8px;
+    transition: transform 0.18s var(--mola), background-color 0.15s, border-color 0.15s;
+  }
+  .ferr:hover:not(:disabled) { background: var(--bg); }
+  .ferr:active:not(:disabled) { transform: scale(0.94); }
+  .ferr[aria-pressed='true'] { background: var(--brand-soft); border-color: var(--fg); }
+  .ferr:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ferr svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .ferr svg .cheio { fill: currentColor; }
+  .espaco { flex: 1; }
+  .dica { flex: 1 1 100%; font-size: 0.85rem; line-height: 1.35; min-height: 1.35em; padding-inline: 4px; }
+  .qualidade { max-width: 360px; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida strong { font-size: 1.25rem; }
+  .saida span { display: block; }
+  @media (max-width: 560px) {
+    .ferr { padding: 4px 8px; }
+    #desfazer span, #apagar span { display: none; }
+    .dica { font-size: 0.8rem; min-height: 2.7em; }
+  }
+</style>
