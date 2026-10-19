@@ -1,0 +1,615 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import GradeArquivos from '../../components/GradeArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="escanear-para-pdf"
+  titulo="Escanear para PDF"
+  subtitulo="Use a câmera do celular como scanner: fotografe as páginas, deixe com cara de documento escaneado e salve tudo num PDF só. As fotos não saem do seu aparelho."
+  tituloSeo="Escanear documento para PDF pelo celular, grátis"
+  descricao="Fotografe documentos com a câmera do celular e transforme em PDF com cara de escaneado: recorte, preto e branco e folha A4. Nada é enviado para a internet."
+  passos={[
+    'Toque em "Abrir a câmera" e fotografe as páginas em sequência, ou escolha fotos que já estão na galeria.',
+    'Arraste os cartões (ou use as setas) para acertar a ordem. Tire da lista a foto que saiu ruim.',
+    'Toque no botão de recortar de cada página para cortar a mesa em volta do papel. Gire se a foto estiver de lado.',
+    'Escolha o filtro (o "Documento" deixa o papel branco e o texto escuro), o tamanho da página e a qualidade.',
+    'Toque em "Criar PDF" e depois em "Baixar PDF".',
+  ]}
+  perguntas={[
+    { p: 'Como escanear um documento pelo celular sem aplicativo?', r: 'Abra esta página no navegador do celular e toque em "Abrir a câmera". Fotografe cada página, toque em "Concluir", recorte as bordas se precisar e toque em "Criar PDF". Não precisa instalar nada nem criar conta.' },
+    { p: 'Dá para juntar várias páginas num PDF só?', r: 'Sim. Cada foto vira uma página, na ordem dos cartões. Você pode fotografar a frente e o verso do RG, as páginas de um contrato ou várias notas fiscais e baixar um arquivo único.' },
+    { p: 'Como deixar a foto com cara de documento escaneado?', r: 'Use o filtro "Documento": ele tira a sombra do celular, deixa o fundo do papel branco por igual e escurece o texto. O filtro "Preto e branco" é ainda mais forte e gera arquivos menores, bom para textos impressos. Para carimbos e assinaturas coloridas, escolha "Cor realçada".' },
+    { p: 'A câmera não abre. O que fazer?', r: 'O navegador precisa da sua permissão para usar a câmera. Toque no cadeado ao lado do endereço do site, libere a câmera e tente de novo. Se ainda assim não abrir, use o botão "Tirar foto", que abre o aplicativo de câmera do celular, ou escolha fotos da galeria.' },
+    { p: 'O PDF escaneado é aceito em sites do governo e de bancos?', r: 'Na maioria dos casos, sim: o arquivo é um PDF comum, com uma imagem por página. Se o site tiver limite de tamanho, escolha a qualidade "Menor" ou o filtro "Preto e branco", que deixam o arquivo bem mais leve.' },
+    { p: 'As fotos dos meus documentos são enviadas para algum servidor?', r: 'Não. A câmera, os filtros e a montagem do PDF funcionam dentro do navegador, no seu aparelho. Nenhuma foto é enviada para a internet, nem para nós.' },
+  ]}
+>
+  <div class="stack">
+    <div class="captura">
+      <div class="captura-texto">
+        <strong>Fotografar agora</strong>
+        <span class="muted">Apoie o papel numa mesa escura, com boa luz e sem flash.</span>
+      </div>
+      <div class="captura-botoes">
+        <button id="abrir-camera" type="button" class="btn">Abrir a câmera</button>
+        <input id="foto-input" class="escondido" type="file" accept="image/*" capture="environment" />
+        <label for="foto-input" class="btn btn-sec">Tirar foto</label>
+      </div>
+    </div>
+    <p id="camera-erro" class="erro" role="alert" hidden></p>
+
+    <div id="visor-bloco" class="visor-bloco" hidden>
+      <div class="visor">
+        <video id="video" playsinline muted></video>
+        <span id="flash" class="flash" aria-hidden="true"></span>
+      </div>
+      <div class="visor-acoes">
+        <span id="contagem" class="contagem muted" aria-live="polite">Nenhuma foto ainda</span>
+        <button id="fotografar" type="button" class="obturador" aria-label="Fotografar esta página"><span></span></button>
+        <button id="concluir" type="button" class="btn btn-sec">Concluir</button>
+      </div>
+    </div>
+
+    <SoltarArquivos id="entrada" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple texto="Escolher fotos" dica="ou arraste e solte aqui · fotos da galeria ou do computador" />
+
+    <GradeArquivos id="lista" rotulo="Páginas na ordem do PDF" />
+
+    <div id="editor" class="editor" hidden>
+      <div class="editor-topo">
+        <strong id="editor-titulo">Recortar página</strong>
+        <span class="muted">Arraste os cantos até a borda do papel.</span>
+      </div>
+      <div class="palco">
+        <canvas id="ed-canvas" aria-hidden="true"></canvas>
+        <div id="caixa" class="caixa" data-alca="mover" tabindex="0" role="group"
+             aria-label="Área de recorte. Use as setas para mover e Shift com as setas para mudar o tamanho.">
+          <span class="alca" data-alca="no" aria-hidden="true"></span>
+          <span class="alca" data-alca="ne" aria-hidden="true"></span>
+          <span class="alca" data-alca="so" aria-hidden="true"></span>
+          <span class="alca" data-alca="se" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="editor-acoes">
+        <button id="ed-girar" type="button" class="btn btn-sec">Girar 90°</button>
+        <button id="ed-tudo" type="button" class="btn btn-sec">Foto inteira</button>
+        <button id="ed-fechar" type="button" class="btn">Pronto</button>
+      </div>
+    </div>
+
+    <div class="opcoes">
+      <div class="campo">
+        <label for="filtro">Filtro</label>
+        <select id="filtro">
+          <option value="documento" selected>Documento (cinza com contraste)</option>
+          <option value="pb">Preto e branco (arquivo menor)</option>
+          <option value="cor">Cor realçada</option>
+          <option value="original">Original (sem filtro)</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="tamanho">Tamanho da página</label>
+        <select id="tamanho">
+          <option value="a4" selected>A4 (210 × 297 mm)</option>
+          <option value="foto">Mesmo formato da foto</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="qualidade">Qualidade</label>
+        <select id="qualidade">
+          <option value="menor">Menor (para e-mail e WhatsApp)</option>
+          <option value="normal" selected>Normal</option>
+          <option value="alta">Alta (para imprimir)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="enviar">
+      <button id="criar" type="button" class="btn" disabled>Criar PDF</button>
+      <span id="status" class="muted" aria-live="polite">Fotografe ou escolha as páginas.</span>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div>
+        <strong id="saida-titulo"></strong>
+        <span id="saida-info"></span>
+      </div>
+      <a id="baixar" class="btn" download="documento-escaneado.pdf" href="#">Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O celular como scanner de bolso</h2>
+    <p>Nem todo mundo tem scanner em casa, mas quase todo mundo tem um celular com câmera boa. O problema é que a foto de um documento costuma sair com a mesa aparecendo em volta, uma sombra do próprio celular no meio da folha e o papel meio amarelado. Esta ferramenta resolve isso em três passos: você recorta só a folha, o filtro corrige a luz e o PDF sai com uma página por foto, pronto para anexar.</p>
+    <p>É o caminho mais curto para mandar a frente e o verso do RG para abrir uma conta, enviar o comprovante de residência para o RH, entregar o atestado na escola ou guardar as notas fiscais do mês para o imposto de renda.</p>
+    <h2>Qual filtro escolher</h2>
+    <ul>
+      <li><strong>Documento:</strong> o padrão. Deixa o papel branco por igual, mesmo com sombra de um lado, e o texto bem escuro em tons de cinza. Serve para contratos, boletos, receitas e formulários.</li>
+      <li><strong>Preto e branco:</strong> só preto e branco, como uma fotocópia. O arquivo fica bem menor e o texto impresso fica muito nítido. Evite em documentos com foto, porque o rosto perde os detalhes.</li>
+      <li><strong>Cor realçada:</strong> corrige a luz, mas mantém as cores. Use quando a assinatura de caneta azul, um carimbo ou um selo colorido precisam aparecer.</li>
+      <li><strong>Original:</strong> a foto do jeito que saiu, só recortada. Bom para fotos de objetos ou quando o documento já foi fotografado com cuidado.</li>
+    </ul>
+    <h2>Dicas para a foto sair boa</h2>
+    <p>Coloque a folha numa superfície mais escura que o papel, como uma mesa de madeira: o contraste ajuda você a ver a borda na hora de recortar. Fique perto de uma janela durante o dia e evite o flash, que cria um reflexo branco no meio da página. Segure o celular paralelo à folha, bem de cima, para as linhas não ficarem tortas. Se a foto tremeu, tire da lista e fotografe de novo: é mais rápido do que tentar salvar uma imagem borrada.</p>
+    <p>O tamanho A4 é o mais seguro para imprimir. Já o "mesmo formato da foto" evita as bordas brancas e fica melhor para cupons, recibos estreitos e cartões. Se precisar juntar o resultado com outro arquivo, use o <a href="/pdf/juntar-pdf">Juntar PDF</a>; se o site pedir um arquivo ainda menor, passe pelo <a href="/pdf/comprimir-pdf">Comprimir PDF</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { ehHeic, arrastarRecorte, type Alca, type Retangulo, type Tamanho } from '../../lib/imagem';
+  import { desenhar, codificar, novoCanvas } from '../../lib/canvas';
+  import { novoPdf, paraBlob } from '../../lib/pdf-navegador';
+  import { criarCartao, numerar } from '../../lib/cartao-arquivo';
+  import { animarTroca, mover, ordenavel } from '../../lib/ordenavel';
+  import {
+    aplicarFiltro, fracaoEmPixels, girarFracao, girarFracaoVezes, paginaDoScan, pixelsEmFracao, tamanhoDeSaida,
+    FOTO_INTEIRA, QUALIDADES, type Filtro, type Fracao, type QualidadeScan, type TamanhoScan,
+  } from '../../lib/escanear';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const fotoInput = $<HTMLInputElement>('foto-input');
+  const abrirCamera = $<HTMLButtonElement>('abrir-camera');
+  const cameraErro = $('camera-erro');
+  const visorBloco = $('visor-bloco');
+  const video = $<HTMLVideoElement>('video');
+  const flash = $('flash');
+  const contagem = $('contagem');
+  const fotografar = $<HTMLButtonElement>('fotografar');
+  const lista = $('lista');
+  const editor = $('editor');
+  const edCanvas = $<HTMLCanvasElement>('ed-canvas');
+  const caixa = $('caixa');
+  const filtro = $<HTMLSelectElement>('filtro');
+  const tamanhoPag = $<HTMLSelectElement>('tamanho');
+  const qualidade = $<HTMLSelectElement>('qualidade');
+  const botao = $<HTMLButtonElement>('criar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  /** Lado maior da cópia reduzida usada no editor e nas miniaturas. */
+  const LADO_PREVIA = 1100;
+  const LADO_MINI = 240;
+  const poucoMovimento = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  interface Pagina {
+    id: string; file: File; li: HTMLLIElement;
+    previa?: HTMLCanvasElement; largura?: number; altura?: number;
+    rot: number; recorte: Fracao; erro?: string;
+  }
+  let paginas: Pagina[] = [];
+  let contador = 0;
+  let fotosDaCamera = 0;
+  let urlSaida = '';
+  let trabalhando = false;
+  let editando: Pagina | null = null;
+
+  // ---------- Abrir fotos (com HEIC) ----------
+  type Heic2any = (o: { blob: Blob; toType?: string; quality?: number }) => Promise<Blob | Blob[]>;
+  let conversor: Promise<Heic2any> | null = null;
+  function carregarConversor(): Promise<Heic2any> {
+    if (!conversor) {
+      conversor = import('heic2any').then((m) => m.default as unknown as Heic2any);
+      conversor.catch(() => { conversor = null; });
+    }
+    return conversor;
+  }
+
+  /** Abre a foto já em pé (o navegador aplica a orientação gravada pela câmera). */
+  async function decodificar(file: File): Promise<ImageBitmap> {
+    try { return await createImageBitmap(file); } catch { /* pode ser HEIC */ }
+    if (!ehHeic(file.name, file.type)) throw new Error('Não foi possível abrir esta imagem.');
+    status.textContent = 'Carregando o conversor de HEIC (só na primeira vez)…';
+    const heic2any = await carregarConversor();
+    const r = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+    return createImageBitmap(Array.isArray(r) ? r[0] : r);
+  }
+
+  // ---------- Montar uma página (recorte, giro e filtro) ----------
+  function girarCanvas(fonte: HTMLCanvasElement, rot: number): HTMLCanvasElement {
+    if (!rot) return fonte;
+    const virar = rot % 180 !== 0;
+    const c = novoCanvas(virar ? fonte.height : fonte.width, virar ? fonte.width : fonte.height);
+    const ctx = c.getContext('2d')!;
+    ctx.translate(c.width / 2, c.height / 2);
+    ctx.rotate((rot * Math.PI) / 180);
+    ctx.drawImage(fonte, -fonte.width / 2, -fonte.height / 2);
+    return c;
+  }
+
+  /**
+   * Página pronta a partir da foto (ou da prévia). O recorte é guardado na foto já girada;
+   * aqui ele é "desgirado" para cortar a foto original e só depois a imagem pequena é girada.
+   */
+  function montar(p: Pagina, fonte: ImageBitmap | HTMLCanvasElement, ladoMax: number, f: Filtro): HTMLCanvasElement {
+    const vezes = p.rot / 90;
+    const r = fracaoEmPixels(girarFracaoVezes(p.recorte, -vezes), fonte.width, fonte.height);
+    const t = tamanhoDeSaida(r.largura, r.altura, ladoMax);
+    const cortada = desenhar(fonte as ImageBitmap, t.largura, t.altura, { recorte: r, fundo: '#ffffff' });
+    const c = girarCanvas(cortada, p.rot);
+    if (f !== 'original') {
+      const ctx = c.getContext('2d', { willReadFrequently: true })!;
+      const dados = ctx.getImageData(0, 0, c.width, c.height);
+      aplicarFiltro(dados.data, c.width, c.height, f);
+      ctx.putImageData(dados, 0, 0);
+    }
+    return c;
+  }
+
+  function desenharMiniatura(p: Pagina, animar = false) {
+    if (!p.previa) return;
+    const c = montar(p, p.previa, LADO_MINI, filtro.value as Filtro);
+    const mini = p.li.querySelector('.mini')!;
+    mini.querySelector('canvas')?.remove();
+    mini.append(c);
+    if (animar && !poucoMovimento()) c.animate([{ opacity: 0.4, transform: 'scale(0.96)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+    const t = fracaoEmPixels(girarFracaoVezes(p.recorte, -p.rot / 90), p.largura!, p.altura!);
+    const virar = p.rot % 180 !== 0;
+    p.li.querySelector('.detalhe')!.textContent = `${virar ? t.altura : t.largura} × ${virar ? t.largura : t.altura} px · ${tamanho(p.file.size)}`;
+  }
+
+  // ---------- Lista ----------
+  function invalidarSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function atualizar() {
+    numerar(lista);
+    paginas.forEach((p, i) => {
+      p.li.querySelector<HTMLButtonElement>('[data-acao="antes"]')!.disabled = i === 0;
+      p.li.querySelector<HTMLButtonElement>('[data-acao="depois"]')!.disabled = i === paginas.length - 1;
+    });
+    const validas = paginas.filter((p) => p.previa);
+    const abrindo = paginas.some((p) => !p.previa && !p.erro);
+    botao.disabled = trabalhando || abrindo || validas.length === 0;
+    if (trabalhando) return;
+    if (abrindo) status.textContent = 'Abrindo as fotos…';
+    else if (!paginas.length) status.textContent = 'Fotografe ou escolha as páginas.';
+    else if (!validas.length) status.textContent = 'Nenhuma das fotos pôde ser aberta.';
+    else status.textContent = `${validas.length} ${validas.length === 1 ? 'página' : 'páginas'} no PDF.`
+      + (validas.length < paginas.length ? ' As fotos com erro ficam de fora.' : '');
+  }
+
+  const ICONE_RECORTAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>';
+
+  let fila: Promise<unknown> = Promise.resolve();
+  function abrir(p: Pagina) {
+    fila = fila.then(async () => {
+      if (!paginas.includes(p)) return;
+      const detalhe = p.li.querySelector('.detalhe')!;
+      try {
+        const bitmap = await decodificar(p.file);
+        p.largura = bitmap.width; p.altura = bitmap.height;
+        const t = tamanhoDeSaida(bitmap.width, bitmap.height, LADO_PREVIA);
+        p.previa = desenhar(bitmap, t.largura, t.altura, { fundo: '#ffffff' });
+        bitmap.close();
+        desenharMiniatura(p);
+      } catch {
+        p.erro = 'Não foi possível abrir esta imagem.';
+        detalhe.textContent = p.erro; detalhe.classList.add('erro');
+        p.li.classList.add('com-erro');
+      }
+      atualizar();
+    });
+  }
+
+  function adicionar(files: File[]) {
+    invalidarSaida();
+    for (const file of files) {
+      const { li } = criarCartao(`p${++contador}`, file.name, { girar: true });
+      const recortar = document.createElement('button');
+      recortar.type = 'button'; recortar.className = 'acao'; recortar.dataset.acao = 'recortar';
+      recortar.setAttribute('aria-label', 'Recortar esta página'); recortar.title = 'Recortar';
+      recortar.innerHTML = ICONE_RECORTAR;
+      li.querySelector('[data-acao="remover"]')!.before(recortar);
+      const p: Pagina = { id: li.dataset.id!, file, li, rot: 0, recorte: { ...FOTO_INTEIRA } };
+      paginas.push(p);
+      lista.append(li);
+      abrir(p);
+    }
+    atualizar();
+  }
+
+  function reordenar(novas: Pagina[]) {
+    animarTroca(lista, () => { paginas = novas; lista.replaceChildren(...paginas.map((p) => p.li)); });
+    if (editando && !paginas.includes(editando)) fecharEditor();
+    invalidarSaida();
+    atualizar();
+  }
+
+  function girar(p: Pagina) {
+    p.rot = (p.rot + 90) % 360;
+    p.recorte = girarFracao(p.recorte);
+    desenharMiniatura(p, true);
+    if (editando === p) mostrarEditor(p);
+    invalidarSaida();
+  }
+
+  lista.addEventListener('click', (e) => {
+    const alvo = e.target as HTMLElement;
+    const b = alvo.closest<HTMLButtonElement>('[data-acao]');
+    const i = paginas.findIndex((p) => p.li.contains(alvo));
+    if (i < 0 || trabalhando) return;
+    const p = paginas[i];
+    const acao = b?.dataset.acao ?? (alvo.closest('.mini') ? 'recortar' : '');
+    if (acao === 'antes' && i > 0) reordenar(mover(paginas, i, i - 1));
+    else if (acao === 'depois' && i < paginas.length - 1) reordenar(mover(paginas, i, i + 1));
+    else if (acao === 'remover') reordenar(paginas.filter((_, k) => k !== i));
+    else if (acao === 'girar' && p.previa) girar(p);
+    else if (acao === 'recortar' && p.previa) mostrarEditor(p, true);
+  });
+
+  ordenavel(lista, (de, para) => { paginas = mover(paginas, de, para); invalidarSaida(); atualizar(); if (editando) mostrarTitulo(); });
+  entrada.addEventListener('arquivos', (e) => adicionar((e as CustomEvent<File[]>).detail));
+  fotoInput.addEventListener('change', () => { adicionar(Array.from(fotoInput.files ?? [])); fotoInput.value = ''; });
+  filtro.addEventListener('change', () => { invalidarSaida(); paginas.forEach((p) => desenharMiniatura(p)); });
+  for (const sel of [tamanhoPag, qualidade]) sel.addEventListener('change', invalidarSaida);
+
+  // ---------- Editor de recorte ----------
+  let img: Tamanho = { largura: 1, altura: 1 };
+  let r: Retangulo = { x: 0, y: 0, largura: 1, altura: 1 };
+
+  function mostrarTitulo() {
+    if (editando) $('editor-titulo').textContent = `Recortar a página ${paginas.indexOf(editando) + 1}`;
+  }
+
+  function desenharCaixa() {
+    caixa.style.left = `${(r.x / img.largura) * 100}%`;
+    caixa.style.top = `${(r.y / img.altura) * 100}%`;
+    caixa.style.width = `${(r.largura / img.largura) * 100}%`;
+    caixa.style.height = `${(r.altura / img.altura) * 100}%`;
+  }
+
+  function mostrarEditor(p: Pagina, rolar = false) {
+    if (!p.previa) return;
+    editando = p;
+    const c = girarCanvas(p.previa, p.rot);
+    edCanvas.width = c.width; edCanvas.height = c.height;
+    edCanvas.getContext('2d')!.drawImage(c, 0, 0);
+    img = { largura: c.width, altura: c.height };
+    r = fracaoEmPixels(p.recorte, img.largura, img.altura);
+    desenharCaixa();
+    mostrarTitulo();
+    editor.hidden = false;
+    paginas.forEach((q) => q.li.classList.toggle('editando', q === p));
+    if (rolar) editor.scrollIntoView({ behavior: poucoMovimento() ? 'auto' : 'smooth', block: 'nearest' });
+  }
+
+  function fecharEditor() {
+    editando = null;
+    editor.hidden = true;
+    paginas.forEach((q) => q.li.classList.remove('editando'));
+  }
+
+  function guardarRecorte() {
+    if (!editando) return;
+    editando.recorte = pixelsEmFracao(r, img.largura, img.altura);
+    desenharMiniatura(editando);
+    invalidarSaida();
+  }
+
+  let arraste: { alca: Alca; x0: number; y0: number; r0: Retangulo; escala: number; id: number } | null = null;
+  caixa.addEventListener('pointerdown', (e) => {
+    const alvo = (e.target as HTMLElement).closest<HTMLElement>('[data-alca]');
+    if (!alvo || e.button > 0) return;
+    e.preventDefault();
+    caixa.focus({ preventScroll: true });
+    const escala = img.largura / edCanvas.getBoundingClientRect().width;
+    arraste = { alca: alvo.dataset.alca as Alca, x0: e.clientX, y0: e.clientY, r0: { ...r }, escala, id: e.pointerId };
+    caixa.setPointerCapture(e.pointerId);
+    caixa.classList.add('ativa');
+  });
+  caixa.addEventListener('pointermove', (e) => {
+    if (!arraste || e.pointerId !== arraste.id) return;
+    const dx = (e.clientX - arraste.x0) * arraste.escala, dy = (e.clientY - arraste.y0) * arraste.escala;
+    r = arrastarRecorte(arraste.r0, arraste.alca, dx, dy, img, null, Math.max(8, Math.round(arraste.escala * 32)));
+    desenharCaixa();
+  });
+  const soltar = (e: PointerEvent) => {
+    if (!arraste || e.pointerId !== arraste.id) return;
+    arraste = null; caixa.classList.remove('ativa');
+    guardarRecorte();
+  };
+  caixa.addEventListener('pointerup', soltar);
+  caixa.addEventListener('pointercancel', soltar);
+  caixa.addEventListener('keydown', (e) => {
+    const passo = Math.max(1, Math.round(Math.max(img.largura, img.altura) / 100));
+    const d: Record<string, [number, number]> = { ArrowLeft: [-passo, 0], ArrowRight: [passo, 0], ArrowUp: [0, -passo], ArrowDown: [0, passo] };
+    const v = d[e.key];
+    if (!v) return;
+    e.preventDefault();
+    r = arrastarRecorte(r, e.shiftKey ? 'se' : 'mover', v[0], v[1], img, null, 8);
+    desenharCaixa(); guardarRecorte();
+  });
+
+  $('ed-girar').addEventListener('click', () => { if (editando) girar(editando); });
+  $('ed-tudo').addEventListener('click', () => {
+    if (!editando) return;
+    r = { x: 0, y: 0, ...img };
+    desenharCaixa(); guardarRecorte();
+  });
+  $('ed-fechar').addEventListener('click', () => {
+    const p = editando;
+    fecharEditor();
+    p?.li.scrollIntoView({ behavior: poucoMovimento() ? 'auto' : 'smooth', block: 'nearest' });
+  });
+
+  // ---------- Câmera ----------
+  let fluxo: MediaStream | null = null;
+
+  function mostrarErroCamera(msg: string) { cameraErro.textContent = msg; cameraErro.hidden = false; }
+
+  function pararCamera() {
+    fluxo?.getTracks().forEach((t) => t.stop());
+    fluxo = null;
+    video.srcObject = null;
+    visorBloco.hidden = true;
+    abrirCamera.hidden = false;
+  }
+
+  function mostrarContagem() {
+    contagem.textContent = fotosDaCamera === 0 ? 'Nenhuma foto ainda'
+      : `${fotosDaCamera} ${fotosDaCamera === 1 ? 'foto tirada' : 'fotos tiradas'}`;
+  }
+
+  abrirCamera.addEventListener('click', async () => {
+    cameraErro.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      mostrarErroCamera('Este navegador não deixa usar a câmera dentro da página. Use o botão "Tirar foto", que abre o aplicativo de câmera.');
+      return;
+    }
+    abrirCamera.disabled = true;
+    try {
+      fluxo = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 3264 }, height: { ideal: 2448 } },
+        audio: false,
+      });
+    } catch (e) {
+      const nome = (e as DOMException)?.name;
+      if (nome === 'NotAllowedError' || nome === 'SecurityError') {
+        mostrarErroCamera('A câmera não foi liberada. Toque no cadeado ao lado do endereço do site, permita a câmera e tente de novo, ou use o botão "Tirar foto".');
+      } else if (nome === 'NotFoundError' || nome === 'OverconstrainedError') {
+        mostrarErroCamera('Nenhuma câmera foi encontrada neste aparelho. Escolha fotos que já estão salvas.');
+      } else if (nome === 'NotReadableError') {
+        mostrarErroCamera('A câmera está sendo usada por outro aplicativo. Feche o outro aplicativo e tente de novo.');
+      } else {
+        mostrarErroCamera('Não foi possível ligar a câmera. Use o botão "Tirar foto" ou escolha fotos salvas.');
+      }
+      return;
+    } finally {
+      abrirCamera.disabled = false;
+    }
+    video.srcObject = fluxo;
+    visorBloco.hidden = false;
+    abrirCamera.hidden = true;
+    fotosDaCamera = 0;
+    mostrarContagem();
+    try { await video.play(); } catch { /* alguns navegadores tocam sozinhos */ }
+    visorBloco.scrollIntoView({ behavior: poucoMovimento() ? 'auto' : 'smooth', block: 'nearest' });
+  });
+
+  fotografar.addEventListener('click', () => {
+    if (!fluxo || !video.videoWidth) return;
+    const c = novoCanvas(video.videoWidth, video.videoHeight);
+    c.getContext('2d')!.drawImage(video, 0, 0);
+    if (!poucoMovimento()) flash.animate([{ opacity: 0.85 }, { opacity: 0 }], { duration: 300, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
+    navigator.vibrate?.(30);
+    const n = ++fotosDaCamera;
+    mostrarContagem();
+    c.toBlob((blob) => {
+      if (!blob) return;
+      const hora = new Date().toTimeString().slice(0, 8).replace(/:/g, '-');
+      adicionar([new File([blob], `pagina-${n}-${hora}.jpg`, { type: 'image/jpeg' })]);
+    }, 'image/jpeg', 0.92);
+  });
+
+  $('concluir').addEventListener('click', () => {
+    pararCamera();
+    lista.scrollIntoView({ behavior: poucoMovimento() ? 'auto' : 'smooth', block: 'nearest' });
+  });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && fluxo) pararCamera(); });
+  window.addEventListener('pagehide', pararCamera);
+
+  // ---------- Criar o PDF ----------
+  botao.addEventListener('click', async () => {
+    const validas = paginas.filter((p) => p.previa);
+    if (!validas.length) return;
+    trabalhando = true;
+    invalidarSaida();
+    atualizar();
+    const f = filtro.value as Filtro;
+    const q = QUALIDADES[qualidade.value as QualidadeScan];
+    const t = tamanhoPag.value as TamanhoScan;
+    try {
+      const doc = await novoPdf();
+      doc.setTitle('Documento escaneado');
+      let n = 0;
+      for (const p of validas) {
+        status.textContent = `Preparando a página ${++n} de ${validas.length}…`;
+        const bitmap = await decodificar(p.file);
+        const c = montar(p, bitmap, q.lado, f);
+        bitmap.close();
+        const blob = await codificar(c, 'image/jpeg', q.jpg);
+        const largura = c.width, altura = c.height;
+        c.width = c.height = 0;
+        const imagem = await doc.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+        const pos = paginaDoScan(largura, altura, t);
+        const pagina = doc.addPage([pos.largura, pos.altura]);
+        pagina.drawImage(imagem, { x: pos.x, y: pos.y, width: pos.w, height: pos.h });
+      }
+      status.textContent = 'Gerando o arquivo…';
+      const blob = await paraBlob(doc);
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = `documento-escaneado-${new Date().toISOString().slice(0, 10)}.pdf`;
+      $('saida-titulo').textContent = `PDF com ${validas.length} ${validas.length === 1 ? 'página' : 'páginas'}`;
+      $('saida-info').textContent = tamanho(blob.size);
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch {
+      status.textContent = 'Não foi possível criar o PDF. Pode faltar memória no aparelho; tente com menos páginas ou com a qualidade "Menor".';
+    } finally {
+      trabalhando = false;
+      atualizar();
+      if (!saida.hidden) status.textContent = 'Pronto!';
+    }
+  });
+</script>
+
+<style>
+  .captura { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .captura-texto { flex: 1 1 240px; display: flex; flex-direction: column; gap: 2px; }
+  .captura-texto .muted { font-size: 0.9rem; }
+  .captura-botoes { display: flex; flex-wrap: wrap; gap: 10px; }
+  .escondido { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .escondido:focus-visible + label { outline: 3px solid var(--link); outline-offset: 2px; }
+
+  .visor-bloco { display: flex; flex-direction: column; gap: 12px; animation: entrar 0.25s var(--suave); }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+  .visor { position: relative; width: 100%; max-width: 560px; margin-inline: auto; border-radius: 18px; overflow: hidden; background: var(--brand-ink); line-height: 0; }
+  .visor video { width: 100%; max-height: 65vh; min-height: 240px; object-fit: contain; display: block; }
+  .flash { position: absolute; inset: 0; background: var(--surface); opacity: 0; pointer-events: none; }
+  .visor-acoes { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; max-width: 560px; width: 100%; margin-inline: auto; }
+  .contagem { font-size: 0.9rem; }
+  .visor-acoes .btn { justify-self: end; }
+  .obturador {
+    width: 68px; height: 68px; border-radius: 50%; padding: 5px; cursor: pointer;
+    border: 3px solid var(--brand-ink); background: var(--surface);
+    transition: transform 0.18s var(--mola);
+  }
+  .obturador span { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--brand); border: 2px solid var(--brand-ink); }
+  .obturador:hover { transform: scale(1.05); }
+  .obturador:active { transform: scale(0.9); }
+
+  .editor { display: flex; flex-direction: column; gap: 12px; padding: 14px; border: 2px solid var(--brand-ink); border-radius: var(--radius); background: var(--bg); animation: entrar 0.25s var(--suave); }
+  .editor-topo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+  .editor-topo .muted { font-size: 0.9rem; }
+  .palco { position: relative; width: fit-content; max-width: 100%; margin-inline: auto; line-height: 0; overflow: hidden; border-radius: 8px; user-select: none; -webkit-user-select: none; }
+  .palco canvas { display: block; max-width: 100%; max-height: 62vh; width: auto; height: auto; }
+  .caixa {
+    position: absolute; cursor: move; touch-action: none;
+    outline: 2px solid var(--brand); outline-offset: -1px;
+    box-shadow: 0 0 0 1px var(--brand-ink), 0 0 0 100vmax color-mix(in srgb, var(--brand-ink) 55%, transparent);
+  }
+  .caixa:focus-visible { outline: 3px solid var(--link); }
+  .alca { position: absolute; width: 20px; height: 20px; border-radius: 50%; background: var(--brand); border: 2px solid var(--brand-ink); transition: transform 0.2s var(--mola); }
+  .alca::before { content: ''; position: absolute; inset: -14px; }
+  .alca:hover, .caixa.ativa .alca { transform: scale(1.2); }
+  .alca[data-alca='no'] { left: -6px; top: -6px; cursor: nwse-resize; }
+  .alca[data-alca='ne'] { right: -6px; top: -6px; cursor: nesw-resize; }
+  .alca[data-alca='so'] { left: -6px; bottom: -6px; cursor: nesw-resize; }
+  .alca[data-alca='se'] { right: -6px; bottom: -6px; cursor: nwse-resize; }
+  .editor-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+  :global(#lista li.editando) { border-color: var(--brand-ink); box-shadow: 0 0 0 2px var(--brand); }
+  :global(#lista .mini) { cursor: pointer; }
+
+  .opcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { color: var(--muted); }
+</style>

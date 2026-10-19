@@ -1,0 +1,280 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="extrair-imagens-pdf"
+  titulo="Extrair imagens do PDF"
+  subtitulo="Tire as fotos, logotipos e figuras de dentro de um PDF, no tamanho em que foram guardadas. Baixe uma por uma ou todas num .zip, sem enviar o arquivo."
+  tituloSeo="Extrair imagens de PDF online grátis (PNG ou JPG)"
+  descricao="Extraia todas as imagens de um PDF de uma vez, grátis: fotos, logotipos e figuras em PNG ou JPG. Baixe uma a uma ou em .zip. O PDF não sai do seu aparelho."
+  passos={[
+    'Escolha o formato: PNG guarda a imagem sem perda e com fundo transparente; JPG deixa o arquivo menor.',
+    'Escolha o PDF ou arraste o arquivo para a área indicada. As imagens aparecem conforme são encontradas.',
+    'Confira a grade: cada imagem mostra o tamanho em pixels e as páginas em que aparece.',
+    'Baixe só as que quiser ou clique em "Baixar todas (.zip)".',
+  ]}
+  perguntas={[
+    { p: 'Como tirar uma imagem de dentro de um PDF?', r: 'Escolha o PDF nesta página e espere alguns segundos: todas as imagens guardadas no arquivo aparecem numa grade, cada uma com o botão "Baixar". Se quiser todas, use "Baixar todas (.zip)". Funciona no computador e no celular.' },
+    { p: 'A imagem sai com a mesma qualidade do PDF?', r: 'Sai com a mesma resolução em que ela foi guardada dentro do PDF, que muitas vezes é maior do que aparece na página. Em PNG não há nenhuma perda; em JPG a imagem é gravada com qualidade alta, de 92%, e fica bem menor.' },
+    { p: 'Por que o gráfico ou a tabela do meu PDF não apareceu?', r: 'Gráficos, tabelas, textos e desenhos feitos no próprio programa (como Word, Excel e PowerPoint) costumam ser guardados como linhas e formas, não como imagem. Para salvar esses elementos, use o PDF para JPG, que transforma a página inteira em imagem, e depois recorte a parte que interessa.' },
+    { p: 'Por que algumas imagens pequenas não aparecem?', r: 'Por padrão, imagens com menos de 32 pixels em algum lado ficam de fora, porque quase sempre são fios, marcadores e enfeites. Desmarque a opção "Ignorar imagens muito pequenas" para ver todas.' },
+    { p: 'Um PDF escaneado tem imagens para extrair?', r: 'Tem: num PDF escaneado, cada página costuma ser uma única imagem grande. A extração devolve essas páginas na resolução original do scanner, sem passar por uma nova conversão.' },
+    { p: 'O PDF é enviado para algum lugar?', r: 'Não. O arquivo é lido pelo seu navegador, com a mesma tecnologia de leitura de PDF do Firefox, e as imagens são montadas no seu aparelho. Nada é enviado para a internet.' },
+  ]}
+>
+  <div class="stack">
+    <div class="opcoes">
+      <div class="campo">
+        <label for="formato">Formato das imagens</label>
+        <select id="formato">
+          <option value="image/png" selected>PNG (sem perda)</option>
+          <option value="image/jpeg">JPG (arquivo menor)</option>
+        </select>
+      </div>
+      <label class="marcar"><input id="pequenas" type="checkbox" checked /> Ignorar imagens muito pequenas (menos de 32 px)</label>
+    </div>
+
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado topo-saida">
+        <div><strong id="saida-titulo"></strong><span id="saida-info" class="muted"></span></div>
+        <a id="zip" class="btn" href="#" download hidden>Baixar todas (.zip)</a>
+      </div>
+      <p id="status" class="muted" aria-live="polite"></p>
+      <ol id="imagens" class="imagens" aria-label="Imagens encontradas no PDF"></ol>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve extrair as imagens</h2>
+    <p>Muita coisa útil chega presa dentro de um PDF: a foto do produto no catálogo do fornecedor, o logotipo da empresa no manual de marca, a planta do apartamento no material do lançamento, as figuras de uma apostila ou de um artigo científico. Tirar um print da tela até funciona, mas a imagem sai pequena, com pedaços da página em volta. Extraindo, você recebe o arquivo da imagem do jeito que ele foi colocado no PDF, normalmente com muito mais resolução.</p>
+    <h2>O que conta como imagem</h2>
+    <p>Um PDF guarda dois tipos de conteúdo. As imagens são fotos e figuras formadas por pixels, como JPG e PNG que alguém inseriu no documento. Já textos, tabelas, gráficos do Excel e desenhos feitos no próprio programa são guardados como instruções de desenho, e por isso não aparecem aqui. Quando um PDF foi escaneado, cada página inteira é uma imagem, e é isso que você vai receber.</p>
+    <h2>Dicas</h2>
+    <ul>
+      <li>O mesmo logotipo repetido em todas as páginas aparece uma vez só, com a lista das páginas onde ele está.</li>
+      <li>Escolha PNG para logotipos, ícones e desenhos com fundo transparente. Para fotos, JPG gera arquivos várias vezes menores, com diferença que quase ninguém percebe.</li>
+      <li>Algumas imagens são guardadas em pedaços (faixas ou blocos) pelo programa que criou o PDF. Nesse caso cada pedaço aparece separado; para ter a figura inteira, use o <a href="/pdf/pdf-para-jpg">PDF para JPG</a> e recorte com o <a href="/imagem/recortar-imagem">Recortar imagem</a>.</li>
+      <li>Imagens com máscara de transparência saem com o fundo transparente em PNG. Em JPG, a parte transparente fica branca.</li>
+    </ul>
+    <p>Respeite os direitos de quem fez as imagens: extrair uma foto de um PDF não dá permissão para usá-la em outro lugar.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { codificar, novoCanvas } from '../../lib/canvas';
+  import { abrirParaVer, carregarPdfjs, fecharPdf, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { ehPequena, impressaoDigital, listarPaginas, paraRgbaPdfjs, temTransparencia } from '../../lib/extrair-imagens';
+  import { criarZip } from '../../lib/zip';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const formato = $<HTMLSelectElement>('formato');
+  const pequenas = $<HTMLInputElement>('pequenas');
+  const saida = $('saida');
+  const status = $('status');
+  const imagens = $('imagens');
+  const zip = $<HTMLAnchorElement>('zip');
+
+  interface Achada { chave: string; nome: string; blob: Blob; paginas: number[]; detalhe: HTMLElement; }
+  interface ObjImagem { width: number; height: number; bitmap?: ImageBitmap; data?: Uint8Array | Uint8ClampedArray; kind?: number; }
+
+  let arquivo: File | null = null;
+  let rodada = 0;
+  let urls: string[] = [];
+
+  function limpar() {
+    rodada++;
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    imagens.innerHTML = '';
+    zip.hidden = true;
+    saida.hidden = true;
+  }
+
+  /** Espera o pdf.js terminar de decodificar a imagem (ou desiste depois de 15 s). */
+  function pegarObjeto(pagina: { objs: { get(id: string, cb: (d: unknown) => void): unknown }; commonObjs: { get(id: string, cb: (d: unknown) => void): unknown } }, id: string): Promise<ObjImagem | null> {
+    return new Promise((ok) => {
+      const t = setTimeout(() => ok(null), 15000);
+      (id.startsWith('g_') ? pagina.commonObjs : pagina.objs).get(id, (d) => { clearTimeout(t); ok((d as ObjImagem) ?? null); });
+    });
+  }
+
+  /** Desenha a imagem do pdf.js num canvas e devolve também os pixels. */
+  function paraCanvas(obj: ObjImagem): { canvas: HTMLCanvasElement; px: Uint8ClampedArray } {
+    const canvas = novoCanvas(obj.width, obj.height);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    if (obj.bitmap) {
+      ctx.drawImage(obj.bitmap, 0, 0);
+      return { canvas, px: ctx.getImageData(0, 0, obj.width, obj.height).data };
+    }
+    if (!obj.data || obj.kind === undefined) throw new Error('Imagem sem dados');
+    const px = paraRgbaPdfjs(obj.kind, obj.data, obj.width, obj.height);
+    ctx.putImageData(new ImageData(px, obj.width, obj.height), 0, 0);
+    return { canvas, px };
+  }
+
+  function mostrar(a: Achada, largura: number, altura: number) {
+    const url = URL.createObjectURL(a.blob); urls.push(url);
+    const li = document.createElement('li');
+    const mini = document.createElement('span'); mini.className = 'mini';
+    const img = document.createElement('img'); img.src = url; img.alt = `Imagem ${imagens.children.length + 1}`;
+    img.width = largura; img.height = altura; img.decoding = 'async';
+    mini.append(img);
+    const titulo = document.createElement('span'); titulo.className = 'num'; titulo.textContent = `${largura} × ${altura} px`;
+    const link = document.createElement('a'); link.className = 'btn btn-sec'; link.href = url; link.download = a.nome; link.textContent = 'Baixar';
+    li.append(mini, titulo, a.detalhe, link);
+    imagens.append(li);
+  }
+
+  function detalhe(a: Achada) {
+    a.detalhe.textContent = `${listarPaginas(a.paginas)} · ${tamanho(a.blob.size)}`;
+  }
+
+  async function extrair() {
+    if (!arquivo) return;
+    limpar();
+    const minha = rodada;
+    aviso.hidden = true;
+    const file = arquivo;
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    let doc: DocumentoPdfJs | null = null;
+    const tipo = formato.value as 'image/png' | 'image/jpeg';
+    const ext = tipo === 'image/png' ? 'png' : 'jpg';
+    const base = file.name.replace(/\.pdf$/i, '') || 'documento';
+    const achadas = new Map<string, Achada>();
+    let puladas = 0, falhas = 0;
+    try {
+      const lib = await carregarPdfjs();
+      const { OPS } = lib;
+      doc = await abrirParaVer(await file.arrayBuffer());
+      if (minha !== rodada) return;
+      saida.hidden = false;
+      $('saida-titulo').textContent = 'Procurando imagens…';
+      $('saida-info').textContent = '';
+      const total = doc.numPages;
+      for (let n = 1; n <= total; n++) {
+        status.textContent = `Lendo a página ${n} de ${total}…`;
+        const pagina = await doc.getPage(n);
+        const lista = await pagina.getOperatorList();
+        const vistas = new Set<string>();
+        for (let i = 0; i < lista.fnArray.length; i++) {
+          const fn = lista.fnArray[i];
+          let obj: ObjImagem | null = null;
+          if (fn === OPS.paintImageXObject || fn === OPS.paintImageXObjectRepeat) {
+            const id = lista.argsArray[i][0] as string;
+            if (vistas.has(id)) continue;
+            vistas.add(id);
+            obj = await pegarObjeto(pagina as never, id);
+          } else if (fn === OPS.paintInlineImageXObject) {
+            obj = lista.argsArray[i][0] as ObjImagem;
+          } else continue;
+          if (minha !== rodada) return;
+          if (!obj || !obj.width || !obj.height) { falhas++; continue; }
+          if (pequenas.checked && ehPequena(obj.width, obj.height)) { puladas++; continue; }
+          let canvas: HTMLCanvasElement, px: Uint8ClampedArray;
+          try { ({ canvas, px } = paraCanvas(obj)); } catch { falhas++; continue; }
+          const chave = impressaoDigital(px, obj.width, obj.height);
+          const repetida = achadas.get(chave);
+          if (repetida) {
+            if (!repetida.paginas.includes(n)) { repetida.paginas.push(n); detalhe(repetida); }
+            canvas.width = canvas.height = 0;
+            continue;
+          }
+          let alvo = canvas;
+          if (tipo === 'image/jpeg' && temTransparencia(px)) {
+            // JPG não tem transparência: a parte transparente fica branca.
+            alvo = novoCanvas(canvas.width, canvas.height);
+            const c = alvo.getContext('2d')!;
+            c.fillStyle = '#ffffff'; c.fillRect(0, 0, alvo.width, alvo.height); c.drawImage(canvas, 0, 0);
+          }
+          const blob = await codificar(alvo, tipo, 0.92);
+          if (minha !== rodada) return;
+          const numero = achadas.size + 1;
+          const a: Achada = {
+            chave, blob, paginas: [n], detalhe: Object.assign(document.createElement('span'), { className: 'muted det' }),
+            nome: `${base}-imagem-${String(numero).padStart(3, '0')}-pagina-${n}.${ext}`,
+          };
+          achadas.set(chave, a);
+          detalhe(a);
+          mostrar(a, obj.width, obj.height);
+          $('saida-titulo').textContent = `${achadas.size} ${achadas.size === 1 ? 'imagem encontrada' : 'imagens encontradas'}…`;
+          canvas.width = canvas.height = 0;
+        }
+        pagina.cleanup();
+      }
+
+      const lista = [...achadas.values()];
+      const soma = lista.reduce((s, a) => s + a.blob.size, 0);
+      const extras: string[] = [];
+      if (puladas) extras.push(`${puladas} ${puladas === 1 ? 'pequena ignorada' : 'pequenas ignoradas'}`);
+      if (falhas) extras.push(`${falhas} não ${falhas === 1 ? 'pôde ser lida' : 'puderam ser lidas'}`);
+      if (!lista.length) {
+        $('saida-titulo').textContent = 'Nenhuma imagem encontrada';
+        $('saida-info').textContent = '';
+        status.textContent = 'Este PDF não tem fotos ou figuras guardadas como imagem'
+          + (extras.length ? ` (${extras.join(', ')})` : '')
+          + '. Para salvar a página inteira como imagem, use o PDF para JPG.';
+        return;
+      }
+      $('saida-titulo').textContent = `${lista.length} ${lista.length === 1 ? 'imagem encontrada' : 'imagens encontradas'}`;
+      $('saida-info').textContent = `${tamanho(soma)} no total` + (extras.length ? ` · ${extras.join(', ')}` : '');
+      status.textContent = '';
+      if (lista.length > 1) {
+        const arquivos = await Promise.all(lista.map(async (a) => ({ nome: a.nome, dados: new Uint8Array(await a.blob.arrayBuffer()) })));
+        if (minha !== rodada) return;
+        const url = URL.createObjectURL(new Blob([criarZip(arquivos) as Uint8Array<ArrayBuffer>], { type: 'application/zip' }));
+        urls.push(url);
+        zip.href = url;
+        zip.download = `${base}-imagens.zip`;
+        zip.hidden = false;
+      }
+    } catch (e) {
+      if (minha !== rodada) return;
+      saida.hidden = true;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível ler as imagens deste PDF.';
+      aviso.hidden = false;
+    } finally {
+      fecharPdf(doc);
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => { arquivo = (e as CustomEvent<File[]>).detail[0]; extrair(); });
+  formato.addEventListener('change', extrair);
+  pequenas.addEventListener('change', extrair);
+</script>
+
+<style>
+  .opcoes { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 24px; }
+  .opcoes .campo { flex: 1 1 260px; max-width: 380px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.95rem; padding-bottom: 10px; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--brand); }
+  .topo-saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .topo-saida span { display: block; }
+  #status:empty { display: none; }
+  .imagens {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;
+  }
+  .imagens :global(li) {
+    display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 8px;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    animation: entrar 0.3s var(--suave) backwards;
+  }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+  .imagens :global(.mini) {
+    aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; border-radius: 6px;
+    background: repeating-conic-gradient(var(--line) 0 25%, var(--surface) 0 50%) 0 0 / 16px 16px;
+  }
+  .imagens :global(.mini img) { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; }
+  .imagens :global(.num) { font-weight: 600; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+  .imagens :global(.det) { font-size: 0.8rem; line-height: 1.35; overflow-wrap: anywhere; }
+  .imagens :global(.btn) { padding: 6px 12px; font-size: 0.9rem; margin-top: auto; }
+</style>
