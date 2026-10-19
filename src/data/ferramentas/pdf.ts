@@ -21,7 +21,7 @@ export default [
   { slug: 'recortar-pdf', nome: 'Recortar PDF', resumo: 'Corte as margens das páginas do PDF.', status: 'planejada' },
   { slug: 'ajustar-a4', nome: 'Ajustar PDF para A4', resumo: 'Deixe todas as páginas no tamanho A4.', status: 'planejada' },
   { slug: 'achatar-pdf', nome: 'Achatar PDF', resumo: 'Trave formulários e anotações para ninguém editar.', status: 'pronta' },
-  { slug: 'editar-metadados-pdf', nome: 'Editar informações do PDF', resumo: 'Mude título, autor e assunto do arquivo.', status: 'planejada' },
+  { slug: 'editar-metadados-pdf', nome: 'Editar informações do PDF', resumo: 'Mude título, autor e assunto do arquivo.', status: 'pronta' },
   { slug: 'preencher-formulario-pdf', nome: 'Preencher formulário PDF', resumo: 'Preencha os campos de um PDF e salve.', status: 'planejada' },
   { slug: 'pdf-preto-e-branco', nome: 'PDF em preto e branco', resumo: 'Converta o PDF para tons de cinza.', status: 'planejada' },
   { slug: 'extrair-imagens-pdf', nome: 'Extrair imagens do PDF', resumo: 'Baixe todas as imagens de dentro do PDF.', status: 'planejada' },

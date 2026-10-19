@@ -1,0 +1,283 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="editar-metadados-pdf"
+  titulo="Editar informações do PDF"
+  subtitulo="Veja e mude o título, o autor, o assunto, as palavras-chave e as datas gravadas dentro do PDF, ou apague tudo de uma vez. Sem enviar o arquivo."
+  tituloSeo="Editar metadados do PDF: título, autor e mais"
+  descricao="Mude grátis o título, autor, assunto, palavras-chave e datas de um PDF, ou apague todos os metadados de uma vez. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Confira as informações que estão gravadas no arquivo hoje.',
+    'Mude o que quiser. Campo vazio apaga a informação. Para tirar tudo, use "Limpar tudo".',
+    'Clique em "Salvar PDF" e baixe o arquivo com as informações novas.',
+  ]}
+  perguntas={[
+    { p: 'O que são os metadados de um PDF?', r: 'São informações gravadas dentro do arquivo que não aparecem nas páginas: título, autor, assunto, palavras-chave, o programa que criou o documento e as datas de criação e de modificação. Elas aparecem em "Propriedades do documento" no leitor de PDF e às vezes no título da aba do navegador.' },
+    { p: 'Como mudar o título que aparece quando abro o PDF?', r: 'O navegador e muitos leitores mostram o campo "Título" no lugar do nome do arquivo. Escreva o título certo aqui, salve e use o arquivo novo. Se deixar o título vazio, o leitor volta a mostrar o nome do arquivo.' },
+    { p: 'Como tirar meu nome do PDF?', r: 'O Word, o Google Docs e outros programas costumam gravar o nome de quem criou o documento no campo "Autor". Apague esse campo (ou clique em "Limpar tudo") e salve. Para um currículo, uma denúncia ou um documento anônimo, confira também o texto das páginas, que esta ferramenta não altera.' },
+    { p: 'Mudar os metadados altera o conteúdo do PDF?', r: 'Não. Páginas, textos, imagens e formulários ficam iguais. Só as informações de propriedades mudam. A única cópia removida é a versão XMP das informações, para não ficar um título antigo escondido no arquivo.' },
+    { p: 'Por que o Acrobat ainda mostra o título antigo?', r: 'Alguns programas guardam uma segunda cópia das informações, no formato XMP, e o Acrobat lê essa cópia primeiro. Por isso a ferramenta remove o XMP ao salvar. Se o título antigo continuar aparecendo, confira se você abriu o arquivo novo, e não o original.' },
+    { p: 'É seguro? O PDF é enviado para algum lugar?', r: 'Não é enviado. O arquivo é aberto e salvo pelo seu navegador, com a biblioteca pdf-lib. Nada sai do seu computador ou celular.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+    <p id="status" class="muted" aria-live="polite"></p>
+
+    <form id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <div class="grade">
+        <div class="campo largo">
+          <label for="titulo">Título</label>
+          <input id="titulo" type="text" autocomplete="off" />
+        </div>
+        <div class="campo">
+          <label for="autor">Autor</label>
+          <input id="autor" type="text" autocomplete="off" />
+        </div>
+        <div class="campo">
+          <label for="assunto">Assunto</label>
+          <input id="assunto" type="text" autocomplete="off" />
+        </div>
+        <div class="campo largo">
+          <label for="palavrasChave">Palavras-chave</label>
+          <input id="palavrasChave" type="text" autocomplete="off" />
+          <small>Separe com vírgula, por exemplo: contrato, aluguel, 2026.</small>
+        </div>
+        <div class="campo">
+          <label for="criador">Criado com (programa de origem)</label>
+          <input id="criador" type="text" autocomplete="off" />
+        </div>
+        <div class="campo">
+          <label for="produtor">Produtor do PDF</label>
+          <input id="produtor" type="text" autocomplete="off" />
+        </div>
+        <div class="campo">
+          <label for="criacao">Data de criação</label>
+          <input id="criacao" type="datetime-local" step="60" />
+        </div>
+        <div class="campo">
+          <label for="modificacao">Data de modificação</label>
+          <input id="modificacao" type="datetime-local" step="60" />
+          <button id="agora" type="button" class="link">Usar a data e hora de agora</button>
+        </div>
+      </div>
+
+      <div id="extras" class="extras" hidden>
+        <p class="rotulo">Outras informações gravadas no arquivo</p>
+        <ul id="extras-lista"></ul>
+        <label class="marcar"><input id="apagar-extras" type="checkbox" /> Apagar também estas informações</label>
+      </div>
+      <p id="xmp" class="muted nota" hidden>Este PDF também guarda uma cópia das informações no formato XMP, lida primeiro por alguns programas. Ao salvar, essa cópia é removida para valer o que está escrito aqui.</p>
+
+      <div class="acoes">
+        <button id="salvar" type="submit" class="btn">Salvar PDF</button>
+        <button id="limpar" type="button" class="btn btn-sec">Limpar tudo</button>
+        <button id="restaurar" type="button" class="btn btn-sec">Voltar ao original</button>
+      </div>
+    </form>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong>PDF salvo</strong><span id="saida-info" class="muted"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+      <dl id="conferencia" class="conferencia"></dl>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Informações que viajam escondidas no PDF</h2>
+    <p>Todo PDF carrega uma ficha que não aparece nas páginas. Nela ficam o título, o nome de quem criou o arquivo, o assunto, palavras-chave, o programa usado e as datas de criação e de última modificação. Quem abre "Propriedades do documento" no leitor de PDF vê tudo isso. Um currículo salvo no computador do trabalho pode levar o nome da empresa como autor; uma proposta pode mostrar que foi criada meses antes do que parece; um relatório pode sair com o título "Documento1" na aba do navegador.</p>
+    <h2>Quando vale a pena editar</h2>
+    <ul>
+      <li><strong>Título certo na aba e na busca:</strong> ao publicar um PDF num site, o Google e o navegador usam o título gravado no arquivo. Um título claro, como "Cardápio de outubro", ajuda quem procura.</li>
+      <li><strong>Privacidade:</strong> antes de mandar um documento para fora, apague o autor ou clique em "Limpar tudo" para não expor seu nome, o da empresa ou o do computador.</li>
+      <li><strong>Organização:</strong> assunto e palavras-chave ajudam a achar arquivos na busca do Windows, do Mac e de sistemas de gestão de documentos.</li>
+      <li><strong>Padronização:</strong> uma empresa pode querer que todos os PDFs enviados a clientes tenham o mesmo autor e um título com o número do contrato.</li>
+    </ul>
+    <h2>O que "Limpar tudo" apaga</h2>
+    <p>Apaga todos os campos desta página, as informações extras que alguns programas acrescentam (como "Company" ou "SourceModified") e a cópia XMP. Não mexe no conteúdo das páginas: se o seu nome está escrito no texto, no rodapé ou numa assinatura, ele continua lá. Fotos dentro do PDF também podem ter dados próprios, como a câmera usada, que esta ferramenta não remove.</p>
+    <p>As datas usam o horário do seu aparelho. Quem abrir o arquivo em outro fuso verá a hora convertida para o fuso dele, que é o comportamento normal dos leitores de PDF.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, carregarPdfLib, ErroPdf } from '../../lib/pdf-navegador';
+  import { gravarMetadados, lerCampoData, lerMetadados, paraCampoData, type Leitura, type Metadados } from '../../lib/metadados-pdf';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const status = $('status');
+  const painel = $<HTMLFormElement>('painel');
+  const info = $('info');
+  const extras = $('extras');
+  const extrasLista = $('extras-lista');
+  const apagarExtras = $<HTMLInputElement>('apagar-extras');
+  const xmp = $('xmp');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const conferencia = $('conferencia');
+  const textos = ['titulo', 'autor', 'assunto', 'palavrasChave', 'criador', 'produtor'] as const;
+  const campo = (id: string) => $<HTMLInputElement>(id);
+  const criacao = campo('criacao');
+  const modificacao = campo('modificacao');
+
+  let bytes: ArrayBuffer | null = null;
+  let original: Leitura | null = null;
+  let nome = 'documento.pdf';
+  let rodada = 0;
+  let url = '';
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (url) URL.revokeObjectURL(url);
+    url = '';
+  }
+
+  function preencher(m: Leitura) {
+    for (const k of textos) campo(k).value = m[k];
+    criacao.value = paraCampoData(m.criacao);
+    modificacao.value = paraCampoData(m.modificacao);
+    extrasLista.innerHTML = '';
+    for (const e of m.extras) {
+      const li = document.createElement('li');
+      const b = document.createElement('strong'); b.textContent = e.chave + ': ';
+      li.append(b, e.valor || '(sem texto)');
+      extrasLista.append(li);
+    }
+    extras.hidden = !m.extras.length;
+    apagarExtras.checked = false;
+    xmp.hidden = !m.temXmp;
+  }
+
+  /** Data do campo; se a pessoa não mexeu, vale a original (com os segundos). */
+  function dataDoCampo(input: HTMLInputElement, antes: Date | null): Date | null {
+    return input.value === paraCampoData(antes) ? antes : lerCampoData(input.value);
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    bytes = null; original = null;
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    status.textContent = 'Abrindo o PDF…';
+    try {
+      const dados = await file.arrayBuffer();
+      const [doc, lib] = await Promise.all([abrirParaEditar(dados), carregarPdfLib()]);
+      if (minha !== rodada) return;
+      original = lerMetadados(lib, doc);
+      bytes = dados;
+      nome = /\.pdf$/i.test(file.name) ? file.name : file.name + '.pdf';
+      const n = doc.getPageCount();
+      info.textContent = `${file.name} · ${n} ${n === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      preencher(original);
+      status.textContent = '';
+      painel.hidden = false;
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  async function salvar() {
+    if (!bytes || !original) return;
+    const minha = ++rodada;
+    limparSaida();
+    status.textContent = 'Salvando…';
+    const novos: Metadados = {
+      titulo: campo('titulo').value, autor: campo('autor').value, assunto: campo('assunto').value,
+      palavrasChave: campo('palavrasChave').value, criador: campo('criador').value, produtor: campo('produtor').value,
+      criacao: dataDoCampo(criacao, original.criacao),
+      modificacao: dataDoCampo(modificacao, original.modificacao),
+    };
+    try {
+      const [doc, lib] = await Promise.all([abrirParaEditar(bytes), carregarPdfLib()]);
+      gravarMetadados(lib, doc, novos, apagarExtras.checked);
+      const novo = await doc.save({ updateFieldAppearances: false });
+      if (minha !== rodada) return;
+      // Confere lendo o arquivo salvo.
+      const lido = lerMetadados(lib, await lib.PDFDocument.load(novo, { updateMetadata: false }));
+      const blob = new Blob([novo as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      url = URL.createObjectURL(blob);
+      baixar.href = url;
+      baixar.download = nome;
+      conferencia.innerHTML = '';
+      const linhas: [string, string][] = [
+        ['Título', lido.titulo], ['Autor', lido.autor], ['Assunto', lido.assunto], ['Palavras-chave', lido.palavrasChave],
+        ['Criado com', lido.criador], ['Produtor', lido.produtor],
+        ['Criação', lido.criacao ? lido.criacao.toLocaleString('pt-BR') : ''],
+        ['Modificação', lido.modificacao ? lido.modificacao.toLocaleString('pt-BR') : ''],
+        ...lido.extras.map((e) => [e.chave, e.valor] as [string, string]),
+      ];
+      for (const [k, v] of linhas) {
+        const dt = document.createElement('dt'); dt.textContent = k;
+        const dd = document.createElement('dd'); dd.textContent = v || '(vazio)'; if (!v) dd.className = 'muted';
+        conferencia.append(dt, dd);
+      }
+      const vazias = linhas.every(([, v]) => !v);
+      $('saida-info').textContent = (vazias ? 'Sem nenhuma informação gravada' : 'Informações gravadas como abaixo') + ` · ${tamanho(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível salvar este PDF.';
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  painel.addEventListener('submit', (e) => { e.preventDefault(); salvar(); });
+  painel.addEventListener('input', () => { limparSaida(); status.textContent = ''; });
+  $('limpar').addEventListener('click', () => {
+    for (const k of textos) campo(k).value = '';
+    criacao.value = modificacao.value = '';
+    apagarExtras.checked = true;
+    limparSaida();
+    status.textContent = 'Campos apagados. Clique em "Salvar PDF" para gerar o arquivo sem nenhuma informação.';
+  });
+  $('restaurar').addEventListener('click', () => {
+    if (!original) return;
+    preencher(original);
+    limparSaida();
+    status.textContent = '';
+  });
+  $('agora').addEventListener('click', () => { modificacao.value = paraCampoData(new Date()); limparSaida(); });
+</script>
+
+<style>
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .largo { grid-column: 1 / -1; }
+  .link {
+    align-self: flex-start; padding: 2px 0; border: 0; background: none; color: var(--link);
+    font: inherit; font-size: 0.85rem; text-decoration: underline; cursor: pointer;
+  }
+  .extras { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+  .extras .rotulo { margin: 0; }
+  .extras ul { margin: 0; padding-left: 20px; overflow-wrap: anywhere; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 40px; }
+  .marcar input { width: 20px; height: 20px; flex: none; accent-color: var(--brand); }
+  .nota { margin: 0; font-size: 0.9rem; }
+  .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+  .conferencia { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; }
+  .conferencia :global(dt) { font-weight: 600; }
+  .conferencia :global(dd) { margin: 0; overflow-wrap: anywhere; }
+  @media (max-width: 420px) {
+    .conferencia { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .conferencia :global(dd) { margin-bottom: 8px; }
+  }
+</style>
