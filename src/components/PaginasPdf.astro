@@ -1,0 +1,90 @@
+---
+// Grade de miniaturas das páginas de um PDF (organizar, remover, girar, extrair páginas...).
+// As páginas são criadas no navegador pela classe GradePaginas de src/lib/pdf-miniaturas.ts:
+//   const grade = new GradePaginas(document.getElementById('paginas')!, { ordenar: true, aoMudar });
+//   await grade.abrir(dadosDoPdf, totalDePaginas);
+interface Props { id: string; rotulo: string; }
+const { id, rotulo } = Astro.props;
+---
+<ol class="paginas-pdf" id={id} aria-label={rotulo}></ol>
+
+<style>
+  .paginas-pdf {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 12px;
+  }
+  .paginas-pdf:empty { display: none; }
+  .paginas-pdf :global(li) {
+    position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+    padding: 6px; border: 2px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    animation: entrar-pagina 0.3s var(--suave) backwards;
+    transition: border-color 0.15s, opacity 0.2s var(--suave);
+  }
+  @keyframes entrar-pagina { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+  .paginas-pdf.ordenar :global(li) { cursor: grab; user-select: none; -webkit-user-select: none; }
+  .paginas-pdf :global(li.arrastando) {
+    z-index: 3; cursor: grabbing; box-shadow: var(--sombra-alta); border-color: var(--fg); opacity: 0.95;
+  }
+
+  .paginas-pdf :global(.mini) {
+    position: relative; aspect-ratio: 3 / 4; display: grid; place-items: center; overflow: hidden;
+    background: var(--bg); border-radius: 6px;
+  }
+  .paginas-pdf :global(.giro) {
+    display: grid; place-items: center; width: 100%; height: 100%; pointer-events: none;
+    transition: transform 0.35s var(--mola);
+  }
+  .paginas-pdf :global(.giro canvas) {
+    max-width: 100%; max-height: 100%; width: auto; height: auto; display: block;
+    box-shadow: 0 0 0 1px var(--line); animation: surgir 0.25s var(--suave);
+  }
+  .paginas-pdf :global(.alvo) {
+    position: absolute; inset: 0; z-index: 1; padding: 0; margin: 0; cursor: pointer;
+    border: 0; border-radius: 6px; background: transparent;
+  }
+  .paginas-pdf :global(.alvo:focus-visible) { outline: 3px solid var(--link); outline-offset: -3px; }
+  .paginas-pdf :global(li:has(.alvo):hover) { border-color: var(--muted); }
+  .paginas-pdf :global(li:has(.alvo):active .giro) { transform: scale(0.96); }
+
+  .paginas-pdf :global(.numero) {
+    position: absolute; top: 5px; left: 5px; z-index: 2; min-width: 26px; height: 26px; padding: 0 6px;
+    display: grid; place-items: center; border-radius: 13px; pointer-events: none;
+    font: 700 0.85rem var(--f-display); background: var(--brand); color: var(--brand-ink); border: 2px solid var(--brand-ink);
+  }
+  .paginas-pdf :global(.selo) {
+    position: absolute; z-index: 2; display: grid; place-items: center; width: 40px; height: 40px;
+    border-radius: 50%; pointer-events: none; opacity: 0; transform: scale(0.6);
+    transition: opacity 0.18s var(--suave), transform 0.25s var(--mola);
+  }
+  .paginas-pdf :global(.selo.remover) { background: var(--erro); color: var(--surface); }
+  .paginas-pdf :global(.selo.escolher) { background: var(--brand); color: var(--brand-ink); border: 2px solid var(--brand-ink); }
+  .paginas-pdf :global(li.marcada .selo) { opacity: 1; transform: none; }
+  .paginas-pdf :global(li.marcada:has(.selo.remover)) { border-color: var(--erro); }
+  .paginas-pdf :global(li.marcada:has(.selo.remover) .giro) { opacity: 0.35; }
+  .paginas-pdf :global(li.marcada:has(.selo.escolher)) { border-color: var(--fg); }
+  .paginas-pdf :global(li.girada) { border-color: var(--fg); }
+
+  .paginas-pdf :global(.cantos) {
+    position: absolute; top: 4px; right: 4px; z-index: 2; display: flex; flex-direction: column; gap: 4px;
+  }
+  .paginas-pdf :global(.cantos .acao) {
+    width: 30px; height: 30px; background: var(--surface); border-color: var(--line); box-shadow: var(--sombra);
+  }
+  .paginas-pdf :global([data-acao='excluir']:hover) { color: var(--erro); }
+
+  .paginas-pdf :global(.acoes) { display: flex; align-items: center; justify-content: space-between; gap: 2px; }
+  .paginas-pdf :global(.origem) {
+    flex: 1 1 auto; min-width: 0; text-align: center; font-size: 0.78rem; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .paginas-pdf :global(.legenda) { font-size: 0.85rem; font-weight: 600; text-align: center; }
+  .paginas-pdf :global(.acao) {
+    display: grid; place-items: center; flex: 0 0 auto; width: 28px; height: 32px; padding: 0; cursor: pointer;
+    border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--fg);
+    transition: transform 0.18s var(--mola), background-color 0.15s;
+  }
+  .paginas-pdf :global(.acao:hover) { background: var(--bg); border-color: var(--line); }
+  .paginas-pdf :global(.acao:active) { transform: scale(0.9); }
+  .paginas-pdf :global(.acao:disabled) { opacity: 0.3; cursor: default; transform: none; background: transparent; border-color: transparent; }
+  .paginas-pdf :global([data-alca]) { cursor: grab; touch-action: none; color: var(--muted); }
+</style>

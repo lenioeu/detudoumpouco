@@ -1,0 +1,208 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import PaginasPdf from '../../components/PaginasPdf.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="remover-paginas"
+  titulo="Remover páginas do PDF"
+  subtitulo="Clique nas páginas que você não quer e baixe o PDF sem elas. Tudo no seu navegador, sem enviar o arquivo."
+  tituloSeo="Remover páginas do PDF online grátis e sem enviar"
+  descricao="Apague páginas do PDF clicando nas miniaturas ou digitando os números, como 2, 5-7. Grátis, sem cadastro, e o arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Clique nas miniaturas das páginas que vão sair. Elas ficam marcadas com um X vermelho.',
+    'Se preferir, digite os números no campo, como 2, 5-7, ou use os atalhos de páginas pares e ímpares.',
+    'Clique em "Remover páginas" e baixe o PDF novo.',
+  ]}
+  perguntas={[
+    { p: 'Como excluir uma página de um PDF?', r: 'Escolha o PDF, clique na miniatura da página que você quer apagar e depois em "Remover páginas". O arquivo novo sai sem ela, com as outras páginas na mesma ordem.' },
+    { p: 'Como apagar várias páginas do PDF de uma vez?', r: 'Clique em todas as miniaturas que vão sair ou digite os números no campo, separados por vírgula. Use hífen para um trecho: "3-8, 12" remove as páginas de 3 a 8 e a 12.' },
+    { p: 'Como tirar as páginas em branco de um PDF escaneado?', r: 'Escaneamentos frente e verso costumam deixar o verso em branco nas páginas pares. Clique em "Pares" para marcar todas de uma vez, confira nas miniaturas se nenhuma tem conteúdo e desmarque as que devem ficar.' },
+    { p: 'Remover páginas diminui o tamanho do PDF?', r: 'Normalmente sim. O PDF novo é montado só com as páginas que ficaram, sem as imagens e fontes que eram usadas apenas nas páginas removidas.' },
+    { p: 'O arquivo é enviado para algum servidor?', r: 'Não. O PDF é aberto e salvo pelo seu navegador. Nenhuma página sai do seu aparelho.' },
+    { p: 'Dá para recuperar a página depois de remover?', r: 'O seu arquivo original não é alterado: a ferramenta cria um PDF novo. Se precisar da página de volta, é só usar o original de novo.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <div class="campo">
+        <label for="intervalos">Páginas para remover</label>
+        <input id="intervalos" type="text" placeholder="Ex.: 2, 5-7" autocomplete="off" />
+        <small>Clique nas miniaturas ou digite os números separados por vírgula.</small>
+      </div>
+      <div class="barra">
+        <button id="pares" type="button" class="btn btn-sec">Pares</button>
+        <button id="impares" type="button" class="btn btn-sec">Ímpares</button>
+        <button id="nenhuma" type="button" class="btn btn-sec">Desmarcar todas</button>
+      </div>
+      <p id="resumo" class="muted" aria-live="polite"></p>
+      <PaginasPdf id="paginas" rotulo="Páginas do PDF. Clique para marcar as que vão sair." />
+      <div class="enviar">
+        <button id="remover" type="button" class="btn" disabled>Remover páginas</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div><strong id="saida-titulo"></strong><span id="saida-info"></span></div>
+      <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve</h2>
+    <p>Quase todo PDF tem alguma página sobrando. O extrato do banco vem com três páginas de propaganda no fim. A fatura do cartão traz o termo de adesão junto. O escaneamento frente e verso deixa uma folha em branco a cada página. E aquele boletim que você precisa mandar para a escola tem as notas do irmão na página 2.</p>
+    <p>Remover essas páginas deixa o arquivo mais limpo, mais leve e evita mandar informação que ninguém pediu. Em processos seletivos e pedidos de documento, um PDF enxuto também passa mais fácil pelo limite de tamanho do site.</p>
+    <h2>Três jeitos de marcar</h2>
+    <ul>
+      <li><strong>Clicando:</strong> cada clique numa miniatura marca ou desmarca a página. As marcadas ficam apagadas, com um X vermelho, para você ver o que vai sumir.</li>
+      <li><strong>Digitando:</strong> no campo, "1, 4-6, 10-" remove a página 1, as páginas de 4 a 6 e tudo da 10 até o fim. É o jeito mais rápido em PDFs grandes.</li>
+      <li><strong>Pares ou ímpares:</strong> um clique marca metade do arquivo. Serve para tirar os versos em branco de um escaneamento ou separar só a frente de cada folha.</li>
+    </ul>
+    <h2>Cuidados</h2>
+    <p>Confira as miniaturas antes de baixar, principalmente quando digitar os números: a numeração que vale é a posição da página no arquivo, que nem sempre é o número impresso no rodapé. Uma capa sem número faz tudo andar uma casa. Pelo menos uma página precisa ficar, senão não há PDF para baixar.</p>
+    <p>O arquivo original continua do jeito que estava; o que você baixa é uma cópia nova, com o nome terminado em "-editado". Se em vez de apagar você quer guardar só algumas páginas, o <a href="/pdf/extrair-paginas">Extrair páginas</a> faz o caminho contrário, e para mudar a ordem use o <a href="/pdf/organizar-pdf">Organizar PDF</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, ErroPdf } from '../../lib/pdf-navegador';
+  import { GradePaginas } from '../../lib/pdf-miniaturas';
+  import { montarPdf, paresOuImpares } from '../../lib/paginas-pdf';
+  import { escreverIntervalos, lerIntervalos } from '../../lib/intervalos';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const intervalos = $<HTMLInputElement>('intervalos');
+  const resumo = $('resumo');
+  const botao = $<HTMLButtonElement>('remover');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let dados: ArrayBuffer | null = null;
+  let nomeBase = 'documento';
+  let urlSaida = '';
+  let rodada = 0;
+  let trabalhando = false;
+  let erroCampo = '';
+
+  const grade = new GradePaginas($('paginas'), {
+    clique: 'remover',
+    aoMudar: () => { intervalos.value = escreverIntervalos(grade.marcadas()); erroCampo = ''; mudou(); },
+  });
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function mudou() {
+    limparSaida();
+    status.textContent = '';
+    const tirar = grade.marcadas().length;
+    const ficam = grade.total - tirar;
+    if (erroCampo) { resumo.textContent = erroCampo; resumo.className = 'erro'; }
+    else if (!tirar) { resumo.textContent = 'Nenhuma página marcada ainda.'; resumo.className = 'muted'; }
+    else if (!ficam) { resumo.textContent = 'Todas as páginas estão marcadas. Deixe pelo menos uma.'; resumo.className = 'erro'; }
+    else {
+      resumo.className = 'muted';
+      resumo.textContent = `Vai remover ${tirar} ${tirar === 1 ? 'página' : 'páginas'} e ficar com ${ficam}.`;
+    }
+    botao.disabled = trabalhando || !dados || !!erroCampo || !tirar || !ficam;
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    dados = null;
+    grade.limpar();
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const buf = await file.arrayBuffer();
+      const doc = await abrirParaEditar(buf);
+      if (minha !== rodada) return;
+      const total = doc.getPageCount();
+      dados = buf;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      intervalos.value = '';
+      erroCampo = '';
+      painel.hidden = false;
+      const abrindo = grade.abrir(buf, total);
+      mudou();
+      await abrindo;
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  intervalos.addEventListener('input', () => {
+    if (!intervalos.value.trim()) { erroCampo = ''; grade.marcar([]); }
+    else {
+      const r = lerIntervalos(intervalos.value, grade.total);
+      erroCampo = r.erro ?? '';
+      if (!r.erro) grade.marcar(r.grupos.flat());
+    }
+    mudou();
+  });
+  // Ao sair do campo, a lista fica escrita do jeito curto e em ordem (ex.: "7, 2-3" vira "2-3, 7").
+  intervalos.addEventListener('change', () => { if (!erroCampo) intervalos.value = escreverIntervalos(grade.marcadas()); });
+
+  const atalho = (paginas: number[]) => { grade.marcar(paginas); intervalos.value = escreverIntervalos(paginas); erroCampo = ''; mudou(); };
+  $('pares').addEventListener('click', () => atalho(paresOuImpares(grade.total, 'pares')));
+  $('impares').addEventListener('click', () => atalho(paresOuImpares(grade.total, 'impares')));
+  $('nenhuma').addEventListener('click', () => atalho([]));
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+
+  botao.addEventListener('click', async () => {
+    const ficam = grade.escolhidas(false);
+    if (!dados || !ficam.length || ficam.length === grade.total) return;
+    const minha = rodada;
+    const tiradas = grade.total - ficam.length;
+    trabalhando = true;
+    mudou();
+    status.textContent = 'Removendo…';
+    try {
+      const bytes = await montarPdf(dados, ficam);
+      if (minha !== rodada) return;
+      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = `${nomeBase}-editado.pdf`;
+      $('saida-titulo').textContent = `${tiradas} ${tiradas === 1 ? 'página removida' : 'páginas removidas'}`;
+      $('saida-info').textContent = `Ficaram ${ficam.length} ${ficam.length === 1 ? 'página' : 'páginas'} · ${tamanho(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível salvar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      trabalhando = false;
+      botao.disabled = false;
+    }
+  });
+</script>
+
+<style>
+  .barra { display: flex; flex-wrap: wrap; gap: 8px; }
+  .barra .btn { padding: 6px 12px; font-size: 0.9rem; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; color: var(--muted); }
+</style>

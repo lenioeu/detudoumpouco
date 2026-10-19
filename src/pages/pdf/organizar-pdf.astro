@@ -1,0 +1,172 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import PaginasPdf from '../../components/PaginasPdf.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="organizar-pdf"
+  titulo="Organizar PDF"
+  subtitulo="Mude a ordem das páginas arrastando as miniaturas. Dá para girar e tirar páginas no mesmo passo. Tudo no seu navegador, sem enviar o arquivo."
+  tituloSeo="Organizar PDF online grátis: mudar a ordem das páginas"
+  descricao="Mude a ordem das páginas do PDF arrastando as miniaturas, gire e tire páginas. Grátis, sem cadastro e sem enviar o arquivo: tudo no seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Arraste as miniaturas para a nova posição. No celular, segure pela alça de pontinhos ou use as setas.',
+    'Se precisar, gire uma página com o botão de seta curva ou tire a página com o X.',
+    'Clique em "Salvar PDF" e baixe o arquivo com a nova ordem.',
+  ]}
+  perguntas={[
+    { p: 'Como mudar a ordem das páginas de um PDF?', r: 'Escolha o PDF nesta página e arraste cada miniatura até o lugar certo. O número amarelo mostra a posição nova e o "pág." embaixo mostra de onde a página veio. Depois clique em "Salvar PDF" e baixe o arquivo.' },
+    { p: 'Como inverter a ordem das páginas do PDF?', r: 'Clique em "Inverter ordem". A última página vira a primeira, o que resolve escaneamentos feitos de trás para frente. Confira as miniaturas e salve.' },
+    { p: 'Organizar o PDF muda a qualidade ou o texto?', r: 'Não. As páginas não são convertidas em imagem: textos continuam selecionáveis e as imagens ficam na mesma qualidade. Quando nenhuma página é tirada, até links e campos de formulário continuam funcionando.' },
+    { p: 'Dá para organizar PDF pelo celular?', r: 'Dá. No celular, segure a alça de pontinhos embaixo da miniatura e arraste, ou use as setas para mover uma posição de cada vez. A página rola sozinha quando o dedo chega perto da borda.' },
+    { p: 'O arquivo é enviado para algum servidor?', r: 'Não. O PDF é aberto e salvo pelo seu próprio navegador. Nada é enviado, e você pode até desligar a internet depois que a página abrir.' },
+    { p: 'Por que meu PDF não abre?', r: 'PDFs com senha para abrir ou com bloqueio de edição, como alguns extratos de banco, precisam ser desbloqueados com a senha antes. Arquivos corrompidos também não abrem.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <div class="barra">
+        <button id="inverter" type="button" class="btn btn-sec">Inverter ordem</button>
+        <button id="restaurar" type="button" class="btn btn-sec">Voltar ao original</button>
+      </div>
+      <PaginasPdf id="paginas" rotulo="Páginas na ordem em que vão ficar" />
+      <div class="enviar">
+        <button id="salvar" type="button" class="btn">Salvar PDF</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div><strong id="saida-titulo">PDF organizado</strong><span id="saida-info"></span></div>
+      <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Quando organizar um PDF</h2>
+    <p>O caso mais comum é o escaneamento fora de ordem. Você passa um contrato de 12 páginas no scanner da impressora, uma folha enrosca, você coloca de novo e a página 7 vai parar no fim. Em vez de escanear tudo outra vez, basta arrastar a miniatura de volta para o lugar.</p>
+    <p>Outro caso é o documento montado com pressa: o PDF juntado tem o comprovante de residência antes do RG, mas o edital pede o RG primeiro. Ou a apostila que o professor mandou tem a lista de exercícios no meio da teoria. Organizar resolve isso em segundos e o arquivo continua um só.</p>
+    <h2>O que dá para fazer aqui</h2>
+    <ul>
+      <li><strong>Mudar a ordem:</strong> arraste com o mouse ou, no celular, pela alça de pontinhos. As setas movem a página uma posição para o lado, o que ajuda em ajustes finos e para quem usa teclado.</li>
+      <li><strong>Inverter tudo:</strong> scanners com alimentador às vezes leem a pilha de baixo para cima. O botão "Inverter ordem" corrige o arquivo inteiro de uma vez.</li>
+      <li><strong>Girar:</strong> a seta curva no canto gira a página 90 graus para a direita. Clique de novo para continuar girando.</li>
+      <li><strong>Tirar páginas:</strong> o X remove a página do resultado. Se errar, "Voltar ao original" desfaz tudo.</li>
+    </ul>
+    <h2>Dicas para não errar</h2>
+    <p>O número em destaque no canto da miniatura é a posição que a página vai ter no arquivo novo. Embaixo, "pág. 5" lembra de onde ela veio. Assim fica fácil conferir se a página 5 do original foi mesmo para a posição certa. Antes de mandar o arquivo, abra o PDF baixado e passe pelas páginas: leva poucos segundos e evita reenviar documento.</p>
+    <p>Quando você só muda a ordem ou gira, o arquivo original é mantido por dentro: links, marcadores e campos de formulário continuam lá. Se tirar páginas, o PDF é recriado só com as que ficaram e costuma sair menor. Para apagar muitas páginas de uma vez, o <a href="/pdf/remover-paginas">Remover páginas</a> é mais rápido, e para juntar com outro arquivo use o <a href="/pdf/juntar-pdf">Juntar PDF</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, ErroPdf } from '../../lib/pdf-navegador';
+  import { GradePaginas } from '../../lib/pdf-miniaturas';
+  import { montarPdf } from '../../lib/paginas-pdf';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const botao = $<HTMLButtonElement>('salvar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let dados: ArrayBuffer | null = null;
+  let nomeBase = 'documento';
+  let urlSaida = '';
+  let rodada = 0;
+  let trabalhando = false;
+
+  const grade = new GradePaginas($('paginas'), { ordenar: true, girar: true, excluir: true, aoMudar: mudou });
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function mudou() {
+    limparSaida();
+    const n = grade.paginas.length;
+    const tiradas = grade.total - n;
+    botao.disabled = trabalhando || !dados || n === 0;
+    if (trabalhando) return;
+    if (!n) status.textContent = 'Todas as páginas foram tiradas. Clique em "Voltar ao original".';
+    else status.textContent = `${n} ${n === 1 ? 'página' : 'páginas'} no arquivo novo` + (tiradas ? ` (${tiradas} ${tiradas === 1 ? 'tirada' : 'tiradas'}).` : '.');
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    dados = null;
+    grade.limpar();
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const buf = await file.arrayBuffer();
+      const doc = await abrirParaEditar(buf);
+      if (minha !== rodada) return;
+      const total = doc.getPageCount();
+      dados = buf;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      painel.hidden = false;
+      const abrindo = grade.abrir(buf, total);
+      mudou();
+      await abrindo;
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  $('inverter').addEventListener('click', () => { grade.reordenar([...grade.paginas].reverse()); mudou(); });
+  $('restaurar').addEventListener('click', () => { grade.restaurar(); mudou(); });
+
+  botao.addEventListener('click', async () => {
+    if (!dados || !grade.paginas.length) return;
+    const minha = rodada;
+    trabalhando = true;
+    mudou();
+    status.textContent = 'Salvando…';
+    try {
+      const bytes = await montarPdf(dados, grade.escolhidas());
+      if (minha !== rodada) return;
+      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = `${nomeBase}-organizado.pdf`;
+      const n = grade.paginas.length;
+      $('saida-info').textContent = `${n} ${n === 1 ? 'página' : 'páginas'} · ${tamanho(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível salvar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      trabalhando = false;
+      botao.disabled = !dados || !grade.paginas.length;
+    }
+  });
+</script>
+
+<style>
+  .barra { display: flex; flex-wrap: wrap; gap: 8px; }
+  .barra .btn { padding: 6px 12px; font-size: 0.9rem; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; color: var(--muted); }
+</style>

@@ -1,0 +1,179 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import PaginasPdf from '../../components/PaginasPdf.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="girar-pdf"
+  titulo="Girar PDF"
+  subtitulo="Desvire páginas deitadas ou de cabeça para baixo e salve o PDF certo. Gire uma página só ou todas de uma vez, sem enviar o arquivo."
+  tituloSeo="Girar PDF online grátis: rodar páginas e salvar"
+  descricao="Gire as páginas do PDF 90 ou 180 graus, uma por uma ou todas juntas, e salve de vez. Grátis, sem cadastro, e o arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Clique na miniatura para girar a página 90 graus para a direita. As setas do canto giram para um lado ou para o outro.',
+    'Para girar o arquivo inteiro, use os botões "Girar todas".',
+    'Clique em "Salvar PDF" e baixe o arquivo com as páginas na posição certa.',
+  ]}
+  perguntas={[
+    { p: 'Como girar um PDF e salvar?', r: 'Escolha o PDF, gire as páginas clicando nas miniaturas ou nos botões "Girar todas" e clique em "Salvar PDF". O arquivo baixado já abre com as páginas na posição nova em qualquer leitor de PDF.' },
+    { p: 'Como girar só uma página do PDF?', r: 'Clique só na miniatura da página que está torta. Cada clique gira 90 graus para a direita. Se passar do ponto, use a seta para a esquerda no canto da miniatura.' },
+    { p: 'Como desvirar um PDF de cabeça para baixo?', r: 'Clique duas vezes na miniatura (90 + 90 = 180 graus). Se o arquivo todo está de cabeça para baixo, clique duas vezes em "Girar todas para a direita".' },
+    { p: 'Por que o PDF volta a ficar deitado quando abro de novo?', r: 'Girar no leitor de PDF só muda a visualização naquele momento. Aqui o giro é gravado no arquivo, então ele abre certo no celular, no computador e para quem receber.' },
+    { p: 'Girar o PDF perde qualidade?', r: 'Não. O giro é uma informação da página: textos, imagens, links e campos de formulário continuam iguais. O tamanho do arquivo praticamente não muda.' },
+    { p: 'O arquivo é enviado para algum servidor?', r: 'Não. O PDF é aberto e salvo pelo seu navegador e não sai do seu aparelho.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <div class="barra">
+        <button id="todas-esquerda" type="button" class="btn btn-sec">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11a8 8 0 1 1 2.3 5.7"/><path d="M4 4v7h7"/></svg>
+          Girar todas para a esquerda
+        </button>
+        <button id="todas-direita" type="button" class="btn btn-sec">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+          Girar todas para a direita
+        </button>
+        <button id="desfazer" type="button" class="btn btn-sec">Desfazer giros</button>
+      </div>
+      <PaginasPdf id="paginas" rotulo="Páginas do PDF. Clique para girar." />
+      <div class="enviar">
+        <button id="salvar" type="button" class="btn" disabled>Salvar PDF</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div><strong id="saida-titulo"></strong><span id="saida-info"></span></div>
+      <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Por que o PDF fica torto</h2>
+    <p>Na maioria das vezes, a culpa é do escaneamento. Uma folha colocada de lado no scanner, uma foto de documento tirada com o celular deitado ou um aplicativo de digitalização que não entendeu a orientação. O resultado é aquele PDF em que você precisa virar o pescoço para ler, ou que o atendente devolve pedindo para mandar de novo.</p>
+    <p>Também acontece com planilhas e plantas: a página foi feita na horizontal, mas o arquivo saiu na vertical, com tudo de lado. E em documentos juntados de vários lugares, uma página ou outra entra de cabeça para baixo.</p>
+    <h2>Girar uma, algumas ou todas</h2>
+    <ul>
+      <li><strong>Uma página:</strong> clique na miniatura. Cada clique gira 90 graus no sentido do relógio. A seta da esquerda, no canto, volta 90 graus.</li>
+      <li><strong>Todas:</strong> os botões "Girar todas" aplicam o mesmo giro ao arquivo inteiro. É o caso típico de um PDF escaneado todo deitado.</li>
+      <li><strong>Misturado:</strong> dá para girar todas e depois acertar só as que já estavam certas. As páginas giradas ficam com a borda escura, para você saber o que mudou.</li>
+    </ul>
+    <h2>O giro fica gravado</h2>
+    <p>Muita gente gira o PDF no leitor do computador, fecha e descobre que ele abriu torto de novo, ou que a pessoa que recebeu viu tudo de lado. Isso acontece porque o leitor só muda a visualização. Aqui o giro é salvo dentro do arquivo, na própria página.</p>
+    <p>Como nada é redesenhado, o texto continua selecionável, a qualidade é a mesma e links e campos de formulário seguem funcionando. Se o problema for a ordem das páginas, use o <a href="/pdf/organizar-pdf">Organizar PDF</a>, que também gira.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, ErroPdf } from '../../lib/pdf-navegador';
+  import { GradePaginas } from '../../lib/pdf-miniaturas';
+  import { montarPdf } from '../../lib/paginas-pdf';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const botao = $<HTMLButtonElement>('salvar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  let dados: ArrayBuffer | null = null;
+  let nomeBase = 'documento';
+  let urlSaida = '';
+  let rodada = 0;
+  let trabalhando = false;
+
+  const grade = new GradePaginas($('paginas'), { girar: true, clique: 'girar', aoMudar: mudou });
+  const giradas = () => grade.escolhidas().filter((p) => p.giro).length;
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (urlSaida) { URL.revokeObjectURL(urlSaida); urlSaida = ''; }
+  }
+
+  function mudou() {
+    limparSaida();
+    const n = giradas();
+    botao.disabled = trabalhando || !dados || !n;
+    if (trabalhando) return;
+    status.textContent = n ? `${n} ${n === 1 ? 'página girada' : 'páginas giradas'}.` : 'Clique nas páginas que você quer girar.';
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    dados = null;
+    grade.limpar();
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const buf = await file.arrayBuffer();
+      const doc = await abrirParaEditar(buf);
+      if (minha !== rodada) return;
+      const total = doc.getPageCount();
+      dados = buf;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      painel.hidden = false;
+      const abrindo = grade.abrir(buf, total);
+      mudou();
+      await abrindo;
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  $('todas-esquerda').addEventListener('click', () => { grade.girarTodas(-90); mudou(); });
+  $('todas-direita').addEventListener('click', () => { grade.girarTodas(90); mudou(); });
+  $('desfazer').addEventListener('click', () => { grade.restaurar(); mudou(); });
+
+  botao.addEventListener('click', async () => {
+    const n = giradas();
+    if (!dados || !n) return;
+    const minha = rodada;
+    trabalhando = true;
+    mudou();
+    status.textContent = 'Salvando…';
+    try {
+      const bytes = await montarPdf(dados, grade.escolhidas());
+      if (minha !== rodada) return;
+      const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      urlSaida = URL.createObjectURL(blob);
+      baixar.href = urlSaida;
+      baixar.download = `${nomeBase}-girado.pdf`;
+      $('saida-titulo').textContent = `${n} ${n === 1 ? 'página girada' : 'páginas giradas'}`;
+      $('saida-info').textContent = `${grade.total} ${grade.total === 1 ? 'página' : 'páginas'} · ${tamanho(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível salvar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      trabalhando = false;
+      botao.disabled = !dados || !giradas();
+    }
+  });
+</script>
+
+<style>
+  .barra { display: flex; flex-wrap: wrap; gap: 8px; }
+  .barra .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.9rem; }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; color: var(--muted); }
+</style>
