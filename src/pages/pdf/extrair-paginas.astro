@@ -1,0 +1,249 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import PaginasPdf from '../../components/PaginasPdf.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="extrair-paginas"
+  titulo="Extrair páginas do PDF"
+  subtitulo="Escolha as páginas que interessam e salve só elas num PDF novo. O arquivo original fica como está, e nada é enviado."
+  tituloSeo="Extrair páginas do PDF online grátis e sem enviar"
+  descricao="Escolha as páginas do PDF pelas miniaturas ou pelos números e salve só elas num arquivo novo. Grátis, sem cadastro, e o PDF não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Clique nas miniaturas das páginas que você quer guardar, ou digite os números, como 1, 3-5.',
+    'Se quiser cada página num arquivo próprio, marque a opção "Salvar cada página num PDF separado".',
+    'Clique em "Extrair páginas" e baixe o PDF novo.',
+  ]}
+  perguntas={[
+    { p: 'Como salvar só uma página de um PDF?', r: 'Escolha o PDF, clique na miniatura da página e depois em "Extrair páginas". Sai um PDF novo só com ela, com o texto e as imagens do jeito que estavam.' },
+    { p: 'Como tirar algumas páginas de um PDF e salvar em outro arquivo?', r: 'Clique em todas as páginas que você quer ou digite os números separados por vírgula, como "2, 5, 9-12". Todas vão para um único PDF novo, na ordem em que aparecem no original.' },
+    { p: 'Qual a diferença entre extrair páginas e dividir PDF?', r: 'Extrair cria um arquivo com as páginas escolhidas. Dividir corta o PDF em vários pedaços de uma vez, por intervalos ou a cada tantas páginas. Para tirar só o que interessa, extrair é mais direto.' },
+    { p: 'O PDF original é alterado?', r: 'Não. O original continua no seu aparelho do jeito que estava. A ferramenta só cria uma cópia com as páginas escolhidas.' },
+    { p: 'Dá para extrair páginas de PDF pelo celular?', r: 'Dá. Toque nas miniaturas para escolher e no botão para baixar. Tudo funciona no navegador do celular, sem instalar aplicativo.' },
+    { p: 'O arquivo é enviado para algum servidor?', r: 'Não. O PDF é aberto e o novo arquivo é criado pelo seu navegador. Nada sai do seu aparelho.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <div class="campo">
+        <label for="intervalos">Páginas para extrair</label>
+        <input id="intervalos" type="text" placeholder="Ex.: 1, 3-5" autocomplete="off" />
+        <small>Clique nas miniaturas ou digite os números separados por vírgula.</small>
+      </div>
+      <div class="barra">
+        <button id="pares" type="button" class="btn btn-sec">Pares</button>
+        <button id="impares" type="button" class="btn btn-sec">Ímpares</button>
+        <button id="nenhuma" type="button" class="btn btn-sec">Desmarcar todas</button>
+      </div>
+      <label class="marcar"><input id="separar" type="checkbox" /> Salvar cada página num PDF separado</label>
+      <p id="resumo" class="muted" aria-live="polite"></p>
+      <PaginasPdf id="paginas" rotulo="Páginas do PDF. Clique para escolher as que vão para o arquivo novo." />
+      <div class="enviar">
+        <button id="extrair" type="button" class="btn" disabled>Extrair páginas</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong id="saida-titulo"></strong><span id="saida-info"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+      <ul id="arquivos" class="arquivos" hidden></ul>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Quando extrair páginas</h2>
+    <p>Pense no PDF de 80 páginas do contrato de financiamento, quando o banco só pede a página com as assinaturas. Ou na apostila inteira do cursinho, quando você quer imprimir só a lista de exercícios. Ou na declaração do Imposto de Renda, quando o corretor pede só o recibo de entrega. Em todos esses casos, mandar o arquivo inteiro atrapalha quem recebe e pode expor dados que não precisavam ir.</p>
+    <p>Extrair resolve isso: você escolhe as páginas e recebe um PDF novo só com elas. O original continua guardado, inteiro, para quando precisar de novo.</p>
+    <h2>Como escolher rápido</h2>
+    <ul>
+      <li><strong>Poucas páginas:</strong> clique nas miniaturas. As escolhidas ganham um sinal de certo e a borda escura.</li>
+      <li><strong>Trechos longos:</strong> digite no campo. "5-20" pega da página 5 até a 20; "30-" vai da 30 até o fim; "1, 4, 7" pega páginas soltas.</li>
+      <li><strong>Frente ou verso:</strong> os botões "Pares" e "Ímpares" escolhem metade do arquivo, útil em escaneamentos frente e verso.</li>
+    </ul>
+    <h2>Um arquivo ou vários</h2>
+    <p>Por padrão, as páginas escolhidas vão juntas para um PDF só, na mesma ordem do original. Se cada página precisa ir para um lugar, como os holerites do ano que vão para pastas diferentes, marque "Salvar cada página num PDF separado": você baixa os arquivos um por um ou todos num .zip.</p>
+    <p>O texto continua selecionável e as imagens não perdem qualidade, porque as páginas são copiadas como estão, sem virar foto. Se o que você quer é apagar algumas páginas e manter o resto, o <a href="/pdf/remover-paginas">Remover páginas</a> é o caminho mais curto. Para cortar o arquivo em várias partes de uma vez, use o <a href="/pdf/dividir-pdf">Dividir PDF</a>.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, ErroPdf } from '../../lib/pdf-navegador';
+  import { GradePaginas } from '../../lib/pdf-miniaturas';
+  import { montarPdf, montarVarios, paresOuImpares } from '../../lib/paginas-pdf';
+  import { escreverIntervalos, lerIntervalos, nomeDoGrupo } from '../../lib/intervalos';
+  import { criarZip } from '../../lib/zip';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const intervalos = $<HTMLInputElement>('intervalos');
+  const separar = $<HTMLInputElement>('separar');
+  const resumo = $('resumo');
+  const botao = $<HTMLButtonElement>('extrair');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const listaArquivos = $('arquivos');
+
+  let dados: ArrayBuffer | null = null;
+  let nomeBase = 'documento';
+  let urls: string[] = [];
+  let rodada = 0;
+  let trabalhando = false;
+  let erroCampo = '';
+
+  const grade = new GradePaginas($('paginas'), {
+    clique: 'escolher',
+    aoMudar: () => { intervalos.value = escreverIntervalos(grade.marcadas()); erroCampo = ''; mudou(); },
+  });
+
+  function limparSaida() {
+    saida.hidden = true;
+    urls.forEach(URL.revokeObjectURL); urls = [];
+    listaArquivos.replaceChildren();
+  }
+
+  function mudou() {
+    limparSaida();
+    status.textContent = '';
+    const n = grade.marcadas().length;
+    if (erroCampo) { resumo.textContent = erroCampo; resumo.className = 'erro'; }
+    else if (!n) { resumo.textContent = 'Nenhuma página escolhida ainda.'; resumo.className = 'muted'; }
+    else {
+      resumo.className = 'muted';
+      const p = `${n} ${n === 1 ? 'página escolhida' : 'páginas escolhidas'}`;
+      resumo.textContent = separar.checked && n > 1 ? `${p}: vai gerar ${n} arquivos.` : `${p}: vai gerar 1 arquivo.`;
+    }
+    botao.disabled = trabalhando || !dados || !!erroCampo || !n;
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    dados = null;
+    grade.limpar();
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    try {
+      const buf = await file.arrayBuffer();
+      const doc = await abrirParaEditar(buf);
+      if (minha !== rodada) return;
+      const total = doc.getPageCount();
+      dados = buf;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      info.textContent = `${file.name} · ${total} ${total === 1 ? 'página' : 'páginas'} · ${tamanho(file.size)}`;
+      intervalos.value = '';
+      erroCampo = '';
+      painel.hidden = false;
+      const abrindo = grade.abrir(buf, total);
+      mudou();
+      await abrindo;
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  intervalos.addEventListener('input', () => {
+    if (!intervalos.value.trim()) { erroCampo = ''; grade.marcar([]); }
+    else {
+      const r = lerIntervalos(intervalos.value, grade.total);
+      erroCampo = r.erro ?? '';
+      if (!r.erro) grade.marcar(r.grupos.flat());
+    }
+    mudou();
+  });
+  intervalos.addEventListener('change', () => { if (!erroCampo) intervalos.value = escreverIntervalos(grade.marcadas()); });
+  separar.addEventListener('change', mudou);
+
+  const atalho = (paginas: number[]) => { grade.marcar(paginas); intervalos.value = escreverIntervalos(paginas); erroCampo = ''; mudou(); };
+  $('pares').addEventListener('click', () => atalho(paresOuImpares(grade.total, 'pares')));
+  $('impares').addEventListener('click', () => atalho(paresOuImpares(grade.total, 'impares')));
+  $('nenhuma').addEventListener('click', () => atalho([]));
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+
+  const link = (bytes: Uint8Array, tipo: string) => {
+    const url = URL.createObjectURL(new Blob([bytes as Uint8Array<ArrayBuffer>], { type: tipo }));
+    urls.push(url);
+    return url;
+  };
+
+  botao.addEventListener('click', async () => {
+    const escolhidas = grade.escolhidas(true);
+    if (!dados || !escolhidas.length) return;
+    const minha = rodada;
+    const numeros = escolhidas.map((p) => p.indice + 1);
+    const grupos = separar.checked ? escolhidas.map((p) => [p]) : [escolhidas];
+    trabalhando = true;
+    mudou();
+    try {
+      status.textContent = grupos.length > 1 ? `Criando ${grupos.length} arquivos…` : 'Extraindo…';
+      const todos = grupos.length > 1 ? await montarVarios(dados, grupos) : [await montarPdf(dados, grupos[0])];
+      if (minha !== rodada) return;
+      const feitos = todos.map((bytes, i) => ({
+        nome: `${nomeBase}-${nomeDoGrupo(grupos[i].map((p) => p.indice + 1))}.pdf`, bytes, paginas: grupos[i].length,
+      }));
+      if (feitos.length === 1) {
+        const f = feitos[0];
+        baixar.href = link(f.bytes, 'application/pdf');
+        baixar.download = f.nome;
+        baixar.textContent = 'Baixar PDF';
+        $('saida-titulo').textContent = 'PDF pronto';
+        $('saida-info').textContent = `${f.paginas} ${f.paginas === 1 ? 'página' : 'páginas'} (${escreverIntervalos(numeros)}) · ${tamanho(f.bytes.length)}`;
+        listaArquivos.hidden = true;
+      } else {
+        baixar.href = link(criarZip(feitos.map((f) => ({ nome: f.nome, dados: f.bytes }))), 'application/zip');
+        baixar.download = `${nomeBase}-paginas.zip`;
+        baixar.textContent = 'Baixar todos (.zip)';
+        $('saida-titulo').textContent = `${feitos.length} arquivos prontos`;
+        $('saida-info').textContent = 'Baixe um por um ou todos juntos.';
+        for (const f of feitos) {
+          const li = document.createElement('li');
+          const nome = document.createElement('span'); nome.className = 'nome'; nome.textContent = f.nome;
+          const det = document.createElement('span'); det.className = 'muted'; det.textContent = tamanho(f.bytes.length);
+          const a = document.createElement('a'); a.className = 'btn'; a.href = link(f.bytes, 'application/pdf'); a.download = f.nome; a.textContent = 'Baixar';
+          li.append(nome, det, a);
+          listaArquivos.append(li);
+        }
+        listaArquivos.hidden = false;
+      }
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch (e) {
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível criar o PDF. Pode faltar memória no aparelho.';
+    } finally {
+      trabalhando = false;
+      botao.disabled = !dados || !grade.marcadas().length;
+    }
+  });
+</script>
+
+<style>
+  .barra { display: flex; flex-wrap: wrap; gap: 8px; }
+  .barra .btn { padding: 6px 12px; font-size: 0.9rem; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--fg); }
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; color: var(--muted); }
+  .arquivos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .arquivos :global(li) { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); }
+  .arquivos :global(.nome) { font-weight: 600; flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
+  .arquivos :global(.btn) { padding: 7px 14px; font-size: 0.95rem; }
+</style>

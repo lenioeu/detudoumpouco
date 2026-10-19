@@ -1,6 +1,7 @@
 // Montar um PDF a partir das páginas de outro: mudar a ordem, girar, tirar ou escolher páginas.
 // Usado por organizar PDF, remover páginas, girar PDF e extrair páginas.
 // As contas são funções puras; montarPdf() carrega o pdf-lib só quando é chamado.
+import type { PDFDocument } from 'pdf-lib';
 import { abrirParaEditar, carregarPdfLib, novoPdf } from './pdf-navegador';
 
 /** Uma página do PDF final: de qual página do original ela vem (começando em 0) e quanto girar a mais. */
@@ -80,8 +81,32 @@ export async function montarPdf(dados: ArrayBuffer, paginas: PaginaEscolhida[]):
     return original.save();
   }
 
+  return copiar(original, paginas);
+}
+
+/** Vários PDFs novos de uma vez (um por grupo), abrindo o original uma vez só. */
+export async function montarVarios(dados: ArrayBuffer, grupos: PaginaEscolhida[][]): Promise<Uint8Array[]> {
+  const original = await abrirParaEditar(dados);
+  const total = original.getPageCount();
+  const r: Uint8Array[] = [];
+  for (const grupo of grupos) {
+    if (!grupo.length || grupo.some((p) => !Number.isInteger(p.indice) || p.indice < 0 || p.indice >= total)) {
+      throw new Error('Página fora do PDF.');
+    }
+    r.push(await copiar(original, grupo));
+  }
+  return r;
+}
+
+/** Copia as páginas para um PDF novo, já com o giro extra. */
+async function copiar(original: PDFDocument, paginas: PaginaEscolhida[]): Promise<Uint8Array> {
+  const { degrees } = await carregarPdfLib();
   const novo = await novoPdf();
   const copias = await novo.copyPages(original, paginas.map((p) => p.indice));
-  copias.forEach((pg, i) => { girar(pg, paginas[i].giro); novo.addPage(pg); });
+  copias.forEach((pg, i) => {
+    const extra = normalizarGiro(paginas[i].giro);
+    if (extra) pg.setRotation(degrees(normalizarGiro(pg.getRotation().angle + extra)));
+    novo.addPage(pg);
+  });
   return novo.save();
 }
