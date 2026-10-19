@@ -8,7 +8,7 @@ export default [
   { slug: 'comprimir-pdf', nome: 'Comprimir PDF', resumo: 'Diminua o tamanho do arquivo.', status: 'pronta' },
   { slug: 'organizar-pdf', nome: 'Organizar PDF', resumo: 'Mude a ordem das páginas arrastando.', status: 'pronta' },
   { slug: 'remover-paginas', nome: 'Remover páginas do PDF', resumo: 'Apague as páginas que você não quer.', status: 'pronta' },
-  { slug: 'girar-pdf', nome: 'Girar PDF', resumo: 'Gire páginas tortas ou de cabeça para baixo.', status: 'planejada' },
+  { slug: 'girar-pdf', nome: 'Girar PDF', resumo: 'Gire páginas tortas ou de cabeça para baixo.', status: 'pronta' },
   { slug: 'proteger-pdf', nome: 'Proteger PDF com senha', resumo: 'Coloque senha no seu PDF.', status: 'planejada' },
   { slug: 'remover-senha-pdf', nome: 'Remover senha de PDF', resumo: 'Tire a senha de um PDF que você sabe abrir.', status: 'planejada' },
   { slug: 'numerar-paginas', nome: 'Numerar páginas', resumo: 'Coloque número nas páginas do PDF.', status: 'planejada' },
