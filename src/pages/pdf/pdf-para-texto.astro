@@ -1,0 +1,197 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="pdf-para-texto"
+  titulo="PDF para texto"
+  subtitulo="Tire todo o texto de um PDF para copiar, colar ou salvar em .txt, com as linhas e os parágrafos no lugar. O arquivo é lido no seu navegador."
+  tituloSeo="PDF para texto: copie o texto do PDF grátis"
+  descricao="Extraia o texto de um PDF grátis e sem enviar o arquivo. Mantém linhas e parágrafos, junta frases quebradas e baixa em .txt ou copia com um clique."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Espere a leitura das páginas. O texto aparece na caixa logo abaixo.',
+    'Se for colar no Word ou num e-mail, marque "Juntar as linhas de cada parágrafo".',
+    'Clique em "Copiar texto" ou em "Baixar .txt".',
+  ]}
+  perguntas={[
+    { p: 'Como copiar o texto de um PDF?', r: 'Escolha o arquivo nesta página e clique em "Copiar texto". Todo o conteúdo vai para a área de transferência, pronto para colar com Ctrl+V. Se preferir guardar, use "Baixar .txt", que abre no Bloco de Notas, no Word ou no celular.' },
+    { p: 'Por que o texto saiu vazio ou faltando partes?', r: 'Porque essas páginas são imagens, não texto. Isso acontece com documentos escaneados, fotos de papel transformadas em PDF e alguns boletos e certidões. Para ler o texto de uma imagem é preciso OCR (reconhecimento de caracteres), que esta ferramenta não faz. A página avisa quais páginas não tinham texto.' },
+    { p: 'Como tirar as quebras de linha do texto copiado do PDF?', r: 'Marque "Juntar as linhas de cada parágrafo". Cada parágrafo vira uma linha só, e palavras quebradas com hífen no fim da linha ("compu-" e "tador") voltam a ficar inteiras. Os parágrafos continuam separados por uma linha em branco.' },
+    { p: 'O PDF é enviado para algum servidor?', r: 'Não. O texto é lido pelo pdf.js, que roda no seu navegador. O arquivo e o texto não saem do seu computador ou celular, o que importa para contratos, laudos e documentos pessoais.' },
+    { p: 'A ordem do texto pode sair trocada?', r: 'Pode, em páginas com várias colunas, caixas de texto soltas ou tabelas. O texto sai na ordem em que foi gravado dentro do PDF, que quase sempre é a ordem de leitura, mas nem todo programa grava assim. Revise antes de usar.' },
+    { p: 'Dá para extrair texto de PDF com senha?', r: 'Só se ele abrir sem pedir senha. Um PDF que pede senha para abrir precisa ser desbloqueado antes. Já o bloqueio que só impede copiar não atrapalha a leitura por aqui.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+    <p id="status" class="muted" aria-live="polite"></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <p id="sem-texto" class="alerta" hidden></p>
+      <div class="opcoes">
+        <label class="marcar"><input id="juntar" type="checkbox" /> Juntar as linhas de cada parágrafo</label>
+        <label class="marcar"><input id="marcar" type="checkbox" checked /> Mostrar onde começa cada página</label>
+      </div>
+      <div class="campo">
+        <label for="texto">Texto do PDF <span id="contagem" class="muted contagem"></span></label>
+        <textarea id="texto" rows="16" spellcheck="false"></textarea>
+      </div>
+      <div class="acoes">
+        <button id="copiar" type="button" class="btn">Copiar texto</button>
+        <a id="baixar" class="btn btn-sec" href="#" download>Baixar .txt</a>
+        <span id="copiado" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve tirar o texto do PDF</h2>
+    <p>Copiar direto do leitor de PDF costuma dar trabalho: a seleção pula de coluna, cada linha vem com uma quebra no meio da frase e o cabeçalho se mistura com o conteúdo. Aqui o arquivo inteiro é lido de uma vez e o texto sai organizado em linhas e parágrafos. Serve para citar um trecho de uma lei ou de um edital, aproveitar o conteúdo de um currículo antigo, colar uma cláusula de contrato num e-mail, jogar um artigo num tradutor ou procurar uma palavra num relatório de centenas de páginas.</p>
+    <h2>Linhas do PDF ou parágrafos corridos</h2>
+    <p>O PDF não sabe o que é um parágrafo. Ele só guarda cada pedaço de texto e a posição dele na página. A ferramenta refaz as linhas olhando a altura de cada pedaço e separa os parágrafos quando o espaço entre duas linhas é bem maior que o normal. Com a opção "Juntar as linhas" desmarcada, o texto mantém as quebras do jeito que estão no papel, o que é bom para poemas, endereços, listas e tabelas simples. Marcada, cada parágrafo vira uma linha corrida e as palavras hifenizadas no fim da linha voltam a ficar inteiras, o que é bom para colar no Word, no Google Docs ou num e-mail.</p>
+    <h2>PDF escaneado não tem texto</h2>
+    <p>Se o PDF veio de um scanner ou de fotos tiradas com o celular, cada página é uma imagem. Para o computador, ali não existe letra nenhuma, só pontos coloridos. Nesse caso a ferramenta avisa quais páginas ficaram sem texto. Para transformar essas imagens em texto é preciso OCR, um reconhecimento que tenta "ler" as letras da foto.</p>
+    <h2>Dicas</h2>
+    <ul>
+      <li>Revise números, datas e valores antes de usar: em tabelas, a ordem das colunas pode mudar.</li>
+      <li>O arquivo .txt sai em UTF-8, com acentos corretos no Bloco de Notas, no Word e no celular.</li>
+      <li>Para aproveitar só algumas páginas, desmarque "Mostrar onde começa cada página" depois de copiar o trecho, ou use a marcação "--- Página 5 ---" para achar o ponto certo.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaVer, fecharPdf, ErroPdf } from '../../lib/pdf-navegador';
+  import { contarPalavras, paginasSemTexto, pedacoDoPdfJs, textoDoDocumento, type PedacoTexto } from '../../lib/pdf-texto';
+  import { formatar } from '../../lib/numeros';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const status = $('status');
+  const painel = $('painel');
+  const info = $('info');
+  const semTexto = $('sem-texto');
+  const juntar = $<HTMLInputElement>('juntar');
+  const marcar = $<HTMLInputElement>('marcar');
+  const caixa = $<HTMLTextAreaElement>('texto');
+  const contagem = $('contagem');
+  const copiar = $<HTMLButtonElement>('copiar');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const copiado = $('copiado');
+
+  let paginas: PedacoTexto[][] = [];
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let url = '';
+
+  const plural = (n: number, um: string, varios: string) => `${formatar(n, 0)} ${n === 1 ? um : varios}`;
+
+  function atualizarDownload() {
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(new Blob([caixa.value], { type: 'text/plain;charset=utf-8' }));
+    baixar.href = url;
+    baixar.download = `${nomeBase}.txt`;
+    const t = caixa.value;
+    contagem.textContent = `· ${plural(contarPalavras(t), 'palavra', 'palavras')} · ${plural(t.length, 'caractere', 'caracteres')}`;
+  }
+
+  function montar() {
+    caixa.value = textoDoDocumento(paginas, { juntar: juntar.checked, marcarPaginas: marcar.checked });
+    copiado.textContent = '';
+    atualizarDownload();
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    aviso.hidden = true;
+    painel.hidden = true;
+    status.textContent = '';
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    status.textContent = 'Abrindo o PDF…';
+    let doc;
+    try {
+      doc = await abrirParaVer(await file.arrayBuffer());
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+      return;
+    }
+    try {
+      const lidas: PedacoTexto[][] = [];
+      for (let n = 1; n <= doc.numPages; n++) {
+        if (minha !== rodada) return;
+        status.textContent = `Lendo a página ${n} de ${doc.numPages}…`;
+        const pagina = await doc.getPage(n);
+        const conteudo = await pagina.getTextContent();
+        lidas.push(conteudo.items.map(pedacoDoPdfJs).filter((p): p is PedacoTexto => p !== null));
+        pagina.cleanup();
+      }
+      if (minha !== rodada) return;
+      paginas = lidas;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      const total = lidas.length;
+      info.textContent = `${file.name} · ${plural(total, 'página', 'páginas')} · ${tamanho(file.size)}`;
+      const vazias = paginasSemTexto(lidas);
+      if (vazias.length === total) {
+        semTexto.textContent = 'Não encontramos texto neste PDF. Ele parece ser escaneado ou feito de fotos: cada página é uma imagem. Para ler o texto de uma imagem é preciso OCR (reconhecimento de caracteres).';
+      } else if (vazias.length) {
+        const lista = vazias.length > 12 ? vazias.slice(0, 12).join(', ') + '…' : vazias.join(', ');
+        semTexto.textContent = `${vazias.length === 1 ? 'A página' : 'As páginas'} ${lista} não ${vazias.length === 1 ? 'tem' : 'têm'} texto, só imagem (provavelmente escaneada${vazias.length === 1 ? '' : 's'}). O texto ${vazias.length === 1 ? 'dela' : 'delas'} só sai com OCR.`;
+      }
+      semTexto.hidden = !vazias.length;
+      status.textContent = '';
+      montar();
+      painel.hidden = false;
+    } catch {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      aviso.textContent = 'Não foi possível ler o texto deste PDF.';
+      aviso.hidden = false;
+    } finally {
+      fecharPdf(doc);
+    }
+  }
+
+  async function copiarTexto() {
+    try {
+      await navigator.clipboard.writeText(caixa.value);
+    } catch {
+      caixa.select();
+      document.execCommand('copy');
+    }
+    copiado.textContent = 'Texto copiado!';
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  juntar.addEventListener('change', montar);
+  marcar.addEventListener('change', montar);
+  copiar.addEventListener('click', copiarTexto);
+  let espera = 0;
+  caixa.addEventListener('input', () => { copiado.textContent = ''; clearTimeout(espera); espera = window.setTimeout(atualizarDownload, 250); });
+</script>
+
+<style>
+  .opcoes { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 40px; }
+  .marcar input { width: 20px; height: 20px; flex: none; accent-color: var(--brand); }
+  .contagem { font-weight: 400; font-size: 0.85rem; }
+  textarea {
+    width: 100%; min-height: 280px; resize: vertical; font-family: var(--f-mono); font-size: 0.9rem; line-height: 1.5;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .alerta {
+    margin: 0; padding: 12px 14px; border-radius: var(--radius); background: var(--brand-soft);
+    border: 1px solid var(--line); animation: surgir 0.3s var(--suave);
+  }
+  .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+</style>

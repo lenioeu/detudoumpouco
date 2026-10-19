@@ -1,0 +1,239 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="achatar-pdf"
+  titulo="Achatar PDF"
+  subtitulo="Trave um formulário preenchido e os comentários do PDF: tudo vira parte da página e ninguém consegue mais editar os campos. Feito no seu navegador."
+  tituloSeo="Achatar PDF: trave formulários e anotações grátis"
+  descricao="Achate PDF grátis: campos preenchidos, comentários, carimbos e marca-texto viram parte da página e não podem mais ser editados. Sem enviar o arquivo."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Veja quantos campos de formulário e anotações foram encontrados.',
+    'Deixe marcado o que quer achatar: o formulário, as anotações ou os dois.',
+    'Clique em "Achatar PDF", confira a prévia e baixe o arquivo novo.',
+  ]}
+  perguntas={[
+    { p: 'O que é achatar um PDF?', r: 'É transformar as partes interativas do PDF (campos de formulário, comentários, carimbos, marca-texto e desenhos) em conteúdo fixo da página. A aparência continua a mesma, mas não dá mais para clicar, apagar ou mudar o que foi preenchido.' },
+    { p: 'Por que meu formulário preenchido aparece em branco em outro celular ou impressora?', r: 'Alguns aplicativos e impressoras ignoram os campos de formulário e mostram só o conteúdo da página. Depois de achatar, o que você digitou passa a fazer parte da página e aparece em qualquer leitor, no WhatsApp e na impressão.' },
+    { p: 'Dá para desfazer o achatamento?', r: 'Não. Depois de achatado, o texto dos campos vira desenho na página. Por isso guarde uma cópia do PDF original se ainda for preciso mudar alguma coisa. O arquivo achatado é sempre salvo como um arquivo novo.' },
+    { p: 'Achatar um PDF assinado digitalmente estraga a assinatura?', r: 'Sim. Qualquer mudança no arquivo invalida a assinatura digital (como a do gov.br ou de um certificado ICP-Brasil). A imagem da assinatura continua visível, mas a verificação vai acusar alteração. A página avisa quando encontra um campo assinado.' },
+    { p: 'Os links do PDF continuam funcionando?', r: 'Continuam. Links clicáveis não são achatados, porque não têm desenho próprio e não atrapalham ninguém.' },
+    { p: 'O arquivo é enviado para algum servidor?', r: 'Não. O PDF é aberto e alterado pelo seu navegador, com a biblioteca pdf-lib. Ele não sai do seu computador ou celular, o que importa para fichas com CPF, endereço e dados de saúde.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+    <p id="status" class="muted" aria-live="polite"></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <ul id="achados" class="achados"></ul>
+      <p id="alerta-assinatura" class="alerta" hidden>Este PDF tem assinatura digital. Achatar altera o arquivo e a assinatura deixa de ser válida, mesmo que continue aparecendo na página.</p>
+      <p id="nada" class="alerta" hidden>Este PDF não tem campos de formulário nem anotações para achatar. Ele já está "achatado".</p>
+      <div id="opcoes" class="opcoes">
+        <label class="marcar"><input id="op-form" type="checkbox" checked /> Achatar o formulário (campos)</label>
+        <label class="marcar"><input id="op-anot" type="checkbox" checked /> Achatar as anotações (comentários, carimbos, desenhos)</label>
+      </div>
+      <div class="acoes">
+        <button id="achatar" type="button" class="btn">Achatar PDF</button>
+      </div>
+    </div>
+
+    <div id="saida" class="stack" hidden>
+      <div class="resultado saida">
+        <div><strong id="saida-titulo">PDF achatado</strong><span id="saida-info" class="muted"></span></div>
+        <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+      </div>
+      <p id="saida-obs" class="muted" hidden></p>
+      <figure class="previa">
+        <span class="moldura"><img id="previa" alt="Prévia da página achatada" /></span>
+        <figcaption id="previa-legenda" class="muted"></figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que acontece quando você achata um PDF</h2>
+    <p>Um PDF tem duas camadas. Uma é a página em si: texto, imagens e linhas. A outra fica por cima e guarda as coisas interativas: as caixas de um formulário, os comentários amarelos, o marca-texto, os carimbos de "aprovado" e os desenhos feitos à mão no leitor. Achatar é pegar o que está na camada de cima e desenhar direto na página, apagando a versão editável. Visualmente nada muda; o que muda é que ninguém consegue mais alterar aquilo.</p>
+    <h2>Quando vale a pena</h2>
+    <ul>
+      <li><strong>Formulário preenchido que vai ser enviado:</strong> ficha de matrícula, cadastro de cliente, requerimento de prefeitura ou declaração. Achatado, o que você digitou não some nem pode ser trocado por quem recebe.</li>
+      <li><strong>Campos que não aparecem:</strong> há aplicativos de celular, visualizadores de e-mail e impressoras que mostram o formulário em branco. Depois de achatar, os dados fazem parte da página e aparecem em qualquer lugar.</li>
+      <li><strong>Revisões com comentários:</strong> um contrato ou uma prova corrigida com marca-texto e notas. Achatando, as marcações viram parte do documento final.</li>
+      <li><strong>Antes de juntar ou dividir:</strong> campos com o mesmo nome em arquivos diferentes podem se misturar ao juntar PDFs. Achatar antes evita esse problema.</li>
+    </ul>
+    <h2>O que fica como estava</h2>
+    <p>Links clicáveis continuam funcionando. Comentários do tipo "nota" que não têm desenho próprio (o leitor é que desenha o ícone) também ficam, e a página avisa quantos são. Campos marcados como ocultos são removidos sem aparecer, do mesmo jeito que estavam invisíveis no leitor. Se o PDF pedia ao leitor para redesenhar os campos, o desenho é refeito com uma fonte padrão antes de achatar, para o valor preenchido aparecer certinho.</p>
+    <p>Dica: guarde o original. Um PDF achatado não volta a ser editável, e para mudar um dado será preciso preencher o formulário de novo.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, carregarPdfLib, fecharPdf, miniatura, ErroPdf } from '../../lib/pdf-navegador';
+  import type { Analise } from '../../lib/achatar-pdf';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const status = $('status');
+  const painel = $('painel');
+  const info = $('info');
+  const achados = $('achados');
+  const alertaAssinatura = $('alerta-assinatura');
+  const nada = $('nada');
+  const opcoes = $('opcoes');
+  const opForm = $<HTMLInputElement>('op-form');
+  const opAnot = $<HTMLInputElement>('op-anot');
+  const botao = $<HTMLButtonElement>('achatar');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const previa = $<HTMLImageElement>('previa');
+
+  const motor = () => import('../../lib/achatar-pdf');
+  let bytes: ArrayBuffer | null = null;
+  let analise: Analise | null = null;
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let url = '';
+  let urlPrevia = '';
+
+  const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (url) URL.revokeObjectURL(url);
+    if (urlPrevia) URL.revokeObjectURL(urlPrevia);
+    url = urlPrevia = '';
+    previa.removeAttribute('src');
+  }
+
+  function atualizar() {
+    const a = analise;
+    const algo = !!a && ((opForm.checked && a.campos > 0) || (opAnot.checked && a.anotacoes > 0));
+    botao.disabled = !algo;
+    alertaAssinatura.hidden = !(a && a.assinados > 0 && opForm.checked);
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    bytes = null; analise = null;
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    status.textContent = 'Abrindo o PDF…';
+    try {
+      const dados = await file.arrayBuffer();
+      const [doc, lib, m] = await Promise.all([abrirParaEditar(dados), carregarPdfLib(), motor()]);
+      if (minha !== rodada) return;
+      const a = m.analisar(lib, doc);
+      bytes = dados; analise = a;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      const total = doc.getPageCount();
+      info.textContent = `${file.name} · ${plural(total, 'página', 'páginas')} · ${tamanho(file.size)}`;
+      achados.innerHTML = '';
+      const itens = [
+        plural(a.campos, 'campo de formulário', 'campos de formulário'),
+        plural(a.anotacoes, 'anotação', 'anotações') + ' (comentários, marcações, carimbos)',
+        plural(a.links, 'link', 'links') + ' (continuam clicáveis)',
+      ];
+      for (const t of itens) { const li = document.createElement('li'); li.textContent = t; achados.append(li); }
+      opForm.checked = a.campos > 0; opForm.disabled = a.campos === 0;
+      opAnot.checked = a.anotacoes > 0; opAnot.disabled = a.anotacoes === 0;
+      const vazio = a.campos === 0 && a.anotacoes === 0;
+      nada.hidden = !vazio;
+      opcoes.hidden = vazio;
+      botao.hidden = vazio;
+      status.textContent = '';
+      painel.hidden = false;
+      atualizar();
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+    }
+  }
+
+  async function executar() {
+    if (!bytes || !analise) return;
+    const minha = ++rodada;
+    limparSaida();
+    botao.disabled = true;
+    status.textContent = 'Achatando…';
+    try {
+      // Abre de novo a partir dos bytes originais: achatar duas vezes com opções diferentes sempre parte do original.
+      const [doc, lib, m] = await Promise.all([abrirParaEditar(bytes), carregarPdfLib(), motor()]);
+      const r = await m.achatar(lib, doc, { formulario: opForm.checked, anotacoes: opAnot.checked });
+      const saidaBytes = await doc.save({ updateFieldAppearances: false });
+      if (minha !== rodada) return;
+      const blob = new Blob([saidaBytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' });
+      url = URL.createObjectURL(blob);
+      baixar.href = url;
+      baixar.download = `${nomeBase}-achatado.pdf`;
+      const partes: string[] = [];
+      if (opForm.checked && analise.campos) partes.push(plural(analise.campos, 'campo', 'campos'));
+      if (r.anotacoesAchatadas) partes.push(plural(r.anotacoesAchatadas, 'anotação', 'anotações'));
+      $('saida-info').textContent = (partes.length ? partes.join(' e ') + ' fixados na página · ' : '') + tamanho(blob.size);
+      const obs: string[] = [];
+      if (r.semAparencia) obs.push(`${plural(r.semAparencia, 'nota ficou', 'notas ficaram')} como ${r.semAparencia === 1 ? 'estava' : 'estavam'}, porque não ${r.semAparencia === 1 ? 'tem' : 'têm'} desenho próprio (o leitor de PDF é que desenha o ícone).`);
+      if (r.camposSemAtualizar) obs.push(`${plural(r.camposSemAtualizar, 'campo usa', 'campos usam')} letras que a fonte padrão não tem; ${r.camposSemAtualizar === 1 ? 'ele ficou' : 'eles ficaram'} com o desenho que já ${r.camposSemAtualizar === 1 ? 'tinha' : 'tinham'}. Confira na prévia.`);
+      $('saida-obs').textContent = obs.join(' ');
+      $('saida-obs').hidden = !obs.length;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+
+      // Prévia: a primeira página que mudou, desenhada a partir do arquivo novo.
+      const numero = r.paginas[0] ?? 1;
+      const visor = await abrirParaVer(saidaBytes.buffer.slice(saidaBytes.byteOffset, saidaBytes.byteOffset + saidaBytes.byteLength) as ArrayBuffer);
+      try {
+        const canvas = await miniatura(visor, numero, 360);
+        if (minha !== rodada) return;
+        const png = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, 'image/png'));
+        canvas.width = canvas.height = 0;
+        if (png && minha === rodada) {
+          urlPrevia = URL.createObjectURL(png);
+          previa.src = urlPrevia;
+          $('previa-legenda').textContent = `Página ${numero} do arquivo achatado`;
+        }
+      } finally { fecharPdf(visor); }
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível achatar este PDF.';
+    } finally {
+      if (minha === rodada) atualizar();
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  botao.addEventListener('click', executar);
+  for (const el of [opForm, opAnot]) el.addEventListener('change', () => { limparSaida(); status.textContent = ''; atualizar(); });
+</script>
+
+<style>
+  .achados { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 4px; }
+  .opcoes { display: flex; flex-direction: column; gap: 2px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 40px; }
+  .marcar input { width: 20px; height: 20px; flex: none; accent-color: var(--brand); }
+  .alerta {
+    margin: 0; padding: 12px 14px; border-radius: var(--radius); background: var(--brand-soft);
+    border: 1px solid var(--line); animation: surgir 0.3s var(--suave);
+  }
+  .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+  .previa { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .moldura {
+    display: grid; place-items: center; width: min(100%, 360px); aspect-ratio: 3 / 4; overflow: hidden;
+    background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius);
+  }
+  .moldura img { max-width: 100%; max-height: 100%; width: auto; height: auto; display: block; }
+  .previa figcaption { font-size: 0.85rem; }
+</style>
