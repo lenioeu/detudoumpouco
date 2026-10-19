@@ -14,7 +14,7 @@ export default [
   { slug: 'numerar-paginas', nome: 'Numerar páginas', resumo: 'Coloque número nas páginas do PDF.', status: 'planejada' },
   { slug: 'marca-dagua', nome: "Marca d'água em PDF", resumo: 'Adicione um texto ou logo em todas as páginas.', status: 'planejada' },
   { slug: 'editar-pdf', nome: 'Editar PDF', resumo: 'Escreva, coloque imagens, desenhe e destaque no PDF.', status: 'planejada' },
-  { slug: 'escanear-para-pdf', nome: 'Escanear para PDF', resumo: 'Fotografe documentos com o celular e salve em PDF.', status: 'planejada' },
+  { slug: 'escanear-para-pdf', nome: 'Escanear para PDF', resumo: 'Fotografe documentos com o celular e salve em PDF.', status: 'pronta' },
   { slug: 'extrair-paginas', nome: 'Extrair páginas do PDF', resumo: 'Salve só as páginas que você escolher num PDF novo.', status: 'planejada' },
   { slug: 'pdf-para-png', nome: 'PDF para PNG', resumo: 'Salve as páginas do PDF como PNG em alta qualidade.', status: 'planejada' },
   { slug: 'pdf-para-texto', nome: 'PDF para texto', resumo: 'Copie todo o texto de um PDF.', status: 'planejada' },
