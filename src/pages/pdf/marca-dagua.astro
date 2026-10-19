@@ -1,0 +1,550 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+import { POSICOES_MARCA } from '../../lib/marca-dagua';
+import { FONTES, CORES } from '../../lib/pdf-desenho';
+---
+<Ferramenta
+  secao="pdf"
+  slug="marca-dagua"
+  titulo="Marca d'água em PDF"
+  subtitulo="Coloque um texto, como CONFIDENCIAL ou CÓPIA, ou o logo da sua empresa em todas as páginas do PDF. Ajuste a transparência, a posição e a inclinação vendo a prévia. Tudo no seu navegador."
+  tituloSeo="Marca d'água em PDF online grátis: texto ou logo"
+  descricao="Coloque marca d'água no PDF grátis: texto ou logo, com transparência, posição, inclinação e mosaico. Veja a prévia antes. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Escolha se a marca é um texto ou uma imagem (o logo em PNG ou JPG). Para texto, digite a palavra, como CONFIDENCIAL.',
+    'Escolha a posição na figura da página ou marque "Repetir em toda a página". Ajuste tamanho, opacidade (transparência) e inclinação.',
+    'Confira na prévia, passando pelas páginas com as setas. Se quiser, limite a marca a algumas páginas.',
+    'Clique em "Colocar marca d\'água" e baixe o PDF pronto.',
+  ]}
+  perguntas={[
+    { p: "Como colocar marca d'água em um PDF?", r: 'Escolha o PDF, digite o texto da marca (ou escolha a imagem do logo), ajuste a transparência e a posição vendo a prévia e clique em "Colocar marca d\'água". O PDF novo sai com a marca em todas as páginas, ou só nas que você escolher.' },
+    { p: "Como colocar o logo da empresa como marca d'água?", r: 'Em "O que colocar", escolha "Imagem ou logo" e selecione o arquivo. PNG com fundo transparente fica melhor, porque só o desenho aparece. JPG também funciona, mas o fundo branco da imagem aparece como um retângulo claro.' },
+    { p: "Qual a melhor transparência para marca d'água?", r: 'Entre 15% e 30% para uma marca grande no centro: ela fica visível sem atrapalhar a leitura. Para um logo pequeno no canto, dá para usar 60% a 100%. A prévia mostra o resultado na hora.' },
+    { p: "Dá para tirar a marca d'água depois?", r: 'Guarde o PDF original, porque a marca vai junto com o arquivo novo. Ela entra como uma camada por cima da página. Isso basta para deixar claro que é uma cópia, mas quem tem um editor de PDF consegue apagar. Para dificultar, use o mosaico, que repete a marca pela página toda.' },
+    { p: "A marca d'água deixa o PDF mais pesado?", r: 'Quase nada com texto: só alguns KB. Com imagem, o arquivo cresce o tamanho da imagem uma vez só, mesmo que ela apareça em todas as páginas, porque o PDF guarda a imagem uma vez e repete a referência.' },
+    { p: 'Meu PDF é enviado para algum servidor?', r: 'Não. A marca é colocada dentro do seu navegador. Nem o PDF nem o seu logo saem do aparelho.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+
+      <div class="editor">
+        <div class="opcoes stack">
+          <fieldset class="pilulas">
+            <legend class="rotulo">O que colocar</legend>
+            <label><input type="radio" name="tipo" value="texto" checked /> <span>Texto</span></label>
+            <label><input type="radio" name="tipo" value="imagem" /> <span>Imagem ou logo</span></label>
+          </fieldset>
+
+          <div id="campos-texto" class="stack">
+            <div class="campo">
+              <label for="texto">Texto da marca</label>
+              <input id="texto" type="text" value="CONFIDENCIAL" maxlength="80" autocomplete="off" />
+            </div>
+            <div class="duas">
+              <div class="campo">
+                <label for="fonte">Letra</label>
+                <select id="fonte">
+                  {Object.entries(FONTES).map(([k, f]) => <option value={k} selected={k === 'helvetica-negrito'}>{f.nome}</option>)}
+                </select>
+              </div>
+              <div class="campo">
+                <label for="cor">Cor</label>
+                <select id="cor">
+                  {Object.entries(CORES).map(([k, c]) => <option value={k} selected={k === 'cinza'}>{c.nome}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="campos-imagem" class="stack" hidden>
+            <SoltarArquivos id="logo" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" texto="Escolher imagem" dica="PNG com fundo transparente fica melhor" />
+            <div id="logo-escolhido" class="logo-escolhido" hidden>
+              <span id="logo-info" class="muted"></span>
+              <label for="logo-input" class="btn btn-sec trocar">Trocar imagem</label>
+            </div>
+            <p id="logo-erro" class="erro" hidden></p>
+          </div>
+
+          <fieldset class="lugar">
+            <legend class="rotulo">Posição</legend>
+            <div class="lugar-linha">
+              <div class="folha" id="folha">
+                {POSICOES_MARCA.map((p) => (
+                  <label title={p.nome}>
+                    <input type="radio" name="posicao" value={p.valor} checked={p.valor === 'centro'} aria-label={p.nome} />
+                    <span aria-hidden="true"></span>
+                  </label>
+                ))}
+              </div>
+              <label class="marcar"><input id="mosaico" type="checkbox" /> Repetir em toda a página (mosaico)</label>
+            </div>
+          </fieldset>
+
+          <div class="campo">
+            <label for="tamanho">Tamanho <output id="tamanho-v" for="tamanho">60%</output></label>
+            <input id="tamanho" type="range" min="5" max="100" step="1" value="60" />
+            <small>Em relação à largura da página.</small>
+          </div>
+          <div class="campo">
+            <label for="opacidade">Opacidade <output id="opacidade-v" for="opacidade">25%</output></label>
+            <input id="opacidade" type="range" min="5" max="100" step="1" value="25" />
+            <small>Quanto menor, mais transparente. 100% = sem transparência.</small>
+          </div>
+          <div class="campo">
+            <label for="angulo">Inclinação <output id="angulo-v" for="angulo">45°</output></label>
+            <input id="angulo" type="range" min="-90" max="90" step="5" value="45" />
+          </div>
+          <div class="campo">
+            <label for="paginas">Páginas</label>
+            <input id="paginas" type="text" placeholder="Todas" autocomplete="off" />
+            <small>Deixe vazio para todas, ou digite como 1-3, 5.</small>
+          </div>
+          <p id="resumo" class="muted" aria-live="polite"></p>
+        </div>
+
+        <div class="previa-area">
+          <div class="previa" id="previa"><span class="muted">Carregando a prévia…</span></div>
+          <div class="navegar">
+            <button id="anterior" type="button" class="btn btn-sec" aria-label="Página anterior">‹</button>
+            <span id="qual" class="muted" aria-live="polite"></span>
+            <button id="proxima" type="button" class="btn btn-sec" aria-label="Próxima página">›</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="enviar">
+        <button id="aplicar" type="button" class="btn" disabled>Colocar marca d'água</button>
+        <span id="status" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <div id="saida" class="resultado saida" hidden>
+      <div><strong>PDF com marca d'água</strong><span id="saida-info" class="muted"></span></div>
+      <a id="baixar" class="btn" href="#" download>Baixar PDF</a>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>Para que serve a marca d'água</h2>
+    <p>A marca d'água avisa, em cada página, de onde o documento veio ou para que ele serve. Quem manda a cópia de um RG ou de um comprovante de residência para um cadastro pode escrever "Somente para abertura de conta no banco X" por cima: se a cópia vazar, fica difícil usar para outra coisa. Escritórios marcam minutas com "RASCUNHO" para ninguém assinar a versão errada. Fotógrafos, professores e designers colocam o logo nas páginas de um portfólio ou de uma apostila antes de mandar para o cliente.</p>
+    <h2>Texto ou logo: qual usar</h2>
+    <ul>
+      <li><strong>Texto grande e inclinado no centro:</strong> o clássico CONFIDENCIAL ou CÓPIA. Use cinza ou vermelho, transparência entre 15% e 30% e inclinação de 45°.</li>
+      <li><strong>Mosaico:</strong> repete o texto pela página toda. É o mais difícil de cortar com um print ou de apagar. Bom para documentos pessoais enviados por e-mail ou WhatsApp. Use um tamanho menor, entre 20% e 35%.</li>
+      <li><strong>Logo no canto:</strong> uma imagem pequena (10% a 20% da largura), sem inclinação, num dos cantos. Fica com cara de papel timbrado e não atrapalha a leitura.</li>
+    </ul>
+    <h2>Dicas</h2>
+    <p>Prefira o logo em PNG com fundo transparente: em JPG, o fundo branco da imagem cobre o texto da página atrás dele. Se o logo só existe com fundo branco, use uma transparência menor para o retângulo quase sumir. Os acentos do português (ç, ã, é) funcionam normalmente; símbolos especiais e emojis não existem nas letras padrão do PDF e ficam de fora, com um aviso. Páginas deitadas ou giradas recebem a marca do jeito que aparecem na tela. Depois de pronto, você pode <a href="/pdf/comprimir-pdf">comprimir o PDF</a> se ele ficar grande para enviar.</p>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho as tamanhoArquivo } from '../../lib/arquivos';
+  import { abrirParaEditar, abrirParaVer, desenharPagina, fecharPdf, novoPdf, paraBlob, ErroPdf, type DocumentoPdfJs } from '../../lib/pdf-navegador';
+  import { FONTES, colocarImagem, escreverTexto, filtrarTexto, imagemNoCanvas, infoDaPagina, textoNoCanvas, type Cor, type Fonte, type InfoPagina, type ImagemVisual, type TextoVisual } from '../../lib/pdf-desenho';
+  import { centrosDaMarca, tamanhoDaImagem, tamanhoDaLetra, type PosicaoMarca } from '../../lib/marca-dagua';
+  import { mmParaPt, origemParaCentro } from '../../lib/pdf-visual';
+  import { lerIntervalos } from '../../lib/intervalos';
+  import { orientacaoJpeg } from '../../lib/pdf-pagina';
+  import type { PDFDocument, PDFFont, PDFImage } from 'pdf-lib';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const logoEntrada = $('logo');
+  const aviso = $('aviso');
+  const painel = $('painel');
+  const info = $('info');
+  const camposTexto = $('campos-texto');
+  const camposImagem = $('campos-imagem');
+  const logoInfo = $('logo-info');
+  const logoEscolhido = $('logo-escolhido');
+  const logoErro = $('logo-erro');
+  const texto = $<HTMLInputElement>('texto');
+  const fonteSel = $<HTMLSelectElement>('fonte');
+  const corSel = $<HTMLSelectElement>('cor');
+  const mosaico = $<HTMLInputElement>('mosaico');
+  const folha = $('folha');
+  const tamanho = $<HTMLInputElement>('tamanho');
+  const opacidade = $<HTMLInputElement>('opacidade');
+  const angulo = $<HTMLInputElement>('angulo');
+  const paginasCampo = $<HTMLInputElement>('paginas');
+  const resumo = $('resumo');
+  const previa = $('previa');
+  const qual = $('qual');
+  const anterior = $<HTMLButtonElement>('anterior');
+  const proxima = $<HTMLButtonElement>('proxima');
+  const botao = $<HTMLButtonElement>('aplicar');
+  const status = $('status');
+  const saida = $('saida');
+  const baixar = $<HTMLAnchorElement>('baixar');
+
+  const MARGEM = mmParaPt(10);
+
+  interface Logo { bytes: Uint8Array; png: boolean; largura: number; altura: number; fonte: CanvasImageSource; nome: string; }
+
+  let dados: ArrayBuffer | null = null;
+  let visor: DocumentoPdfJs | null = null;
+  let infos: InfoPagina[] = [];
+  let nomeBase = 'documento';
+  let atual = 1;
+  let rodada = 0;
+  let url = '';
+  let base: { pagina: number; canvas: HTMLCanvasElement } | null = null;
+  let logo: Logo | null = null;
+
+  let medidor: PDFDocument | null = null;
+  const medidas = new Map<Fonte, PDFFont>();
+  async function fonteDeMedida(f: Fonte): Promise<PDFFont> {
+    if (!medidor) medidor = await novoPdf();
+    let fonte = medidas.get(f);
+    if (!fonte) { fonte = await medidor.embedFont(FONTES[f].pdf); medidas.set(f, fonte); }
+    return fonte;
+  }
+
+  const tipo = () => document.querySelector<HTMLInputElement>('input[name="tipo"]:checked')!.value as 'texto' | 'imagem';
+
+  function opcoes() {
+    return {
+      tipo: tipo(),
+      texto: texto.value.trim(),
+      fonte: fonteSel.value as Fonte,
+      cor: corSel.value as Cor,
+      posicao: document.querySelector<HTMLInputElement>('input[name="posicao"]:checked')!.value as PosicaoMarca,
+      mosaico: mosaico.checked,
+      tamanho: Number(tamanho.value),
+      opacidade: Number(opacidade.value) / 100,
+      angulo: Number(angulo.value),
+    };
+  }
+
+  /** Quais páginas recebem a marca. */
+  function paginasEscolhidas(): { paginas: number[]; erro?: string } {
+    const n = infos.length;
+    if (!paginasCampo.value.trim()) return { paginas: Array.from({ length: n }, (_, i) => i + 1) };
+    const r = lerIntervalos(paginasCampo.value, n);
+    if (r.erro) return { paginas: [], erro: r.erro };
+    return { paginas: [...new Set(r.grupos.flat())].sort((a, b) => a - b) };
+  }
+
+  type Item = { texto: TextoVisual } | { imagem: ImagemVisual };
+
+  /** As marcas de uma página, já posicionadas. */
+  function marcasDaPagina(pagina: number, fonte: PDFFont, o: ReturnType<typeof opcoes>): Item[] {
+    const inf = infos[pagina - 1];
+    if (o.tipo === 'texto') {
+      const t = filtrarTexto(o.texto, fonte).texto;
+      if (!t) return [];
+      const tam = tamanhoDaLetra(o.tamanho, inf.largura, fonte.widthOfTextAtSize(t, 1));
+      const w = fonte.widthOfTextAtSize(t, tam);
+      const h = fonte.heightAtSize(tam, { descender: false });
+      return centrosDaMarca(o.posicao, o.mosaico, inf.largura, inf.altura, w, h, o.angulo, MARGEM).map((c) => {
+        const p = origemParaCentro(c.x, c.y, w, h, o.angulo);
+        return { texto: { texto: t, x: p.x, y: p.y, angulo: o.angulo, tamanho: tam, fonte: o.fonte, cor: o.cor, opacidade: o.opacidade } };
+      });
+    }
+    if (!logo) return [];
+    const { largura: w, altura: h } = tamanhoDaImagem(o.tamanho, inf.largura, inf.altura, logo.largura, logo.altura);
+    return centrosDaMarca(o.posicao, o.mosaico, inf.largura, inf.altura, w, h, o.angulo, MARGEM).map((c) => {
+      const p = origemParaCentro(c.x, c.y, w, h, o.angulo);
+      return { imagem: { x: p.x, y: p.y, largura: w, altura: h, angulo: o.angulo, opacidade: o.opacidade } };
+    });
+  }
+
+  async function atualizarResumo() {
+    const o = opcoes();
+    const sel = paginasEscolhidas();
+    let msg = '', erro = false;
+    if (sel.erro) { msg = sel.erro; erro = true; }
+    else if (o.tipo === 'texto' && !o.texto) { msg = 'Digite o texto da marca.'; erro = true; }
+    else if (o.tipo === 'imagem' && !logo) { msg = 'Escolha a imagem do logo.'; erro = true; }
+    else {
+      const n = sel.paginas.length;
+      msg = n === infos.length ? `A marca vai em todas as ${n} páginas.` : `A marca vai em ${n} de ${infos.length} páginas.`;
+      if (n === 1 && infos.length === 1) msg = 'A marca vai na página do PDF.';
+      if (o.tipo === 'texto') {
+        const { fora } = filtrarTexto(o.texto, await fonteDeMedida(o.fonte));
+        if (fora.length) msg += ` Estes caracteres não existem na letra do PDF e ficam de fora: ${fora.join(' ')}`;
+      }
+    }
+    resumo.textContent = msg;
+    resumo.className = erro && (o.tipo !== 'imagem' || logo || sel.erro) ? 'erro' : 'muted';
+    botao.disabled = !dados || erro;
+  }
+
+  let agendado = false;
+  function agendarPrevia() {
+    if (agendado) return;
+    agendado = true;
+    requestAnimationFrame(() => { agendado = false; desenharPrevia().catch(() => undefined); });
+  }
+
+  async function desenharPrevia() {
+    if (!visor || !infos.length) return;
+    const minha = rodada;
+    const pagina = atual;
+    qual.textContent = `Página ${pagina} de ${infos.length}`;
+    anterior.disabled = pagina <= 1;
+    proxima.disabled = pagina >= infos.length;
+    const inf = infos[pagina - 1];
+    if (!base || base.pagina !== pagina) {
+      const larguraCss = Math.min(previa.clientWidth || 360, 460);
+      const densidade = Math.min(window.devicePixelRatio || 1, 2);
+      const { canvas } = await desenharPagina(visor, pagina, (larguraCss * densidade) / inf.largura);
+      if (minha !== rodada || pagina !== atual) return;
+      base = { pagina, canvas };
+    }
+    const o = opcoes();
+    const fonte = await fonteDeMedida(o.fonte);
+    if (minha !== rodada || pagina !== atual) return;
+    const tela = document.createElement('canvas');
+    tela.width = base.canvas.width; tela.height = base.canvas.height;
+    tela.setAttribute('role', 'img');
+    tela.setAttribute('aria-label', `Prévia da página ${pagina}`);
+    const ctx = tela.getContext('2d')!;
+    ctx.drawImage(base.canvas, 0, 0);
+    const k = tela.width / inf.largura;
+    if (paginasEscolhidas().paginas.includes(pagina)) {
+      for (const m of marcasDaPagina(pagina, fonte, o)) {
+        if ('texto' in m) textoNoCanvas(ctx, k, inf.altura, m.texto);
+        else if (logo) imagemNoCanvas(ctx, k, inf.altura, logo.fonte, m.imagem);
+      }
+    }
+    previa.replaceChildren(tela);
+  }
+
+  function limparSaida() {
+    saida.hidden = true;
+    if (url) { URL.revokeObjectURL(url); url = ''; }
+    status.textContent = '';
+  }
+
+  function mudou() {
+    $('tamanho-v').textContent = `${tamanho.value}%`;
+    $('opacidade-v').textContent = `${opacidade.value}%`;
+    $('angulo-v').textContent = `${angulo.value}°`;
+    camposTexto.hidden = tipo() !== 'texto';
+    camposImagem.hidden = tipo() !== 'imagem';
+    folha.classList.toggle('desligada', mosaico.checked);
+    limparSaida();
+    atualizarResumo();
+    agendarPrevia();
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    limparSaida();
+    aviso.hidden = true;
+    painel.hidden = true;
+    botao.disabled = true;
+    dados = null; infos = []; base = null;
+    fecharPdf(visor); visor = null;
+    try {
+      const bytes = await file.arrayBuffer();
+      const doc = await abrirParaEditar(bytes);
+      if (minha !== rodada) return;
+      dados = bytes;
+      infos = doc.getPages().map(infoDaPagina);
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      const n = infos.length;
+      info.textContent = `${file.name} · ${n} ${n === 1 ? 'página' : 'páginas'} · ${tamanhoArquivo(file.size)}`;
+      atual = 1;
+      previa.innerHTML = '<span class="muted">Carregando a prévia…</span>';
+      painel.hidden = false;
+      mudou();
+      const v = await abrirParaVer(bytes);
+      if (minha !== rodada) { fecharPdf(v); return; }
+      visor = v;
+      await desenharPrevia();
+    } catch (e) {
+      if (minha !== rodada) return;
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+      painel.hidden = true;
+    }
+  }
+
+  const ehPdf = (f: File) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+  const ehImagem = (f: File) => f.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|svg)$/i.test(f.name);
+
+  /** Lê o logo. PNG e JPG vão direto para o PDF; os outros formatos (e JPG girado pela câmera) passam por um canvas. */
+  async function lerLogo(file: File): Promise<Logo> {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const endereco = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = endereco;
+      await img.decode();
+      let largura = img.naturalWidth, altura = img.naturalHeight;
+      const png = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+      const jpg = bytes[0] === 0xff && bytes[1] === 0xd8 && orientacaoJpeg(bytes) === 1;
+      if ((png || jpg) && largura && altura) return { bytes, png, largura, altura, fonte: img, nome: file.name };
+      // SVG sem tamanho, WebP, GIF ou JPG com rotação da câmera: desenha num canvas e salva em PNG.
+      const svg = /svg/i.test(file.type) || /\.svg$/i.test(file.name);
+      if (!largura || !altura) { largura = 1200; altura = 1200; }
+      // SVG é desenho: rasteriza com 1600 px no lado maior. Fotos grandes ficam com no máximo 2000 px.
+      const fator = svg ? 1600 / Math.max(largura, altura) : Math.min(1, 2000 / Math.max(largura, altura));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(largura * fator)); c.height = Math.max(1, Math.round(altura * fator));
+      c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
+      const blob = await new Promise<Blob | null>((ok) => c.toBlob(ok, 'image/png'));
+      if (!blob) throw new Error('canvas');
+      return { bytes: new Uint8Array(await blob.arrayBuffer()), png: true, largura: c.width, altura: c.height, fonte: c, nome: file.name };
+    } finally {
+      URL.revokeObjectURL(endereco);
+    }
+  }
+
+  entrada.addEventListener('arquivos', (e) => {
+    const files = (e as CustomEvent<File[]>).detail;
+    const pdf = files.find(ehPdf);
+    if (pdf) { carregar(pdf); return; }
+    // Uma imagem colada (Ctrl+V) com o PDF já aberto é para o logo; a outra área cuida dela.
+    if (dados && files.some(ehImagem)) return;
+    aviso.textContent = files.some(ehImagem) ? 'Escolha primeiro o PDF. A imagem do logo vem depois.' : 'Este arquivo não é um PDF.';
+    aviso.hidden = false;
+  });
+
+  logoEntrada.addEventListener('arquivos', async (e) => {
+    if (!dados) return;
+    const file = (e as CustomEvent<File[]>).detail.find(ehImagem);
+    if (!file) return;
+    try {
+      logo = await lerLogo(file);
+      logoInfo.textContent = `${logo.nome} · ${logo.largura} x ${logo.altura} px`;
+      logoEscolhido.hidden = false;
+      logoEntrada.hidden = true;
+      logoErro.hidden = true;
+      document.querySelector<HTMLInputElement>('input[name="tipo"][value="imagem"]')!.checked = true;
+      if (Number(opacidade.value) < 50 && Number(tamanho.value) === 60) { tamanho.value = '30'; opacidade.value = '50'; angulo.value = '0'; }
+    } catch {
+      logo = null;
+      logoEscolhido.hidden = true;
+      logoEntrada.hidden = false;
+      logoErro.textContent = 'Não foi possível abrir esta imagem. Use PNG ou JPG.';
+      logoErro.hidden = false;
+    }
+    mudou();
+  });
+
+  document.querySelectorAll('input[name="tipo"], input[name="posicao"]').forEach((el) => el.addEventListener('change', mudou));
+  for (const el of [fonteSel, corSel]) el.addEventListener('change', mudou);
+  for (const el of [texto, tamanho, opacidade, angulo, paginasCampo]) el.addEventListener('input', mudou);
+  mosaico.addEventListener('change', () => {
+    if (mosaico.checked && Number(tamanho.value) > 40) tamanho.value = '25';
+    mudou();
+  });
+  anterior.addEventListener('click', () => { if (atual > 1) { atual--; agendarPrevia(); } });
+  proxima.addEventListener('click', () => { if (atual < infos.length) { atual++; agendarPrevia(); } });
+
+  botao.addEventListener('click', async () => {
+    if (!dados) return;
+    const minha = rodada;
+    botao.disabled = true;
+    limparSaida();
+    status.textContent = "Colocando a marca d'água…";
+    try {
+      const o = opcoes();
+      // Sempre a partir dos bytes originais: aplicar de novo não acumula marcas.
+      const doc = await abrirParaEditar(dados);
+      const medida = await fonteDeMedida(o.fonte);
+      let fonte: PDFFont | null = null;
+      let imagem: PDFImage | null = null;
+      if (o.tipo === 'texto') fonte = await doc.embedFont(FONTES[o.fonte].pdf);
+      else if (logo) imagem = logo.png ? await doc.embedPng(logo.bytes) : await doc.embedJpg(logo.bytes);
+      const paginas = doc.getPages();
+      const escolhidas = paginasEscolhidas().paginas;
+      for (const p of escolhidas) {
+        for (const m of marcasDaPagina(p, medida, o)) {
+          if ('texto' in m && fonte) await escreverTexto(paginas[p - 1], infos[p - 1], fonte, m.texto);
+          else if ('imagem' in m && imagem) await colocarImagem(paginas[p - 1], infos[p - 1], imagem, m.imagem);
+        }
+      }
+      doc.setProducer('oquebragalho.app');
+      const blob = await paraBlob(doc);
+      if (minha !== rodada) return;
+      url = URL.createObjectURL(blob);
+      baixar.href = url;
+      baixar.download = `${nomeBase}-marca-dagua.pdf`;
+      $('saida-info').textContent = `${escolhidas.length} ${escolhidas.length === 1 ? 'página' : 'páginas'} com a marca · ${tamanhoArquivo(blob.size)}`;
+      saida.hidden = false;
+      status.textContent = 'Pronto!';
+    } catch {
+      status.textContent = "Não foi possível colocar a marca d'água. Pode faltar memória no aparelho.";
+    } finally {
+      botao.disabled = !dados;
+      atualizarResumo();
+    }
+  });
+</script>
+
+<style>
+  .editor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 760px) { .editor { grid-template-columns: minmax(0, 1fr); } }
+
+  .pilulas { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .pilulas legend { margin-bottom: 8px; }
+  .pilulas label { cursor: pointer; }
+  .pilulas input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .pilulas span {
+    display: inline-block; padding: 7px 16px; border: 2px solid var(--line); border-radius: 999px; font-weight: 600;
+    transition: transform 0.2s var(--mola), background-color 0.15s, border-color 0.15s;
+  }
+  .pilulas label:active span { transform: scale(0.95); }
+  .pilulas input:checked + span { background: var(--brand); border-color: var(--brand-ink); color: var(--brand-ink); }
+  .pilulas input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px; }
+
+  .duas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+  .lugar { border: 0; margin: 0; padding: 0; }
+  .lugar legend { margin-bottom: 8px; }
+  .lugar-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .folha {
+    width: 104px; aspect-ratio: 210 / 297; border: 2px solid var(--line); border-radius: 6px; background: var(--bg);
+    display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); padding: 6px; gap: 4px;
+    transition: opacity 0.2s var(--suave);
+  }
+  .folha.desligada { opacity: 0.4; pointer-events: none; }
+  .folha label { position: relative; cursor: pointer; display: grid; place-items: center; }
+  .folha input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .folha span {
+    width: 22px; height: 22px; border-radius: 5px; background: var(--surface); border: 2px solid var(--line);
+    transition: transform 0.2s var(--mola), background-color 0.15s, border-color 0.15s;
+  }
+  .folha label:hover span { transform: scale(1.1); }
+  .folha label:active span { transform: scale(0.92); }
+  .folha input:checked + span { background: var(--brand); border-color: var(--brand-ink); }
+  .folha input:focus-visible + span { outline: 3px solid var(--link); outline-offset: 2px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .marcar input { width: 18px; height: 18px; accent-color: var(--fg); flex: none; }
+
+  .logo-escolhido { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius); }
+  .logo-escolhido span { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+  .trocar { padding: 6px 14px; font-size: 0.95rem; }
+  .campo label output { font-weight: 400; color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+  .previa-area { display: flex; flex-direction: column; gap: 10px; align-items: center; position: sticky; top: calc(var(--altura-topo) + 16px); }
+  .previa {
+    width: 100%; min-height: 320px; display: grid; place-items: center; padding: 12px;
+    background: var(--bg); border-radius: var(--radius); border: 1px solid var(--line);
+  }
+  .previa :global(canvas) { display: block; max-width: 100%; max-height: 70vh; width: auto; height: auto; box-shadow: var(--sombra); }
+  @media (max-width: 760px) {
+    .previa-area { order: -1; position: static; }
+    .previa { min-height: 240px; }
+    .previa :global(canvas) { max-height: 55vh; }
+  }
+  .navegar { display: flex; align-items: center; gap: 12px; }
+  .navegar .btn { padding: 6px 14px; font-size: 1.2rem; line-height: 1; }
+  .navegar span { min-width: 9em; text-align: center; font-variant-numeric: tabular-nums; }
+
+  .enviar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+  .saida { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; animation: surgir 0.3s var(--suave); }
+  .saida span { display: block; }
+</style>

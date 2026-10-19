@@ -373,7 +373,7 @@ const posicoes = [
     background-image: repeating-linear-gradient(to bottom, transparent 0 9px, var(--line) 9px 11px);
     background-clip: content-box; background-origin: content-box;
   }
-  .folha .pos { cursor: pointer; display: grid; place-items: center; }
+  .folha .pos { position: relative; cursor: pointer; display: grid; place-items: center; }
   .folha .pos.base-esquerda, .folha .pos.base-centro, .folha .pos.base-direita { grid-row: 3; }
   .folha input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .folha span {
