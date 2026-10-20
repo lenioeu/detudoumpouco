@@ -1,0 +1,18 @@
+{
+  "id": "quantocustava",
+  "nome": "Quanto Custava?",
+  "dominio": "quantocustava.app",
+  "marca": "quanto-custava",
+  "descricao": "O jogo diário dos preços de antigamente: descubra o que era mais caro, em dinheiro de hoje.",
+  "cor": "#15803D",
+  "corEscura": "#166534",
+  "corClara": "#DCFCE7",
+  "lancamento": "2026-11-01",
+  "contato": "",
+  "responsavel": "",
+  "anuncios": {
+    "cliente": "",
+    "espacos": { "topo": "", "fim": "" },
+    "recompensa": ""
+  }
+}

@@ -1,0 +1,49 @@
+name: Dados do Quanto Custava?
+
+# Baixa o IPCA e as séries de preços, gera os itens do jogo, estende o
+# calendário de rodadas e grava o resultado no repositório.
+
+on:
+  schedule:
+    # Dia 12 de cada mês, 9h de Brasília. O IBGE divulga o IPCA por volta do dia 10.
+    - cron: '0 12 12 * *'
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/quantocustava/**'
+      - 'sites/quantocustava/dados/itens-pesquisados.csv'
+      - 'sites/quantocustava/js/sorteio.js'
+      - '.github/workflows/dados-quantocustava.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dados-quantocustava-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Baixar fontes e gerar itens
+        run: node scripts/quantocustava/atualizar-dados.mjs
+      - name: Testes
+        run: node --test testes/*.test.mjs
+      - name: Montar o site
+        run: node scripts/build.mjs quantocustava
+      - name: Gravar os dados
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sites/quantocustava/dados
+          if git diff --cached --quiet; then
+            echo "Nada mudou."
+          else
+            git commit -m "Atualiza dados do Quanto Custava?"
+            git push
+          fi

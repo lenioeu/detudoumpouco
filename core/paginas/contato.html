@@ -1,0 +1,21 @@
+---
+titulo: Contato
+descricao: Fale com a equipe do {{nome}}.
+---
+<!doctype html>
+<html lang="pt-BR">
+<head>
+{{> head}}
+</head>
+<body>
+{{> cabecalho}}
+<main class="principal texto">
+  <h1>Contato</h1>
+  <p>Achou um erro em algum desafio, tem uma sugestão ou quer falar sobre parcerias? Escreva para:</p>
+  <p><a class="botao" href="mailto:{{contato}}">{{contato}}</a></p>
+  <p>Ao relatar um erro, diga o número do jogo e a rodada. Isso ajuda a corrigir mais rápido.</p>
+</main>
+<div class="principal"><div class="anuncio anuncio--fim" data-espaco="fim"></div></div>
+{{> rodape}}
+</body>
+</html>

@@ -1,0 +1,7 @@
+[
+  { "id": "ditoefeito", "nome": "Dito e Feito", "dominio": "ditoefeito.app", "cor": "#C2410C" },
+  { "id": "quantocustava", "nome": "Quanto Custava?", "dominio": "quantocustava.app", "cor": "#15803D" },
+  { "id": "tanacara", "nome": "Tá na Cara", "dominio": "tanacara.app", "cor": "#7C3AED" },
+  { "id": "bateevolta", "nome": "Bate e Volta", "dominio": "bateevolta.app", "cor": "#1D4ED8" },
+  { "id": "escadinha", "nome": "Escadinha", "dominio": "escadinha.app", "cor": "#BE185D" }
+]

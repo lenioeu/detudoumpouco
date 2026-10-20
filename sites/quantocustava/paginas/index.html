@@ -1,0 +1,112 @@
+---
+titulo:
+descricao: O jogo diário dos preços de antigamente. Dez rodadas por dia: descubra o que era mais caro, em dinheiro de hoje.
+---
+<!doctype html>
+<html lang="pt-BR">
+<head>
+{{> head}}
+<link rel="stylesheet" href="/css/jogo.css?v={{versao}}">
+<script type="module" src="/js/jogo.js"></script>
+</head>
+<body>
+{{> cabecalho}}
+<main class="principal">
+  <div class="anuncio anuncio--topo" data-espaco="topo"></div>
+
+  <section id="jogo" class="jogo" aria-live="polite">
+    <div class="info-dia">
+      <strong data-numero-jogo>Jogo de hoje</strong>
+      <span>Rodada <strong data-rodada>1</strong>/10</span>
+    </div>
+    <div class="barra-passos" data-barra aria-hidden="true"></div>
+
+    <h1 class="pergunta" data-pergunta>O que era mais caro, em dinheiro de hoje?</h1>
+
+    <div class="disputa">
+      <button type="button" class="opcao" data-opcao="a" disabled>
+        <span class="etiqueta opcao__ano" data-ano></span>
+        <span class="opcao__nome" data-nome>Carregando…</span>
+        <span class="opcao__detalhe" data-detalhe></span>
+        <span class="opcao__valores" data-valores hidden></span>
+      </button>
+      <span class="disputa__ou" aria-hidden="true">ou</span>
+      <button type="button" class="opcao" data-opcao="b" disabled>
+        <span class="etiqueta opcao__ano" data-ano></span>
+        <span class="opcao__nome" data-nome>Carregando…</span>
+        <span class="opcao__detalhe" data-detalhe></span>
+        <span class="opcao__valores" data-valores hidden></span>
+      </button>
+    </div>
+
+    <p class="dica-revelada" data-dica-texto hidden></p>
+
+    <div class="jogo__acoes">
+      <button type="button" class="botao botao--largo" data-proxima hidden>Próxima rodada</button>
+      <button type="button" class="botao botao--tracejado botao--largo" data-pedir-dica>
+        <span data-icone="anuncio"></span>Ver uma dica · assistir anúncio
+      </button>
+    </div>
+  </section>
+
+  <section id="resultado" class="resultado" hidden>
+    <div class="resultado__placar">
+      <div>
+        <p class="resultado__rotulo" data-numero-jogo-final></p>
+        <p class="resultado__pontos"><strong data-acertos>0</strong><span>/10</span></p>
+      </div>
+      <div class="resultado__grade" data-grade aria-hidden="true"></div>
+    </div>
+    <p class="resultado__frase" data-frase></p>
+    <div class="cartao cartao--sombra" data-sequencia></div>
+    <button type="button" class="botao botao--largo" data-compartilhar>
+      Compartilhar resultado <span data-icone="compartilhar"></span>
+    </button>
+    <p class="resultado__proximo">Próximo jogo em <strong data-contagem>--:--:--</strong></p>
+    <details class="cartao resultado__fontes">
+      <summary>Ver os preços e as fontes de hoje</summary>
+      <ol data-lista-fontes></ol>
+    </details>
+  </section>
+
+  <section class="texto explicacao">
+    <h2>Como funciona</h2>
+    <p>Todo dia, à meia-noite, saem dez disputas entre preços de diferentes épocas desde o Plano Real: um salário mínimo, um Big Mac, uma passagem de ônibus, um videogame… Para cada par, escolha o que pesava mais no bolso <strong>em dinheiro de hoje</strong>, isto é, corrigido pela inflação oficial (IPCA).</p>
+    <p>Você joga uma vez por dia. Jogue todos os dias para aumentar a sua sequência. <a href="/como-jogar">Leia as regras completas</a>.</p>
+  </section>
+
+  <div class="anuncio anuncio--fim" data-espaco="fim"></div>
+</main>
+
+<dialog class="painel" id="painel-progresso" aria-labelledby="titulo-progresso">
+  <div class="painel__caixa">
+    <div class="painel__topo">
+      <h2 id="titulo-progresso">Seu progresso</h2>
+      <button type="button" class="botao-icone" data-fechar aria-label="Fechar"><span data-icone="fechar"></span></button>
+    </div>
+    <div data-conteudo-progresso></div>
+    <div class="proximo">
+      <div class="proximo__tempo">Próximo jogo em <strong data-contagem>--:--:--</strong></div>
+      <button type="button" class="botao" data-compartilhar>Compartilhar <span data-icone="compartilhar"></span></button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="painel painel--folha" id="painel-dica" aria-labelledby="titulo-dica">
+  <div class="painel__caixa">
+    <div class="dica__topo">
+      <svg aria-hidden="true" width="72" height="72" viewBox="0 0 72 72"><rect x="4" y="12" width="64" height="44" rx="4" fill="var(--cor)" stroke="var(--tinta)" stroke-width="3"/><path d="M30 24v20l17-10z" fill="#fff" stroke="var(--tinta)" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 66h24M36 56v10" stroke="var(--tinta)" stroke-width="4" stroke-linecap="round"/></svg>
+      <div>
+        <h2 id="titulo-dica">Quer uma dica?</h2>
+        <p>Assista a um anúncio curto e veja quanto cada item custava na época, sem a correção da inflação.</p>
+      </div>
+    </div>
+    <button type="button" class="botao botao--largo" data-assistir><span data-icone="play"></span>Assistir anúncio</button>
+    <button type="button" class="botao botao--texto" data-fechar>Agora não</button>
+    <p class="dica__nota">Uma dica por rodada. Usar dica não zera a sua sequência, mas a rodada vale metade dos pontos.</p>
+  </div>
+</dialog>
+
+{{> rodape}}
+</body>
+</html>

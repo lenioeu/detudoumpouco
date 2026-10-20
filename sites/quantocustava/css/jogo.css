@@ -1,0 +1,92 @@
+/* Estilos próprios do Quanto Custava?. A base vem de /core/css/base.css. */
+
+.jogo, .resultado { display: flex; flex-direction: column; gap: 16px; }
+
+.pergunta { margin: 4px 0 0; font-size: 1.7rem; }
+
+.disputa { display: flex; flex-direction: column; gap: 14px; }
+
+.opcao {
+  position: relative;
+  text-align: left;
+  border: 2px solid var(--tinta);
+  border-radius: var(--raio);
+  background: var(--branco);
+  box-shadow: var(--sombra);
+  padding: 24px 18px 18px;
+  display: flex; flex-direction: column; gap: 4px;
+  min-height: 112px;
+  transition: transform 80ms ease, box-shadow 80ms ease, background 120ms ease;
+}
+.opcao:hover:not(:disabled) { background: #FBFAF6; }
+.opcao:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--tinta); }
+.opcao:disabled { cursor: default; }
+.opcao__ano { position: absolute; top: -14px; left: 14px; transform: rotate(-3deg); }
+.opcao[data-opcao="b"] .opcao__ano { transform: rotate(2deg); }
+.opcao__nome { font-family: var(--fonte-titulo); font-weight: 800; font-size: 1.45rem; letter-spacing: -0.01em; line-height: 1.15; }
+.opcao__detalhe { font-size: 0.95rem; color: var(--grafite); }
+.opcao__valores {
+  margin-top: 8px; padding-top: 10px; border-top: 2px dashed var(--linha-forte);
+  display: flex; flex-direction: column; gap: 2px; font-size: 0.95rem;
+}
+.opcao__valores strong { font-family: var(--fonte-titulo); font-weight: 800; font-size: 1.5rem; }
+
+.opcao.mais-caro { background: var(--cor-clara); }
+.opcao.escolhida::after {
+  content: attr(data-veredito);
+  position: absolute; top: -14px; right: 14px;
+  padding: 2px 10px; border: 2px solid var(--tinta);
+  background: var(--tinta); color: var(--branco);
+  font-weight: 700; font-size: 0.85rem;
+}
+.opcao.escolhida.acertou::after { background: var(--cor); }
+
+.disputa__ou {
+  align-self: center;
+  width: 40px; height: 40px; margin: -20px 0; z-index: 1;
+  border-radius: 999px; background: var(--tinta); color: var(--branco);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fonte-titulo); font-weight: 800; font-size: 0.95rem;
+}
+
+.dica-revelada {
+  margin: 0; padding: 12px 14px;
+  border: 2px dashed var(--tinta); border-radius: var(--raio);
+  background: var(--branco); font-size: 0.95rem;
+}
+
+.jogo__acoes { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.botao [data-icone] { display: inline-flex; }
+.botao [data-icone] svg { width: 20px; height: 20px; }
+
+/* Resultado */
+.resultado__placar { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.resultado__rotulo { margin: 0; font-weight: 700; }
+.resultado__pontos { margin: 0; font-family: var(--fonte-titulo); font-weight: 800; line-height: 0.9; letter-spacing: -0.04em; }
+.resultado__pontos strong { font-size: 4.6rem; }
+.resultado__pontos span { font-size: 2.2rem; color: var(--grafite); }
+.resultado__grade { display: grid; grid-template-columns: repeat(5, 26px); gap: 4px; }
+.resultado__grade span { height: 24px; border: 2px solid var(--tinta); background: var(--branco); }
+.resultado__grade .certo { background: var(--cor); }
+.resultado__grade .com-dica { background: var(--cor-clara); }
+.resultado__frase { margin: 0; font-size: 1.05rem; }
+.resultado__proximo { margin: 0; text-align: center; }
+.resultado__proximo strong { font-family: var(--fonte-titulo); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.resultado__fontes summary { cursor: pointer; font-weight: 700; min-height: 32px; }
+.resultado__fontes ol { margin: 12px 0 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; }
+
+/* Dica */
+.dica__topo { display: flex; gap: 16px; align-items: center; }
+.dica__topo svg { flex: none; }
+.dica__topo h2 { margin: 0 0 4px; font-size: 1.7rem; }
+.dica__topo p { margin: 0; }
+.dica__nota { margin: 0; font-size: 0.9rem; color: var(--grafite); }
+
+.explicacao { margin-top: 16px; }
+.explicacao h2 { margin-top: 0; }
+
+/* Páginas de respostas */
+.respostas-lista { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.respostas-lista a { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; background: var(--branco); border: 2px solid var(--tinta); border-radius: var(--raio); text-decoration: none; font-weight: 700; }
+.par-resposta { margin-bottom: 14px; }
+.par-resposta p { margin: 0 0 4px; }

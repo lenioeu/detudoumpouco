@@ -1,0 +1,38 @@
+---
+titulo: Termos de uso
+descricao: Regras de uso do {{nome}}.
+---
+<!doctype html>
+<html lang="pt-BR">
+<head>
+{{> head}}
+</head>
+<body>
+{{> cabecalho}}
+<main class="principal texto">
+  <h1>Termos de uso</h1>
+  <p>Última atualização: {{dataAtualizacao}}.</p>
+  <p>Ao usar o <strong>{{nome}}</strong> ({{dominio}}), você concorda com estes termos.</p>
+
+  <h2>O jogo</h2>
+  <p>O {{nome}} é um jogo gratuito de entretenimento, com um desafio novo por dia. Pode ser usado livremente para diversão pessoal, em casa, na escola ou com os amigos.</p>
+
+  <h2>Conteúdo e fontes</h2>
+  <p>As informações usadas no jogo vêm de fontes públicas, indicadas na página de cada desafio. Fazemos o possível para que estejam corretas, mas elas servem para entretenimento e não devem ser usadas como base para decisões financeiras, acadêmicas ou profissionais. Encontrou um erro? Avise pelo e-mail <a href="mailto:{{contato}}">{{contato}}</a>.</p>
+
+  <h2>Uso permitido</h2>
+  <p>Não é permitido tentar burlar o funcionamento do site, sobrecarregá-lo, copiar o jogo para outro site ou clicar em anúncios de forma artificial.</p>
+
+  <h2>Propriedade intelectual</h2>
+  <p>O nome, a marca, o visual e o código do {{nome}} pertencem aos seus criadores. Compartilhar seus resultados e falar do jogo é muito bem-vindo.</p>
+
+  <h2>Anúncios</h2>
+  <p>O site exibe anúncios de terceiros. Não somos responsáveis pelo conteúdo dos anúncios nem pelos produtos anunciados.</p>
+
+  <h2>Mudanças</h2>
+  <p>Estes termos podem ser atualizados; a data no topo indica a versão em vigor.</p>
+</main>
+<div class="principal"><div class="anuncio anuncio--fim" data-espaco="fim"></div></div>
+{{> rodape}}
+</body>
+</html>

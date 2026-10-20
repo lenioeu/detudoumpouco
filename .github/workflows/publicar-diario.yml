@@ -1,0 +1,33 @@
+name: Publicar todo dia
+
+# À meia-noite e cinco de Brasília, pede ao Cloudflare Pages um novo build de
+# cada site, para publicar as respostas do dia que acabou.
+# Para ligar, crie um "Deploy hook" em cada projeto do Cloudflare Pages e salve a
+# URL como secret do repositório (Settings > Secrets and variables > Actions):
+#   CLOUDFLARE_HOOK_QUANTOCUSTAVA, CLOUDFLARE_HOOK_TANACARA, ...
+
+on:
+  schedule:
+    - cron: '5 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Disparar builds
+        env:
+          QUANTOCUSTAVA: ${{ secrets.CLOUDFLARE_HOOK_QUANTOCUSTAVA }}
+          DITOEFEITO: ${{ secrets.CLOUDFLARE_HOOK_DITOEFEITO }}
+          TANACARA: ${{ secrets.CLOUDFLARE_HOOK_TANACARA }}
+          BATEEVOLTA: ${{ secrets.CLOUDFLARE_HOOK_BATEEVOLTA }}
+          ESCADINHA: ${{ secrets.CLOUDFLARE_HOOK_ESCADINHA }}
+        run: |
+          for site in QUANTOCUSTAVA DITOEFEITO TANACARA BATEEVOLTA ESCADINHA; do
+            url="${!site}"
+            if [ -n "$url" ]; then
+              curl -fsS -X POST "$url" > /dev/null && echo "$site: build pedido"
+            else
+              echo "$site: sem deploy hook configurado"
+            fi
+          done
