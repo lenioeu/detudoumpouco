@@ -86,6 +86,23 @@ Dito e Feito, Bate e Volta e Escadinha ainda não têm logo final; os selos prov
   - ranking semanal (segunda a domingo, fechando às 23h59 de Brasília), mensal e geral, mais ligas de amigos;
   - primeiro um ranking por site; o ranking da família inteira vem depois.
 
+## Como rodar
+
+Não há dependências para instalar; basta Node 20 ou mais novo.
+
+- `node scripts/build.mjs [site]`: monta `dist/<site>/` (todos os sites se nenhum for dado; `--producao` falha se faltar contato ou responsável).
+- `node scripts/servir.mjs <site> [porta]`: serve `dist/<site>` em `http://localhost:8080`. Em localhost, os espaços de anúncio aparecem como caixas tracejadas.
+- `node --test testes/*.test.mjs`: testes.
+- `node scripts/quantocustava/atualizar-dados.mjs`: baixa IPCA, salário mínimo e Big Mac e regenera `itens.json` e `calendario.json`. Os sites do governo são bloqueados na rede das sessões do Claude; quem roda isso é o workflow `.github/workflows/dados-quantocustava.yml` (todo mês, ou a cada push que mexe nos dados).
+
+Como um site é organizado (`sites/<id>/`):
+- `site.json`: nome, domínio, cor, data de lançamento, contato e IDs de anúncio.
+- `paginas/*.html`: modelos com front matter (`titulo`, `descricao`), `{{> parcial}}` e `{{variavel}}`. Substituem as páginas de mesmo nome em `core/paginas/`.
+- `js/`, `css/`: código do jogo. Importe a base com `#core/<arquivo>.js` (import map no navegador e `imports` do `package.json` no Node).
+- `build.mjs` (opcional): etapa extra do build, por exemplo para gerar as páginas de respostas.
+
+O sorteio diário é congelado em `dados/calendario.json`: dias já sorteados nunca mudam.
+
 ## Ordem de trabalho
 
 1. Montar a base compartilhada e o primeiro site.
