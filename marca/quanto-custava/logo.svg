@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Quanto Custava?">
+  <!-- Logo de cor única. Os vãos usam a cor do fundo (#F7F4EE); troque se o fundo mudar. -->
+  <g stroke="#F7F4EE" stroke-width="3.5" stroke-linejoin="round" fill="#15803D">
+    <path d="M32 158v14a30 9 0 0 0 60 0v-14z"/><ellipse cx="62" cy="158" rx="30" ry="9"/>
+    <path d="M32 144v14a30 9 0 0 0 60 0v-14z"/><ellipse cx="62" cy="144" rx="30" ry="9"/>
+    <path d="M32 130v14a30 9 0 0 0 60 0v-14z"/><ellipse cx="62" cy="130" rx="30" ry="9"/>
+    <path d="M86 158v14a32 9 0 0 0 64 0v-14z"/><ellipse cx="118" cy="158" rx="32" ry="9"/>
+    <path d="M86 144v14a32 9 0 0 0 64 0v-14z"/><ellipse cx="118" cy="144" rx="32" ry="9"/>
+    <path d="M86 130v14a32 9 0 0 0 64 0v-14z"/><ellipse cx="118" cy="130" rx="32" ry="9"/>
+    <path d="M86 116v14a32 9 0 0 0 64 0v-14z"/><ellipse cx="118" cy="116" rx="32" ry="9"/>
+    <path d="M86 102v14a32 9 0 0 0 64 0v-14z"/><ellipse cx="118" cy="102" rx="32" ry="9"/>
+  </g>
+  <polyline points="26,112 76,72 98,92 146,48" fill="none" stroke="#F7F4EE" stroke-width="21" stroke-linecap="round"/>
+  <polyline points="26,112 76,72 98,92 146,48" fill="none" stroke="#15803D" stroke-width="13" stroke-linecap="round"/>
+  <polygon points="128,36 170,26 160,68" fill="#15803D" stroke="#15803D" stroke-width="4" stroke-linejoin="round"/>
+  <g transform="translate(146 104) rotate(16)">
+    <path d="M18 -14c-10 -2 -14 10 -6 18" fill="none" stroke="#15803D" stroke-width="4" stroke-linecap="round"/>
+    <path d="M0 16L18 0L36 16V72H0Z" fill="#15803D" stroke="#F7F4EE" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="18" cy="16" r="4.5" fill="#F7F4EE"/>
+    <text x="18" y="54" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="17" fill="#F7F4EE">R$</text>
+  </g>
+</svg>
