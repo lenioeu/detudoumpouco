@@ -105,8 +105,15 @@ O sorteio diário é congelado em `dados/calendario.json`: dias já sorteados nu
 
 ## Ordem de trabalho
 
-1. Montar a base compartilhada e o primeiro site.
-2. Uma sessão nova para cada site seguinte, sempre neste repositório.
+1. ~~Montar a base compartilhada e o primeiro site~~ (feito: Quanto Custava?).
+2. Uma sessão nova para cada site seguinte, sempre neste repositório (`jogos-diarios`).
+
+Pendências do Quanto Custava? antes do lançamento:
+- preencher `contato` e `responsavel` em `sites/quantocustava/site.json`;
+- confirmar a data de `lancamento` (hoje 2026-11-01);
+- conferir no documento original os itens marcados `secundaria` em `dados/itens-pesquisados.csv`;
+- criar o projeto no Cloudflare Pages (comando de build `node scripts/build.mjs quantocustava --producao`, pasta `dist/quantocustava`) e apontar o domínio;
+- depois da aprovação no AdSense, preencher `anuncios` em `site.json`.
 
 ## Convenções
 
