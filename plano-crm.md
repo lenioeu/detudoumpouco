@@ -13,10 +13,10 @@ O Whaticket é full-stack em JavaScript/TypeScript:
 
 | Camada | Tecnologia | Para que serve |
 |---|---|---|
-| Backend | Node.js + TypeScript | Regras do sistema, API |
-| Banco de dados | PostgreSQL (ou MySQL/MariaDB, conforme o fork) | Guarda tickets, contatos, mensagens |
-| Filas / cache | Redis | Agendamentos, processamento em fila |
-| Conexão WhatsApp | Baileys | Enviar/receber mensagens |
+| Backend | Node.js + TypeScript + Express + Sequelize | Regras do sistema, API |
+| Banco de dados | **MySQL / MariaDB** (padrão MariaDB 10.6) | Guarda tickets, contatos, mensagens |
+| Conexão WhatsApp | **whatsapp-web.js** ou **zapo** (por QR) | Enviar/receber mensagens |
+| Node.js | 14+ (provider wwebjs) ou 22+ (provider zapo) | Runtime do backend |
 | Frontend | React | Painel do atendente e dashboard |
 | Tempo real | Socket.IO | Conversas aparecendo ao vivo |
 | Empacotamento | Docker | Sobe tudo junto com um comando |
