@@ -18,6 +18,7 @@ export default [
   { slug: 'extrair-paginas', nome: 'Extrair páginas do PDF', resumo: 'Salve só as páginas que você escolher num PDF novo.', status: 'pronta' },
   { slug: 'pdf-para-png', nome: 'PDF para PNG', resumo: 'Salve as páginas do PDF como PNG em alta qualidade.', status: 'pronta' },
   { slug: 'pdf-para-texto', nome: 'PDF para texto', resumo: 'Copie todo o texto de um PDF.', status: 'pronta' },
+  { slug: 'pdf-para-markdown', nome: 'PDF para Markdown', resumo: 'Transforme PDFs em arquivos .md limpos, com títulos, listas, tabelas e links.', status: 'planejada' },
   { slug: 'recortar-pdf', nome: 'Recortar PDF', resumo: 'Corte as margens das páginas do PDF.', status: 'pronta' },
   { slug: 'ajustar-a4', nome: 'Ajustar PDF para A4', resumo: 'Deixe todas as páginas no tamanho A4.', status: 'pronta' },
   { slug: 'achatar-pdf', nome: 'Achatar PDF', resumo: 'Trave formulários e anotações para ninguém editar.', status: 'pronta' },
