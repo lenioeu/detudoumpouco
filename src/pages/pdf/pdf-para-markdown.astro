@@ -1,0 +1,330 @@
+---
+import Ferramenta from '../../layouts/Ferramenta.astro';
+import SoltarArquivos from '../../components/SoltarArquivos.astro';
+---
+<Ferramenta
+  secao="pdf"
+  slug="pdf-para-markdown"
+  titulo="PDF para Markdown"
+  subtitulo="Transforme PDFs em arquivos .md limpos em segundos. Títulos, tabelas, listas e links são preservados, prontos para compartilhar ou usar no ChatGPT, no Claude e onde mais quiser. Tudo acontece no seu navegador."
+  tituloSeo="PDF para Markdown online grátis: converta PDF em .md"
+  descricao="Converta PDF em Markdown (.md) grátis, com títulos, listas, tabelas e links. Ótimo para usar no ChatGPT ou no Claude. O arquivo não sai do seu aparelho."
+  passos={[
+    'Escolha o PDF ou arraste o arquivo para a área indicada.',
+    'Espere a leitura das páginas. O Markdown aparece na caixa logo abaixo.',
+    'Se quiser, escolha só algumas páginas, marque a separação por página ou mantenha cabeçalhos e rodapés.',
+    'Confira o resultado na aba "Prévia" e corrija o que precisar direto na caixa.',
+    'Clique em "Copiar Markdown" ou em "Baixar .md".',
+  ]}
+  perguntas={[
+    { p: 'Como converter PDF para Markdown?', r: 'Escolha o arquivo nesta página. Em poucos segundos o texto aparece em Markdown, com # nos títulos, - nas listas, tabelas com barras verticais e links no formato [texto](endereço). Depois é só clicar em "Copiar Markdown" ou "Baixar .md". Não precisa instalar nada nem criar conta.' },
+    { p: 'Como transformar PDF em .md para usar no ChatGPT ou no Claude?', r: 'Converta o PDF aqui, clique em "Baixar .md" e anexe o arquivo na conversa, ou copie e cole o texto direto na caixa de mensagem. O Markdown é texto puro com a estrutura marcada, então a IA entende o que é título, item de lista e tabela, gasta menos espaço da conversa do que o PDF e erra menos ao citar trechos.' },
+    { p: 'O PDF é enviado para algum servidor?', r: 'Não. O PDF é lido pelo pdf.js, que roda dentro do seu navegador, e a conversão para Markdown também acontece aí. O arquivo e o texto não saem do seu computador ou celular, o que importa para contratos, relatórios internos e documentos pessoais.' },
+    { p: 'A conversão mantém tabelas e links do PDF?', r: 'Mantém na maioria dos casos. Tabelas com colunas bem alinhadas viram tabelas em Markdown, e os links clicáveis do PDF viram [texto](endereço). Endereços de site e e-mails escritos no texto também viram links. Tabelas com células mescladas ou texto quebrado dentro da célula podem sair como parágrafos: aí vale ajustar na caixa.' },
+    { p: 'Por que o Markdown saiu vazio ou faltando páginas?', r: 'Porque essas páginas são imagens, não texto. Isso acontece com documentos escaneados e fotos de papel transformadas em PDF. A página avisa quais páginas não tinham texto. Para esses casos, use primeiro o OCR em PDF, que reconhece as letras da imagem, e depois converta o texto.' },
+    { p: 'Como tirar cabeçalho, rodapé e número de página do texto do PDF?', r: 'Já vem feito: a opção "Tirar cabeçalhos, rodapés e números de página" fica marcada. Ela remove as linhas que se repetem no alto ou no pé da maioria das páginas, como o nome da empresa ou "Página 3 de 10", e os números de página soltos. Desmarque se quiser manter tudo.' },
+  ]}
+>
+  <div class="stack">
+    <SoltarArquivos id="entrada" accept="application/pdf,.pdf" texto="Escolher PDF" />
+    <p id="aviso" class="erro" role="alert" hidden></p>
+    <p id="status" class="muted" aria-live="polite"></p>
+
+    <div id="painel" class="stack" hidden>
+      <p id="info" class="muted"></p>
+      <p id="sem-texto" class="alerta" hidden></p>
+      <div class="opcoes">
+        <label class="marcar"><input id="limpar" type="checkbox" checked /> Tirar cabeçalhos, rodapés e números de página</label>
+        <label class="marcar"><input id="separar" type="checkbox" /> <span>Separar as páginas (<code>---</code> e <code>&lt;!-- página N --&gt;</code>)</span></label>
+      </div>
+      <div class="campo paginas">
+        <label for="paginas">Páginas</label>
+        <input id="paginas" type="text" inputmode="numeric" placeholder="Todas (ou ex.: 1-3, 5)" autocomplete="off" />
+        <small id="erro-paginas" class="erro" hidden></small>
+      </div>
+      <p id="resumo" class="muted resumo" aria-live="polite"></p>
+
+      <div class="abas" role="tablist" aria-label="Ver resultado">
+        <button type="button" class="btn btn-sec aba" role="tab" id="aba-md" aria-controls="painel-md" aria-selected="true">Markdown</button>
+        <button type="button" class="btn btn-sec aba" role="tab" id="aba-previa" aria-controls="painel-previa" aria-selected="false" tabindex="-1">Prévia</button>
+        <span id="contagem" class="muted contagem"></span>
+      </div>
+      <div id="painel-md" class="campo aba-painel" role="tabpanel" aria-labelledby="aba-md">
+        <label for="markdown" class="visualmente-oculto">Markdown do PDF</label>
+        <textarea id="markdown" rows="18" spellcheck="false"></textarea>
+        <small>Você pode editar o texto aqui. Mudar as opções acima gera o Markdown de novo e desfaz as edições.</small>
+      </div>
+      <div id="painel-previa" class="aba-painel" role="tabpanel" aria-labelledby="aba-previa" hidden>
+        <div id="previa" class="previa"></div>
+      </div>
+
+      <div class="acoes">
+        <button id="copiar" type="button" class="btn">Copiar Markdown</button>
+        <a id="baixar" class="btn btn-sec" href="#" download>Baixar .md</a>
+        <span id="copiado" class="muted" aria-live="polite"></span>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="texto">
+    <h2>O que é Markdown e por que converter um PDF</h2>
+    <p>Markdown é texto puro com algumas marcas simples para indicar a estrutura: <code>#</code> antes de um título, <code>-</code> antes de um item de lista, <code>**</code> em volta do negrito e barras verticais para montar uma tabela. O arquivo tem extensão .md e abre em qualquer editor, do Bloco de Notas ao VS Code, além de ser o formato de README no GitHub, de notas no Obsidian e no Notion e de boa parte das documentações técnicas.</p>
+    <p>O PDF foi feito para imprimir, não para reaproveitar. Ao copiar dele, cada linha vem quebrada no meio da frase, o número da página se mistura com o texto e uma tabela vira uma fileira de palavras soltas. Aqui o arquivo inteiro é lido de uma vez e reorganizado: as frases quebradas voltam a ficar inteiras, as palavras hifenizadas no fim da linha são remendadas e a estrutura do documento passa a ser marcada em Markdown.</p>
+    <h2>PDF em Markdown para ChatGPT, Claude e outras IAs</h2>
+    <p>Mandar um PDF para uma IA funciona, mas o Markdown costuma dar resultado melhor. Ele é menor, então sobra mais espaço na conversa para perguntas e respostas. E a estrutura fica explícita: a IA sabe que "3. Prazos" é uma seção, que aquela lista são os documentos exigidos e que aquela tabela tem colunas de produto, preço e estoque. Isso ajuda a resumir um edital, comparar cláusulas de dois contratos, montar perguntas sobre uma apostila ou alimentar uma base de conhecimento.</p>
+    <h2>Como a estrutura é reconhecida</h2>
+    <p>O PDF não guarda "título" ou "tabela". Ele guarda pedaços de texto com posição, tamanho e fonte. A ferramenta deduz o resto: linhas com letra bem maior que a do corpo viram títulos (# para o maior tamanho, ## e ### para os seguintes); uma linha curta e solta, toda em negrito, vira subtítulo; linhas que começam com •, -, 1. ou a) viram listas, com o recuo indicando o nível; linhas com pedaços alinhados nas mesmas colunas viram tabela; e o texto embaixo de um link clicável vira [texto](endereço). Negrito e itálico vêm do nome da fonte. Quando a dúvida é grande, o texto fica como parágrafo, que é mais fácil de corrigir do que uma tabela torta.</p>
+    <h2>Dicas</h2>
+    <ul>
+      <li>Use a aba "Prévia" para conferir títulos e tabelas antes de baixar.</li>
+      <li>Para um livro ou apostila grande, converta por partes no campo "Páginas", como 1-20.</li>
+      <li>Marque "Separar as páginas" se precisar citar a página de onde veio cada trecho. As marcas &lt;!-- página N --&gt; não aparecem quando o Markdown é exibido.</li>
+      <li>PDF escaneado não tem texto. Passe primeiro pelo <a href="/pdf/ocr-pdf">OCR em PDF</a>.</li>
+      <li>Revise números e valores de tabelas antes de usar em algo importante.</li>
+    </ul>
+  </Fragment>
+</Ferramenta>
+
+<script>
+  import { tamanho } from '../../lib/arquivos';
+  import { abrirParaVer, fecharPdf, ErroPdf } from '../../lib/pdf-navegador';
+  import {
+    contarPalavras, converterParaMarkdown, itemDoPdfJs, linkDaAnotacao, paginasSemTexto,
+    type InfoFonte, type ItemMd, type LinkMd, type PaginaMd,
+  } from '../../lib/pdf-markdown';
+  import { markdownParaHtml } from '../../lib/markdown-previa';
+  import { lerIntervalos } from '../../lib/intervalos';
+  import { formatar } from '../../lib/numeros';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const entrada = $('entrada');
+  const aviso = $('aviso');
+  const status = $('status');
+  const painel = $('painel');
+  const info = $('info');
+  const semTexto = $('sem-texto');
+  const limpar = $<HTMLInputElement>('limpar');
+  const separar = $<HTMLInputElement>('separar');
+  const campoPaginas = $<HTMLInputElement>('paginas');
+  const erroPaginas = $('erro-paginas');
+  const resumo = $('resumo');
+  const caixa = $<HTMLTextAreaElement>('markdown');
+  const previa = $('previa');
+  const contagem = $('contagem');
+  const copiar = $<HTMLButtonElement>('copiar');
+  const baixar = $<HTMLAnchorElement>('baixar');
+  const copiado = $('copiado');
+
+  let paginas: PaginaMd[] = [];
+  let nomeBase = 'documento';
+  let rodada = 0;
+  let url = '';
+
+  const plural = (n: number, um: string, varios: string) => `${formatar(n, 0)} ${n === 1 ? um : varios}`;
+
+  // Abas Markdown / Prévia
+  const abas = [$('aba-md'), $('aba-previa')];
+  const paineis = [$('painel-md'), $('painel-previa')];
+  function ativar(i: number) {
+    abas.forEach((a, j) => { a.setAttribute('aria-selected', String(i === j)); a.tabIndex = i === j ? 0 : -1; paineis[j].hidden = i !== j; });
+    if (i === 1) previa.innerHTML = markdownParaHtml(caixa.value) || '<p class="muted">Nada para mostrar.</p>';
+  }
+  abas.forEach((a, i) => {
+    a.addEventListener('click', () => ativar(i));
+    a.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const j = (i + 1) % 2; ativar(j); abas[j].focus(); }
+    });
+  });
+
+  function atualizarDownload() {
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(new Blob([caixa.value], { type: 'text/markdown;charset=utf-8' }));
+    baixar.href = url;
+    baixar.download = `${nomeBase}.md`;
+    const t = caixa.value;
+    contagem.textContent = `${plural(contarPalavras(t), 'palavra', 'palavras')} · ${plural(t.length, 'caractere', 'caracteres')}`;
+  }
+
+  function escolhidas(): number[] | null {
+    erroPaginas.hidden = true;
+    if (!campoPaginas.value.trim()) return [];
+    const r = lerIntervalos(campoPaginas.value, paginas.length);
+    if (r.erro) { erroPaginas.textContent = r.erro; erroPaginas.hidden = false; return null; }
+    return [...new Set(r.grupos.flat())];
+  }
+
+  function montar() {
+    const lista = escolhidas();
+    if (lista === null) return;
+    const { markdown, resumo: r } = converterParaMarkdown(paginas, {
+      limparRepetidos: limpar.checked, separarPaginas: separar.checked, paginas: lista,
+    });
+    caixa.value = markdown;
+    const partes = [
+      r.titulos && plural(r.titulos, 'título', 'títulos'),
+      r.listas && plural(r.listas, 'lista', 'listas'),
+      r.tabelas && plural(r.tabelas, 'tabela', 'tabelas'),
+      r.links && plural(r.links, 'link', 'links'),
+    ].filter(Boolean);
+    resumo.textContent = (partes.length ? `Encontramos ${partes.join(', ')}.` : 'Nenhum título, lista, tabela ou link reconhecido: o texto saiu em parágrafos.')
+      + (r.removidas ? ` ${plural(r.removidas, 'linha de cabeçalho, rodapé ou número de página saiu', 'linhas de cabeçalho, rodapé ou número de página saíram')}.` : '');
+    copiado.textContent = '';
+    atualizarDownload();
+    if (!paineis[1].hidden) ativar(1);
+  }
+
+  /** Nome, negrito e itálico da fonte que o pdf.js carregou para a página. */
+  function fonteDe(pagina: { commonObjs: { has(id: string): boolean; get(id: string): unknown } }, cache: Map<string, InfoFonte | null>, id: string) {
+    if (!cache.has(id)) {
+      let f: InfoFonte | null = null;
+      try {
+        if (pagina.commonObjs.has(id)) {
+          const o = pagina.commonObjs.get(id) as InfoFonte;
+          f = { name: o?.name, bold: o?.bold, black: o?.black, italic: o?.italic };
+        }
+      } catch { f = null; }
+      cache.set(id, f);
+    }
+    return cache.get(id) ?? null;
+  }
+
+  async function carregar(file: File) {
+    const minha = ++rodada;
+    aviso.hidden = true;
+    painel.hidden = true;
+    status.textContent = '';
+    if (!(file.type === 'application/pdf' || /\.pdf$/i.test(file.name))) {
+      aviso.textContent = 'Este arquivo não é um PDF.'; aviso.hidden = false; return;
+    }
+    status.textContent = 'Abrindo o PDF…';
+    let doc;
+    try {
+      doc = await abrirParaVer(await file.arrayBuffer());
+    } catch (e) {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      aviso.textContent = e instanceof ErroPdf ? e.message : 'Não foi possível abrir este PDF.';
+      aviso.hidden = false;
+      return;
+    }
+    try {
+      const lidas: PaginaMd[] = [];
+      const cache = new Map<string, InfoFonte | null>();
+      for (let n = 1; n <= doc.numPages; n++) {
+        if (minha !== rodada) return;
+        status.textContent = `Lendo a página ${n} de ${doc.numPages}…`;
+        const pagina = await doc.getPage(n);
+        const conteudo = await pagina.getTextContent();
+        const temTexto = conteudo.items.some((i) => 'str' in i && i.str.trim());
+        // As fontes (com nome, negrito e itálico) só chegam depois de preparar o desenho da página.
+        if (temTexto) await pagina.getOperatorList();
+        const itens = conteudo.items
+          .map((i) => itemDoPdfJs(i, 'fontName' in i ? fonteDe(pagina, cache, i.fontName) : null))
+          .filter((p): p is ItemMd => p !== null);
+        let links: LinkMd[] = [];
+        if (temTexto) {
+          try { links = (await pagina.getAnnotations()).map(linkDaAnotacao).filter((l): l is LinkMd => l !== null); } catch { links = []; }
+        }
+        const [, y0, , y1] = pagina.view;
+        lidas.push({ itens, links, altura: y1 - y0, base: y0 });
+        pagina.cleanup();
+      }
+      if (minha !== rodada) return;
+      paginas = lidas;
+      nomeBase = file.name.replace(/\.pdf$/i, '') || 'documento';
+      const total = lidas.length;
+      info.textContent = `${file.name} · ${plural(total, 'página', 'páginas')} · ${tamanho(file.size)}`;
+      const vazias = paginasSemTexto(lidas.map((p) => p.itens));
+      const ocr = ' <a href="/pdf/ocr-pdf">Use o OCR em PDF</a> para reconhecer o texto e depois converta o resultado.';
+      if (vazias.length === total) {
+        semTexto.innerHTML = 'Não encontramos texto neste PDF. Ele parece ser escaneado ou feito de fotos: cada página é uma imagem.' + ocr;
+      } else if (vazias.length) {
+        const lista = vazias.length > 12 ? vazias.slice(0, 12).join(', ') + '…' : vazias.join(', ');
+        semTexto.innerHTML = `${vazias.length === 1 ? 'A página' : 'As páginas'} ${lista} não ${vazias.length === 1 ? 'tem' : 'têm'} texto, só imagem (provavelmente escaneada${vazias.length === 1 ? '' : 's'}).` + ocr;
+      }
+      semTexto.hidden = !vazias.length;
+      campoPaginas.value = '';
+      status.textContent = '';
+      painel.hidden = false;
+      ativar(0);
+      montar();
+    } catch {
+      if (minha !== rodada) return;
+      status.textContent = '';
+      aviso.textContent = 'Não foi possível ler o texto deste PDF.';
+      aviso.hidden = false;
+    } finally {
+      fecharPdf(doc);
+    }
+  }
+
+  async function copiarTexto() {
+    try {
+      await navigator.clipboard.writeText(caixa.value);
+    } catch {
+      caixa.select();
+      document.execCommand('copy');
+    }
+    copiado.textContent = 'Markdown copiado!';
+  }
+
+  entrada.addEventListener('arquivos', (e) => carregar((e as CustomEvent<File[]>).detail[0]));
+  limpar.addEventListener('change', montar);
+  separar.addEventListener('change', montar);
+  let esperaPaginas = 0;
+  campoPaginas.addEventListener('input', () => { clearTimeout(esperaPaginas); esperaPaginas = window.setTimeout(montar, 350); });
+  copiar.addEventListener('click', copiarTexto);
+  let espera = 0;
+  caixa.addEventListener('input', () => { copiado.textContent = ''; clearTimeout(espera); espera = window.setTimeout(atualizarDownload, 250); });
+</script>
+
+<style>
+  .opcoes { display: flex; flex-wrap: wrap; gap: 4px 24px; }
+  .marcar { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-height: 40px; }
+  .marcar code { font-family: var(--f-mono); font-size: 0.85em; }
+  .marcar input { width: 20px; height: 20px; flex: none; accent-color: var(--brand); }
+  .paginas { max-width: 320px; }
+  .resumo { margin: 0; font-size: 0.92rem; }
+  .abas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .aba { padding: 8px 16px; }
+  .aba[aria-selected='true'] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand-ink); }
+  .contagem { margin-left: auto; font-size: 0.85rem; }
+  .aba-painel { animation: entrar 0.25s var(--suave); }
+  .aba-painel[hidden] { display: none; }
+  @keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+  .visualmente-oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  textarea {
+    width: 100%; min-height: 320px; resize: vertical; font-family: var(--f-mono); font-size: 0.88rem; line-height: 1.5;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .previa {
+    min-height: 320px; max-height: 70vh; overflow-y: auto; padding: 16px; border: 1px solid var(--line);
+    border-radius: var(--radius); background: var(--bg); overflow-wrap: anywhere; line-height: 1.6;
+  }
+  .previa > :global(:first-child) { margin-top: 0; }
+  .previa :global(p), .previa :global(ul), .previa :global(ol), .previa :global(blockquote), .previa :global(pre) { margin: 0 0 12px; }
+  .previa :global(ul), .previa :global(ol) { padding-left: 24px; }
+  .previa :global(li > ul), .previa :global(li > ol) { margin: 4px 0 0; }
+  .previa :global(.md-h) { font-family: var(--f-display); font-weight: 700; line-height: 1.25; margin: 20px 0 10px; }
+  .previa :global(.md-h1) { font-size: 1.6rem; }
+  .previa :global(.md-h2) { font-size: 1.3rem; }
+  .previa :global(.md-h3) { font-size: 1.12rem; }
+  .previa :global(.md-h4), .previa :global(.md-h5), .previa :global(.md-h6) { font-size: 1rem; }
+  .previa :global(.md-nota) { color: var(--muted); font-size: 0.82rem; font-family: var(--f-mono); }
+  .previa :global(hr) { border: 0; border-top: 1px solid var(--line); margin: 18px 0; }
+  .previa :global(a) { color: var(--link); }
+  .previa :global(code), .previa :global(pre) { font-family: var(--f-mono); font-size: 0.88em; background: var(--surface); border-radius: 4px; }
+  .previa :global(code) { padding: 1px 4px; }
+  .previa :global(pre) { padding: 10px; overflow-x: auto; }
+  .previa :global(blockquote) { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); }
+  .previa :global(.md-tabela) { overflow-x: auto; margin: 0 0 12px; }
+  .previa :global(table) { border-collapse: collapse; min-width: 50%; font-size: 0.92rem; }
+  .previa :global(th), .previa :global(td) { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+  .previa :global(th) { background: var(--surface); }
+  .alerta {
+    margin: 0; padding: 12px 14px; border-radius: var(--radius); background: var(--brand-soft);
+    border: 1px solid var(--line); animation: surgir 0.3s var(--suave);
+  }
+  .alerta :global(a) { color: var(--link); font-weight: 600; }
+  .acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+</style>
