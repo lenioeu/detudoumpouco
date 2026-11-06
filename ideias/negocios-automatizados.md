@@ -51,3 +51,35 @@ mas quebra quando o site muda e pode violar termos de uso.
 coleta (API oficial ou reverse-api) → banco de dados (histórico, evitar duplicados)
 → IA (filtrar/resumir) → entrega (Telegram, e-mail, WhatsApp Business)
 → cobrança recorrente (Stripe, Asaas, Hotmart) → agendador + alerta de falha.
+
+---
+
+## Detalhe — Ideia 8: checagem de fornecedores
+
+**Fluxo:** cliente envia lista de CNPJs (planilha) → robô consulta as fontes todo mês
+(ou semana) → gera semáforo verde/amarelo/vermelho por fornecedor → relatório
++ **alerta quando algo muda** (o valor real está no alerta de mudança).
+
+| Verificação | Fonte | Dificuldade |
+|---|---|---|
+| Situação cadastral, atividade (CNAE), sócios (QSA), data de abertura, capital | Dados abertos CNPJ (Receita) / BrasilAPI | Fácil, grátis |
+| Sanções: CEIS, CNEP, CEPIM, acordos de leniência | API do Portal da Transparência (token grátis) | Fácil |
+| Inidôneos TCU / improbidade CNJ | Consulta consolidada de PJ do TCU | Média |
+| Lista suja do trabalho escravo | Cadastro de Empregadores (MTE), publicado periodicamente | Média (arquivo) |
+| Sócio é PEP | Lista PEP do Portal da Transparência | Média (CPF mascarado) |
+| CND federal, CNDT (TST), CRF/FGTS | Sites com captcha, sem API pública grátis | Difícil → agregador pago |
+| Processos judiciais por CNPJ | DataJud não busca por parte → Escavador/Jusbrasil (pagos) | Difícil/pago |
+
+**Sinais de alerta automáticos:** CNPJ inapto/baixado; empresa aberta há poucos meses
+com contrato grande; capital social incompatível; sócio em comum com outro fornecedor
+(conluio); endereço/telefone repetido entre fornecedores; entrada em lista de sanções.
+
+**Quem compra:** empresas com programa de integridade (Lei 12.846/2013 e Decreto
+11.129/2022 preveem diligência sobre terceiros), hospitais, construtoras, indústrias,
+quem contrata muito terceirizado (responsabilidade subsidiária trabalhista).
+
+**Preço:** por CNPJ monitorado em faixas (ex.: até 50, até 200, até 1.000), mais
+parecer jurídico avulso quando dá vermelho.
+
+**MVP:** só as fontes fáceis (cadastro + sanções + TCU) → já entrega valor; certidões e
+processos entram depois via agregador pago, repassado no preço.
