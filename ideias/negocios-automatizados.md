@@ -206,3 +206,33 @@ Lógica usada: procurar mudanças recentes ("por que agora") que abriram mercado
 - **O que é:** pessoa descreve o que precisa (pintar apartamento, conserto, frete); IA contata 10 prestadores por WhatsApp/ligação e devolve 3 orçamentos comparados.
 - **Por que agora:** agentes de voz e WhatsApp com IA ficaram baratos.
 - **Receita:** prestadores pagam por cliente fechado ou assinatura.
+
+---
+
+## Aprofundamento (preferências: gosta do R2-1; quer entender R2-2 e R2-5)
+
+### R2-2 — Clone de especialista: detalhes
+- **Montagem:** reunir conteúdo do especialista (vídeos transcritos, posts, e-books, lives, respostas de DM) →
+  base de conhecimento consultada pela IA + instruções de tom, limites e quando mandar falar com o humano.
+- **Produto para o seguidor:** não é só tirar dúvida; o que segura a assinatura é ser **proativo**
+  (plano personalizado, check-in semanal, cobrança de meta, lembrete).
+- **Dor do especialista:** DMs sem resposta, audiência grande que não vira dinheiro, não quer gravar mais conteúdo.
+- **Economia (exemplo):** R$ 29–49/mês por seguidor; 50% especialista / 50% plataforma; custo de IA de poucos reais por usuário/mês.
+- **Nichos para começar (menos regulados):** culinária, idiomas, concursos, marketing digital, carreira, artesanato, jardinagem.
+- **Evitar no início:** saúde, nutrição, psicologia (conselhos profissionais, dados sensíveis/LGPD) e investimentos (regras da CVM).
+- **Defesa:** contrato de exclusividade com o especialista + plataforma que fica melhor com o uso.
+- **Sinergia com R2-1:** mesma infraestrutura (WhatsApp + Pix Automático). Produto único: "comunidade paga + clone do especialista dentro".
+- **Teste:** 1 especialista, 30 dias, meta de 30–50 seguidores pagantes.
+
+### R2-5 — IA que faz orçamentos: na prática
+1. Cliente descreve no WhatsApp (texto, áudio, fotos). IA faz as perguntas que faltam (metragem, prazo, material).
+2. IA monta pedido padronizado.
+3. Busca 10–15 prestadores na região (Google Places API: nome, telefone, nota).
+4. Envia o pedido por WhatsApp Business (mensagem modelo aprovada) ou ligação com agente de voz (avisando que é IA).
+5. Prestadores respondem como quiserem; IA transcreve, pergunta o que faltou.
+6. IA normaliza: preço, prazo, material incluso, garantia, nota no Google → tabela com os 3 melhores.
+7. Cliente escolhe; IA agenda a visita.
+- **Problema central:** o negócio fecha fora da plataforma → difícil cobrar comissão (desintermediação).
+- **Saída mais forte (B2B):** síndicos e administradoras de condomínio precisam de **3 orçamentos** para quase toda obra/serviço
+  → assinatura mensal para administradoras; cobrança garantida, demanda recorrente.
+- **Teste manual:** fazer à mão para 10 pedidos em 1 categoria (pintura ou frete) na sua cidade; medir tempo e satisfação.
