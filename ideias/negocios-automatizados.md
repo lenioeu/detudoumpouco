@@ -236,3 +236,28 @@ Lógica usada: procurar mudanças recentes ("por que agora") que abriram mercado
 - **Saída mais forte (B2B):** síndicos e administradoras de condomínio precisam de **3 orçamentos** para quase toda obra/serviço
   → assinatura mensal para administradoras; cobrança garantida, demanda recorrente.
 - **Teste manual:** fazer à mão para 10 pedidos em 1 categoria (pintura ou frete) na sua cidade; medir tempo e satisfação.
+
+---
+
+## R2-1 — Quem é o cliente (WhatsApp + Pix recorrente)
+
+**Quem paga você:** o dono do grupo (fica com % de cada mensalidade). Os membros são clientes dele.
+**Perfil ideal:** já cobra mensalidade, organiza tudo no WhatsApp, recebe Pix manualmente e sofre com inadimplência.
+
+| Segmento | Exemplos | Dor | Observação |
+|---|---|---|---|
+| Esporte amador organizado ⭐ | assessorias de corrida, beach tennis, ciclismo, futevôlei, racha de futebol | cobrar todo mês, "fulano não pagou", constrangimento de cobrar amigo | Já cobram (R$ 100–300/mês nas assessorias), fáceis de achar (Instagram/Strava), indicam uns aos outros |
+| Professores e mentores | grupos de concurso/OAB/ENEM, idiomas, música, mentorias | adicionar/remover aluno à mão, link do grupo vaza | Encaixa com o "clone" do especialista (R2-2) |
+| Criadores de conteúdo | grupo VIP de receitas, maternidade, marketing, fitness | Hotmart/Kiwify não gerenciam o grupo; cartão é recusado | Ticket menor, volume maior |
+| Aulas com mensalidade | escolinhas de futebol/natação/ballet, personal, pilates pequeno | inadimplência, cobrança manual | Concorre com Asaas e sistemas de academia |
+| Associações | clubes de leitura, associações de moradores, ONGs, igrejas | contribuição recorrente informal | Volume grande, ticket baixo |
+| **Evitar** | grupos de "sinais"/apostas/trading | risco de fraude, CVM, bets | Contamina a marca e o provedor de pagamento |
+
+**Primeiro nicho sugerido:** assessorias de corrida.
+
+**Validar antes de construir:**
+1. WhatsApp: automação de entrar/sair do grupo pela API oficial é limitada; bibliotecas não oficiais arriscam banimento.
+   Alternativas: link de convite individual após pagamento + lista de inadimplentes para o dono remover; ou Telegram (bot completo).
+2. Dinheiro de terceiros: usar provedor com **split de pagamento** e Pix Automático (dinheiro cai direto para o dono),
+   evitando que você vire instituição de pagamento regulada pelo Banco Central.
+3. Entrevistar 10 donos de assessoria: quanto perdem com inadimplência e quanto tempo gastam cobrando.
