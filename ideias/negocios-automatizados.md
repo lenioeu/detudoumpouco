@@ -168,3 +168,41 @@ processos entram depois via agregador pago, repassado no preço.
 - **Dor:** promessa de academia/dieta/estudo que não dura 3 semanas.
 - **Como roda:** pessoa deposita valor, comprova o hábito (foto, app, GPS); quem falha perde para o bolo dos que cumpriram.
 - **Atenção:** pode ser enquadrado como aposta no Brasil → validar juridicamente; alternativa: valor perdido vai para ONG.
+
+---
+
+## Rodada 2 (recomeço) — critérios do usuário
+Rodada 1 descartada: potencial de escala baixo e/ou concorrência alta.
+Novos critérios: **escala alta**, **pouca concorrência**, **investimento quase zero**, qualquer cliente/formato.
+Lógica usada: procurar mudanças recentes ("por que agora") que abriram mercados ainda vazios.
+
+### R2-1. Cobrança recorrente para grupos de WhatsApp (Pix Automático)
+- **Por que agora:** Pix Automático (2025) permite cobrança recorrente sem cartão.
+- **O que é:** quem tem grupo/comunidade (corrida, receitas, bolão de estudos, mentoria, racha de futebol, escolinha) cobra mensalidade; quem paga entra, quem para de pagar sai do grupo automaticamente.
+- **Escala:** milhões de grupos; receita = % de cada mensalidade; cada dono de grupo traz os membros.
+- **Concorrência:** Hotmart/Kiwify focam em curso e cartão; nicho "WhatsApp + Pix recorrente" pouco ocupado.
+- **Custo inicial:** baixo, usando provedor de pagamento que já oferece Pix Automático.
+
+### R2-2. "Clone" de especialista por assinatura
+- **O que é:** IA treinada com o conteúdo de um especialista (nutricionista, personal, professor, influenciador) que responde os seguidores 24h; seguidor paga mensalidade; receita dividida com o especialista.
+- **Escala:** o especialista traz o público (custo de aquisição ~zero); replicável para centenas de especialistas.
+- **Concorrência:** existe nos EUA (ex.: Delphi); no Brasil, quase vazio.
+- **Teste:** 1 especialista parceiro, 30 dias.
+
+### R2-3. Visibilidade de marcas nas respostas de IA (GEO)
+- **Por que agora:** pessoas trocam o Google por ChatGPT/Gemini/Claude para pedir recomendação.
+- **O que é:** monitora se a marca aparece quando alguém pergunta "melhor dentista em Curitiba" ou "melhor tênis de corrida barato"; relatório mensal + o que fazer para aparecer.
+- **Escala:** SaaS puro; custo = chamadas de API.
+- **Concorrência:** ferramentas globais em inglês; mercado local/PT-BR e pequenas empresas pouco atendido.
+
+### R2-4. "Como é morar aqui" — avaliações de prédios e condomínios
+- **O que é:** quem morou avalia o prédio (barulho, infiltração, internet, síndico, segurança) — o Reclame Aqui da moradia.
+- **Escala:** conteúdo gerado pelos usuários + Google traz tráfego; efeito de rede.
+- **Receita:** construtoras/administradoras/imobiliárias pagam para responder e ter perfil verificado; anúncios.
+- **Concorrência:** nenhum player dominante no Brasil.
+- **Risco:** moderação/difamação (Marco Civil, art. 19) — vantagem de quem é advogado.
+
+### R2-5. IA que faz os orçamentos por você
+- **O que é:** pessoa descreve o que precisa (pintar apartamento, conserto, frete); IA contata 10 prestadores por WhatsApp/ligação e devolve 3 orçamentos comparados.
+- **Por que agora:** agentes de voz e WhatsApp com IA ficaram baratos.
+- **Receita:** prestadores pagam por cliente fechado ou assinatura.
