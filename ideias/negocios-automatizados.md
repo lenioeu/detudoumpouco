@@ -83,3 +83,41 @@ parecer jurídico avulso quando dá vermelho.
 
 **MVP:** só as fontes fáceis (cadastro + sanções + TCU) → já entrega valor; certidões e
 processos entram depois via agregador pago, repassado no preço.
+
+---
+
+## Fora da caixa (sem relação com o mundo jurídico)
+
+### Alertas de nicho (dados → aviso pago)
+| # | Ideia | Fonte | Observação |
+|---|---|---|---|
+| 15 | **Previsão para hobbies** — ondas p/ surfistas, maré+lua p/ pescadores, vento p/ kitesurf, geada p/ produtor rural | Open-Meteo (grátis, inclui marine) | Assinatura barata no WhatsApp/Telegram; comunidades apaixonadas |
+| 16 | **Alerta de reposição (restock)** — cartas Pokémon, LEGO, tênis, consoles | Lojas (reverse-api) | Comunidade paga no Discord/Telegram; risco de termos de uso |
+| 17 | **Passagens baratas / erro de tarifa** saindo da sua cidade | APIs de agregadores de voo | Newsletter grátis + plano pago com alerta instantâneo |
+| 18 | **Combustível mais barato** p/ motoristas de app e frotas | Levantamento semanal de preços da ANP | App/assinatura para frotas |
+
+### Software pequeno com distribuição pronta
+| # | Ideia | Observação |
+|---|---|---|
+| 19 | **App para lojas Nuvemshop/Shopify** (recuperação de carrinho via WhatsApp, avaliações, frete) | A loja de apps traz os clientes; cobrança mensal automática |
+| 20 | **Plantão de sites** — monitora site fora do ar, SSL e domínio vencendo, para pequenas empresas | Técnico simples, suporte quase zero |
+| 21 | **SEO programático** — site com milhares de páginas geradas de dados (ex.: "praias que aceitam cachorro", "pet shops 24h por bairro") | Receita de anúncios/afiliados; demora meses para ranquear |
+
+### Conteúdo gerado por IA
+| # | Ideia | Observação |
+|---|---|---|
+| 22 | **Histórias infantis personalizadas** (nome, cidade, pet da criança) — PDF semanal ou livro impresso sob demanda | Revisar conteúdo; pais pagam bem |
+| 23 | **Cardápio semanal + lista de compras** ajustado a dieta/orçamento | Assinatura B2C; pode cruzar com preços de supermercado |
+| 24 | **Atividades pedagógicas semanais** (colorir, caça-palavras, exercícios por série) para pais e professores | Kit mensal em PDF |
+
+### Físico, mas com pouca mão de obra
+| # | Ideia | Observação |
+|---|---|---|
+| 25 | **Mercadinho autônomo em condomínio** | Pagamento por app/PIX, estoque monitorado; exige reposição (terceirizável) |
+| 26 | **Máquinas automáticas** (lavanderia self-service, vending, armários inteligentes) | Investimento inicial alto; receita recorrente |
+
+### Vender dados/relatórios
+| 27 | **Relatório mensal de preço de aluguel por bairro** para imobiliárias e investidores | Coleta de anúncios (reverse-api) + análise automática |
+
+**Filtro para escolher:** (1) alguém já paga por isso hoje? (2) a fonte de dados é estável?
+(3) o cliente acha você sozinho (loja de apps, SEO, comunidade) ou você precisa vender um a um?
