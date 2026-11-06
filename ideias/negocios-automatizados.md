@@ -121,3 +121,50 @@ processos entram depois via agregador pago, repassado no preço.
 
 **Filtro para escolher:** (1) alguém já paga por isso hoje? (2) a fonte de dados é estável?
 (3) o cliente acha você sozinho (loja de apps, SEO, comunidade) ou você precisa vender um a um?
+
+---
+
+## Combinações (modelo existente A + modelo existente B → dor resolvida)
+
+### 28. Check-in diário para idosos por voz de IA ⭐
+- **Combina:** teleassistência + agente de voz com IA + assinatura paga pelos filhos.
+- **Dor:** idoso que mora sozinho; filhos longe e culpados; quedas que só são descobertas horas depois.
+- **Como roda:** IA liga todo dia no horário combinado, conversa, lembra remédio, percebe sinais (confusão, tristeza, não atendeu) → avisa a família no WhatsApp. Relatório semanal para os filhos.
+- **Escala:** custo marginal = minutos de ligação. Canal: grupos de filhos, geriatras, farmácias.
+- **Teste em 7 dias:** landing page + 10 famílias com ligação feita por você mesmo (simula a IA) e mede retenção.
+
+### 29. "Retrospectiva" mensal para pequenos negócios
+- **Combina:** Spotify Wrapped + relatório financeiro + gerador de posts.
+- **Dor:** dono de pequeno negócio não olha os números e não tem conteúdo para o Instagram.
+- **Como roda:** conecta maquininha/iFood/Instagram → todo mês gera insights ("sua terça é 40% mais fraca") + posts prontos e compartilháveis ("1.200 cafés servidos em outubro").
+- **Escala:** o post compartilhado é a propaganda (cada cliente divulga o produto).
+
+### 30. Caçador de assinaturas esquecidas
+- **Combina:** Rocket Money (EUA) + Open Finance Brasil (via agregadores como Pluggy/Belvo).
+- **Dor:** brasileiro paga streaming, app e academia que nem usa; cobranças que sobem sem aviso.
+- **Como roda:** lê a fatura, detecta recorrências, alerta reajuste, gera o pedido de cancelamento pronto.
+- **Receita:** assinatura ou % da economia do primeiro ano.
+
+### 31. "Síndico" da sua casa
+- **Combina:** calendário de manutenção preventiva + marketplace de prestadores (tipo GetNinjas) + diagnóstico por foto com IA.
+- **Dor:** casa só recebe atenção quando quebra (caixa d'água, filtro, ar-condicionado, dedetização, calha).
+- **Como roda:** cadastro da casa → lembretes automáticos → 1 clique agenda prestador avaliado.
+- **Receita:** assinatura + comissão do serviço.
+
+### 32. Bolsa de permuta online entre empresas
+- **Combina:** clubes de permuta (antigos, offline) + marketplace + moeda interna de créditos.
+- **Dor:** pequena empresa com capacidade ociosa (horário vazio, estoque parado) e sem caixa.
+- **Como roda:** dentista vende limpeza em créditos, usa créditos para pagar gráfica, que paga restaurante.
+- **Receita:** mensalidade + taxa por transação. Efeito de rede = difícil de copiar. (Checar tributação de permuta.)
+
+### 33. Preço dinâmico para mesas vazias de restaurante
+- **Combina:** gestão de receita de companhia aérea + Too Good To Go.
+- **Dor:** restaurante lotado sexta e vazio terça; desconto fixo destrói margem.
+- **Como roda:** restaurante libera horários ociosos; app mostra "-30% hoje 19h"; desconto ajusta pela demanda.
+- **Receita:** mensalidade do restaurante + comissão por mesa.
+
+### 34. Desafio com dinheiro em jogo
+- **Combina:** Strava/app de hábitos + contrato de compromisso (StickK/DietBet).
+- **Dor:** promessa de academia/dieta/estudo que não dura 3 semanas.
+- **Como roda:** pessoa deposita valor, comprova o hábito (foto, app, GPS); quem falha perde para o bolo dos que cumpriram.
+- **Atenção:** pode ser enquadrado como aposta no Brasil → validar juridicamente; alternativa: valor perdido vai para ONG.
