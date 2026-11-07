@@ -261,3 +261,19 @@ Lógica usada: procurar mudanças recentes ("por que agora") que abriram mercado
 2. Dinheiro de terceiros: usar provedor com **split de pagamento** e Pix Automático (dinheiro cai direto para o dono),
    evitando que você vire instituição de pagamento regulada pelo Banco Central.
 3. Entrevistar 10 donos de assessoria: quanto perdem com inadimplência e quanto tempo gastam cobrando.
+
+---
+
+## Rodada 3 — SaaS por assinatura que resolve um problema claro
+Critério: nicho mal atendido no Brasil, dor concreta, cliente fácil de achar, custo inicial ~zero.
+
+| # | SaaS | Problema | Quem paga | Por que agora / pouca concorrência |
+|---|---|---|---|---|
+| S1 ⭐ | **Gestão para instrutor de direção autônomo** — agenda, pacote de aulas, cobrança Pix, controle de horas exigidas, avaliação do aluno | Instrutor autônomo organiza tudo no WhatsApp e caderno | Instrutor (R$ 49–99/mês) | Novas regras da CNH permitem instrutor autônomo → mercado novo, sem ferramenta dominante (confirmar regras vigentes) |
+| S2 ⭐ | **Riscos psicossociais da NR-1** — questionário anônimo, relatório, plano de ação e evidências para fiscalização | Pequena empresa não sabe cumprir a nova exigência e teme multa | Empresa (por funcionário/mês) ou consultorias de SST revendendo | Exigência fiscalizada a partir de 2026; mercado em formação |
+| S3 | **Condomínio pequeno em autogestão** (6–30 unidades) — rateio, cobrança Pix Automático, prestação de contas, reservas | Síndico morador faz planilha; administradora é cara | Condomínio (R$ 2–5 por unidade/mês) | Grandes softwares miram administradoras; prédio pequeno é ignorado |
+| S4 | **Brechó** — foto da peça vira anúncio pronto com IA + controle de consignação (repasse para quem deixou a peça) | Cadastrar peça é lento; acerto com consignantes é caótico | Brechó (R$ 49–149/mês) | Mercado de usados em alta; nada focado em consignação |
+| S5 | **Obra pequena para empreiteiro** — orçamento por áudio/foto, cronograma, foto diária para o cliente, recebimento por etapa | Cliente desconfia, empreiteiro desorganizado, calote | Empreiteiro | Ferramentas existentes são para construtora, não para autônomo |
+| S6 | **Assessoria esportiva** — treinos, presença, Strava, cobrança Pix recorrente | Cobrança e gestão manual no WhatsApp | Assessoria/treinador | Evolução da ideia R2-1 |
+
+**Teste comum:** 10 conversas com o público-alvo + página com preço + lista de espera antes de programar.
