@@ -21,8 +21,14 @@ confirmar antes de usar o número em qualquer decisão de investimento.
   busca por localização/CEP, perfil com foto e currículo, avaliação por estrelas, selo na CNH
   digital; contato e negociação seguem fora do app, por WhatsApp. ([Autopapo](https://autopapo.com.br/noticia/funcao-cnh-do-brasil-instrutores-localizacao/),
   [Canaltech](https://canaltech.com.br/carros/tirar-cnh-no-brasil-acaba-de-ficar-ainda-mais-facil-com-app-veja-o-motivo/))
-  **Confirma a tese do briefing: o app é só vitrine de descoberta — não tem agenda, cobrança,
-  controle de horas nem ficha de evolução do aluno.**
+  **Atualização (segunda rodada de pesquisa):** o app é mais avançado do que a primeira leitura
+  sugeria — já existe uma **"área dedicada para o instrutor gerenciar o próprio negócio"**, e o
+  registro das aulas usa biometria/GPS, com dados enviados ao Renach. Ainda assim, só **~7% das
+  aulas práticas** são dadas por instrutores autônomos hoje — adoção real baixa.
+  ([Click Petróleo e Gás](https://clickpetroleoegas.com.br/sem-autoescolas-profissao-de-instrutor-autonomo-ganha-forca-com-novo-modelo-da-cnh-do-brasil-256-milhoes-de-usuarios-no-app-139-milhao-de-pedidos-e-85-918-profissionais-em-formacao-afch/))
+  **Risco a monitorar:** se essa "área de gerenciar o negócio" evoluir para cobrança e controle
+  de horas, o governo passa a competir diretamente com o produto proposto — vale investigar essa
+  área a fundo antes de travar o escopo do MVP.
 - Instrutores já cadastrados nos sistemas estaduais tiveram até **06/07/2026** para migrar o
   cadastro para a plataforma nacional — ou seja, a base de usuários endereçável já existia antes
   do app federal e está passando por uma migração agora.
@@ -35,19 +41,24 @@ confirmar antes de usar o número em qualquer decisão de investimento.
 | CNHs emitidas jan–mai/2026 | 1.141.765 (+8,9% vs 2025) | Balanço oficial do programa CNH do Brasil — **este é o dado mais confiável** |
 | Gasto total anual dos candidatos com CNH | ~R$ 9,6 bi | Citado em matéria de imprensa, sem metodologia clara |
 | Faturamento do setor de autoescolas | sem número oficial atual; Feneauto estima perda de R$ 14 bi/ano com a desobrigação | **Feneauto é parte interessada** (defende a obrigatoriedade) — tratar como limite superior, não como fato |
-| Instrutores autônomos credenciados (nacional) | **não encontrado** | — |
-| Instrutores autônomos credenciados (PR) | 12.421 "autorizados" | Citado em liminar judicial, não confirmado como número oficial do Detran-PR |
+| Instrutores "cadastrados" (nacional, app CNH do Brasil) | ~170–172 mil | Poder360 / Agência Gov, maio/2026 — confiança **média**; não está claro se "cadastrado" equivale a credenciado e autorizado a dar aula |
+| Inscritos no curso de formação de instrutor (nacional) | 211 mil (desde dez/2025) **ou** 85.918 (sem data clara) | WEBPIAUI / O Metropolitano — mede inscrição em curso, não credenciamento final; os dois números não são comparáveis entre si |
+| Instrutores autônomos "autorizados" (PR) | 12.421 | Citado em liminar judicial (ASCEFOCON), não confirmado como número oficial do Detran-PR — confiança **baixa** |
+| Painel nacional consolidado de credenciados | **não encontrado** | Nem Senatran nem Ministério dos Transportes divulgaram um total agregado nas fontes pesquisadas |
 | Preço da aula com instrutor autônomo | R$ 70–155/hora | Blogs de comparação de preço — sem tabela oficial, preço é livre |
 | Preço da aula em autoescola | R$ 20–60/hora | idem |
 | Custo total das 2h obrigatórias com instrutor autônomo | R$ 150–250 | idem |
 
 **Leitura:** o único dado robusto é o volume de CNHs emitidas (governo). Todo o resto — número
 de instrutores, faturamento do setor, impacto da reforma — vem de estimativas de partes
-interessadas (Feneauto do lado das autoescolas) ou de blogs. Para um TAM defensável, falta um
-dado primário: **quantos instrutores autônomos estão credenciados, por estado**. Isso é público
-mas disperso em painéis separados de cada Detran — nenhuma matéria agregou. Ação recomendada:
-puxar a lista pública de credenciados em 3–4 Detrans grandes (GO, PR, RJ, SC — são os que têm
-processo mais maduro) antes de fechar o plano de negócio.
+interessadas (Feneauto do lado das autoescolas) ou de blogs, e as diferentes "contagens de
+instrutor" (cadastrado no app, inscrito no curso, autorizado pelo estado) **medem coisas
+diferentes e não devem ser somadas ou comparadas diretamente**. GO e SC já têm painel público de
+credenciados no site do Detran (mas sem total agregado encontrado); RJ e SP não apareceram em
+nenhuma lista pública nas duas rodadas de busca. Ação recomendada: acessar diretamente os
+painéis de GO e SC para contar os nomes, e pedir à Senatran/Ministério dos Transportes (via LAI,
+se necessário) o número de credenciados ativos por estado — é o dado que mais destrava o
+dimensionamento do TAM.
 
 ### 1.3 Regras por estado — o padrão e onde variam
 Todos os estados seguem a Resolução CONTRAN 1.020/2025, mas cada Detran publica portaria própria
@@ -65,7 +76,11 @@ buscas — é a lacuna mais importante para preencher (maior mercado do país).
 | **CE** | — | Instrutores reclamam que o sistema do Detran-CE direciona automaticamente para veículo de autoescola, driblando a norma | [O Povo+](https://mais.opovo.com.br/jornal/cidades/2026/03/13/instrutores-autonomos-acusam-detran-ce-de-barrar-uso-de-veiculos-proprios-nos-exames.html) |
 | **PR** | — | ~12.421 "autorizados" (não confirmado); ASCEFOCON-PR obteve liminar parcial exigindo certidão de regularidade do Detran-PR antes do cadastro na plataforma nacional | [Liminar ASCEFOCON-PR](https://www.portaldotransito.com.br/wp-content/uploads/2026/05/Liminar-ASCEFOCON-PR.pdf) |
 | **PI** | — | Edital explicita que o instrutor atua "por sua conta e risco" | — |
-| **SP** | **não encontrado** | Nenhuma portaria específica apareceu na busca — maior mercado do país e maior lacuna de dados | — |
+| **SP** | não confirmado | Detran-SP já credenciava instrutores **antes** da Resolução 1.020/2025, via Portaria Normativa nº 25/2024 e Edital de Credenciamento nº 3.1 (12/12/2024), com portal próprio (`credenciados.detran.sp.gov.br`); não confirmado se essa norma foi adaptada para cobrir o modelo autônomo nos termos da resolução federal — taxa, validade e regra de veículo específicas de SP continuam **não encontradas** | [Detran-SP (portal)](https://credenciados.detran.sp.gov.br/classe-instrutor-de-transito) |
+| **BA** | — | Portaria DETRAN nº 599/2025 (29/12/2025), com anexo de penalidades ao instrutor; requisitos e validade não encontrados | [normasbrasil.com.br](https://www.normasbrasil.com.br/norma/portaria-599-2025-ba_488753.html) |
+| **DF** | — | Detran-DF anunciou (abr/2026) que o instrutor pode atuar de forma independente com autorização própria; diretora de Credenciamento alertou sobre prazo para emitir a nova autorização sem perder acesso | [SouBrasília](https://soubrasilia.com/detran-df-divulga-novas-regras-para-instrutor-de-transito-autorizado-a-atuar-sem-vinculo-com-autoescola/) |
+| **ES** | — | Detran-ES confirma aplicação da Resolução 1.020/2025; aula prática pode ser feita com instrutor autônomo credenciado ao próprio Detran-ES; portaria estadual específica não encontrada | — |
+| **RS, PE, AM** | — | Nenhuma portaria estadual específica encontrada nas duas rodadas de busca — RS só confirma que concluiu a "implementação das principais etapas" da norma nacional, sem detalhar instrutor autônomo | [Detran-RS](https://www.estado.rs.gov.br/detranrs-conclui-principais-etapas-de-implementacao-da-cnh-do-brasil-no-rs) |
 
 **Implicação de produto:** não dá para hard-code uma única regra de "carga horária" ou "validade
 de credencial" — o produto precisa de um campo de configuração por estado (ou pelo menos avisos
@@ -79,17 +94,56 @@ confiar só no app federal, que trata o país como regra única.
   para cadastro, mas **não suspende** a resolução nem o programa CNH do Brasil.
 - **CE:** instrutores buscam ação no Ministério Público / Justiça Federal contra o
   direcionamento para veículo de autoescola.
-- **STF:** há menção de ação no STF contra a mudança, sem detalhes de andamento confirmados.
+- **STF:** a **CNC** (Confederação Nacional do Comércio) ajuizou ADI real contra dispositivos da
+  Resolução 1.020/2025, incluindo o instrutor autônomo (~jun/2026). A ministra Cármen Lúcia
+  **arquivou** uma dessas ações sem julgar o mérito da inconstitucionalidade, mantendo a norma
+  em vigor. Não há decisão de mérito definitiva encontrada até o momento. ([Conjur](https://www.conjur.com.br/2026-jun-15/confederacao-do-comercio-contesta-no-stf-flexibilizacao-para-obter-cnh/),
+  [Poder360](https://www.poder360.com.br/poder-justica/stf-arquiva-acao-contra-uso-de-carro-particular-na-prova-da-cnh/))
+- **MT:** único caso de reversão real encontrado — Justiça Federal suspendeu a resolução no
+  estado a pedido do Detran-MT, mas o **TRF-1 reverteu a suspensão**, e a norma voltou a valer.
+  ([Portal do Trânsito](https://www.portaldotransito.com.br/noticias/fiscalizacao-e-legislacao/carteira-de-habilitacao-cnh/primeira-habilitacao/resolucao-1020-25-do-contran-e-suspensa-pela-justica-em-mt/))
+- **MS:** resistência administrativa (não judicial) — Detran-MS ainda não libera agendamento de
+  exame para instrutor autônomo.
 - **MG:** matéria (status atual não confirmado) de que o governo estadual avaliaria "coibir" o
   credenciamento — sinal de resistência político-administrativa mesmo em estado grande.
 - Entidades do setor (Feneauto e sindicatos estaduais) estão organizando "contra-ataque" no
   Congresso e no STF.
 
-**Risco central para a tese:** a política pode ser revertida, judicializada ou fortemente
-restringida em um ou mais estados antes do produto atingir escala — e o produto precisaria se
-adaptar estado a estado de qualquer forma (seção 1.3). **Mitigação estrutural:** não apostar o
-negócio inteiro no instrutor autônomo. A trilha B2B para CFC (seção 4) é resiliente a esse risco:
-autoescola vai sempre precisar de gestão, com ou sem a resolução.
+**Leitura de risco (atualizada):** em toda disputa concreta encontrada — STF, SP, MT — o
+resultado foi **manter a resolução vigente**; a única suspensão temporária (MT) foi revertida em
+instância superior. O padrão observado é fricção administrativa estado a estado (SP, MG, MS, CE),
+não reversão judicial da política nacional. **Risco regulatório: moderado-baixo no nível
+federal, moderado no nível estadual** (cada Detran ainda pode travar ou atrasar a
+operacionalização, como mostra a tabela 1.3). **Mitigação estrutural:** ainda assim, não apostar
+o negócio inteiro no instrutor autônomo — a trilha B2B para CFC (seção 4) é resiliente a esse
+risco porque autoescola vai sempre precisar de gestão, com ou sem a resolução.
+
+### 1.5 Concorrência direta no B2C (atualização: não é mercado totalmente vazio)
+A primeira rodada de pesquisa não achou concorrente direto. Uma segunda rodada focada
+especificamente nisso encontrou um candidato próximo:
+- **Seu Instrutor** (CEO Mateus Castro): plataforma brasileira que conecta candidatos a
+  instrutores credenciados pelo Detran — busca por geolocalização, filtros de perfil,
+  avaliações e agendamento direto pelo site/app. É o mais próximo de um concorrente direto
+  encontrado até agora, mas **nenhuma fonte confirma** que ela cobra via Pix ou oferece
+  controle de horas/ficha de evolução do aluno — parece focada em descoberta/agendamento, não
+  na gestão administrativa completa do instrutor. Não verificado diretamente no produto (só
+  imprensa) — **ação recomendada: testar o produto real antes de assumir que o espaço de
+  gestão administrativa está livre.**
+  ([Portal de Prefeitura](https://portaldeprefeitura.com.br/brasil/cnh-nova-regra-do-contran-permite-aulas-instrutor-autonomo/632670/))
+- A vaga no Workana (dez/2025) para um marketplace de aulas autônomas propõe comissão de
+  15–25% — confirma que a demanda por esse modelo existe no mercado, mas ainda não é produto
+  lançado.
+- **Pix Automático** é viável tecnicamente para cobrança recorrente de pacotes, mas depende de
+  autorização do aluno no próprio app do banco dele — nenhum produto do setor usa isso ainda,
+  o que é uma oportunidade de diferenciação técnica real.
+- Nenhum app dedicado a agenda+cobrança+progresso para instrutor autônomo apareceu em busca de
+  loja de aplicativos.
+
+**Conclusão revisada:** o espaço de "descoberta de instrutor" já tem pelo menos um concorrente
+(Seu Instrutor) competindo com o próprio app do governo. O espaço de **gestão administrativa
+completa** (cobrança recorrente, controle de horas, ficha de evolução) continua sem concorrente
+confirmado — mas a diferenciação do produto deve focar explicitamente nisso, e não em
+"descoberta", onde já há dois players (um deles o governo).
 
 ---
 
@@ -202,15 +256,30 @@ roteiro) antes de travar.
 - O usuário pediu explicitamente essa frente, e ela **reduz o risco regulatório** da aposta
   pura em instrutor autônomo (seção 1.4): CFC é obrigado a existir e vai precisar de gestão
   independente do desfecho da resolução.
-- **Muitas CFCs ainda operam no papel** — confirmado pela pesquisa: o software mais citado no
-  mercado brasileiro de gestão de autoescola é fragmentado e pouco maduro. Os únicos nomes que
-  apareceram foram **Inove CFC** (foco em dar ao proprietário controle de caixa) e
-  **Transitare**, da Tecnodata Educacional (pré-lançamento, sem dados de adoção), além de
-  **e-conductor** (empresa de 2016, sem avaliações públicas). Nenhum preço público foi
-  encontrado para nenhum dos três — sinal de mercado pouco transparente e pouco competitivo em
-  marketing digital, não necessariamily de baixa demanda.
-- Isso é uma faixa branca real: não há um "Notion das autoescolas" nem um player dominante
-  visível — diferente de verticais SaaS mais maduras.
+- **Muitas CFCs ainda operam no papel ou em planilha** — mas uma segunda rodada de pesquisa
+  mostrou que o mercado de software para CFC **não é vazio**: existem pelo menos 9 players
+  ativos, com site comercial próprio:
+
+  | Produto | Sinal de escala/porte | Foco |
+  |---|---|---|
+  | **e-condutor** | alega 750 mil+ alunos já passados pela plataforma (maior número do setor) | agenda, matrícula, financeiro, instrutores, veículos, app aluno/instrutor |
+  | **InforCFC** | alega 800+ autoescolas atendidas | gestão, financeiro, fluxo de caixa, agenda, matrícula |
+  | **SgaeNet** | produto da Reobote Tecnologia e Pagamentos | 100% em nuvem, matrícula online, portal do aluno |
+  | **CFCWebSoft** | — | financeiro: Pix/boleto automático, inadimplência, fluxo de caixa |
+  | **InoveCFC** | criado por Carla Patrícia Pontes | software completo, calculadora de custos, integração WhatsApp |
+  | **GestorCFC** | — | app do aluno, agenda online, indicadores de desempenho |
+  | **CFC Produtivo** | — | fluxo de caixa, agendamento, NF-e, WhatsApp, apps nativos |
+  | **Transitare** (Tecnodata Educacional) | — | mais um programa de conteúdo/parceria educacional do que um ERP puro |
+
+  **Nenhum dos 9 expõe preço público** — venda 100% por contato comercial/demo — e **nenhuma
+  notícia de investimento/captação** foi encontrada para qualquer um deles. Não há reviews de
+  gestores de CFC sobre esses sistemas (Reclame Aqui só tem reclamação de aluno sobre a
+  autoescola, não sobre o software).
+- **Conclusão revisada:** não é uma faixa branca — é um mercado fragmentado, sem player
+  dominante visível, mas já com oferta razoável. A oportunidade real está em **preço
+  transparente/self-service** (nenhum concorrente faz isso) e na **adjacência com o B2C**
+  (nenhum dos 9 parece pensado para gerenciar instrutores autônomos parceiros, só instrutores
+  próprios da CFC).
 
 ### 4.2 Escopo do produto B2B
 | Módulo | Equivalente no B2C | Observação específica de CFC |
@@ -223,12 +292,16 @@ roteiro) antes de travar.
 | Relatórios para fiscalização/Detran | — | Exportação no formato que o Detran pede — alto valor percebido, baixo custo de construir uma vez validado o formato |
 
 ### 4.3 Diferenciação frente aos concorrentes existentes
-- Posicionar como mais simples e mais barato que os sistemas legados de CFC (que parecem
-  vendidos via contato comercial direto, sem transparência de preço — fricção que um produto
-  self-service com preço público já resolveria).
+- Posicionar como mais simples e mais barato que os 9 sistemas de CFC já mapeados (seção 4.1),
+  todos vendidos via contato comercial direto, sem transparência de preço — fricção que um
+  produto self-service com preço público já resolveria sozinho, sem precisar de feature nova.
 - Usar a adjacência com o módulo B2C: uma CFC que opera no modelo híbrido (instrutores próprios
   + parceiros autônomos) só consegue gerenciar os dois num sistema que fala a língua dos dois —
-  diferencial natural de ter nascido do lado do instrutor autônomo.
+  nenhum dos 9 concorrentes mapeados parece pensado para isso; é o diferencial natural de ter
+  nascido do lado do instrutor autônomo.
+- Antes de fechar o posicionamento, testar pelo menos o produto do líder aparente em escala
+  (e-condutor, 750 mil+ alunos) e o mais financeiro (CFCWebSoft) como usuário, para saber
+  exatamente o que falta neles — hoje a avaliação é só pelo site institucional de cada um.
 
 ### 4.4 Modelo de receita B2B
 - **Mensalidade por CFC**, provavelmente escalada por nº de alunos ativos ou de instrutores/veículos (modelo SaaS clássico B2B), não por transação — CFC tem fluxo de caixa mais estável que instrutor individual e espera previsibilidade de custo.
@@ -255,17 +328,29 @@ roteiro) antes de travar.
   sem precisar de dois produtos.
 
 ## 6. Riscos consolidados e próximos passos imediatos
-**Riscos principais:** (1) regulatório/judicial — a resolução pode ser restringida; (2) dado de
-mercado fraco — TAM real desconhecido até confirmar número de credenciados por estado; (3)
-heterogeneidade estadual — produto precisa de configuração por estado desde o início; (4) app
-federal pode evoluir para oferecer gestão basica, embora hoje não ofereça.
+**Riscos principais (atualizados após a segunda rodada de pesquisa):**
+1. **Regulatório/judicial — moderado-baixo, não alto:** toda disputa concreta encontrada (STF,
+   SP, MT) manteve a resolução vigente; a única suspensão (MT) foi revertida. O risco real é
+   fricção administrativa estado a estado (SP, MG, MS, CE), não reversão da política nacional.
+2. **TAM ainda fraco:** nenhuma contagem nacional confiável de instrutores credenciados; os
+   números disponíveis (170 mil cadastrados, 211 mil/85,9 mil inscritos em curso, 12.421 "autorizados" no PR) medem coisas diferentes e não são comparáveis.
+3. **Heterogeneidade estadual:** confirmada e ainda maior do que o levantamento inicial — SP
+   (maior mercado) segue sem regra específica confirmada; BA, DF, ES têm norma própria; PE, AM
+   não têm nada publicado. Produto precisa de configuração por estado desde o início.
+4. **Concorrência já existe, não é mercado vazio:** no B2C, o app federal já tem área de
+   "gerenciar o próprio negócio" e existe um concorrente privado (Seu Instrutor) focado em
+   descoberta. No B2B, há pelo menos 9 sistemas de CFC ativos (seção 4.1), nenhum com preço
+   público — a diferenciação tem que ser mais específica que "não existe nada assim".
 
 **Próximos passos imediatos:**
-1. Ligar/pesquisar diretamente nos portais de GO, PR, RJ e SC para obter o número público de
-   instrutores credenciados (preenche a lacuna do item 1.2).
-2. Rodar as entrevistas dos roteiros 2.1 e 2.2 — mínimo 5 instrutores + 3 CFCs, em pelo menos
-   2 estados.
-3. Rodar o "MVP 0" (planilha + WhatsApp manual) com 3–5 instrutores reais por 2–4 semanas antes
+1. Acessar diretamente os painéis públicos de credenciados de GO e SC (contagem manual) e
+   solicitar à Senatran/Ministério dos Transportes o número de credenciados ativos por estado,
+   via LAI se necessário — preenche a lacuna de TAM do item 1.2.
+2. Testar como usuário o app **Seu Instrutor** (B2C) e pelo menos **e-condutor** e
+   **CFCWebSoft** (B2B) antes de desenhar a diferenciação final.
+3. Rodar as entrevistas dos roteiros 2.1 e 2.2 — mínimo 5 instrutores + 3 CFCs, em pelo menos
+   2 estados, incluindo perguntas sobre esses concorrentes específicos (o que usam, o que falta).
+4. Rodar o "MVP 0" (planilha + WhatsApp manual) com 3–5 instrutores reais por 2–4 semanas antes
    de programar.
-4. Montar página de lista de espera separada para instrutor autônomo e para CFC, para medir
+5. Montar página de lista de espera separada para instrutor autônomo e para CFC, para medir
    intenção de cada segmento de forma independente.
