@@ -277,3 +277,10 @@ Critério: nicho mal atendido no Brasil, dor concreta, cliente fácil de achar, 
 | S6 | **Assessoria esportiva** — treinos, presença, Strava, cobrança Pix recorrente | Cobrança e gestão manual no WhatsApp | Assessoria/treinador | Evolução da ideia R2-1 |
 
 **Teste comum:** 10 conversas com o público-alvo + página com preço + lista de espera antes de programar.
+
+### Concorrência — S6 assessoria esportiva (pesquisa 07/11/2026)
+Mercado **já ocupado**: Treinus (líder, ~200+ assessorias, planos a partir de ~R$ 105/20 alunos), SisRUN Coach,
+Fitney (app com a marca da assessoria), MFIT, Tecnofit (academias, com cobrança), TrainingPeaks (global),
+além de treinadores de IA (Runna, comprado pelo Strava; Guerrinha IA no WhatsApp).
+Brecha possível: treinador pequeno que não quer app e vive no WhatsApp + cobrança Pix Automático; esportes fora da corrida.
+**Conclusão:** rebaixar S6; não atende o critério de pouca concorrência.
