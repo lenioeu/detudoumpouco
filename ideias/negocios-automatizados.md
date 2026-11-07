@@ -320,3 +320,22 @@ Lógica: modelo provado no exterior + versão brasileira (WhatsApp, Pix, marketp
 - **Próximo passo:** pesquisar concorrência no Brasil.
 
 **Fonte de mais ideias:** listas de micro-SaaS lucrativos (Indie Hackers, Acquire.com), mapas de vertical SaaS europeu (Point Nine), SaaS chinês de "tráfego privado".
+
+---
+
+## Rodada 5 — Europa por país (pesquisa 07/11/2026)
+
+| País | SaaS / modelo | O que faz | Já tem no Brasil? |
+|---|---|---|---|
+| França | **Ornikar** | Autoescola online: aulas teóricas online + rede de ~3.000 instrutores independentes; ~€104 mi de receita em 2025; comprou En Voiture Simone; habilitação ~€1.500 vs ~€2.500 tradicional | **Não** — valida fortemente S1 (instrutor autônomo) |
+| França | Doctolib, Qonto, Pennylane, Agicap, Malt, Swile, PayFit | agenda médica, banco PJ, contabilidade, fluxo de caixa, freelancers, benefícios, folha | Sim (Doctoralia, Conta Azul, Nibo, Caju/Flash etc.) |
+| Espanha | **Playtomic** | reserva de quadra de raquete/padel + achar parceiro do seu nível + software do clube; rodada de €65 mi em 2025 | Está na App Store BR; concorrência local em beach tennis **a verificar** |
+| Espanha | Holded (comprada pela Visma), Factorial | ERP e RH para PME | Sim (Omie, Conta Azul, Sólides) |
+| Portugal | AirCourts (comprada pela Playtomic, tinha 87% dos clubes de padel), Moloni/InvoiceXpress, Coverflex | reserva de quadras, faturação, benefícios | Parcial |
+| Itália | Fatture in Cloud, Satispay | fatura eletrônica (explodiu com a obrigatoriedade), pagamento por app | Sim (Pix, emissores de nota) — lição: **obrigação legal cria mercado** |
+| Inglaterra | GoCardless, Fresha, Fixflo | débito recorrente; software grátis para salões que lucra nos pagamentos; manutenção para imobiliárias | GoCardless ≈ Pix Automático; modelo Fresha (grátis + taxa de pagamento) é aplicável a qualquer nicho |
+
+**Conclusões:**
+1. Ornikar é a melhor prova de que S1 (instrutor autônomo) pode virar negócio grande. Atenção: na França houve processos de sindicatos de autoescolas.
+2. Playtomic → checar se o beach tennis/padel no Brasil já tem dono.
+3. Modelo Fresha: SaaS de graça, receita na taxa de pagamento → derruba a barreira de venda.
