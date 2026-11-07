@@ -295,3 +295,28 @@ Brecha possível: treinador pequeno que não quer app e vive no WhatsApp + cobra
   o SaaS cuida da gestão. Primeiras provas com instrutor particular no RJ em out/2026 → mercado começando agora.
   Riscos: app do governo ampliar funções; regras estaduais (Detran) variam; tamanho do mercado a confirmar.
 - **Conclusão:** S1 é a brecha mais limpa encontrada até agora.
+
+---
+
+## Rodada 4 — SaaS que já funciona lá fora e falta no Brasil ("tropicalizar")
+Lógica: modelo provado no exterior + versão brasileira (WhatsApp, Pix, marketplaces locais).
+
+### T1 ⭐ Crosslisting para brechós e revendedores de usados
+- **Lá fora:** EUA têm Vendoo (a partir de ~US$ 9/mês), List Perfectly (US$ 29–99+/mês), Crosslist — publicam a mesma peça em 10+ marketplaces e tiram dos outros quando vende.
+- **Brasil:** integradores (Base.com, Anymarket, UpSeller) são para produto novo com estoque; não foi encontrado nenhum que inclua Enjoei e trate peça única.
+- **Produto:** foto → IA escreve anúncio e sugere preço → publica em Enjoei, Mercado Livre, Shopee, OLX, Instagram → vendeu em um, some dos outros. Pode incluir consignação (ver S4).
+- **Risco técnico:** Enjoei/OLX sem API pública → nos EUA isso é resolvido com extensão de navegador que age em nome do usuário (reverse-api ajuda a mapear).
+
+### T2 Clienteling via WhatsApp para lojas físicas (modelo chinês WeCom/Weimob)
+- **Lá fora:** na China, vendedores de loja atendem clientes pelo WeCom (WeChat corporativo); Weimob/Youzan vendem SaaS e IA para isso.
+- **Brasil:** WhatsApp é o "WeChat brasileiro"; Suiteshare atende grandes redes (Reserva, Magalu); estimativa de ~50% dos vendedores ainda usam WhatsApp manual. Lojas médias/pequenas mal atendidas.
+- **Dor:** vendedora usa WhatsApp pessoal → quando sai, leva os clientes; dono não vê nada; venda não atribuída.
+- **Produto:** número da empresa por vendedor, carteira de clientes, lembretes (aniversário, "chegou seu tamanho"), IA sugere mensagem, comissão por venda atribuída.
+- **Alvo:** lojas de roupa, calçados, ótica, joalheria, cosméticos, móveis.
+
+### T3 Escala de turnos para bares, restaurantes e padarias (a verificar)
+- **Lá fora:** Planday (Dinamarca), 7shifts (Canadá), Deputy, When I Work.
+- **Brasil:** softwares focam em ponto eletrônico, não em montar escala, trocar turno, chamar folguista e comparar custo da escala com vendas.
+- **Próximo passo:** pesquisar concorrência no Brasil.
+
+**Fonte de mais ideias:** listas de micro-SaaS lucrativos (Indie Hackers, Acquire.com), mapas de vertical SaaS europeu (Point Nine), SaaS chinês de "tráfego privado".
