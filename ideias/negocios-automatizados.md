@@ -360,3 +360,16 @@ Lógica: modelo provado no exterior + versão brasileira (WhatsApp, Pix, marketp
 2. WhatsApp/super-app como interface (Índia, China, Brasil).
 3. Digitalizar o "caderno" de negócios informais (Índia, África).
 4. Obrigação legal ou subsídio do governo criando mercado (Itália, Coreia).
+
+---
+
+## Recomeço do zero (07/11/2026) — o que dá para construir aqui e escalar
+Ferramentas disponíveis na sessão: escrever/testar código, GitHub, Cloudflare (Workers, D1, KV, R2), API do Claude,
+páginas publicadas (Artifacts), pesquisa web, reverse-api-engineer.
+O fundador precisa providenciar: conta no provedor de pagamento com Pix API, domínio, CNPJ, WhatsApp Business API (opcional).
+
+| Opção | O que é | Mecanismo de escala |
+|---|---|---|
+| **A** | Link de agendamento + sinal por Pix + lembrete (porta de entrada do produto horizontal para autônomos) | Cada página de agendamento mostra "feito com X" → cliente do autônomo vira divulgação (modelo Calendly) |
+| **B** | Ferramenta de IA para advogados (vantagem do fundador; ~1,4 mi de advogados) | Nicho grande, fundador conhece a dor e o canal |
+| **C** ⭐ | **Proposta → aceite com validade jurídica → sinal Pix → cobrança automática das parcelas** para qualquer autônomo | Une a hipótese horizontal (calote, sinal, escopo, preço) com a vantagem jurídica; cada proposta enviada divulga o produto |
