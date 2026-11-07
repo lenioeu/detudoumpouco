@@ -284,3 +284,14 @@ Fitney (app com a marca da assessoria), MFIT, Tecnofit (academias, com cobrança
 além de treinadores de IA (Runna, comprado pelo Strava; Guerrinha IA no WhatsApp).
 Brecha possível: treinador pequeno que não quer app e vive no WhatsApp + cobrança Pix Automático; esportes fora da corrida.
 **Conclusão:** rebaixar S6; não atende o critério de pouca concorrência.
+
+### Concorrência — S1 e S2 (pesquisa 07/11/2026)
+- **S2 NR-1:** já há players (Indexmed com módulo COPSOQ II, QBest, softwares de SST como RSData) e tendência
+  de os softwares de SST existentes adicionarem o módulo. MTE: questionário sozinho não basta — exige análise técnica
+  integrada ao inventário de riscos/AEP. Mercado em formação, mas a janela está fechando.
+- **S1 instrutor autônomo:** Resolução Senatran 1.020/2025; o governo lançou (maio/2026) a "Nova Jornada do Instrutor"
+  no app CNH do Brasil — vitrine onde o aluno acha o instrutor e negocia pelo WhatsApp. **Não foi encontrada ferramenta
+  de gestão para o instrutor** (agenda, pacotes, cobrança, controle de aulas, evolução do aluno). O governo gera a demanda;
+  o SaaS cuida da gestão. Primeiras provas com instrutor particular no RJ em out/2026 → mercado começando agora.
+  Riscos: app do governo ampliar funções; regras estaduais (Detran) variam; tamanho do mercado a confirmar.
+- **Conclusão:** S1 é a brecha mais limpa encontrada até agora.
