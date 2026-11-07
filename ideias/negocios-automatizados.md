@@ -339,3 +339,24 @@ Lógica: modelo provado no exterior + versão brasileira (WhatsApp, Pix, marketp
 1. Ornikar é a melhor prova de que S1 (instrutor autônomo) pode virar negócio grande. Atenção: na França houve processos de sindicatos de autoescolas.
 2. Playtomic → checar se o beach tennis/padel no Brasil já tem dono.
 3. Modelo Fresha: SaaS de graça, receita na taxa de pagamento → derruba a barreira de venda.
+
+---
+
+## Rodada 6 — Dores resolvidas por SaaS em outros países (pesquisa 07/11/2026)
+
+| País | Dor | Exemplos | Versão brasileira possível |
+|---|---|---|---|
+| EUA | Prestador perde ligação = perde cliente | Recepcionistas de IA por nicho: Rosie, Goodcall, Marlie AI (US$ 49–199/mês), integradas a Jobber/Housecall Pro | Atendente de IA no WhatsApp para prestadores (ar-condicionado, desentupidora, vidraceiro, chaveiro): responde, orça, agenda |
+| China | Vendedor leva o cliente quando sai; varejo sem dados | WeCom + Weimob/Youzan (SCRM, IA para vendedor) | Clienteling no WhatsApp (T2) |
+| Índia | Mercadinho no caderno; fiado; venda pelo WhatsApp | OkCredit (fiado digital), ChattyBao (kiranas no WhatsApp), Squarebox.ai (CRM WhatsApp) | Caderneta de fiado digital com cobrança Pix automática para mercadinhos/padarias/açougues (checar concorrência) |
+| Indonésia | 60+ mi de micro negócios sem gestão; crédito difícil | Majoo (PDV + gestão), BukuWarung, Mekari (fusão de SaaS) | Já bem atendido no BR (maquininhas + apps de gestão) |
+| Japão | Falta de mão de obra (envelhecimento) | SaaS vertical por setor (química: Sotas; agro; logística), Recruit digitalizando PMEs | Automação para setores com falta de gente no BR (ex.: agro, transporte) |
+| Coreia do Sul | Pequeno lojista sem fidelização; sem TI | Dodo Point (fidelidade pelo telefone, 10 mil lojas, 20 mi usuários); governo subsidia SaaS; Naver vende apps para lojistas | Fidelidade pelo número de WhatsApp/CPF para comércio de bairro (checar concorrência) |
+| Nigéria/Quênia | Negócio informal no papel | SaaS para alfaiates; T40 (gestão de transporte intermunicipal); Omniretail (150 mil varejistas) | **Ateliê de costura/ajustes** (pedidos, medidas, prazos, cobrança); **excursões de compras e vans** (ex.: sacoleiras para Brás/Goiânia: assentos, lista, Pix) |
+| México | PME sem ERP/contabilidade | Bind ERP, Nubox | Bem atendido no BR |
+
+**Padrões globais:**
+1. IA vertical (recepcionista/agente) por nicho > ferramenta genérica.
+2. WhatsApp/super-app como interface (Índia, China, Brasil).
+3. Digitalizar o "caderno" de negócios informais (Índia, África).
+4. Obrigação legal ou subsídio do governo criando mercado (Itália, Coreia).
