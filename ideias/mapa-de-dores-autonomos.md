@@ -100,3 +100,20 @@ Contexto: mais de 25 milhões de pessoas trabalham por conta própria no Brasil 
 ## Próximo passo sugerido
 Escolher 3–5 categorias e pontuar: tamanho (quantos existem), intensidade da dor, se já pagam por algo hoje,
 facilidade de alcançar, concorrência. Depois, conversar com 5 pessoas de cada.
+
+---
+
+## Raciocínio do fundador (07/11/2026) — guardar
+- **Rejeitou** soluções por categoria: cada nicho isolado é **pequeno demais**.
+- **Hipótese:** um produto **horizontal** que resolva as **dores comuns a todos os autônomos**
+  (as 10 da lista acima) — ou pelo menos o núcleo comum — em vez de um SaaS por profissão.
+- Núcleo comum candidato: agenda + confirmação/sinal, orçamento e cobrança (Pix/Pix Automático),
+  controle financeiro separado do pessoal, MEI/nota/impostos, atendimento no WhatsApp, reputação.
+
+### Pontos para analisar quando retomar
+- Horizontal = mercado gigante (25+ mi), mas concorrência forte em partes do núcleo
+  (bancos e maquininhas para autônomo, emissores de nota, apps de agenda).
+- Comum no mercado: começar horizontal no núcleo e "vestir" por profissão com modelos prontos
+  (ex.: mesmo motor, telas diferentes para manicure, pedreiro, professor).
+- Diferencial possível: juntar tudo num só lugar via WhatsApp, em vez de 5 apps separados.
+- Pergunta-chave: qual dor comum é a "porta de entrada" (a que faz o autônomo instalar no dia 1)?
