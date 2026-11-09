@@ -1,4 +1,4 @@
-# AssinaBot
+# De Acordo
 
 Bot de WhatsApp para colher assinaturas eletrônicas em documentos do escritório. Quem assina faz tudo **dentro do WhatsApp**: não há site, cadastro nem aplicativo extra.
 
@@ -146,8 +146,8 @@ Acesse a VPS por SSH e rode:
 
 ```bash
 curl -fsSL https://get.docker.com | sh          # instala o Docker
-git clone https://github.com/<usuario>/<repositorio>.git assinabot
-cd assinabot
+git clone https://github.com/<usuario>/<repositorio>.git deacordo
+cd deacordo
 cp .env.example .env
 nano .env                                       # preencha tudo (veja abaixo)
 docker compose up -d --build

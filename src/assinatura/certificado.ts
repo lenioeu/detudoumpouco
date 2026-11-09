@@ -43,7 +43,7 @@ export class AssinadorDePdf {
       location: this.dados.local,
       contactInfo: this.dados.contato,
       signatureLength: 16384,
-      appName: "AssinaBot",
+      appName: "De Acordo",
     });
     const comEspaco = await doc.save({ useObjectStreams: false });
     const assinado = await new SignPdf().sign(Buffer.from(comEspaco), new P12Signer(this.p12, { passphrase: this.senha }));

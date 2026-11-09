@@ -9,7 +9,7 @@ import { encontrarLinhasDeAssinatura } from "../src/assinatura/linhas.js";
 import { finalizarDocumento, prepararDocumento, sha256 } from "../src/assinatura/pagina.js";
 import { lerTextoDoPdf } from "../src/assinatura/texto-node.js";
 
-const pasta = mkdtempSync(join(tmpdir(), "assinabot-"));
+const pasta = mkdtempSync(join(tmpdir(), "deacordo-"));
 
 function pdfsigDisponivel(): boolean {
   try {

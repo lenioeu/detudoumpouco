@@ -174,7 +174,7 @@ app.post("/um-dia", (_req, res) => {
 });
 
 app.listen(porta, "127.0.0.1", () => {
-  console.log(`\nSimulador do AssinaBot: abra http://localhost:${porta} no navegador`);
+  console.log(`\nSimulador do De Acordo: abra http://localhost:${porta} no navegador`);
   console.log(
     comIa
       ? "IA: Claude (lê o documento de verdade)"

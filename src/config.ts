@@ -19,7 +19,7 @@ const esquema = z.object({
   /** URL pública deste servidor (usada nos logs e na documentação dos webhooks). */
   PUBLIC_URL: z.string().url(),
   /** Caminho do banco SQLite onde ficam as conversas e envios. */
-  DATABASE_PATH: z.string().default("data/assinabot.db"),
+  DATABASE_PATH: z.string().default("data/deacordo.db"),
 
   /**
    * Números (com DDI) autorizados a enviar documentos, separados por vírgula. Opcionalmente com o

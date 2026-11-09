@@ -1,5 +1,5 @@
 /**
- * Simulador do AssinaBot que roda inteiro no navegador (publicado como página no claude.ai).
+ * Simulador do De Acordo que roda inteiro no navegador (publicado como página no claude.ai).
  * Usa o mesmo código do bot: conversa, coleta de assinaturas, página de assinaturas,
  * manifesto e assinatura digital do PDF. Só o banco (memória), o WhatsApp (a própria
  * página) e a IA (Claude da conta de quem abre) são trocados.
@@ -62,7 +62,7 @@ const config = carregarConfig({
 const assinador = new AssinadorDePdf(
   Buffer.from(__CERTIFICADO_P12__, "base64"),
   SENHA_CERTIFICADO,
-  { nome: config.SENDER_DISPLAY_NAME, local: config.SENDER_LOCATION, contato: "Simulador AssinaBot" },
+  { nome: config.SENDER_DISPLAY_NAME, local: config.SENDER_LOCATION, contato: "Simulador De Acordo" },
 );
 
 let sample: Sample | null = null;
