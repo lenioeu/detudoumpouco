@@ -171,6 +171,10 @@ Na Meta, cadastre o webhook `https://<seu-subdomínio>/webhook/whatsapp` com o `
 
 Serviços como o **Railway** constroem a imagem direto do GitHub a partir do `Dockerfile`, cuidam do HTTPS e cobram por uso (alguns dólares por mês). Crie o projeto apontando para o repositório, adicione um **volume** montado em `/app/data` e preencha as mesmas variáveis do `.env` no painel. A ressalva: os dados ficam em data center fora do Brasil, o que pede atenção às regras de transferência internacional da LGPD.
 
+## Site institucional
+
+A pasta `site/` tem a página inicial, a política de privacidade e os termos de uso, servidos pelo próprio bot em `/`, `/privacidade` e `/termos`. A identidade visual é provisória: cores, fontes e espaçamentos ficam no topo de `site/estilo.css`, e o logotipo em `site/logo.svg`. Os trechos destacados em amarelo (razão social, CNPJ, prazos, encarregado) precisam ser preenchidos antes de publicar.
+
 ## Segurança
 
 - Só os números em `AUTHORIZED_SENDERS` podem enviar documentos. Os botões de assinatura só valem no WhatsApp da pessoa convidada.

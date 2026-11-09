@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import express, { type Request } from "express";
 import type { Repositorio } from "./banco.js";
 import type { Config } from "./config.js";
@@ -21,6 +22,9 @@ export function criarServidor(config: Config, fluxo: Fluxo, banco: Repositorio):
   app.get("/saude", (_req, res) => {
     res.json({ ok: true });
   });
+
+  // Site institucional (página inicial, privacidade e termos), servido no mesmo domínio
+  app.use(express.static(fileURLToPath(new URL("../site/", import.meta.url)), { extensions: ["html"] }));
 
   // Página aberta pelo QR Code e pelo link do rodapé da via final
   app.get("/verificar/:codigo/carimbo.tsr", (req, res) => {

@@ -1,0 +1,99 @@
+/*
+ * Identidade visual PROVISÓRIA do DeAcordo.
+ * Cores, fontes, raios e espaçamentos ficam só aqui: ao definir a identidade definitiva,
+ * troque estes valores (e o logotipo em logo.svg) e o site inteiro acompanha.
+ */
+:root {
+  --cor-fundo: #f6f7f5;
+  --cor-superficie: #ffffff;
+  --cor-texto: #1a1f1d;
+  --cor-texto-suave: #5d6763;
+  --cor-borda: #dde1dd;
+  --cor-marca: #1b6b58;
+  --cor-marca-texto: #ffffff;
+  --cor-marca-clara: #e3efeb;
+  --cor-destaque: #e8b04a;
+
+  --fonte-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fonte-titulo: var(--fonte-texto);
+
+  --raio: 12px;
+  --largura: 1080px;
+  --largura-texto: 720px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font: 17px/1.6 var(--fonte-texto);
+}
+img, svg { max-width: 100%; }
+a { color: var(--cor-marca); }
+h1, h2, h3 { font-family: var(--fonte-titulo); line-height: 1.2; text-wrap: balance; }
+:focus-visible { outline: 2px solid var(--cor-marca); outline-offset: 2px; }
+
+.conteudo { max-width: var(--largura); margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left)); }
+
+/* Cabeçalho */
+.topo { background: var(--cor-superficie); border-bottom: 1px solid var(--cor-borda); }
+.topo .conteudo { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
+.marca { display: inline-flex; align-items: center; gap: 10px; color: var(--cor-texto); text-decoration: none; font-weight: 800; font-size: 20px; }
+.marca img { width: 32px; height: 32px; }
+.topo nav { display: flex; gap: 20px; flex-wrap: wrap; }
+.topo nav a { color: var(--cor-texto-suave); text-decoration: none; font-weight: 600; font-size: 15px; }
+.topo nav a:hover { color: var(--cor-marca); }
+@media (max-width: 640px) { .topo nav { display: none; } }
+
+/* Botões */
+.botao {
+  display: inline-block; padding: 12px 22px; border-radius: 999px; font-weight: 700; text-decoration: none;
+  background: var(--cor-marca); color: var(--cor-marca-texto); border: 2px solid var(--cor-marca);
+}
+.botao.secundario { background: transparent; color: var(--cor-marca); }
+
+/* Seções da página inicial */
+.abertura { padding-top: 72px; padding-bottom: 56px; }
+.abertura h1 { font-size: clamp(32px, 6vw, 52px); margin: 0 0 16px; max-width: 16ch; }
+.abertura p { font-size: 20px; color: var(--cor-texto-suave); max-width: 52ch; margin: 0 0 28px; }
+.acoes { display: flex; gap: 12px; flex-wrap: wrap; }
+
+section.bloco { padding: 56px 0; border-top: 1px solid var(--cor-borda); }
+section.bloco h2 { font-size: clamp(26px, 4vw, 34px); margin: 0 0 8px; }
+section.bloco > .conteudo > p { color: var(--cor-texto-suave); max-width: 60ch; margin: 0 0 28px; }
+
+.grade { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.cartao { background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 22px; }
+.cartao h3 { margin: 0 0 6px; font-size: 19px; }
+.cartao p { margin: 0; color: var(--cor-texto-suave); font-size: 16px; }
+.numero {
+  display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--cor-marca-clara); color: var(--cor-marca); font-weight: 800; margin-bottom: 10px;
+}
+
+.perguntas details { background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 20px; margin-bottom: 10px; }
+.perguntas summary { font-weight: 700; cursor: pointer; }
+.perguntas details p { color: var(--cor-texto-suave); margin: 10px 0 0; }
+
+.chamada { background: var(--cor-marca); color: var(--cor-marca-texto); border-radius: var(--raio); padding: 40px 32px; text-align: center; }
+.chamada h2 { margin: 0 0 8px; }
+.chamada p { margin: 0 0 22px; opacity: 0.9; }
+.chamada .botao { background: var(--cor-marca-texto); color: var(--cor-marca); border-color: var(--cor-marca-texto); }
+
+/* Páginas de texto (privacidade, termos) */
+.documento { max-width: var(--largura-texto); margin: 0 auto; padding: 48px max(16px, env(safe-area-inset-left)) 64px; }
+.documento h1 { font-size: clamp(30px, 5vw, 40px); margin: 0 0 4px; }
+.documento .atualizado { color: var(--cor-texto-suave); margin: 0 0 32px; }
+.documento h2 { font-size: 22px; margin: 36px 0 8px; }
+.documento table { border-collapse: collapse; width: 100%; font-size: 15px; }
+.documento th, .documento td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--cor-borda); }
+.tabela { overflow-x: auto; }
+.pendente { background: #fff1c7; border-radius: 4px; padding: 0 4px; }
+
+/* Rodapé */
+.rodape { border-top: 1px solid var(--cor-borda); background: var(--cor-superficie); padding: 32px 0; font-size: 15px; color: var(--cor-texto-suave); }
+.rodape .conteudo { display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: space-between; }
+.rodape nav { display: flex; gap: 20px; flex-wrap: wrap; }
+.rodape a { color: var(--cor-texto-suave); }

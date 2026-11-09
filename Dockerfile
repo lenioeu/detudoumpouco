@@ -6,6 +6,7 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY src ./src
+COPY site ./site
 COPY tsconfig.json ./
 
 ENV PORT=3000 DATABASE_PATH=/app/data/deacordo.db CERTIFICATE_PATH=/app/data/certificado.p12
