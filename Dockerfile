@@ -1,4 +1,4 @@
-# Imagem do De Acordo. Os dados (banco SQLite e certificado) ficam em /app/data: monte um volume ali.
+# Imagem do DeAcordo. Os dados (banco SQLite e certificado) ficam em /app/data: monte um volume ali.
 FROM node:22-slim
 
 WORKDIR /app

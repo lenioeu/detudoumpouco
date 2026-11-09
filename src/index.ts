@@ -33,6 +33,6 @@ setInterval(() => {
 }, 15 * 60_000);
 
 criarServidor(config, fluxo, banco).listen(config.PORT, () => {
-  console.log(`De Acordo ouvindo na porta ${config.PORT}`);
+  console.log(`DeAcordo ouvindo na porta ${config.PORT}`);
   console.log(`  Webhook do WhatsApp: ${config.PUBLIC_URL}/webhook/whatsapp`);
 });

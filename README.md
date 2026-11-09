@@ -1,4 +1,4 @@
-# De Acordo
+# DeAcordo
 
 Bot de WhatsApp para colher assinaturas eletrônicas em documentos do escritório. Quem assina faz tudo **dentro do WhatsApp**: não há site, cadastro nem aplicativo extra.
 
