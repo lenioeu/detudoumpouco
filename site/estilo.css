@@ -153,13 +153,13 @@ p, li, .perguntas details p { text-align: justify; }
 .secao .cabeca { display: flex; flex-direction: column; gap: var(--espaco-3); margin-bottom: var(--espaco-7); max-width: 720px; }
 
 /* Como funciona (PassoComoFunciona).
-   Padrão e celular: cartões grandes que se empilham conforme a página desce (só CSS, leve).
-   Computador com JS: lista de passos à esquerda e a cena do passo ativo num painel grande à direita. */
+   Celular com JS: rolagem horizontal fixa (a seção fica presa e os cartões andam para o lado conforme a página desce).
+   Sem JS ou com movimento reduzido: carrossel de arrastar. Computador: lista de passos e painel com a cena ativa. */
 .como { background: var(--superficie); border-top: 1px solid var(--borda); padding: 96px 0; }
 .como .topo-secao { display: flex; flex-direction: column; gap: var(--espaco-3); margin-bottom: var(--espaco-7); max-width: 760px; }
 .passos {
   list-style: none; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left))); padding: 0 max(16px, env(safe-area-inset-left)) var(--espaco-2);
-  display: flex; gap: var(--espaco-4); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  position: relative; display: flex; gap: var(--espaco-4); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
   overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
 }
 .passos::-webkit-scrollbar { display: none; }
@@ -203,6 +203,26 @@ p, li, .perguntas details p { text-align: justify; }
 .chip em { font: 600 10px var(--font-rotulo); font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: var(--disco); color: #fff; display: grid; place-items: center; }
 .passo .balao { font-size: 14px; }
 .passo .documento-mini { min-width: 0; width: 100%; transform: scale(0.82); }
+
+/* Rolagem horizontal fixa (celular): a faixa de cartões vai de 0 a --deslize (medido em tema.js) */
+@media (max-width: 959px) {
+  .como.lateral { padding: 0; height: calc(100svh + 4 * 86vw); }
+  .como.lateral .palco { position: sticky; top: 0; height: 100svh; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+  .como.lateral .palco > .conteudo { width: 100%; }
+  .como.lateral .topo-secao { margin-bottom: var(--espaco-4); }
+  .como.lateral .titulo-2 { font-size: 28px; }
+  .como.lateral .passos { overflow: visible; scroll-snap-type: none; padding-bottom: 0; will-change: transform; }
+  .como.lateral .passo { flex-basis: 84vw; }
+  .como.lateral .passo-texto p { font-size: 16px; }
+  .como.lateral .passo .visual { height: max(210px, min(40svh, 340px)); }
+  .como.lateral.linha-do-tempo { view-timeline: --como-funciona block; }
+  .como.lateral.linha-do-tempo .passos {
+    animation: deslizar-passos linear both;
+    animation-timeline: --como-funciona;
+    animation-range: contain 0% contain 100%;
+  }
+}
+@keyframes deslizar-passos { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--deslize, 0px), 0, 0); } }
 
 @media (min-width: 960px) {
   .como.interativo { padding: 0; height: calc(100vh + 5 * 60vh); }
@@ -369,10 +389,12 @@ p, li, .perguntas details p { text-align: justify; }
 /* Chamada final */
 .chamada { background: var(--superficie-elevada); border: 1px solid var(--borda); border-radius: var(--raio-xl); padding: 48px var(--espaco-7); display: grid; gap: var(--espaco-6); align-items: center; }
 @media (min-width: 860px) { .chamada { grid-template-columns: 1fr auto; } }
-.marca-grande img { display: block; height: clamp(64px, 9vw, 104px); width: auto; max-width: 100%; }
+@media (max-width: 720px) { .chamada { padding: 32px 20px; } }
+/* Marca grande: ocupa a largura da caixa (no computador, até um limite) */
+.marca-grande img { display: block; width: 100%; height: auto; }
+@media (min-width: 960px) { .abertura .marca-grande img { max-width: 560px; } .chamada .marca-grande img { max-width: 640px; } }
 .abertura .marca-grande { margin-bottom: var(--espaco-2); }
 .chamada .marca-grande { grid-column: 1 / -1; }
-.chamada .marca-grande img { height: clamp(72px, 10vw, 120px); }
 .chamada p { margin: var(--espaco-2) 0 0; color: var(--texto-apoio); }
 
 /* Rodapé */

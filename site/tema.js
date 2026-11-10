@@ -76,7 +76,7 @@
 
   // "Como funciona" no computador: lista de passos à esquerda e a cena do passo ativo à direita.
   // Com movimento permitido, a seção fica presa na tela e o passo avança conforme a página desce
-  // (só troca classes, sem animar a cada pixel). No celular, os cartões se empilham só com CSS.
+  // (só troca classes, sem animar a cada pixel).
   const secao = document.querySelector(".como");
   if (!secao) return;
   const passos = [...secao.querySelectorAll(".passo")];
@@ -102,8 +102,13 @@
   const configurar = () => {
     secao.classList.toggle("interativo", telaGrande.matches);
     secao.classList.toggle("sem-movimento", semMovimento);
+    secao.classList.toggle("lateral", !telaGrande.matches && !semMovimento);
+    secao.classList.toggle("linha-do-tempo", !telaGrande.matches && !semMovimento && linhaDoTempo);
+    if (!secao.classList.contains("lateral")) lista.style.transform = "";
     if (ativo < 0) ativar(0);
     visuais.forEach(ajustarCena);
+    medir();
+    aoRolarLateral();
     aoRolar();
   };
   passos.forEach((p, i) =>
@@ -114,9 +119,40 @@
       scrollTo({ top: secao.offsetTop + ((i + 0.5) / passos.length) * percurso, behavior: "smooth" });
     }),
   );
-  // Celular: carrossel de arrastar para o lado; os pontinhos mostram em que passo a pessoa está
+  // Celular: rolagem horizontal fixa. A seção fica presa na tela e os cartões andam para o lado conforme a
+  // página desce, sem barra de rolagem. Onde o navegador anima ligado à rolagem (CSS animation-timeline),
+  // o movimento é todo dele; senão, este script move a faixa usando só a posição da rolagem e medidas
+  // guardadas (nada é medido durante o movimento, para não travar).
   const lista = secao.querySelector(".passos");
   const pontos = [...secao.querySelectorAll(".pontos-passos span")];
+  const linhaDoTempo = typeof CSS !== "undefined" && CSS.supports?.("animation-timeline: view()");
+  let medidas = null;
+  const marcarPonto = (i) => pontos.forEach((ponto, j) => ponto.classList.toggle("ativo", j === i));
+  const medir = () => {
+    if (!secao.classList.contains("lateral")) {
+      medidas = null;
+      return;
+    }
+    const ultimo = passos[passos.length - 1];
+    const folga = parseFloat(getComputedStyle(lista).paddingLeft) || 16;
+    const deslize = Math.min(0, innerWidth - (ultimo.offsetLeft + ultimo.offsetWidth + folga));
+    secao.style.setProperty("--deslize", `${deslize}px`);
+    medidas = { topo: secao.getBoundingClientRect().top + scrollY, percurso: Math.max(1, secao.offsetHeight - innerHeight), deslize };
+  };
+  let pedidoLateral = 0;
+  const aoRolarLateral = () => {
+    pedidoLateral = 0;
+    if (!medidas) return;
+    const p = Math.min(1, Math.max(0, (scrollY - medidas.topo) / medidas.percurso));
+    if (!linhaDoTempo) lista.style.transform = `translate3d(${p * medidas.deslize}px, 0, 0)`;
+    marcarPonto(Math.round(p * (passos.length - 1)));
+  };
+  addEventListener("scroll", () => (pedidoLateral ||= requestAnimationFrame(aoRolarLateral)), { passive: true });
+  let pedidoMedida = 0;
+  addEventListener("resize", () => (pedidoMedida ||= requestAnimationFrame(() => ((pedidoMedida = 0), medir(), aoRolarLateral()))));
+  addEventListener("load", () => (medir(), aoRolarLateral()));
+
+  // Sem a rolagem fixa (movimento reduzido), os cartões ficam num carrossel de arrastar
   let pedidoPontos = 0;
   lista?.addEventListener(
     "scroll",
@@ -128,7 +164,7 @@
         passos.forEach((p, i) => {
           if (Math.abs(p.offsetLeft + p.offsetWidth / 2 - centro) < Math.abs(passos[atual].offsetLeft + passos[atual].offsetWidth / 2 - centro)) atual = i;
         });
-        pontos.forEach((ponto, i) => ponto.classList.toggle("ativo", i === atual));
+        marcarPonto(atual);
       })),
     { passive: true },
   );
