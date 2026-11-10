@@ -35,6 +35,7 @@
 
 <main>
   <section class="abertura">
+    <div class="painel-abertura">
     <div class="conteudo">
       <div class="texto">
         <p class="rotulo">Assinatura eletrônica</p>
@@ -64,37 +65,48 @@
         </div>
       </div>
     </div>
+    </div>
   </section>
 
   <section class="como" id="como-funciona" aria-labelledby="titulo-como">
     <div class="palco">
-      <div class="conteudo topo-secao">
-        <div>
+      <div class="conteudo">
+        <div class="topo-secao">
           <p class="rotulo">Como funciona</p>
           <h2 class="titulo-2" id="titulo-como">Do PDF à via assinada, em <i>cinco</i> passos</h2>
         </div>
-        <span class="contador" aria-hidden="true">passo 1 de 5</span>
-      </div>
-      <div class="faixa-janela">
-        <ol class="faixa" role="list" style="list-style:none;margin:0">
-          <li class="passo">
-            <span class="numero">01</span>
-            <div class="visual"><div class="mini-doc"><span class="selo-pdf">PDF</span><i></i><i style="width:80%"></i><i style="width:60%"></i></div></div>
-            <h3 class="titulo-3">Envie o PDF do documento para a nossa IA</h3>
+        <ol class="passos" role="list">
+          <li class="passo" style="--i:0">
+            <div class="passo-texto">
+              <span class="numero">01</span>
+              <h3 class="titulo-3">Envie o PDF do documento para a nossa IA</h3>
+              <p>Mande o arquivo pelo WhatsApp. A inteligência artificial lê o documento e encontra quem precisa assinar.</p>
+            </div>
+            <div class="visual"><div class="cena"><div class="mini-doc"><span class="selo-pdf">PDF</span><i></i><i style="width:80%"></i><i style="width:60%"></i></div></div></div>
           </li>
-          <li class="passo">
-            <span class="numero">02</span>
-            <div class="visual"><div class="chips"><div class="chip"><em>ML</em>Marina Lima</div><div class="chip"><em>RS</em>Rafael Souza</div></div></div>
-            <h3 class="titulo-3">Diga quem vai assinar</h3>
+          <li class="passo" style="--i:1">
+            <div class="passo-texto">
+              <span class="numero">02</span>
+              <h3 class="titulo-3">Diga quem vai assinar</h3>
+              <p>Confira as partes que a IA sugeriu e mande o contato de cada uma, um a um ou todos de uma vez.</p>
+            </div>
+            <div class="visual"><div class="cena"><div class="chips"><div class="chip"><em>ML</em>Marina Lima</div><div class="chip"><em>RS</em>Rafael Souza</div></div></div></div>
           </li>
-          <li class="passo">
-            <span class="numero">03</span>
-            <div class="visual" style="justify-content:flex-start"><div class="balao recebido">Contrato de locação para você assinar · 3 págs.</div></div>
-            <h3 class="titulo-3">Cada um recebe no <span class="com-wa">WhatsApp<span class="wa" aria-hidden="true"></span></span></h3>
+          <li class="passo" style="--i:2">
+            <div class="passo-texto">
+              <span class="numero">03</span>
+              <h3 class="titulo-3">Cada um recebe no <span class="com-wa">WhatsApp<span class="wa" aria-hidden="true"></span></span></h3>
+              <p>O documento chega na conversa de cada pessoa, sem aplicativo novo e sem cadastro.</p>
+            </div>
+            <div class="visual"><div class="cena" style="justify-content:flex-start"><div class="balao recebido">Contrato de locação para você assinar · 3 págs.</div></div></div>
           </li>
-          <li class="passo">
-            <span class="numero">04</span>
-            <div class="visual telas" aria-label="CPF, selfie segurando o documento e confirmação dos dados" role="img">
+          <li class="passo" style="--i:3">
+            <div class="passo-texto">
+              <span class="numero">04</span>
+              <h3 class="titulo-3">Informa o CPF, envia a selfie e diz que está <span class="de-acordo">de acordo</span></h3>
+              <p>Quem assina confere os dados, envia a selfie com o documento quando você pedir e confirma com um toque.</p>
+            </div>
+            <div class="visual"><div class="cena telas" aria-label="CPF, selfie segurando o documento e confirmação dos dados" role="img">
               <div class="tela">
                 <div class="balao recebido">Para assinar, informe seu CPF.</div>
                 <div class="balao enviado"><span>123.456.789-09</span><span class="hora">14:31 ✓✓</span></div>
@@ -124,24 +136,25 @@
                 </div>
               </div>
               <div class="etapas" aria-hidden="true"><span>CPF</span><span>Selfie (quando pedida)</span><span>Confirmação</span></div>
-            </div>
-            <h3 class="titulo-3">Informa o CPF, envia a selfie e diz que está <span class="de-acordo">de acordo</span></h3>
+            </div></div>
           </li>
-          <li class="passo">
-            <span class="numero">05</span>
-            <div class="visual">
+          <li class="passo" style="--i:4">
+            <div class="passo-texto">
+              <span class="numero">05</span>
+              <h3 class="titulo-3">Todos recebem a via assinada</h3>
+              <p>A via final chega para todos, com a assinatura na linha de cada um, o certificado e o QR Code de verificação.</p>
+            </div>
+            <div class="visual"><div class="cena">
               <div class="documento-mini">
                 <h4>CONTRATO DE LOCAÇÃO</h4>
                 <div class="l"></div><div class="l" style="width:80%"></div>
                 <div class="assinante">Marina Lima</div>
                 <div class="adesivo"><img src="/marca/carimbo-fundo-claro.svg" alt=""><div class="linhas"><span class="de-acordo">de acordo</span><span class="data">10/11/2026 14:32</span></div></div>
               </div>
-            </div>
-            <h3 class="titulo-3">Todos recebem a via assinada</h3>
+            </div></div>
           </li>
         </ol>
       </div>
-      <div class="conteudo"><div class="barra" aria-hidden="true"><span class="vista"></span><span></span><span></span><span></span><span></span></div></div>
     </div>
   </section>
 

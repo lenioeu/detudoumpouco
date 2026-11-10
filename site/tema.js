@@ -61,27 +61,60 @@
     }
   }
 
-  // "Como funciona": a página desce e a faixa de passos anda para o lado (desligado com movimento reduzido)
-  const secao = document.querySelector(".como");
-  if (!secao || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const faixa = secao.querySelector(".faixa");
-  const barras = [...secao.querySelectorAll(".barra span")];
-  const contador = secao.querySelector(".contador");
-  secao.classList.add("lateral");
-
-  let pedido = 0;
-  const atualizar = () => {
-    pedido = 0;
-    const caixa = secao.getBoundingClientRect();
-    const percurso = secao.offsetHeight - innerHeight;
-    const progresso = Math.min(1, Math.max(0, -caixa.top / percurso));
-    const sobra = Math.max(0, faixa.scrollWidth - innerWidth);
-    faixa.style.transform = `translateX(${-progresso * sobra}px)`;
-    const atual = Math.min(barras.length, Math.floor(progresso * barras.length) + 1);
-    barras.forEach((b, i) => b.classList.toggle("vista", i < atual));
-    if (contador) contador.textContent = `passo ${atual} de ${barras.length}`;
+  // Cenas dos passos: desenhadas num quadro fixo (250×190, com folga) e ampliadas para ocupar o espaço disponível
+  const ajustarCena = (visual) => {
+    const escala = Math.min(visual.clientWidth / 270, visual.clientHeight / 210);
+    visual.style.setProperty("--escala", String(Math.max(0.8, Math.min(escala, 2))));
   };
-  addEventListener("scroll", () => (pedido ||= requestAnimationFrame(atualizar)), { passive: true });
-  addEventListener("resize", atualizar);
-  atualizar();
+  const visuais = [...document.querySelectorAll(".passo .visual")];
+  if ("ResizeObserver" in window) {
+    const observadorDeTamanho = new ResizeObserver((entradas) => entradas.forEach((e) => ajustarCena(e.target)));
+    visuais.forEach((v) => observadorDeTamanho.observe(v));
+  } else {
+    visuais.forEach(ajustarCena);
+  }
+
+  // "Como funciona" no computador: lista de passos à esquerda e a cena do passo ativo à direita.
+  // Com movimento permitido, a seção fica presa na tela e o passo avança conforme a página desce
+  // (só troca classes, sem animar a cada pixel). No celular, os cartões se empilham só com CSS.
+  const secao = document.querySelector(".como");
+  if (!secao) return;
+  const passos = [...secao.querySelectorAll(".passo")];
+  const telaGrande = matchMedia("(min-width: 960px)");
+  const semMovimento = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let ativo = -1;
+  const ativar = (i) => {
+    if (i === ativo) return;
+    ativo = i;
+    passos.forEach((p, j) => p.classList.toggle("ativo", j === i));
+  };
+  const progresso = () => {
+    const percurso = secao.offsetHeight - innerHeight;
+    return percurso > 0 ? Math.min(1, Math.max(0, -secao.getBoundingClientRect().top / percurso)) : 0;
+  };
+  let pedido = 0;
+  const aoRolar = () => {
+    pedido = 0;
+    if (secao.classList.contains("interativo") && !semMovimento) {
+      ativar(Math.min(passos.length - 1, Math.floor(progresso() * passos.length)));
+    }
+  };
+  const configurar = () => {
+    secao.classList.toggle("interativo", telaGrande.matches);
+    secao.classList.toggle("sem-movimento", semMovimento);
+    if (ativo < 0) ativar(0);
+    visuais.forEach(ajustarCena);
+    aoRolar();
+  };
+  passos.forEach((p, i) =>
+    p.addEventListener("click", () => {
+      if (!secao.classList.contains("interativo")) return;
+      if (semMovimento) return ativar(i);
+      const percurso = secao.offsetHeight - innerHeight;
+      scrollTo({ top: secao.offsetTop + ((i + 0.5) / passos.length) * percurso, behavior: "smooth" });
+    }),
+  );
+  telaGrande.addEventListener("change", configurar);
+  addEventListener("scroll", () => (pedido ||= requestAnimationFrame(aoRolar)), { passive: true });
+  configurar();
 })();
