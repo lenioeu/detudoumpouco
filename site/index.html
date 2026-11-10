@@ -175,21 +175,21 @@
       <div class="via-texto revelar">
         <p class="rotulo">A via assinada</p>
         <h2 class="titulo-2" id="titulo-exemplo">O documento vai assinado direto no seu <span class="com-wa">WhatsApp<span class="wa" aria-hidden="true"></span></span>, <i>assim:</i></h2>
-        <p class="corpo-grande">Cada pessoa aparece com o adesivo de assinatura, o CPF completo, o número de <span class="com-wa">WhatsApp<span class="wa" aria-hidden="true"></span></span> e a data e a hora de Brasília. No fim da via vem o certificado, com a trilha de eventos e o QR Code de verificação.</p>
+        <p class="corpo-grande">Toda via termina com o certificado de assinatura: o QR Code que abre a página de verificação, o hash SHA-256 que prova que nada foi alterado e a trilha de eventos, com a data e a hora de cada etapa, do envio à última assinatura.</p>
         <div class="acoes">
           <button class="botao principal" type="button" data-abrir-via>Ver em tela cheia</button>
         </div>
         <p class="aviso-exemplo">Dados fictícios · exemplo sem valor jurídico</p>
       </div>
       <figure class="folha">
-        <button class="botao-folha" type="button" data-abrir-via aria-label="Ver a página de assinaturas em tela cheia">
+        <button class="botao-folha" type="button" data-abrir-via aria-label="Ver o certificado em tela cheia">
         <picture>
           <!-- Computador: sempre a versão de 300 dpi (nítida até em telas 4K); celular: a de 150 dpi, ou a de 300 em telas muito densas -->
-          <source media="(min-width: 960px)" srcset="/exemplo/pagina-de-assinaturas-300dpi.webp">
-          <img src="/exemplo/pagina-de-assinaturas-150dpi.webp"
-               srcset="/exemplo/pagina-de-assinaturas-150dpi.webp 1241w, /exemplo/pagina-de-assinaturas-300dpi.webp 2481w"
+          <source media="(min-width: 960px)" srcset="/exemplo/certificado-300dpi.webp">
+          <img src="/exemplo/certificado-150dpi.webp"
+               srcset="/exemplo/certificado-150dpi.webp 1241w, /exemplo/certificado-300dpi.webp 2481w"
                sizes="92vw" width="2481" height="3508" decoding="async"
-             alt="Página de assinaturas de exemplo de um contrato de locação: cada signatário com o adesivo de assinatura, CPF, WhatsApp e data e hora">
+             alt="Certificado de assinatura de exemplo: QR Code de verificação, hashes SHA-256 e a trilha de eventos do documento">
         </picture>
         </button>
         <figcaption>Toque na folha para ampliar</figcaption>
@@ -199,13 +199,13 @@
 
   <dialog class="visualizador" aria-labelledby="titulo-visualizador">
     <div class="visualizador-topo">
-      <p id="titulo-visualizador">Página de assinaturas · exemplo</p>
+      <p id="titulo-visualizador">Certificado de assinatura · exemplo</p>
       <button class="fechar-visualizador" type="button" aria-label="Fechar">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
     <div class="visualizador-paginas">
-      <img data-src="/exemplo/pagina-de-assinaturas-300dpi.webp" width="2481" height="3508" alt="Página de assinaturas de exemplo: cada pessoa com o adesivo de assinatura, o CPF, o WhatsApp e a data e hora">
+      <img data-src="/exemplo/certificado-300dpi.webp" width="2481" height="3508" alt="Certificado de assinatura de exemplo: QR Code de verificação, hashes SHA-256 e a trilha de eventos do documento">
     </div>
   </dialog>
 

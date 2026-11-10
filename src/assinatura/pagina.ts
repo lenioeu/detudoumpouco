@@ -209,11 +209,22 @@ export async function finalizarDocumento(
   e.campo("Verifique a autenticidade em", dados.urlVerificacao, false, COR.tinta);
   adicionarLink(doc, e.pagina, [MARGEM, e.y, MARGEM + LARGURA_UTIL, e.y + 22], dados.urlVerificacao);
 
+  e.secao("Eventos do documento");
+  e.texto("DATAS E HORÁRIOS DE BRASÍLIA", 6.5, COR.apoio, e.mono);
+  e.espaco(4);
+  for (const ev of linhaDoTempo(dados)) {
+    e.garantir(16);
+    const y = e.y;
+    e.pagina.drawText(formatarDataHora(ev.em, false), { x: MARGEM, y: y - 8, size: 7, font: e.mono, color: COR.tinta });
+    e.texto(ev.texto, 9, COR.grafite, e.fonte, 96);
+    e.espaco(3);
+  }
+
   e.secao("Assinaturas");
   for (const r of dados.registros) {
     const imagem = r.selfie ? await incorporarImagem(doc, r.selfie) : null;
     const alturaFoto = imagem ? Math.min(110, (imagem.height / imagem.width) * 82) : 0;
-    e.garantir(Math.max(150, alturaFoto + 30));
+    e.garantir(Math.max(120, alturaFoto + 30));
     const topo = e.y;
     if (imagem) {
       e.reservaDireita = 100;
@@ -227,26 +238,13 @@ export async function finalizarDocumento(
     e.texto(r.papel.toUpperCase(), 7, COR.tinta, e.mono);
     e.texto(r.nome, 12, COR.grafite, e.negrito);
     e.espaco(2);
-    e.campo("CPF", formatarCpf(r.cpf));
-    e.campo("WhatsApp", formatarTelefone(r.telefone));
+    e.parDeCampos(["CPF", formatarCpf(r.cpf)], ["WhatsApp", formatarTelefone(r.telefone)]);
+    e.parDeCampos(["Data da assinatura", formatarDataHora(r.assinadoEm)], ["ID da mensagem de confirmação", r.mensagemId, true]);
     e.campo("Canal", "WhatsApp (documento recebido e assinado no número do signatário)");
     if (imagem) e.campo("Identidade", "selfie segurando documento de identidade, ao lado");
-    e.campo("Data da assinatura", formatarDataHora(r.assinadoEm));
-    e.campo("ID da mensagem de confirmação", r.mensagemId, true);
     if (imagem) e.y = Math.min(e.y, topo - alturaFoto - 16);
     e.reservaDireita = 0;
     e.espaco(10);
-  }
-
-  e.secao("Eventos do documento");
-  e.texto("DATAS E HORÁRIOS DE BRASÍLIA", 6.5, COR.apoio, e.mono);
-  e.espaco(4);
-  for (const ev of linhaDoTempo(dados)) {
-    e.garantir(16);
-    const y = e.y;
-    e.pagina.drawText(formatarDataHora(ev.em, false), { x: MARGEM, y: y - 8, size: 7, font: e.mono, color: COR.tinta });
-    e.texto(ev.texto, 9, COR.grafite, e.fonte, 96);
-    e.espaco(3);
   }
 
   e.secao("Provas de integridade");
@@ -475,11 +473,26 @@ class Escritor {
   }
 
   /** Rótulo pequeno em cima e o valor embaixo; hashes e IDs saem em fonte mono. */
-  campo(rotulo: string, valor: string, mono = false, cor: RGB = COR.grafite): void {
+  campo(rotulo: string, valor: string, mono = false, cor: RGB = COR.grafite, recuo = 0): void {
     this.garantir(24);
-    this.texto(rotulo.toUpperCase(), 6, COR.apoio, this.mono);
-    this.texto(valor, mono ? 7.5 : 9.5, cor, mono ? this.mono : this.fonte);
+    this.texto(rotulo.toUpperCase(), 6, COR.apoio, this.mono, recuo);
+    this.texto(valor, mono ? 7.5 : 9.5, cor, mono ? this.mono : this.fonte, recuo);
     this.espaco(3);
+  }
+
+  /** Dois campos lado a lado, cada um com metade da largura disponível. */
+  parDeCampos(esquerda: [string, string, boolean?], direita: [string, string, boolean?]): void {
+    this.garantir(30);
+    const topo = this.y;
+    const reserva = this.reservaDireita;
+    const metade = (LARGURA_UTIL - reserva) / 2;
+    this.reservaDireita = reserva + metade + 8;
+    this.campo(esquerda[0], esquerda[1], esquerda[2]);
+    const fimEsquerda = this.y;
+    this.y = topo;
+    this.reservaDireita = reserva;
+    this.campo(direita[0], direita[1], direita[2], COR.grafite, metade);
+    this.y = Math.min(this.y, fimEsquerda);
   }
 
   texto(t: string, tamanho: number, cor: RGB = COR.grafite, fonte: PDFFont = this.fonte, recuo = 0): void {

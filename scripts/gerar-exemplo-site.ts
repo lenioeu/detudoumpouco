@@ -1,8 +1,8 @@
 /**
  * Gera a via de exemplo mostrada no site: um contrato de locação fictício, assinado por duas pessoas,
  * com a marca d'água "EXEMPLO · SEM VALOR JURÍDICO" em todas as páginas e assinatura digital.
- * Salva em site/exemplo/ só a página de assinaturas, em imagem WebP de 300 e 150 dpi
- * (o site mostra essa página; não oferece o PDF nem as outras páginas).
+ * Salva em site/exemplo/ só a primeira página do certificado (QR Code, hashes e trilha de eventos),
+ * em imagem WebP de 300 e 150 dpi (o site mostra essa página; não oferece o PDF nem as outras).
  * Precisa de pdftoppm (poppler) e python3 com Pillow.
  *
  *   npx tsx scripts/gerar-exemplo-site.ts
@@ -110,11 +110,11 @@ const paraWebp = (png: string, webp: string) =>
     join(saida, webp),
   ]);
 
-// Página de assinaturas (a 2ª): 300 dpi para telas grandes, 150 dpi para o celular
+// Primeira página do certificado (a 3ª): 300 dpi para telas grandes, 150 dpi para o celular
 for (const dpi of [300, 150]) {
-  const base = join(temporaria, `assinaturas-${dpi}`);
-  execFileSync("pdftoppm", ["-r", String(dpi), "-f", "2", "-l", "2", "-singlefile", "-png", pdfTemporario, base]);
-  paraWebp(`${base}.png`, `pagina-de-assinaturas-${dpi}dpi.webp`);
+  const base = join(temporaria, `certificado-${dpi}`);
+  execFileSync("pdftoppm", ["-r", String(dpi), "-f", "3", "-l", "3", "-singlefile", "-png", pdfTemporario, base]);
+  paraWebp(`${base}.png`, `certificado-${dpi}dpi.webp`);
 }
 
 console.log("Exemplo gerado em site/exemplo/");
