@@ -24,6 +24,22 @@
     if (!guardado) raiz.dataset.theme = e.matches ? "claro" : "escuro";
   });
 
+  // De "Provas que se sustentam" em diante, os blocos aparecem conforme a página desce
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+    raiz.classList.add("animar");
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        for (const e of entradas) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add("visivel");
+          observador.unobserve(e.target);
+        }
+      },
+      { rootMargin: "0px 0px -12% 0px" },
+    );
+    for (const el of document.querySelectorAll(".revelar, .em-sequencia")) observador.observe(el);
+  }
+
   // "Como funciona": a página desce e a faixa de passos anda para o lado (desligado com movimento reduzido)
   const secao = document.querySelector(".como");
   if (!secao || matchMedia("(prefers-reduced-motion: reduce)").matches) return;

@@ -181,6 +181,7 @@ O visual segue o design system do DeAcordo (direção 4a · Disco tinta):
 - `site/marca/`: logotipos, carimbo, favicon e avatar do WhatsApp (SVGs do design system).
 - `site/fonts/`: Special Elite, a fonte da marca (licença OFL). Newsreader e IBM Plex Mono vêm do Google Fonts.
 - `site/estilo.css`: componentes do site (botão, conversa, adesivo de assinatura, faixa "Como funciona"), só com tokens.
+- **QR Code com a marca:** `scripts/qrcode-marca.ts` gera um QR Code com pontos grafite, cantos arredondados e o "dA" no centro, com correção de erros nível H (lê em qualquer leitor). O do site (`site/marca/qrcode-deacordo.svg`) aponta para https://deacordo.app.
 - **Logo do WhatsApp:** `site/marca/whatsapp.svg`, vetorizado da imagem do logo. Aparece pequeno ao lado de cada "WhatsApp" (regra `.wa` de `site/estilo.css`).
 
 Os trechos destacados (razão social, CNPJ, prazos, encarregado) precisam ser preenchidos antes de publicar.

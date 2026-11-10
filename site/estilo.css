@@ -9,6 +9,7 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0;
+  hyphens: auto;
   background: var(--fundo);
   color: var(--texto);
   font: var(--text-corpo);
@@ -22,6 +23,10 @@ img, svg { max-width: 100%; }
 
 .conteudo { max-width: 1160px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left)); }
 @media (min-width: 720px) { .conteudo { padding: 0 var(--espaco-7); } }
+
+/* Textos corridos justificados, com hifenização em português */
+p, li, .perguntas details p { text-align: justify; }
+.balao, .acoes, .rotulo, .chip { text-align: left; hyphens: manual; }
 
 /* Tipografia (estilos do design system; títulos diminuem no celular) */
 .rotulo { font: var(--text-rotulo); letter-spacing: 0.08em; text-transform: uppercase; color: var(--destaque); margin: 0 0 var(--espaco-2); }
@@ -193,6 +198,21 @@ img, svg { max-width: 100%; }
 .telas .etapas span:nth-child(2) { animation-delay: 3s; }
 .telas .etapas span:nth-child(3) { animation-delay: 6s; }
 @keyframes etapa-ativa { 0%, 33% { color: var(--destaque); } 34%, 100% { color: var(--texto-suave); } }
+/* Animações de rolagem (de "Provas que se sustentam" em diante): só com JS e movimento permitido */
+.animar .revelar, .animar .em-sequencia > * {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.animar .revelar.visivel, .animar .em-sequencia.visivel > * { opacity: 1; transform: none; }
+.animar .em-sequencia.visivel > *:nth-child(2) { transition-delay: 0.08s; }
+.animar .em-sequencia.visivel > *:nth-child(3) { transition-delay: 0.16s; }
+.animar .em-sequencia.visivel > *:nth-child(4) { transition-delay: 0.24s; }
+.animar .em-sequencia.visivel > *:nth-child(5) { transition-delay: 0.32s; }
+.animar .em-sequencia.visivel > *:nth-child(6) { transition-delay: 0.4s; }
+/* Os adesivos "batem" no lugar, como um carimbo */
+.animar .adesivo-figura { transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s; }
+.animar .em-sequencia:not(.visivel) .adesivo-figura { transform: scale(1.4) rotate(-14deg); }
+
 @media (prefers-reduced-motion: reduce) {
   .telas .tela, .telas .etapas span { animation: none; }
   .telas .tela:nth-child(3) { opacity: 1; }
@@ -208,8 +228,20 @@ img, svg { max-width: 100%; }
 
 /* Cartões (provas) */
 .grade { display: grid; gap: var(--espaco-5); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-.cartao { background: var(--superficie-elevada); border-radius: var(--raio-lg); padding: var(--espaco-6) var(--espaco-5); display: flex; flex-direction: column; gap: var(--espaco-2); }
+.cartao { background: var(--superficie-elevada); border-radius: var(--raio-lg); padding: var(--espaco-6) var(--espaco-5); }
+.cartao h3 { margin-bottom: var(--espaco-2); }
 .cartao p { margin: 0; color: var(--texto-apoio); }
+/* Com figura: título e figura na mesma linha, texto embaixo na largura toda */
+.cartao.com-figura { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--espaco-4); align-items: start; }
+.cartao.com-figura .figura { grid-column: 2; grid-row: 1; width: 68px; margin-bottom: var(--espaco-3); }
+.cartao.com-figura h3 { grid-column: 1; grid-row: 1; align-self: center; margin-bottom: var(--espaco-3); }
+.cartao.com-figura p { grid-column: 1 / -1; }
+.cartao .figura img, .cartao .figura svg { display: block; width: 100%; height: auto; }
+/* Adesivo: papel com borda grafite e leve inclinação, como o adesivo de assinatura */
+.adesivo-figura { background: var(--papel); border: 2.5px solid var(--grafite); border-radius: var(--raio-md); padding: 4px; }
+.adesivo-figura.inclinado { transform: rotate(-6deg); }
+.adesivo-figura.inclinado-direita { transform: rotate(5deg); padding: 2px; }
+.adesivo-figura svg { border-radius: var(--raio-sm); }
 
 /* Validade jurídica */
 .lei { max-width: 760px; font: var(--text-corpo-grande); color: var(--texto-apoio); margin: 0; }
