@@ -209,17 +209,6 @@ export async function finalizarDocumento(
   e.campo("Verifique a autenticidade em", dados.urlVerificacao, false, COR.tinta);
   adicionarLink(doc, e.pagina, [MARGEM, e.y, MARGEM + LARGURA_UTIL, e.y + 22], dados.urlVerificacao);
 
-  e.secao("Eventos do documento");
-  e.texto("DATAS E HORÁRIOS DE BRASÍLIA", 6.5, COR.apoio, e.mono);
-  e.espaco(4);
-  for (const ev of linhaDoTempo(dados)) {
-    e.garantir(16);
-    const y = e.y;
-    e.pagina.drawText(formatarDataHora(ev.em, false), { x: MARGEM, y: y - 8, size: 7, font: e.mono, color: COR.tinta });
-    e.texto(ev.texto, 9, COR.grafite, e.fonte, 96);
-    e.espaco(3);
-  }
-
   e.secao("Assinaturas");
   for (const r of dados.registros) {
     const imagem = r.selfie ? await incorporarImagem(doc, r.selfie) : null;
@@ -245,6 +234,17 @@ export async function finalizarDocumento(
     if (imagem) e.y = Math.min(e.y, topo - alturaFoto - 16);
     e.reservaDireita = 0;
     e.espaco(10);
+  }
+
+  e.secao("Eventos do documento");
+  e.texto("DATAS E HORÁRIOS DE BRASÍLIA", 6.5, COR.apoio, e.mono);
+  e.espaco(4);
+  for (const ev of linhaDoTempo(dados)) {
+    e.garantir(16);
+    const y = e.y;
+    e.pagina.drawText(formatarDataHora(ev.em, false), { x: MARGEM, y: y - 8, size: 7, font: e.mono, color: COR.tinta });
+    e.texto(ev.texto, 9, COR.grafite, e.fonte, 96);
+    e.espaco(3);
   }
 
   e.secao("Provas de integridade");
