@@ -209,6 +209,10 @@ p, li, .perguntas details p { text-align: justify; }
 .animar .em-sequencia.visivel > *:nth-child(4) { transition-delay: 0.24s; }
 .animar .em-sequencia.visivel > *:nth-child(5) { transition-delay: 0.32s; }
 .animar .em-sequencia.visivel > *:nth-child(6) { transition-delay: 0.4s; }
+.animar .grade.em-sequencia > *:nth-child(odd) { transform: translateX(-90px); }
+.animar .grade.em-sequencia > *:nth-child(even) { transform: translateX(90px); }
+.animar .grade.em-sequencia.visivel > * { transform: none; }
+#seguranca { overflow-x: clip; }
 /* Os adesivos "batem" no lugar, como um carimbo */
 .animar .adesivo-figura { transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s; }
 .animar .em-sequencia:not(.visivel) .adesivo-figura { transform: scale(1.4) rotate(-14deg); }
@@ -242,6 +246,27 @@ p, li, .perguntas details p { text-align: justify; }
 .adesivo-figura.inclinado { transform: rotate(-6deg); }
 .adesivo-figura.inclinado-direita { transform: rotate(5deg); padding: 2px; }
 .adesivo-figura svg { border-radius: var(--raio-sm); }
+/* Hash: adesivo de um documento assinado */
+.doc-assinado { width: 100%; aspect-ratio: 3 / 4; padding: 7px 6px; display: flex; flex-direction: column; gap: 4px; }
+.doc-assinado i { display: block; height: 3px; background: var(--papel-linha); border-radius: 1px; }
+.doc-assinado .linha-assinatura { margin-top: auto; position: relative; border-top: 1px solid var(--grafite); width: 70%; }
+.doc-assinado .linha-assinatura img { position: absolute; right: -14px; bottom: -6px; width: 20px; height: 20px; }
+.cartao.com-figura .figura.adesivo-figura:has(.doc-assinado) { width: 58px; padding: 0; }
+
+/* Assinatura digital do PDF: o mesmo adesivo da via assinada, fora do documento */
+.cartao.com-figura .figura.figura-adesivo { width: auto; padding-top: 4px; }
+.adesivo.solto { position: static; transform: rotate(-6deg); padding: 5px 9px; gap: 6px; }
+.adesivo.solto img { width: 22px; height: 22px; }
+.adesivo.solto .de-acordo { font-size: 16px; }
+.adesivo.solto .data { font-size: 9px; }
+
+/* Trilha de auditoria: escudo com o visto, nas cores do carimbo de cada tema */
+.cartao.com-figura .figura.figura-escudo { width: 56px; }
+.escudo-corpo { fill: var(--disco); }
+.escudo-visto { fill: none; stroke: var(--verde-vivo); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+[data-theme="claro"] .escudo-corpo { fill: var(--papel); stroke: var(--grafite); stroke-width: 3; }
+[data-theme="claro"] .escudo-visto { stroke: var(--tinta); }
+
 /* QR Code em forma de carimbo: um pouco maior, sem inclinação (o carimbo nunca gira) */
 .cartao.com-figura .figura.figura-carimbo { width: 84px; }
 .animar .figura-carimbo { transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s, opacity 0.3s ease 0.5s; }
