@@ -242,6 +242,10 @@ p, li, .perguntas details p { text-align: justify; }
 .adesivo-figura.inclinado { transform: rotate(-6deg); }
 .adesivo-figura.inclinado-direita { transform: rotate(5deg); padding: 2px; }
 .adesivo-figura svg { border-radius: var(--raio-sm); }
+/* QR Code em forma de carimbo: um pouco maior, sem inclinação (o carimbo nunca gira) */
+.cartao.com-figura .figura.figura-carimbo { width: 84px; }
+.animar .figura-carimbo { transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s, opacity 0.3s ease 0.5s; }
+.animar .em-sequencia:not(.visivel) .figura-carimbo { transform: scale(1.5); opacity: 0; }
 
 /* Validade jurídica */
 .lei { max-width: 760px; font: var(--text-corpo-grande); color: var(--texto-apoio); margin: 0; }
