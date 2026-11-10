@@ -1,99 +1,208 @@
 /*
- * Identidade visual PROVISÓRIA do DeAcordo.
- * Cores, fontes, raios e espaçamentos ficam só aqui: ao definir a identidade definitiva,
- * troque estes valores (e o logotipo em logo.svg) e o site inteiro acompanha.
+ * Estilos do site do DeAcordo, montados sobre o design system (direção 4a · Disco tinta).
+ * Cores, fontes, espaços e raios vêm de tokens.css, gerado pelo design system: não ponha valores soltos aqui.
+ * Tema: data-theme="escuro" | "claro" no <html>, escolhido por tema.js.
  */
-:root {
-  --cor-fundo: #f6f7f5;
-  --cor-superficie: #ffffff;
-  --cor-texto: #1a1f1d;
-  --cor-texto-suave: #5d6763;
-  --cor-borda: #dde1dd;
-  --cor-marca: #1b6b58;
-  --cor-marca-texto: #ffffff;
-  --cor-marca-clara: #e3efeb;
-  --cor-destaque: #e8b04a;
-
-  --fonte-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fonte-titulo: var(--fonte-texto);
-
-  --raio: 12px;
-  --largura: 1080px;
-  --largura-texto: 720px;
-}
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0;
-  background: var(--cor-fundo);
-  color: var(--cor-texto);
-  font: 17px/1.6 var(--fonte-texto);
+  background: var(--fundo);
+  color: var(--texto);
+  font: var(--text-corpo);
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
 }
+a { color: inherit; }
 img, svg { max-width: 100%; }
-a { color: var(--cor-marca); }
-h1, h2, h3 { font-family: var(--fonte-titulo); line-height: 1.2; text-wrap: balance; }
-:focus-visible { outline: 2px solid var(--cor-marca); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--destaque); outline-offset: 3px; }
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.conteudo { max-width: var(--largura); margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left)); }
+.conteudo { max-width: 1160px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-left)); }
+@media (min-width: 720px) { .conteudo { padding: 0 var(--espaco-7); } }
+
+/* Tipografia (estilos do design system; títulos diminuem no celular) */
+.rotulo { font: var(--text-rotulo); letter-spacing: 0.08em; text-transform: uppercase; color: var(--destaque); margin: 0 0 var(--espaco-2); }
+.titulo-1 { font: var(--text-titulo-1); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.titulo-2 { font: var(--text-titulo-2); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.titulo-3 { font: var(--text-titulo-3); margin: 0; }
+.corpo-grande { font: var(--text-corpo-grande); color: var(--texto-apoio); margin: 0; }
+@media (max-width: 720px) {
+  .titulo-1 { font-size: 40px; }
+  .titulo-2 { font-size: 30px; }
+  .corpo-grande { font-size: 18px; }
+}
+.titulo-1 i, .titulo-2 i { color: var(--destaque); }
+.de-acordo { font: var(--text-de-acordo); font-style: italic; }
+
+/* MencaoWhatsApp: lugar do logo oficial do WhatsApp ao lado da palavra.
+   Ao baixar o logo do kit oficial, salve em /marca/whatsapp.svg e troque o bloco .wa por:
+   .wa { border: 0; background: url(/marca/whatsapp.svg) center / contain no-repeat; } */
+.com-wa { white-space: nowrap; }
+.wa {
+  display: inline-block; width: 0.8em; height: 0.8em; margin-left: 0.35em; vertical-align: -0.05em;
+  border: 1.5px dashed var(--destaque); border-radius: 50%;
+}
+.titulo-1 .wa, .titulo-2 .wa { width: 24px; height: 24px; border-width: 2px; vertical-align: 0.1em; }
+
+/* Botão */
+.acoes { display: flex; flex-wrap: wrap; gap: var(--espaco-3); }
+.botao {
+  display: inline-flex; align-items: center; min-height: 48px; padding: 14px 22px;
+  border-radius: var(--raio-md); font: 600 17px/1 var(--font-texto); text-decoration: none; cursor: pointer;
+}
+.botao.principal { background: var(--acao-fundo); color: var(--acao-texto); border: 1px solid var(--acao-fundo); }
+.botao.secundario { background: transparent; color: var(--texto); border: 1px solid var(--acao-contorno); }
 
 /* Cabeçalho */
-.topo { background: var(--cor-superficie); border-bottom: 1px solid var(--cor-borda); }
-.topo .conteudo { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; }
-.marca { display: inline-flex; align-items: center; gap: 10px; color: var(--cor-texto); text-decoration: none; font-weight: 800; font-size: 20px; }
-.marca img { width: 32px; height: 32px; }
-.topo nav { display: flex; gap: 20px; flex-wrap: wrap; }
-.topo nav a { color: var(--cor-texto-suave); text-decoration: none; font-weight: 600; font-size: 15px; }
-.topo nav a:hover { color: var(--cor-marca); }
-@media (max-width: 640px) { .topo nav { display: none; } }
-
-/* Botões */
-.botao {
-  display: inline-block; padding: 12px 22px; border-radius: 999px; font-weight: 700; text-decoration: none;
-  background: var(--cor-marca); color: var(--cor-marca-texto); border: 2px solid var(--cor-marca);
+.topo { border-bottom: 1px solid var(--borda); }
+.topo .conteudo { display: flex; align-items: center; justify-content: space-between; gap: var(--espaco-4); min-height: 72px; }
+.marca { display: inline-flex; }
+.marca img { height: 36px; width: auto; display: block; }
+.so-escuro, .so-claro { display: none !important; }
+[data-theme="escuro"] .so-escuro, [data-theme="claro"] .so-claro { display: block !important; }
+.topo nav { display: flex; align-items: center; gap: var(--espaco-6); }
+.topo nav a { color: var(--texto-apoio); text-decoration: none; font-size: 16px; }
+.topo nav a:hover { color: var(--texto); }
+@media (max-width: 760px) { .topo nav a { display: none; } }
+.tema {
+  display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--raio-md);
+  background: transparent; color: var(--texto-apoio); border: 1px solid var(--borda); cursor: pointer;
 }
-.botao.secundario { background: transparent; color: var(--cor-marca); }
+.tema:hover { color: var(--texto); }
+.tema svg { width: 20px; height: 20px; }
+[data-theme="escuro"] .tema .sol, [data-theme="claro"] .tema .lua { display: block; }
+.tema .sol, .tema .lua { display: none; }
 
-/* Seções da página inicial */
-.abertura { padding-top: 72px; padding-bottom: 56px; }
-.abertura h1 { font-size: clamp(32px, 6vw, 52px); margin: 0 0 16px; max-width: 16ch; }
-.abertura p { font-size: 20px; color: var(--cor-texto-suave); max-width: 52ch; margin: 0 0 28px; }
-.acoes { display: flex; gap: 12px; flex-wrap: wrap; }
-
-section.bloco { padding: 56px 0; border-top: 1px solid var(--cor-borda); }
-section.bloco h2 { font-size: clamp(26px, 4vw, 34px); margin: 0 0 8px; }
-section.bloco > .conteudo > p { color: var(--cor-texto-suave); max-width: 60ch; margin: 0 0 28px; }
-
-.grade { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-.cartao { background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 22px; }
-.cartao h3 { margin: 0 0 6px; font-size: 19px; }
-.cartao p { margin: 0; color: var(--cor-texto-suave); font-size: 16px; }
-.numero {
-  display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
-  background: var(--cor-marca-clara); color: var(--cor-marca); font-weight: 800; margin-bottom: 10px;
+/* Abertura */
+.abertura .conteudo {
+  display: grid; gap: var(--espaco-7); align-items: center;
+  padding-top: var(--espaco-8); padding-bottom: var(--espaco-8);
 }
+@media (min-width: 960px) { .abertura .conteudo { grid-template-columns: 1.15fr 1fr; } }
+.abertura .texto { display: flex; flex-direction: column; gap: var(--espaco-6); }
 
-.perguntas details { background: var(--cor-superficie); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 16px 20px; margin-bottom: 10px; }
-.perguntas summary { font-weight: 700; cursor: pointer; }
-.perguntas details p { color: var(--cor-texto-suave); margin: 10px 0 0; }
+/* Conversa (mockup do WhatsApp) */
+.conversa {
+  background-color: var(--conversa-fundo);
+  background-image: radial-gradient(color-mix(in srgb, var(--texto) 8%, transparent) 1px, transparent 1.4px);
+  background-size: 16px 16px;
+  border: 1px solid var(--borda); border-radius: var(--raio-xl); box-shadow: var(--sombra-conversa);
+  padding: var(--espaco-5); display: flex; flex-direction: column; gap: 10px;
+  max-width: 460px; width: 100%; justify-self: center;
+}
+.balao { max-width: 88%; padding: 10px 14px; font: var(--text-corpo); }
+.balao.recebido { align-self: flex-start; background: var(--balao-recebido); color: var(--balao-recebido-texto); border-radius: var(--raio-sm) var(--raio-balao) var(--raio-balao) var(--raio-balao); }
+.balao.enviado {
+  align-self: flex-end; background: var(--balao-enviado); color: var(--balao-enviado-texto);
+  border-radius: var(--raio-balao) var(--raio-sm) var(--raio-balao) var(--raio-balao);
+  display: flex; align-items: flex-end; gap: var(--espaco-2); padding: 8px 12px;
+}
+.hora { font: var(--text-carimbo-data); color: var(--balao-hora); white-space: nowrap; }
+.balao.recebido .hora { color: var(--texto-suave); }
+.anexo { display: flex; align-items: center; gap: 10px; }
+.selo-pdf { background: var(--verde-vivo); color: var(--grafite); font: var(--text-rotulo-pequeno); font-weight: 700; padding: 4px 6px; border-radius: var(--raio-sm); }
 
-.chamada { background: var(--cor-marca); color: var(--cor-marca-texto); border-radius: var(--raio); padding: 40px 32px; text-align: center; }
-.chamada h2 { margin: 0 0 8px; }
-.chamada p { margin: 0 0 22px; opacity: 0.9; }
-.chamada .botao { background: var(--cor-marca-texto); color: var(--cor-marca); border-color: var(--cor-marca-texto); }
+/* Documento e AdesivoAssinatura */
+.documento-mini {
+  position: relative; background: var(--papel); border-radius: var(--raio-sm);
+  padding: var(--espaco-4) var(--espaco-4) var(--espaco-6); margin-top: var(--espaco-2);
+  display: flex; flex-direction: column; gap: 7px; min-width: 250px;
+}
+.documento-mini h4 { margin: 0; font: var(--text-rotulo-pequeno); letter-spacing: 0.06em; color: var(--papel-texto-suave); }
+.documento-mini .l { height: 6px; background: var(--papel-linha); border-radius: 2px; }
+.documento-mini .assinante { margin-top: 30px; border-top: 1px solid var(--grafite); width: 50%; padding-top: 4px; font: 400 11px var(--font-texto); color: var(--papel-texto-suave); }
+.adesivo {
+  position: absolute; right: 12px; bottom: 16px; transform: rotate(-6deg);
+  display: flex; align-items: center; gap: var(--espaco-2); padding: 6px 12px;
+  border: 2.5px solid var(--grafite); border-radius: var(--raio-md); background: rgba(255, 255, 255, 0.85); color: var(--grafite);
+}
+.adesivo img { width: 28px; height: 28px; }
+.adesivo .linhas { display: flex; flex-direction: column; gap: 2px; }
+.adesivo .data { font: var(--text-carimbo-data); color: var(--tinta); }
 
-/* Páginas de texto (privacidade, termos) */
-.documento { max-width: var(--largura-texto); margin: 0 auto; padding: 48px max(16px, env(safe-area-inset-left)) 64px; }
-.documento h1 { font-size: clamp(30px, 5vw, 40px); margin: 0 0 4px; }
-.documento .atualizado { color: var(--cor-texto-suave); margin: 0 0 32px; }
-.documento h2 { font-size: 22px; margin: 36px 0 8px; }
-.documento table { border-collapse: collapse; width: 100%; font-size: 15px; }
-.documento th, .documento td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--cor-borda); }
-.tabela { overflow-x: auto; }
-.pendente { background: #fff1c7; border-radius: 4px; padding: 0 4px; }
+/* Seções */
+.secao { padding: 80px 0; border-top: 1px solid var(--borda); }
+.secao.superficie { background: var(--superficie); }
+.secao .cabeca { display: flex; flex-direction: column; gap: var(--espaco-3); margin-bottom: var(--espaco-7); max-width: 720px; }
+
+/* Como funciona: faixa lateral com 5 passos (PassoComoFunciona) */
+.como { background: var(--superficie); border-top: 1px solid var(--borda); }
+.como .palco { padding: 80px 0 56px; }
+.como .topo-secao { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--espaco-4); }
+.como .contador { font: var(--text-rotulo); color: var(--texto-suave); white-space: nowrap; }
+.faixa-janela { overflow-x: auto; scroll-snap-type: x mandatory; margin-top: var(--espaco-6); padding-bottom: var(--espaco-2); }
+.faixa {
+  display: flex; gap: var(--espaco-5); width: max-content;
+  padding: 0 max(16px, calc((100vw - 1160px) / 2 + var(--espaco-7)));
+}
+.passo {
+  scroll-snap-align: center; width: 300px; height: 290px; flex: none;
+  background: var(--superficie-elevada); border-radius: var(--raio-lg); padding: var(--espaco-5);
+  display: flex; flex-direction: column; gap: var(--espaco-3);
+}
+@media (max-width: 720px) { .passo { width: 85vw; } }
+.passo .numero { font: var(--text-rotulo); color: var(--destaque); }
+.passo .visual {
+  flex: 1; background: var(--conversa-fundo); border-radius: var(--raio-md);
+  display: flex; align-items: center; justify-content: center; padding: 0 14px; overflow: hidden;
+}
+.mini-doc { width: 68px; height: 86px; background: var(--papel); border-radius: var(--raio-sm); padding: 9px; display: flex; flex-direction: column; gap: 5px; }
+.mini-doc .selo-pdf { align-self: flex-start; font-size: 10px; padding: 2px 5px; }
+.mini-doc i { display: block; height: 4px; background: var(--papel-linha); }
+.chips { display: flex; flex-direction: column; gap: var(--espaco-2); width: 100%; }
+.chip { display: flex; align-items: center; gap: var(--espaco-2); background: var(--superficie-elevada); color: var(--texto); border-radius: var(--raio-pill); padding: 5px 12px 5px 5px; font-size: 14px; }
+.chip em { font: 600 10px var(--font-rotulo); font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: var(--disco); color: #fff; display: grid; place-items: center; }
+.passo .balao { font-size: 14px; }
+.passo .documento-mini { min-width: 0; width: 100%; transform: scale(0.82); }
+.barra { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: var(--espaco-6); }
+.barra span { height: 4px; border-radius: 2px; background: var(--borda); transition: background 0.2s; }
+.barra span.vista { background: var(--destaque); }
+
+/* Com JS e movimento permitido: a página desce e a faixa anda para o lado */
+.como.lateral { height: 400vh; }
+.como.lateral .palco { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 0; overflow: hidden; }
+.como.lateral .palco > .conteudo { width: 100%; }
+.como.lateral .faixa-janela { overflow: visible; scroll-snap-type: none; }
+.como.lateral .faixa { will-change: transform; }
+
+/* Cartões (provas) */
+.grade { display: grid; gap: var(--espaco-5); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.cartao { background: var(--superficie-elevada); border-radius: var(--raio-lg); padding: var(--espaco-6) var(--espaco-5); display: flex; flex-direction: column; gap: var(--espaco-2); }
+.cartao p { margin: 0; color: var(--texto-apoio); }
+
+/* Validade jurídica */
+.lei { max-width: 760px; font: var(--text-corpo-grande); color: var(--texto-apoio); margin: 0; }
+
+/* Dúvidas */
+.perguntas { max-width: 820px; display: flex; flex-direction: column; gap: var(--espaco-3); }
+.perguntas details { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio-lg); padding: var(--espaco-4) var(--espaco-5); }
+.perguntas summary { font: var(--text-titulo-3); font-size: 19px; cursor: pointer; }
+.perguntas details p { color: var(--texto-apoio); margin: var(--espaco-3) 0 0; }
+
+/* Chamada final */
+.chamada { background: var(--superficie-elevada); border: 1px solid var(--borda); border-radius: var(--raio-xl); padding: 48px var(--espaco-7); display: grid; gap: var(--espaco-6); align-items: center; }
+@media (min-width: 860px) { .chamada { grid-template-columns: auto 1fr auto; } }
+.chamada img { width: 96px; height: 96px; }
+.chamada p { margin: var(--espaco-2) 0 0; color: var(--texto-apoio); }
 
 /* Rodapé */
-.rodape { border-top: 1px solid var(--cor-borda); background: var(--cor-superficie); padding: 32px 0; font-size: 15px; color: var(--cor-texto-suave); }
-.rodape .conteudo { display: flex; flex-wrap: wrap; gap: 12px 32px; justify-content: space-between; }
-.rodape nav { display: flex; gap: 20px; flex-wrap: wrap; }
-.rodape a { color: var(--cor-texto-suave); }
+.rodape { border-top: 1px solid var(--borda); padding: 32px 0; color: var(--texto-suave); font-size: 15px; }
+.rodape .conteudo { display: flex; flex-wrap: wrap; gap: var(--espaco-3) var(--espaco-7); justify-content: space-between; }
+.rodape nav { display: flex; gap: var(--espaco-5); flex-wrap: wrap; }
+.rodape a { color: var(--texto-apoio); }
+
+/* Páginas de texto (privacidade, termos) */
+.texto-legal { max-width: 760px; margin: 0 auto; padding: var(--espaco-8) max(16px, env(safe-area-inset-left)) 80px; }
+.texto-legal .atualizado { font: var(--text-rotulo); color: var(--texto-suave); margin: var(--espaco-3) 0 var(--espaco-7); }
+.texto-legal h2 { font: var(--text-titulo-3); margin: 40px 0 var(--espaco-2); }
+.texto-legal p, .texto-legal li { color: var(--texto-apoio); }
+.texto-legal strong { color: var(--texto); }
+.texto-legal a { color: var(--destaque); }
+.texto-legal table { border-collapse: collapse; width: 100%; font-size: 15px; }
+.texto-legal th { font: var(--text-rotulo-pequeno); letter-spacing: 0.06em; text-transform: uppercase; color: var(--texto-suave); text-align: left; }
+.texto-legal th, .texto-legal td { padding: 10px 8px; border-bottom: 1px solid var(--borda); vertical-align: top; text-align: left; }
+.tabela { overflow-x: auto; }
+.pendente { background: var(--superficie-elevada); color: var(--destaque); border: 1px dashed var(--destaque); border-radius: var(--raio-sm); padding: 0 4px; }

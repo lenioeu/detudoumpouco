@@ -173,7 +173,17 @@ Serviços como o **Railway** constroem a imagem direto do GitHub a partir do `Do
 
 ## Site institucional
 
-A pasta `site/` tem a página inicial, a política de privacidade e os termos de uso, servidos pelo próprio bot em `/`, `/privacidade` e `/termos`. A identidade visual é provisória: cores, fontes e espaçamentos ficam no topo de `site/estilo.css`, e o logotipo em `site/logo.svg`. Os trechos destacados em amarelo (razão social, CNPJ, prazos, encarregado) precisam ser preenchidos antes de publicar.
+A pasta `site/` tem a página inicial, a política de privacidade e os termos de uso, servidos pelo próprio bot em `/`, `/privacidade` e `/termos`, nos temas escuro e claro (segue o aparelho, com botão para trocar).
+
+O visual segue o design system do DeAcordo (direção 4a · Disco tinta):
+
+- `site/tokens.css`: cópia dos tokens gerados pelo design system. Não edite à mão: quando o design system mudar, copie de novo.
+- `site/marca/`: logotipos, carimbo, favicon e avatar do WhatsApp (SVGs do design system).
+- `site/fonts/`: Special Elite, a fonte da marca (licença OFL). Newsreader e IBM Plex Mono vêm do Google Fonts.
+- `site/estilo.css`: componentes do site (botão, conversa, adesivo de assinatura, faixa "Como funciona"), só com tokens.
+- **Logo do WhatsApp:** o círculo tracejado ao lado de cada "WhatsApp" marca o lugar do logo oficial. Baixe-o do kit de marca do WhatsApp, salve em `site/marca/whatsapp.svg` e troque a regra `.wa` de `site/estilo.css` como indicado no comentário de lá.
+
+Os trechos destacados (razão social, CNPJ, prazos, encarregado) precisam ser preenchidos antes de publicar.
 
 ## Segurança
 

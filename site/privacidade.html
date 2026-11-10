@@ -1,27 +1,46 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="escuro">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Política de privacidade · DeAcordo</title>
-<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<script>(()=>{let t;try{t=localStorage.getItem("deacordo-tema")}catch{}document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: light)").matches?"claro":"escuro")})()</script>
+<link rel="icon" href="/marca/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500;1,6..72,600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/tokens.css">
 <link rel="stylesheet" href="/estilo.css">
+<script src="/tema.js" defer></script>
 </head>
 <body>
 <header class="topo">
   <div class="conteudo">
-    <a class="marca" href="/"><img src="/logo.svg" alt="">DeAcordo</a>
+    <a class="marca" href="/" aria-label="DeAcordo, página inicial">
+      <img class="so-escuro" src="/marca/marca-horizontal-fundo-escuro.svg" alt="DeAcordo">
+      <img class="so-claro" src="/marca/marca-horizontal-fundo-claro.svg" alt="DeAcordo">
+    </a>
+    <nav aria-label="Principal">
+      <a href="/#como-funciona">Como funciona</a>
+      <a href="/#seguranca">Segurança</a>
+      <a href="/#duvidas">Dúvidas</a>
+      <button class="tema" type="button" aria-label="Alternar tema claro e escuro">
+        <svg class="sol" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg>
+        <svg class="lua" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </nav>
   </div>
 </header>
 
-<main class="documento">
-  <h1>Política de privacidade</h1>
+<main class="texto-legal">
+  <p class="rotulo">DeAcordo</p>
+  <h1 class="titulo-2">Política de privacidade</h1>
   <p class="atualizado">Última atualização: <span class="pendente">[data da publicação]</span></p>
 
   <p>Esta política explica quais dados pessoais o DeAcordo trata, para quê, com quem os compartilha e como você exerce seus direitos, nos termos da Lei nº 13.709/2018 (Lei Geral de Proteção de Dados Pessoais, LGPD).</p>
 
   <h2>1. Quem somos</h2>
-  <p>O DeAcordo é um serviço de assinatura eletrônica de documentos pelo WhatsApp, oferecido por <span class="pendente">[razão social]</span>, inscrita no CNPJ sob o nº <span class="pendente">[CNPJ]</span>, com sede em <span class="pendente">[endereço]</span>.</p>
+  <p>O DeAcordo é um serviço de assinatura eletrônica de documentos pelo <span class="com-wa">WhatsApp<span class="wa" aria-hidden="true"></span></span>, oferecido por <span class="pendente">[razão social]</span>, inscrita no CNPJ sob o nº <span class="pendente">[CNPJ]</span>, com sede em <span class="pendente">[endereço]</span>.</p>
 
   <h2>2. Papéis de cada um</h2>
   <p>Quem envia um documento para assinatura (o <strong>remetente</strong>) decide quais documentos enviar e quem deve assiná-los. Em relação aos dados dos signatários e ao conteúdo dos documentos, o remetente é o <strong>controlador</strong> e o DeAcordo atua como <strong>operador</strong>, tratando os dados conforme as instruções do remetente e esta política. Em relação aos dados de cadastro e uso dos próprios remetentes, o DeAcordo é o controlador.</p>
@@ -53,6 +72,7 @@
     <li><strong>Anthropic</strong> (Estados Unidos): o documento enviado é analisado por inteligência artificial apenas para sugerir quem deve assinar. A Anthropic não usa esse conteúdo para treinar seus modelos, nos termos do seu contrato comercial.</li>
     <li><strong>Autoridade de carimbo do tempo</strong>: recebe somente o hash (a impressão digital matemática) da via final, nunca o documento ou dados pessoais.</li>
     <li><strong>Provedores de hospedagem e de rede</strong> (<span class="pendente">[nome do provedor do servidor]</span> e Cloudflare): armazenamento e funcionamento do serviço.</li>
+    <li><strong>Google Fonts</strong>: ao abrir este site, o navegador do visitante baixa as fontes do texto dos servidores do Google, que recebem o endereço IP.</li>
     <li><strong>Autoridades</strong>, quando houver obrigação legal ou ordem judicial.</li>
   </ul>
   <p>Algumas dessas empresas tratam dados fora do Brasil. Essas transferências internacionais se apoiam no art. 33 da LGPD, inclusive em cláusulas contratuais com os fornecedores.</p>
@@ -76,7 +96,7 @@
 
 <footer class="rodape">
   <div class="conteudo">
-    <span>© DeAcordo · contato@deacordo.app</span>
+    <span>DeAcordo™ · contato@deacordo.app</span>
     <nav aria-label="Rodapé">
       <a href="/privacidade">Política de privacidade</a>
       <a href="/termos">Termos de uso</a>

@@ -1,0 +1,163 @@
+/* DeAcordo — generated from tokens.json */
+:root, [data-theme="escuro"] {
+  --fundo: #0b141a; /* Fundo da página. No escuro é o grafite da marca; no claro, papel quente. */
+  --superficie: #111b21; /* Seções e painéis sobre o fundo (ex.: faixa "Como funciona"). */
+  --superficie-elevada: #202c33; /* Cards dentro de uma superfície (cards de passo, chips). */
+  --borda: #2a3942; /* Fios de 1px entre áreas, contorno de painéis. */
+  --texto: #e9edef; /* Texto principal sobre fundo, superficie e superficie-elevada. Contraste ≥ 13:1 nos dois temas. */
+  --texto-apoio: #b4bec4; /* Parágrafos de apoio e links de navegação. */
+  --texto-suave: #8696a0; /* Rótulos, legendas, contadores. ≥ 5:1 sobre o fundo nos dois temas. */
+  --destaque: #25d366; /* Palavra em itálico do título, rótulos de seção, números dos passos, barra de progresso. */
+  --acao-fundo: #25d366; /* Fundo do botão principal. */
+  --acao-texto: #0b141a; /* Texto do botão principal. Verde vivo leva sempre texto escuro. */
+  --acao-contorno: #8696a0; /* Contorno do botão secundário. */
+  --grafite: #0b141a; /* Cor da marca. Fundo onde o carimbo ganha disco; tinta do carimbo e do adesivo sobre papel. */
+  --disco: #005c4b; /* Miolo do carimbo quando o fundo é grafite. Branco sobre disco: 8:1. */
+  --verde-vivo: #25d366; /* Visto do carimbo no escuro, selo PDF, acentos. Só em traço ou com texto grafite por cima (9,4:1); nunca texto branco sobre ele. */
+  --tinta: #075e54; /* Visto do carimbo no claro e data do adesivo. Nunca sobre grafite (contraste baixo). */
+  --conversa-fundo: #0b141a; /* Fundo da janela de conversa, o mais próximo do padrão do WhatsApp em cada tema. */
+  --balao-recebido: #202c33; /* Balão de mensagem recebida. */
+  --balao-recebido-texto: #e9edef; /* Texto do balão recebido. */
+  --balao-enviado: #005c4b; /* Balão de mensagem enviada (o "De acordo"). */
+  --balao-enviado-texto: #ffffff; /* Texto do balão enviado. */
+  --balao-hora: #c9e8df; /* Hora e ✓✓ dentro do balão enviado. */
+  --papel: #ffffff; /* Documento (contrato) mostrado nos mockups. */
+  --papel-linha: #e6e9ec; /* Linhas de texto simuladas no documento. */
+  --papel-texto-suave: #54656f; /* Título e nome do signatário dentro do documento. */
+  --sombra-conversa: none; /* Janela de conversa no tema claro. No escuro usa só a borda. */
+}
+[data-theme="claro"] {
+  --fundo: #f7f5f0;
+  --superficie: #ffffff;
+  --superficie-elevada: #f0f2f5;
+  --borda: #d1d7db;
+  --texto: #0b141a;
+  --texto-apoio: #54656f;
+  --texto-suave: #54656f;
+  --destaque: #075e54;
+  --acao-fundo: #0b141a;
+  --acao-texto: #ffffff;
+  --acao-contorno: #0b141a;
+  --conversa-fundo: #efeae2;
+  --balao-recebido: #ffffff;
+  --balao-recebido-texto: #111b21;
+  --balao-enviado: #d9fdd3;
+  --balao-enviado-texto: #111b21;
+  --balao-hora: #54656f;
+  --sombra-conversa: 0 18px 40px -22px rgba(11,20,26,0.3);
+}
+:root {
+  --espaco-1: 4px; /* Folga entre linhas do adesivo. */
+  --espaco-2: 8px; /* Entre ícone e texto; padding vertical de balão. */
+  --espaco-3: 12px; /* Entre botões; padding horizontal de balão. */
+  --espaco-4: 16px; /* Padding de documento; gap interno de cards. */
+  --espaco-5: 20px; /* Padding de cards de passo e da janela de conversa; gap entre cards. */
+  --espaco-6: 24px; /* Gap entre título, parágrafo e botões no hero. */
+  --espaco-7: 40px; /* Padding lateral de seções; gap entre colunas do hero. */
+  --espaco-8: 56px; /* Padding vertical do hero. */
+  --raio-sm: 4px; /* Selo PDF, documento. */
+  --raio-md: 8px; /* Botões, adesivo de assinatura, previews dentro de cards. */
+  --raio-lg: 12px; /* Cards de passo. */
+  --raio-balao: 14px; /* Balões de conversa (o canto do lado de quem fala fica em raio-sm). */
+  --raio-xl: 16px; /* Janela de conversa. */
+  --raio-pill: 999px; /* Chips de signatário. */
+  --font-marca: "Special Elite", "Courier New", monospace;
+  --font-texto: Newsreader, Georgia, serif;
+  --font-rotulo: "IBM Plex Mono", ui-monospace, monospace;
+  --text-marca-grande: 400 60px/1 var(--font-marca); /* Marca em destaque. Special Elite só na marca e no carimbo. */
+  --text-marca-cabecalho: 400 26px/1 var(--font-marca); /* Marca no cabeçalho do site. */
+  --text-titulo-1: 500 58px/1.04 var(--font-texto); /* Título principal (hero). Uma palavra pode ir em itálico na cor destaque. */
+  --text-titulo-2: 500 40px/1.1 var(--font-texto); /* Título de seção. */
+  --text-titulo-3: 600 22px/1.25 var(--font-texto); /* Título de card (passos). */
+  --text-corpo-grande: 400 19px/1.55 var(--font-texto); /* Parágrafo de abertura. */
+  --text-corpo: 400 16px/1.4 var(--font-texto); /* Texto corrido e balões de conversa. */
+  --text-de-acordo: italic 600 20px/1 var(--font-texto); /* A expressão "de acordo" no adesivo e no balão enviado. */
+  --text-rotulo: 500 13px/1.3 var(--font-rotulo); /* Rótulo de seção, em maiúsculas. */
+  --text-rotulo-pequeno: 600 11px/1.2 var(--font-rotulo); /* Título do documento e selo PDF. */
+  --text-carimbo-data: 500 10px/1.2 var(--font-rotulo); /* Data e hora no adesivo de assinatura; hora nos balões. */
+}
+.marca-grande {
+  font-family: var(--font-marca);
+  font-size: 60px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.marca-cabecalho {
+  font-family: var(--font-marca);
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.titulo-1 {
+  font-family: var(--font-texto);
+  font-size: 58px;
+  line-height: 1.04;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.titulo-2 {
+  font-family: var(--font-texto);
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.titulo-3 {
+  font-family: var(--font-texto);
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.corpo-grande {
+  font-family: var(--font-texto);
+  font-size: 19px;
+  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.corpo {
+  font-family: var(--font-texto);
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.de-acordo {
+  font-family: var(--font-texto);
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0;
+  font-style: italic;
+}
+.rotulo {
+  font-family: var(--font-rotulo);
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+.rotulo-pequeno {
+  font-family: var(--font-rotulo);
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.carimbo-data {
+  font-family: var(--font-rotulo);
+  font-size: 10px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+@font-face {
+  font-family: "Special Elite";
+  src: url("fonts/special-elite-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
