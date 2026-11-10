@@ -53,6 +53,24 @@
     addEventListener("scroll", () => (pedidoTopo ||= requestAnimationFrame(aoRolarTopo)), { passive: true });
   }
 
+  // Visualizador da via de exemplo: abre em tela cheia e só então carrega as imagens das páginas
+  const visualizador = document.querySelector(".visualizador");
+  if (visualizador) {
+    const abrirVia = () => {
+      visualizador.querySelectorAll("img[data-src]").forEach((img) => {
+        img.src = img.dataset.src;
+        img.removeAttribute("data-src");
+      });
+      visualizador.showModal();
+      document.documentElement.style.overflow = "hidden";
+    };
+    document.querySelectorAll("[data-abrir-via]").forEach((b) => b.addEventListener("click", abrirVia));
+    visualizador.querySelector(".fechar-visualizador")?.addEventListener("click", () => visualizador.close());
+    // Toque fora da via (no fundo escuro) também fecha; Esc já fecha sozinho
+    visualizador.addEventListener("click", (e) => e.target === visualizador && visualizador.close());
+    visualizador.addEventListener("close", () => (document.documentElement.style.overflow = ""));
+  }
+
   // Sem escolha guardada, acompanha a troca de tema do aparelho
   matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {
     let guardado = null;

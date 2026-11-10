@@ -363,6 +363,34 @@ section[id] { scroll-margin-top: 80px; }
 @media (min-width: 960px) {
   .folha img { width: auto; height: min(calc(100vh - 140px), 1100px); max-width: 100%; }
 }
+.botao-folha { display: block; padding: 0; border: 0; background: none; cursor: zoom-in; border-radius: var(--raio-sm); }
+.folha figcaption { margin-top: var(--espaco-3); text-align: center; font: var(--text-rotulo); text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-suave); }
+
+/* Visualizador da via completa: tela cheia, páginas uma embaixo da outra, zoom com os dedos */
+.visualizador {
+  width: min(100vw, 980px); max-width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0 auto; padding: 0;
+  border: 0; background: var(--superficie); color: var(--texto);
+}
+.visualizador[open] { display: flex; flex-direction: column; }
+.visualizador::backdrop { background: rgba(11, 20, 26, 0.8); }
+.visualizador-topo {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--espaco-4);
+  padding: var(--espaco-3) max(16px, env(safe-area-inset-left)); border-bottom: 1px solid var(--borda);
+}
+.visualizador-topo p { margin: 0; text-align: left; font: var(--text-rotulo); text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-apoio); }
+.fechar-visualizador {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--raio-md);
+  background: transparent; color: var(--texto); border: 1px solid var(--borda); cursor: pointer;
+}
+.visualizador-paginas {
+  flex: 1; overflow-y: auto; padding: var(--espaco-4) max(12px, env(safe-area-inset-left)) var(--espaco-8);
+  display: flex; flex-direction: column; gap: var(--espaco-4); overscroll-behavior: contain;
+}
+.visualizador-paginas img {
+  display: block; width: 100%; height: auto; background: var(--papel);
+  border: 1px solid var(--borda); border-radius: var(--raio-sm);
+}
+
 .animar .folha:not(.visivel) { opacity: 0; }
 .animar .folha.visivel { animation: folha-pula 1s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
 @keyframes folha-pula {

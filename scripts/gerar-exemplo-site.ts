@@ -1,13 +1,14 @@
 /**
  * Gera a via de exemplo mostrada no site: um contrato de locação fictício, assinado por duas pessoas,
  * com a marca d'água "EXEMPLO · SEM VALOR JURÍDICO" em todas as páginas e assinatura digital.
- * Salva em site/exemplo/ o PDF e a página de assinaturas em imagem (300 dpi e 150 dpi, em WebP).
+ * Salva em site/exemplo/ só imagens (o site mostra a via, não oferece o PDF para baixar): a página de
+ * assinaturas em 300 e 150 dpi e todas as páginas em 200 dpi, para o visualizador. Tudo em WebP.
  * Precisa de pdftoppm (poppler) e python3 com Pillow.
  *
  *   npx tsx scripts/gerar-exemplo-site.ts
  */
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
@@ -97,20 +98,30 @@ const assinador = AssinadorDePdf.carregarOuGerar(join(temporaria, "exemplo.p12")
   contato: "https://deacordo.app",
 });
 const final = await assinador.assinar(await comMarca.save(), "Exemplo de via assinada pelo DeAcordo");
-writeFileSync(join(saida, "via-exemplo.pdf"), final);
-
-// Página de assinaturas (a 2ª) em imagem: 300 dpi para telas grandes, 150 dpi para o celular
 const pdfTemporario = join(temporaria, "via.pdf");
 writeFileSync(pdfTemporario, final);
-for (const dpi of [300, 150]) {
-  const base = join(temporaria, `pagina-${dpi}`);
-  execFileSync("pdftoppm", ["-r", String(dpi), "-f", "2", "-l", "2", "-singlefile", "-png", pdfTemporario, base]);
+for (const antigo of readdirSync(saida)) rmSync(join(saida, antigo));
+const paraWebp = (png: string, webp: string) =>
   execFileSync("python3", [
     "-I",
     "-c",
     "import sys; from PIL import Image; Image.open(sys.argv[1]).convert('RGB').save(sys.argv[2], 'WEBP', quality=88, method=6)",
-    `${base}.png`,
-    join(saida, `pagina-de-assinaturas-${dpi}dpi.webp`),
+    png,
+    join(saida, webp),
   ]);
+
+// Página de assinaturas (a 2ª): 300 dpi para telas grandes, 150 dpi para o celular
+for (const dpi of [300, 150]) {
+  const base = join(temporaria, `assinaturas-${dpi}`);
+  execFileSync("pdftoppm", ["-r", String(dpi), "-f", "2", "-l", "2", "-singlefile", "-png", pdfTemporario, base]);
+  paraWebp(`${base}.png`, `pagina-de-assinaturas-${dpi}dpi.webp`);
+}
+
+// Todas as páginas em 200 dpi, para o visualizador da via completa
+const total = (await PDFDocument.load(final)).getPageCount();
+for (let n = 1; n <= total; n++) {
+  const base = join(temporaria, `pagina-${n}`);
+  execFileSync("pdftoppm", ["-r", "200", "-f", String(n), "-l", String(n), "-singlefile", "-png", pdfTemporario, base]);
+  paraWebp(`${base}.png`, `via-exemplo-pagina-${n}.webp`);
 }
 console.log("Exemplo gerado em site/exemplo/");
