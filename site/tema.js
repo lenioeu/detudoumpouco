@@ -38,6 +38,27 @@
       { rootMargin: "0px 0px -12% 0px" },
     );
     for (const el of document.querySelectorAll(".revelar, .em-sequencia")) observador.observe(el);
+
+    // Cards de provas: um por vez, conforme a página desce. O card N só aparece depois de rolar
+    // N × PASSO pixels a partir do topo da grade (e quando ele mesmo já está à vista).
+    const PASSO = 140;
+    for (const grade of document.querySelectorAll(".cards-um-a-um")) {
+      const cards = [...grade.children];
+      let pedido = 0;
+      const revelar = () => {
+        pedido = 0;
+        const fundoDaTela = innerHeight * 0.88;
+        const topoDaGrade = grade.getBoundingClientRect().top;
+        cards.forEach((card, i) => {
+          if (card.classList.contains("visivel")) return;
+          const alcancado = fundoDaTela - topoDaGrade > i * PASSO + 40;
+          const aVista = card.getBoundingClientRect().top < fundoDaTela;
+          if (alcancado && aVista) card.classList.add("visivel");
+        });
+      };
+      addEventListener("scroll", () => (pedido ||= requestAnimationFrame(revelar)), { passive: true });
+      revelar();
+    }
   }
 
   // "Como funciona": a página desce e a faixa de passos anda para o lado (desligado com movimento reduzido)

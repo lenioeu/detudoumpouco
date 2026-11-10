@@ -26,7 +26,7 @@ img, svg { max-width: 100%; }
 
 /* Textos corridos justificados, com hifenização em português */
 p, li, .perguntas details p { text-align: justify; }
-.balao, .acoes, .rotulo, .chip { text-align: left; hyphens: manual; }
+.balao, .acoes, .rotulo, .chip, .passo, h1, h2, h3, summary { text-align: left; hyphens: manual; }
 
 /* Tipografia (estilos do design system; títulos diminuem no celular) */
 .rotulo { font: var(--text-rotulo); letter-spacing: 0.08em; text-transform: uppercase; color: var(--destaque); margin: 0 0 var(--espaco-2); }
@@ -209,13 +209,18 @@ p, li, .perguntas details p { text-align: justify; }
 .animar .em-sequencia.visivel > *:nth-child(4) { transition-delay: 0.24s; }
 .animar .em-sequencia.visivel > *:nth-child(5) { transition-delay: 0.32s; }
 .animar .em-sequencia.visivel > *:nth-child(6) { transition-delay: 0.4s; }
-.animar .grade.em-sequencia > *:nth-child(odd) { transform: translateX(-90px); }
-.animar .grade.em-sequencia > *:nth-child(even) { transform: translateX(90px); }
-.animar .grade.em-sequencia.visivel > * { transform: none; }
+/* Cards de provas: cada um entra pela lateral (alternando esquerda e direita) num ponto da rolagem */
+.animar .cards-um-a-um > * {
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.animar .cards-um-a-um > *:nth-child(odd) { transform: translateX(-90px); }
+.animar .cards-um-a-um > *:nth-child(even) { transform: translateX(90px); }
+.animar .cards-um-a-um > .visivel { opacity: 1; transform: none; }
 #seguranca { overflow-x: clip; }
 /* Os adesivos "batem" no lugar, como um carimbo */
 .animar .adesivo-figura { transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s; }
-.animar .em-sequencia:not(.visivel) .adesivo-figura { transform: scale(1.4) rotate(-14deg); }
+.animar .cards-um-a-um > :not(.visivel) .adesivo-figura { transform: scale(1.4) rotate(-14deg); }
 
 @media (prefers-reduced-motion: reduce) {
   .telas .tela, .telas .etapas span { animation: none; }
@@ -270,7 +275,7 @@ p, li, .perguntas details p { text-align: justify; }
 /* QR Code em forma de carimbo: um pouco maior, sem inclinação (o carimbo nunca gira) */
 .cartao.com-figura .figura.figura-carimbo { width: 84px; }
 .animar .figura-carimbo { transition: transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) 0.5s, opacity 0.3s ease 0.5s; }
-.animar .em-sequencia:not(.visivel) .figura-carimbo { transform: scale(1.5); opacity: 0; }
+.animar .cards-um-a-um > :not(.visivel) .figura-carimbo { transform: scale(1.5); opacity: 0; }
 
 /* Validade jurídica */
 .lei { max-width: 760px; font: var(--text-corpo-grande); color: var(--texto-apoio); margin: 0; }
