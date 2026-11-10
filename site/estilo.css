@@ -346,6 +346,32 @@ section[id] { scroll-margin-top: 80px; }
   .telas .etapas span:nth-child(3) { color: var(--destaque); }
 }
 
+/* A via assinada: a página de assinaturas de exemplo aparece num salto, como papel jogado na mesa */
+.via-exemplo .conteudo { display: grid; gap: var(--espaco-7); align-items: center; }
+@media (min-width: 960px) { .via-exemplo .conteudo { grid-template-columns: minmax(0, 1fr) auto; } }
+.via-texto { display: flex; flex-direction: column; gap: var(--espaco-5); max-width: 620px; }
+.via-texto .titulo-2, .via-texto .rotulo, .via-texto .corpo-grande { margin: 0; }
+.aviso-exemplo { text-align: left; margin: 0; font: var(--text-rotulo); text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-suave); }
+.link-exemplo { color: var(--destaque); font-weight: 600; white-space: nowrap; }
+.folha { margin: 0; justify-self: center; transform: rotate(-1.5deg); }
+.folha picture { display: block; }
+.folha img {
+  display: block; width: 100%; height: auto; background: var(--papel);
+  border: 1px solid var(--borda); border-radius: var(--raio-sm); box-shadow: var(--sombra-conversa);
+}
+/* No computador a página cabe inteira na altura da tela */
+@media (min-width: 960px) {
+  .folha img { width: auto; height: min(calc(100vh - 140px), 1100px); max-width: 100%; }
+}
+.animar .folha:not(.visivel) { opacity: 0; }
+.animar .folha.visivel { animation: folha-pula 1s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes folha-pula {
+  0% { opacity: 0; transform: translateY(140px) scale(0.86) rotate(-9deg); }
+  55% { opacity: 1; transform: translateY(-22px) scale(1.02) rotate(1deg); }
+  75% { transform: translateY(7px) scale(0.995) rotate(-2.4deg); }
+  100% { transform: translateY(0) scale(1) rotate(-1.5deg); }
+}
+
 /* Cartões (provas) */
 .grade { display: grid; gap: var(--espaco-5); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .cartao { background: var(--superficie-elevada); border-radius: var(--raio-lg); padding: var(--espaco-6) var(--espaco-5); }

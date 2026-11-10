@@ -186,6 +186,8 @@ O visual segue o design system do DeAcordo (direção 4a · Disco tinta):
 
 Os trechos destacados (razão social, CNPJ, prazos, encarregado) precisam ser preenchidos antes de publicar.
 
+A seção "Veja como fica a via assinada" usa a via de exemplo em `site/exemplo/` (PDF assinado e a página de assinaturas em WebP de 300 e 150 dpi), gerada com dados fictícios e marca d'água por `npx tsx scripts/gerar-exemplo-site.ts`. Rode de novo quando o visual do PDF mudar.
+
 Depois de mudar `site/estilo.css`, `site/tokens.css` ou `site/tema.js`, rode `npx tsx scripts/versionar-site.ts`: ele põe nos links o `?v=` com o hash de cada arquivo, para o navegador não juntar a página nova com o estilo antigo guardado em cache. O `site/_headers` define o cache no Cloudflare Pages.
 
 ## Segurança

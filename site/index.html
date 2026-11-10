@@ -11,8 +11,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500;1,6..72,600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="/tokens.css?v=888ee731">
-<link rel="stylesheet" href="/estilo.css?v=d0eb2ffd">
-<script src="/tema.js?v=a0b1c861" defer></script>
+<link rel="stylesheet" href="/estilo.css?v=2ea50609">
+<script src="/tema.js?v=02ca2ace" defer></script>
 </head>
 <body>
 <header class="topo">
@@ -153,7 +153,7 @@
             <div class="passo-texto">
               <span class="numero">05</span>
               <h3 class="titulo-3">Todos recebem a via assinada</h3>
-              <p>A via final chega para todos, com a assinatura na linha de cada um, o certificado e o QR Code de verificação.</p>
+              <p>A via final chega para todos, com a assinatura na linha de cada um, o certificado e o QR Code de verificação. <a class="link-exemplo" href="#exemplo">Veja um exemplo.</a></p>
             </div>
             <div class="visual"><div class="area-cena"><div class="cena">
               <div class="documento-mini">
@@ -167,6 +167,31 @@
         </ol>
         <div class="pontos-passos" aria-hidden="true"><span class="ativo"></span><span></span><span></span><span></span><span></span></div>
       </div>
+    </div>
+  </section>
+
+  <section class="secao via-exemplo" id="exemplo" aria-labelledby="titulo-exemplo">
+    <div class="conteudo">
+      <div class="via-texto revelar">
+        <p class="rotulo">A via assinada</p>
+        <h2 class="titulo-2" id="titulo-exemplo">Veja como fica a <i>página de assinaturas</i></h2>
+        <p class="corpo-grande">Cada pessoa aparece com o adesivo de assinatura, o CPF completo, o número de <span class="com-wa">WhatsApp<span class="wa" aria-hidden="true"></span></span> e a data e a hora de Brasília. No fim da via vem o certificado, com a trilha de eventos e o QR Code de verificação.</p>
+        <div class="acoes">
+          <a class="botao principal" href="/exemplo/via-exemplo.pdf" download>Baixar o exemplo em PDF</a>
+          <a class="botao secundario" href="/exemplo/pagina-de-assinaturas-300dpi.webp" target="_blank" rel="noopener">Ver em tamanho real</a>
+        </div>
+        <p class="aviso-exemplo">Dados fictícios · exemplo sem valor jurídico</p>
+      </div>
+      <figure class="folha">
+        <picture>
+          <!-- Computador: sempre a versão de 300 dpi (nítida até em telas 4K); celular: a de 150 dpi, ou a de 300 em telas muito densas -->
+          <source media="(min-width: 960px)" srcset="/exemplo/pagina-de-assinaturas-300dpi.webp">
+          <img src="/exemplo/pagina-de-assinaturas-150dpi.webp"
+               srcset="/exemplo/pagina-de-assinaturas-150dpi.webp 1241w, /exemplo/pagina-de-assinaturas-300dpi.webp 2481w"
+               sizes="92vw" width="2481" height="3508" decoding="async"
+             alt="Página de assinaturas de exemplo de um contrato de locação: cada signatário com o adesivo de assinatura, CPF, WhatsApp e data e hora">
+        </picture>
+      </figure>
     </div>
   </section>
 

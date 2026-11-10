@@ -75,7 +75,7 @@
       },
       { rootMargin: "0px 0px -12% 0px" },
     );
-    for (const el of document.querySelectorAll(".revelar, .em-sequencia")) observador.observe(el);
+    for (const el of document.querySelectorAll(".revelar, .em-sequencia, .folha")) observador.observe(el);
 
     // Cards de provas: um por vez, conforme a página desce. O card N só aparece depois de rolar
     // N × PASSO pixels a partir do topo da grade (e quando ele mesmo já está à vista).
