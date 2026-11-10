@@ -186,6 +186,8 @@ O visual segue o design system do DeAcordo (direção 4a · Disco tinta):
 
 Os trechos destacados (razão social, CNPJ, prazos, encarregado) precisam ser preenchidos antes de publicar.
 
+Depois de mudar `site/estilo.css`, `site/tokens.css` ou `site/tema.js`, rode `npx tsx scripts/versionar-site.ts`: ele põe nos links o `?v=` com o hash de cada arquivo, para o navegador não juntar a página nova com o estilo antigo guardado em cache. O `site/_headers` define o cache no Cloudflare Pages.
+
 ## Segurança
 
 - Só os números em `AUTHORIZED_SENDERS` podem enviar documentos. Os botões de assinatura só valem no WhatsApp da pessoa convidada.

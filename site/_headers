@@ -1,0 +1,8 @@
+# Cloudflare Pages: o navegador sempre confere se há versão nova da página, do estilo e do script
+# (os links já levam ?v= com o hash do arquivo; veja scripts/versionar-site.ts).
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+/marca/*
+  Cache-Control: public, max-age=86400
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
