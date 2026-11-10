@@ -29,7 +29,7 @@ function desenharModulos(texto: string, favicon: string): { n: number; conteudo:
   const pontos: string[] = [];
   for (let y = 0; y < n; y++) {
     for (let x = 0; x < n; x++) {
-      if (!qr.modules.get(x, y) || noOlho(x, y) || noMiolo(x, y)) continue;
+      if (!qr.modules.get(y, x) || noOlho(x, y) || noMiolo(x, y)) continue;
       pontos.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.46"/>`);
     }
   }

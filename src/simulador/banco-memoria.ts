@@ -1,4 +1,5 @@
 import type { Carimbo } from "../assinatura/carimbo.js";
+import { gerarCodigoCurto } from "../codigo-curto.js";
 import type { Envio, Pendencia, Repositorio, Selfie, Signatario } from "../banco.js";
 import { STATUS_EM_ANDAMENTO } from "../status.js";
 import type { Estado } from "../conversa/estado.js";
@@ -32,7 +33,9 @@ export class BancoMemoria implements Repositorio {
   }
 
   criarEnvio(envio: Envio, signatarios: Pick<Signatario, "papel" | "nome" | "telefone">[]): void {
-    this.envios.set(envio.id, { ...envio });
+    let codigoCurto = gerarCodigoCurto();
+    while (this.envioPorCodigoCurto(codigoCurto)) codigoCurto = gerarCodigoCurto();
+    this.envios.set(envio.id, { ...envio, codigoCurto });
     signatarios.forEach((s, indice) =>
       this.lista.push({
         envioId: envio.id,
@@ -56,6 +59,12 @@ export class BancoMemoria implements Repositorio {
   envio(id: string): Envio | null {
     const e = this.envios.get(id);
     return e ? { ...e } : null;
+  }
+
+  envioPorCodigoCurto(codigo: string): Envio | null {
+    const alvo = codigo.toUpperCase();
+    for (const e of this.envios.values()) if (e.codigoCurto === alvo) return { ...e };
+    return null;
   }
 
   pdfFinal(id: string): Uint8Array | null {

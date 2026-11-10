@@ -37,7 +37,13 @@ export function criarServidor(config: Config, fluxo: Fluxo, banco: Repositorio):
   res.send(Buffer.from(tsr));
 });
 
-app.get("/verificar/:codigo", (req, res) => {
+  app.get("/verificar/:codigo", (req, res) => {
+    const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
+    res.status(status).type("html").send(html);
+  });
+
+  // Link curto impresso no QR Code (maiúsculas ou minúsculas)
+  app.get("/v/:codigo", (req, res) => {
     const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
     res.status(status).type("html").send(html);
   });

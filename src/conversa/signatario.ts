@@ -4,7 +4,7 @@ import { formatarCpf, validarCpf } from "../cpf.js";
 import type { AssinadorDePdf } from "../assinatura/certificado.js";
 import type { Carimbador } from "../assinatura/carimbo.js";
 import { finalizarDocumento, type RegistroDeAssinatura, sha256 } from "../assinatura/pagina.js";
-import { urlDeVerificacao } from "../verificacao.js";
+import { linkDoEnvio } from "../verificacao.js";
 import { formatarTelefone } from "../telefone.js";
 import { type Avisador, type Filas, type Mensageiro, nomeDeArquivo } from "./avisos.js";
 import { primeiroNome } from "./textos.js";
@@ -350,7 +350,7 @@ export class ColetaDeAssinaturas {
       hashOriginal: envio.hashOriginal,
       remetente: this.config.SENDER_DISPLAY_NAME,
       remetenteTelefone: envio.remetente,
-      urlVerificacao: urlDeVerificacao(this.config.PUBLIC_URL, envio.id),
+      urlVerificacao: linkDoEnvio(this.config.PUBLIC_URL, envio),
       registros,
       avancada: envio.exigeSelfie,
       comCarimboDoTempo: Boolean(this.carimbador),

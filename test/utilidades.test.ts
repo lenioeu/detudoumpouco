@@ -1,10 +1,15 @@
 import { createHmac } from "node:crypto";
 import { PDFDocument } from "pdf-lib";
 import { describe, expect, it } from "vitest";
+import { textoParaQr } from "../src/assinatura/qr-carimbo.js";
+import { Banco, type Envio } from "../src/banco.js";
+import { FORMATO_CODIGO_CURTO } from "../src/codigo-curto.js";
 import { linhasComTelefone, parteDoAdvogado, parteDoNome } from "../src/conversa/fluxo.js";
 import { lerBotao } from "../src/conversa/signatario.js";
 import { mascararCpf, validarCpf } from "../src/cpf.js";
 import { formatarTelefone, normalizarTelefone } from "../src/telefone.js";
+import { BancoMemoria } from "../src/simulador/banco-memoria.js";
+import { linkDoEnvio } from "../src/verificacao.js";
 import { assinaturaValida, extrairEventos } from "../src/whatsapp/webhook.js";
 
 describe("telefone", () => {
@@ -130,5 +135,42 @@ describe("IA de demonstração do simulador", () => {
       { papel: "outorgado", nome: "João Pereira" },
     ]);
     expect(corrigida.observacao).toBeNull();
+  });
+});
+
+describe("link curto de verificação", () => {
+  const envio = (id: string): Envio => ({
+    id,
+    remetente: "5551911112222",
+    titulo: "Contrato de locação",
+    ordem: "simultanea",
+    hashOriginal: "abc",
+    pdfApresentado: new Uint8Array([1]),
+    blocos: [],
+    status: "aguardando",
+    criadoEm: "2026-11-10T12:00:00Z",
+    exigeSelfie: false,
+  });
+
+  it("cada envio ganha um código curto, achado com maiúsculas ou minúsculas", () => {
+    for (const banco of [new Banco(":memory:"), new BancoMemoria()]) {
+      banco.criarEnvio(envio("123e4567-e89b-12d3-a456-426614174000"), []);
+      const codigo = banco.envio("123e4567-e89b-12d3-a456-426614174000")!.codigoCurto!;
+      expect(codigo).toMatch(FORMATO_CODIGO_CURTO);
+      expect(banco.envioPorCodigoCurto(codigo.toLowerCase())?.id).toBe("123e4567-e89b-12d3-a456-426614174000");
+      expect(banco.envioPorCodigoCurto("ZZZZZZZ")).toBeNull();
+      expect(linkDoEnvio("https://deacordo.app/", banco.envio("123e4567-e89b-12d3-a456-426614174000")!)).toBe(
+        `https://deacordo.app/v/${codigo}`,
+      );
+    }
+  });
+
+  it("envio antigo, sem código curto, fica com o link completo", () => {
+    expect(linkDoEnvio("https://deacordo.app", { id: "abc", codigoCurto: null })).toBe("https://deacordo.app/verificar/abc");
+  });
+
+  it("o QR Code leva o link curto em maiúsculas (modo alfanumérico, código menor)", () => {
+    expect(textoParaQr("https://deacordo.app/v/K7P2QXM")).toBe("HTTPS://DEACORDO.APP/V/K7P2QXM");
+    expect(textoParaQr("https://deacordo.app/verificar/abc")).toBe("https://deacordo.app/verificar/abc");
   });
 });

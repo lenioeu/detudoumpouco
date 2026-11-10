@@ -100,6 +100,12 @@ app.get("/verificar/:codigo", (req, res) => {
   res.status(status).type("html").send(html);
 });
 
+// Link curto impresso no QR Code (maiúsculas ou minúsculas)
+app.get("/v/:codigo", (req, res) => {
+  const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
+  res.status(status).type("html").send(html);
+});
+
 app.get("/arquivo/:id", (req, res) => {
   const arquivo = whatsapp.arquivo(req.params.id);
   if (!arquivo) {

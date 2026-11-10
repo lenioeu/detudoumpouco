@@ -3,6 +3,7 @@ import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { Carimbo } from "./assinatura/carimbo.js";
 import type { Bloco } from "./assinatura/pagina.js";
+import { gerarCodigoCurto } from "./codigo-curto.js";
 import type { Estado } from "./conversa/estado.js";
 
 export type Envio = {
@@ -18,6 +19,8 @@ export type Envio = {
   criadoEm: string;
   /** Se cada signatário precisa mandar uma selfie segurando um documento de identidade. */
   exigeSelfie: boolean;
+  /** Código curto do link de verificação (/v/CODIGO). Criado pelo banco; envios antigos não têm. */
+  codigoCurto?: string | null;
 };
 
 import { STATUS_EM_ANDAMENTO, type StatusSignatario } from "./status.js";
@@ -77,7 +80,8 @@ export class Banco {
         exige_selfie INTEGER NOT NULL DEFAULT 0,
         carimbo BLOB,
         carimbo_em TEXT,
-        carimbo_autoridade TEXT
+        carimbo_autoridade TEXT,
+        codigo_curto TEXT
       );
       CREATE TABLE IF NOT EXISTS signatarios (
         envio_id TEXT NOT NULL REFERENCES envios(id),
@@ -128,6 +132,7 @@ export class Banco {
       "ALTER TABLE envios ADD COLUMN carimbo BLOB",
       "ALTER TABLE envios ADD COLUMN carimbo_em TEXT",
       "ALTER TABLE envios ADD COLUMN carimbo_autoridade TEXT",
+      "ALTER TABLE envios ADD COLUMN codigo_curto TEXT",
       "ALTER TABLE signatarios ADD COLUMN selfie BLOB",
       "ALTER TABLE signatarios ADD COLUMN selfie_tipo TEXT",
       "ALTER TABLE signatarios ADD COLUMN selfie_em TEXT",
@@ -140,6 +145,7 @@ export class Banco {
         // coluna já existe
       }
     }
+    this.db.exec("CREATE UNIQUE INDEX IF NOT EXISTS envios_codigo_curto ON envios (codigo_curto)");
   }
 
   /** Marca a mensagem como processada; devolve false se ela já tinha sido (a Meta reenvia webhooks). */
@@ -183,8 +189,8 @@ export class Banco {
     try {
       this.db
         .prepare(
-          `INSERT INTO envios (id, remetente, titulo, ordem, hash_original, pdf_apresentado, blocos, status, criado_em, exige_selfie)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO envios (id, remetente, titulo, ordem, hash_original, pdf_apresentado, blocos, status, criado_em, exige_selfie, codigo_curto)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           envio.id,
@@ -197,6 +203,7 @@ export class Banco {
           envio.status,
           envio.criadoEm,
           envio.exigeSelfie ? 1 : 0,
+          this.codigoCurtoLivre(),
         );
       const inserir = this.db.prepare(
         "INSERT INTO signatarios (envio_id, indice, papel, nome, telefone, status) VALUES (?, ?, ?, ?, ?, 'pendente')",
@@ -223,7 +230,22 @@ export class Banco {
       status: l.status as Envio["status"],
       criadoEm: l.criado_em as string,
       exigeSelfie: l.exige_selfie === 1,
+      codigoCurto: (l.codigo_curto as string | null) ?? null,
     };
+  }
+
+  /** Envio pelo código curto do link de verificação (maiúsculas ou minúsculas). */
+  envioPorCodigoCurto(codigo: string): Envio | null {
+    const l = this.db.prepare("SELECT id FROM envios WHERE codigo_curto = ?").get(codigo.toUpperCase()) as { id: string } | undefined;
+    return l ? this.envio(l.id) : null;
+  }
+
+  private codigoCurtoLivre(): string {
+    const existe = this.db.prepare("SELECT 1 FROM envios WHERE codigo_curto = ?");
+    for (;;) {
+      const codigo = gerarCodigoCurto();
+      if (!existe.get(codigo)) return codigo;
+    }
   }
 
   /** Via final assinada, quando o envio já foi concluído. */

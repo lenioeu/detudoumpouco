@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
 import { PDFDocument, PDFString, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
-import QRCode from "qrcode";
 import { formatarCpf } from "../cpf.js";
 import { formatarTelefone } from "../telefone.js";
 import type { LinhaDeAssinatura } from "./linhas.js";
+import { desenharQrCarimbo } from "./qr-carimbo.js";
 
 export type SignatarioNaPagina = { papel: string; nome: string; telefone: string };
 
@@ -52,7 +52,8 @@ const LARGURA_UTIL = A4[0] - 2 * MARGEM;
 const ALTURA_BLOCO = 118;
 const CINZA = rgb(0.35, 0.35, 0.35);
 const AZUL = rgb(0.05, 0.25, 0.55);
-const TAMANHO_QR = 92;
+/** Diâmetro do carimbo com QR Code no certificado (~3,9 cm: lê com folga impresso ou na tela). */
+const TAMANHO_QR = 110;
 
 export function sha256(dados: Uint8Array): string {
   return createHash("sha256").update(dados).digest("hex");
@@ -162,9 +163,10 @@ export async function finalizarDocumento(
   // ------------------------------------------------ certificado
   e.novaPagina();
   const topo = e.y;
-  desenharQrCode(e.pagina, dados.urlVerificacao, A4[0] - MARGEM - TAMANHO_QR, topo - TAMANHO_QR);
-  e.pagina.drawText("Escaneie para verificar", {
-    x: A4[0] - MARGEM - TAMANHO_QR + 6,
+  desenharQrCarimbo(e.pagina, dados.urlVerificacao, A4[0] - MARGEM - TAMANHO_QR, topo, TAMANHO_QR);
+  const legenda = "Escaneie para verificar";
+  e.pagina.drawText(legenda, {
+    x: A4[0] - MARGEM - TAMANHO_QR / 2 - e.fonte.widthOfTextAtSize(legenda, 7) / 2,
     y: topo - TAMANHO_QR - 10,
     size: 7,
     font: e.fonte,
@@ -333,25 +335,6 @@ function rodape(doc: PDFDocument, e: Escritor, codigo: string, url: string): voi
       if (texto === linha2) adicionarLink(doc, pagina, [(width - largura) / 2, 3, (width + largura) / 2, 11], url);
     }
   });
-}
-
-function desenharQrCode(pagina: PDFPage, texto: string, x: number, y: number): void {
-  const { modules } = QRCode.create(texto, { errorCorrectionLevel: "M" });
-  const n = modules.size;
-  const modulo = TAMANHO_QR / (n + 2); // 1 módulo de margem em cada lado
-  pagina.drawRectangle({ x, y, width: TAMANHO_QR, height: TAMANHO_QR, color: rgb(1, 1, 1) });
-  for (let linha = 0; linha < n; linha++) {
-    for (let coluna = 0; coluna < n; coluna++) {
-      if (!modules.get(linha, coluna)) continue;
-      pagina.drawRectangle({
-        x: x + (coluna + 1) * modulo,
-        y: y + TAMANHO_QR - (linha + 2) * modulo,
-        width: modulo,
-        height: modulo,
-        color: rgb(0, 0, 0),
-      });
-    }
-  }
 }
 
 async function incorporarImagem(doc: PDFDocument, selfie: { dados: Uint8Array; tipo: string }) {

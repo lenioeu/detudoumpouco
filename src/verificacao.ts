@@ -1,10 +1,16 @@
-import type { Repositorio } from "./banco.js";
+import type { Envio, Repositorio } from "./banco.js";
+import { FORMATO_CODIGO_CURTO } from "./codigo-curto.js";
 import { mascararCpf } from "./cpf.js";
 import { formatarDataHora, fundamentoLegal, sha256 } from "./assinatura/pagina.js";
 import { formatarTelefone } from "./telefone.js";
 
 export function urlDeVerificacao(urlPublica: string, codigo: string): string {
   return `${urlPublica.replace(/\/+$/, "")}/verificar/${codigo}`;
+}
+
+/** Link curto de verificação (/v/CODIGO); envios antigos, sem código curto, ficam com o link completo. */
+export function linkDoEnvio(urlPublica: string, envio: Pick<Envio, "id" | "codigoCurto">): string {
+  return envio.codigoCurto ? `${urlPublica.replace(/\/+$/, "")}/v/${envio.codigoCurto}` : urlDeVerificacao(urlPublica, envio.id);
 }
 
 const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
@@ -16,7 +22,11 @@ const esc = (t: string) => t.replace(/[&<>"']/g, (c) => ESCAPES[c]!);
  * Na internet o CPF aparece parcialmente oculto; completo, só no próprio documento.
  */
 export function paginaDeVerificacao(banco: Repositorio, codigo: string, nomeDoEscritorio: string): { status: number; html: string } {
-  const envio = /^[0-9a-f-]{36}$/.test(codigo) ? banco.envio(codigo) : null;
+  const envio = /^[0-9a-f-]{36}$/.test(codigo)
+    ? banco.envio(codigo)
+    : FORMATO_CODIGO_CURTO.test(codigo.toUpperCase())
+      ? banco.envioPorCodigoCurto(codigo)
+      : null;
   if (!envio) {
     return {
       status: 404,
@@ -88,7 +98,7 @@ export function paginaDeVerificacao(banco: Repositorio, codigo: string, nomeDoEs
         ${hashFinal ? `<dt>SHA-256 da via final</dt><dd><code>${esc(hashFinal)}</code></dd>` : ""}
         ${
           carimbo
-            ? `<dt>Carimbo do tempo</dt><dd>RFC 3161, emitido em ${esc(formatarDataHora(carimbo.em))} por ${esc(hostDe(carimbo.autoridade))} sobre o SHA-256 da via final. <a href="${esc(envio.id)}/carimbo.tsr" download>Baixar o carimbo (.tsr)</a></dd>`
+            ? `<dt>Carimbo do tempo</dt><dd>RFC 3161, emitido em ${esc(formatarDataHora(carimbo.em))} por ${esc(hostDe(carimbo.autoridade))} sobre o SHA-256 da via final. <a href="/verificar/${esc(envio.id)}/carimbo.tsr" download>Baixar o carimbo (.tsr)</a></dd>`
             : ""
         }
       </dl>
