@@ -15,6 +15,44 @@
     }
   });
 
+  // Cabeçalho inteligente: some ao descer, volta no primeiro gesto para cima; menu do celular no botão ☰.
+  // Na seção "Como funciona" presa na tela, fica escondido para não cobrir os passos.
+  const topo = document.querySelector(".topo");
+  const botaoMenu = document.querySelector(".botao-menu");
+  const menu = document.getElementById("menu-celular");
+  const abrirMenu = (abrir) => {
+    if (!botaoMenu || !menu) return;
+    botaoMenu.setAttribute("aria-expanded", String(abrir));
+    botaoMenu.setAttribute("aria-label", abrir ? "Fechar menu" : "Abrir menu");
+    menu.hidden = !abrir;
+  };
+  botaoMenu?.addEventListener("click", () => abrirMenu(menu.hidden));
+  menu?.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => abrirMenu(false)));
+  addEventListener("keydown", (e) => e.key === "Escape" && abrirMenu(false));
+  if (topo) {
+    let ultimoY = scrollY;
+    let pedidoTopo = 0;
+    const presa = () => {
+      const secao = document.querySelector(".como.lateral, .como.interativo:not(.sem-movimento)");
+      if (!secao) return false;
+      const inicio = secao.offsetTop;
+      return scrollY >= inicio - 1 && scrollY <= inicio + secao.offsetHeight - innerHeight;
+    };
+    const aoRolarTopo = () => {
+      pedidoTopo = 0;
+      const y = scrollY;
+      const passo = y - ultimoY;
+      if (Math.abs(passo) < 6 && y > 80) return;
+      if (y <= 80) topo.classList.remove("escondido");
+      else if (passo > 0) {
+        topo.classList.add("escondido");
+        abrirMenu(false);
+      } else topo.classList.toggle("escondido", presa());
+      ultimoY = y;
+    };
+    addEventListener("scroll", () => (pedidoTopo ||= requestAnimationFrame(aoRolarTopo)), { passive: true });
+  }
+
   // Sem escolha guardada, acompanha a troca de tema do aparelho
   matchMedia("(prefers-color-scheme: light)").addEventListener("change", (e) => {
     let guardado = null;

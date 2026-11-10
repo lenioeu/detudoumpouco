@@ -71,7 +71,31 @@ p, li, .perguntas details p { text-align: justify; }
 .botao.secundario { background: transparent; color: var(--texto); border: 1px solid var(--acao-contorno); }
 
 /* Cabeçalho */
-.topo { border-bottom: 1px solid var(--borda); }
+/* Cabeçalho inteligente: fica no topo, some ao descer a página e volta no primeiro gesto para cima (tema.js) */
+.topo {
+  position: sticky; top: 0; z-index: 50; background: var(--fundo); border-bottom: 1px solid var(--borda);
+  transition: transform 0.3s ease;
+}
+.topo.escondido { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) { .topo { transition: none; } }
+section[id] { scroll-margin-top: 80px; }
+.botao.pequeno { min-height: 40px; padding: 10px 16px; font-size: 15px; }
+.botao-menu {
+  display: none; place-items: center; width: 40px; height: 40px; border-radius: var(--raio-md);
+  background: transparent; color: var(--texto); border: 1px solid var(--borda); cursor: pointer;
+}
+.botao-menu .fechar, .botao-menu[aria-expanded="true"] .tracos { display: none; }
+.botao-menu[aria-expanded="true"] .fechar { display: inline; }
+.menu-celular {
+  display: flex; flex-direction: column; gap: var(--espaco-2);
+  padding: var(--espaco-3) max(16px, env(safe-area-inset-left)) var(--espaco-6);
+  background: var(--fundo); border-top: 1px solid var(--borda);
+}
+.menu-celular[hidden] { display: none; }
+.menu-celular a:not(.botao) {
+  color: var(--texto); text-decoration: none; font: var(--text-titulo-3); padding: var(--espaco-3) 0; border-bottom: 1px solid var(--borda);
+}
+.menu-celular .botao { justify-content: center; margin-top: var(--espaco-4); }
 .topo .conteudo { display: flex; align-items: center; justify-content: space-between; gap: var(--espaco-4); min-height: 72px; }
 .marca { display: inline-flex; }
 .marca img { height: 36px; width: auto; display: block; }
@@ -80,7 +104,8 @@ p, li, .perguntas details p { text-align: justify; }
 .topo nav { display: flex; align-items: center; gap: var(--espaco-6); }
 .topo nav a { color: var(--texto-apoio); text-decoration: none; font-size: 16px; }
 .topo nav a:hover { color: var(--texto); }
-@media (max-width: 760px) { .topo nav a { display: none; } }
+@media (max-width: 760px) { .topo nav .link-topo { display: none; } .botao-menu { display: inline-grid; } }
+@media (min-width: 761px) { .menu-celular { display: none !important; } }
 .tema {
   display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--raio-md);
   background: transparent; color: var(--texto-apoio); border: 1px solid var(--borda); cursor: pointer;
