@@ -1,8 +1,8 @@
 /**
  * Gera a via de exemplo mostrada no site: um contrato de locação fictício, assinado por duas pessoas,
  * com a marca d'água "EXEMPLO · SEM VALOR JURÍDICO" em todas as páginas e assinatura digital.
- * Salva em site/exemplo/ só imagens (o site mostra a via, não oferece o PDF para baixar): a página de
- * assinaturas em 300 e 150 dpi e todas as páginas em 200 dpi, para o visualizador. Tudo em WebP.
+ * Salva em site/exemplo/ só a página de assinaturas, em imagem WebP de 300 e 150 dpi
+ * (o site mostra essa página; não oferece o PDF nem as outras páginas).
  * Precisa de pdftoppm (poppler) e python3 com Pillow.
  *
  *   npx tsx scripts/gerar-exemplo-site.ts
@@ -117,11 +117,4 @@ for (const dpi of [300, 150]) {
   paraWebp(`${base}.png`, `pagina-de-assinaturas-${dpi}dpi.webp`);
 }
 
-// Todas as páginas em 200 dpi, para o visualizador da via completa
-const total = (await PDFDocument.load(final)).getPageCount();
-for (let n = 1; n <= total; n++) {
-  const base = join(temporaria, `pagina-${n}`);
-  execFileSync("pdftoppm", ["-r", "200", "-f", String(n), "-l", String(n), "-singlefile", "-png", pdfTemporario, base]);
-  paraWebp(`${base}.png`, `via-exemplo-pagina-${n}.webp`);
-}
 console.log("Exemplo gerado em site/exemplo/");
