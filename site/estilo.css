@@ -37,15 +37,15 @@ img, svg { max-width: 100%; }
 .titulo-1 i, .titulo-2 i { color: var(--destaque); }
 .de-acordo { font: var(--text-de-acordo); font-style: italic; }
 
-/* MencaoWhatsApp: lugar do logo oficial do WhatsApp ao lado da palavra.
-   Ao baixar o logo do kit oficial, salve em /marca/whatsapp.svg e troque o bloco .wa por:
-   .wa { border: 0; background: url(/marca/whatsapp.svg) center / contain no-repeat; } */
+/* MencaoWhatsApp: logo do WhatsApp logo depois da palavra, sem quebrar a linha entre os dois.
+   marca/whatsapp.svg foi vetorizado da imagem do logo enviada para o projeto. */
 .com-wa { white-space: nowrap; }
 .wa {
-  display: inline-block; width: 0.8em; height: 0.8em; margin-left: 0.35em; vertical-align: -0.05em;
-  border: 1.5px dashed var(--destaque); border-radius: 50%;
+  display: inline-block; width: 0.8em; height: 0.8em; margin-left: 0.3em; vertical-align: -0.08em;
+  background: url(/marca/whatsapp.svg) center / contain no-repeat;
 }
-.titulo-1 .wa, .titulo-2 .wa { width: 24px; height: 24px; border-width: 2px; vertical-align: 0.1em; }
+.titulo-1 .wa, .titulo-2 .wa { width: 26px; height: 26px; margin-left: 10px; vertical-align: 0.12em; }
+@media (max-width: 720px) { .titulo-1 .wa, .titulo-2 .wa { width: 22px; height: 22px; } }
 
 /* Botão */
 .acoes { display: flex; flex-wrap: wrap; gap: var(--espaco-3); }

@@ -181,7 +181,7 @@ O visual segue o design system do DeAcordo (direção 4a · Disco tinta):
 - `site/marca/`: logotipos, carimbo, favicon e avatar do WhatsApp (SVGs do design system).
 - `site/fonts/`: Special Elite, a fonte da marca (licença OFL). Newsreader e IBM Plex Mono vêm do Google Fonts.
 - `site/estilo.css`: componentes do site (botão, conversa, adesivo de assinatura, faixa "Como funciona"), só com tokens.
-- **Logo do WhatsApp:** o círculo tracejado ao lado de cada "WhatsApp" marca o lugar do logo oficial. Baixe-o do kit de marca do WhatsApp, salve em `site/marca/whatsapp.svg` e troque a regra `.wa` de `site/estilo.css` como indicado no comentário de lá.
+- **Logo do WhatsApp:** `site/marca/whatsapp.svg`, vetorizado da imagem do logo. Aparece pequeno ao lado de cada "WhatsApp" (regra `.wa` de `site/estilo.css`).
 
 Os trechos destacados (razão social, CNPJ, prazos, encarregado) precisam ser preenchidos antes de publicar.
 
