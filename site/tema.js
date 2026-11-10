@@ -66,7 +66,7 @@
     const escala = Math.min(visual.clientWidth / 270, visual.clientHeight / 210);
     visual.style.setProperty("--escala", String(Math.max(0.8, Math.min(escala, 2))));
   };
-  const visuais = [...document.querySelectorAll(".passo .visual")];
+  const visuais = [...document.querySelectorAll(".passo .area-cena")];
   if ("ResizeObserver" in window) {
     const observadorDeTamanho = new ResizeObserver((entradas) => entradas.forEach((e) => ajustarCena(e.target)));
     visuais.forEach((v) => observadorDeTamanho.observe(v));
@@ -114,6 +114,25 @@
       scrollTo({ top: secao.offsetTop + ((i + 0.5) / passos.length) * percurso, behavior: "smooth" });
     }),
   );
+  // Celular: carrossel de arrastar para o lado; os pontinhos mostram em que passo a pessoa está
+  const lista = secao.querySelector(".passos");
+  const pontos = [...secao.querySelectorAll(".pontos-passos span")];
+  let pedidoPontos = 0;
+  lista?.addEventListener(
+    "scroll",
+    () =>
+      (pedidoPontos ||= requestAnimationFrame(() => {
+        pedidoPontos = 0;
+        const centro = lista.scrollLeft + lista.clientWidth / 2;
+        let atual = 0;
+        passos.forEach((p, i) => {
+          if (Math.abs(p.offsetLeft + p.offsetWidth / 2 - centro) < Math.abs(passos[atual].offsetLeft + passos[atual].offsetWidth / 2 - centro)) atual = i;
+        });
+        pontos.forEach((ponto, i) => ponto.classList.toggle("ativo", i === atual));
+      })),
+    { passive: true },
+  );
+
   telaGrande.addEventListener("change", configurar);
   addEventListener("scroll", () => (pedido ||= requestAnimationFrame(aoRolar)), { passive: true });
   configurar();

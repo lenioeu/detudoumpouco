@@ -30,6 +30,9 @@ p, li, .perguntas details p { text-align: justify; }
 
 /* Tipografia (estilos do design system; títulos diminuem no celular) */
 .rotulo { font: var(--text-rotulo); letter-spacing: 0.08em; text-transform: uppercase; color: var(--destaque); margin: 0 0 var(--espaco-2); }
+/* Rótulos das seções (Como funciona, Segurança, Validade jurídica, Dúvidas) em destaque */
+.secao .rotulo, .como .rotulo { font-size: 17px; font-weight: 600; letter-spacing: 0.1em; }
+@media (min-width: 1100px) { .secao .rotulo, .como .rotulo { font-size: 21px; } }
 .titulo-1 { font: var(--text-titulo-1); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
 .titulo-2 { font: var(--text-titulo-2); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
 .titulo-3 { font: var(--text-titulo-3); margin: 0; }
@@ -154,20 +157,38 @@ p, li, .perguntas details p { text-align: justify; }
    Computador com JS: lista de passos à esquerda e a cena do passo ativo num painel grande à direita. */
 .como { background: var(--superficie); border-top: 1px solid var(--borda); padding: 96px 0; }
 .como .topo-secao { display: flex; flex-direction: column; gap: var(--espaco-3); margin-bottom: var(--espaco-7); max-width: 760px; }
-.passos { list-style: none; margin: 0; padding: 0; }
-.passo {
-  position: sticky; top: calc(16px + var(--i) * 14px);
-  background: var(--superficie-elevada); border: 1px solid var(--borda); border-radius: var(--raio-xl);
-  padding: var(--espaco-6); margin-bottom: var(--espaco-6);
-  display: grid; gap: var(--espaco-5);
+.passos {
+  list-style: none; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left))); padding: 0 max(16px, env(safe-area-inset-left)) var(--espaco-2);
+  display: flex; gap: var(--espaco-4); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
 }
+.passos::-webkit-scrollbar { display: none; }
+.passo {
+  flex: 0 0 min(86%, 440px); scroll-snap-align: center;
+  background: var(--superficie-elevada); border: 1px solid var(--borda); border-radius: var(--raio-xl);
+  padding: var(--espaco-5); display: flex; flex-direction: column; gap: var(--espaco-4);
+}
+@media (min-width: 720px) { .passo { padding: var(--espaco-6); } }
+.pontos-passos { display: flex; justify-content: center; gap: 8px; margin-top: var(--espaco-4); }
+.pontos-passos span { width: 8px; height: 8px; border-radius: 50%; background: var(--borda); transition: background 0.2s, width 0.2s; }
+.pontos-passos span.ativo { width: 22px; border-radius: 4px; background: var(--destaque); }
 .passo-texto { display: flex; flex-direction: column; gap: var(--espaco-2); }
 .passo .numero { font: var(--text-rotulo); color: var(--destaque); }
-.passo-texto p { margin: 0; color: var(--texto-apoio); font: var(--text-corpo-grande); font-size: 18px; }
+.passo-texto p { text-align: left; margin: 0; color: var(--texto-apoio); font: var(--text-corpo-grande); font-size: 18px; }
+/* Cada cena é uma telinha do WhatsApp: conversa em cima e a barra de digitar embaixo */
 .passo .visual {
-  background: var(--conversa-fundo); border-radius: var(--raio-lg);
-  height: clamp(230px, 64vw, 340px); display: grid; place-items: center; overflow: hidden;
+  margin-top: auto; background: var(--conversa-fundo); border-radius: var(--raio-lg); border: 1px solid var(--borda);
+  height: clamp(300px, 92vw, 400px); display: flex; flex-direction: column; overflow: hidden;
 }
+.area-cena { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; }
+.barra-wa { display: flex; align-items: center; gap: 6px; padding: 6px 8px 8px; }
+.campo-wa {
+  flex: 1; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 12px; border-radius: var(--raio-pill);
+  background: var(--balao-recebido); color: var(--texto-suave); font: var(--text-corpo); font-size: 15px;
+}
+.campo-wa span { flex: 1; }
+.barra-wa svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.mic-wa { width: 40px; height: 40px; border-radius: 50%; background: var(--verde-vivo); color: var(--grafite); display: grid; place-items: center; flex: none; }
 /* Cada cena é desenhada num quadro de 250×190 e ampliada por --escala (calculada em tema.js) */
 .cena {
   width: 250px; height: 190px; position: relative;
@@ -188,12 +209,14 @@ p, li, .perguntas details p { text-align: justify; }
   .como.interativo .palco { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; }
   .como.interativo .palco > .conteudo { width: 100%; }
   .como.interativo .topo-secao { margin-bottom: var(--espaco-6); }
+  .como.interativo .pontos-passos { display: none; }
   .como.interativo .passos {
+    overflow: visible; margin: 0; padding: 0; scroll-snap-type: none;
     position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 56px;
     align-content: center; min-height: min(560px, 64vh);
   }
   .como.interativo .passo {
-    position: static; grid-column: 1; display: block; cursor: pointer;
+    position: static; grid-column: 1; display: block; cursor: pointer; flex: none;
     background: none; border: 0; border-left: 3px solid var(--borda); border-radius: 0;
     padding: 14px 0 14px 24px; margin: 0; transition: border-color 0.3s;
   }
@@ -202,12 +225,16 @@ p, li, .perguntas details p { text-align: justify; }
   .como.interativo .passo:not(.ativo) .titulo-3 { color: var(--texto-suave); }
   .como.interativo .passo:not(.ativo) .passo-texto p { display: none; }
   .como.interativo .passo .visual {
-    position: absolute; top: 0; right: 0; bottom: 0; width: calc((100% - 56px) * 7 / 12); height: auto;
+    position: absolute; top: 0; right: 0; bottom: 0; width: calc((100% - 56px) * 7 / 12); height: auto; margin: 0;
     border: 1px solid var(--borda); border-radius: var(--raio-xl);
     opacity: 0; transform: translateY(18px); pointer-events: none;
     transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .como.interativo .passo.ativo .visual { opacity: 1; transform: none; }
+  .como.interativo .barra-wa { padding: 10px 14px 14px; gap: 10px; }
+  .como.interativo .campo-wa { height: 52px; font-size: 18px; padding: 0 18px; gap: 14px; }
+  .como.interativo .barra-wa svg { width: 24px; height: 24px; }
+  .como.interativo .mic-wa { width: 52px; height: 52px; }
   .como.interativo.sem-movimento { height: auto; padding: 96px 0; }
   .como.interativo.sem-movimento .palco { position: static; height: auto; }
 }
@@ -341,8 +368,11 @@ p, li, .perguntas details p { text-align: justify; }
 
 /* Chamada final */
 .chamada { background: var(--superficie-elevada); border: 1px solid var(--borda); border-radius: var(--raio-xl); padding: 48px var(--espaco-7); display: grid; gap: var(--espaco-6); align-items: center; }
-@media (min-width: 860px) { .chamada { grid-template-columns: auto 1fr auto; } }
-.chamada img { width: 96px; height: 96px; }
+@media (min-width: 860px) { .chamada { grid-template-columns: 1fr auto; } }
+.marca-grande img { display: block; height: clamp(64px, 9vw, 104px); width: auto; max-width: 100%; }
+.abertura .marca-grande { margin-bottom: var(--espaco-2); }
+.chamada .marca-grande { grid-column: 1 / -1; }
+.chamada .marca-grande img { height: clamp(72px, 10vw, 120px); }
 .chamada p { margin: var(--espaco-2) 0 0; color: var(--texto-apoio); }
 
 /* Rodapé */
