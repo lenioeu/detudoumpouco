@@ -19,7 +19,7 @@ Bot de WhatsApp para colher assinaturas eletrônicas em documentos do escritóri
 1. Recebe: "*Olá, Maria! Escritório X enviou o documento "Procuração" para você assinar…*", com o botão **Ver documento**.
 2. Toca no botão e recebe o PDF na conversa, com os botões **Assinar** e **Recusar**.
 3. Ao tocar em **Assinar**, digita o CPF e, se o escritório pediu, manda uma selfie segurando o documento de identidade.
-4. **Revisão:** confere nome (o do documento) e CPF e toca em **Confirmar assinatura**, declarando que os dados estão corretos e que assina por livre vontade. Se o CPF estiver errado, toca em **Corrigir CPF**. A assinatura só vale a partir da confirmação.
+4. **Revisão:** confere nome (o do documento) e CPF e toca em **De Acordo!**, declarando que os dados estão corretos e que assina por livre vontade. Se o CPF estiver errado, toca em **Corrigir CPF**. A assinatura só vale a partir da confirmação.
 5. Quando todos assinam, recebe a via final ali mesmo.
 
 **Lembretes:** quem foi convidado e não assinou recebe o convite de novo depois de `REMINDER_AFTER_HOURS` horas (padrão 24), até `REMINDER_MAX` vezes (padrão 2). O escritório é avisado de cada lembrete e, no fim, de quem continua sem assinar.

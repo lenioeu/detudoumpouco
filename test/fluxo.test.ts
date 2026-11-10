@@ -182,10 +182,10 @@ describe("assinatura pelo WhatsApp", () => {
     if (whatsapp.ultimoTexto(telefone).includes("Confirme seus dados")) await confirmar(telefone);
   }
 
-  /** Toque em "Confirmar assinatura" na tela de revisão. */
+  /** Toque em "De Acordo!" na tela de revisão. */
   async function confirmar(telefone: string) {
     expect(whatsapp.ultimoTexto(telefone)).toContain("Confirme seus dados");
-    await de(telefone, { tipo: "botao", botaoId: whatsapp.botao(telefone, "Confirmar assinatura") });
+    await de(telefone, { tipo: "botao", botaoId: whatsapp.botao(telefone, "De Acordo!") });
   }
 
   it("do PDF até a via final, em ordem", async () => {

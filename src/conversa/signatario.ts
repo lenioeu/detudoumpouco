@@ -213,16 +213,16 @@ export class ColetaDeAssinaturas {
       s.telefone,
       `*Confirme seus dados*\n\n📄 ${envio.titulo}\nNome: *${s.nome}*\nCPF: *${formatarCpf(s.cpf ?? "")}*` +
         (envio.exigeSelfie ? "\nSelfie com documento: enviada" : "") +
-        "\n\nAo tocar em *Confirmar assinatura*, você confirma que estes dados estão corretos, que leu e concorda com o documento " +
+        "\n\nAo tocar em *De Acordo!*, você confirma que estes dados estão corretos, que leu e concorda com o documento " +
         "e que assina por livre vontade.",
       [
-        { id: idDoBotao("confirmar", envio.id, s.indice), titulo: "Confirmar assinatura" },
+        { id: idDoBotao("confirmar", envio.id, s.indice), titulo: "De Acordo!" },
         { id: idDoBotao("corrigir", envio.id, s.indice), titulo: "Corrigir CPF" },
       ],
     );
   }
 
-  /** Toque em "Confirmar assinatura": a assinatura vale a partir daqui. */
+  /** Toque em "De Acordo!": a assinatura vale a partir daqui. */
   private async concluirAssinatura(envio: Envio, s: Signatario, mensagemId: string): Promise<void> {
     const assinadoEm = new Date().toISOString();
     this.banco.atualizarSignatario(envio.id, s.indice, { status: "assinado", assinadoEm, mensagemAssinaturaId: mensagemId });
