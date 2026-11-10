@@ -16,6 +16,8 @@ import { Fluxo } from "../conversa/fluxo.js";
 import { ColetaDeAssinaturas } from "../conversa/signatario.js";
 import { IdentificadorDePartes } from "../ia/partes.js";
 import { lerTextoDoPdf } from "../assinatura/texto-node.js";
+import { carregarFontesDaMarca } from "../assinatura/fontes-node.js";
+import { usarFontesDaMarca } from "../assinatura/pagina.js";
 import { arquivoDoCarimbo, paginaDeVerificacao } from "../verificacao.js";
 import type { MensagemRecebida } from "../whatsapp/webhook.js";
 import { IaDeDemonstracao } from "./ia-demonstracao.js";
@@ -42,6 +44,9 @@ const config = carregarConfig({
   WHATSAPP_APP_SECRET: "simulador",
   WHATSAPP_VERIFY_TOKEN: "simulador",
 });
+
+// PDFs com as fontes da marca (Newsreader e IBM Plex Mono)
+usarFontesDaMarca(carregarFontesDaMarca());
 
 const banco = new Banco(config.DATABASE_PATH);
 const whatsapp = new WhatsAppSimulado();

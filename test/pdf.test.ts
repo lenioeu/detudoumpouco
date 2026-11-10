@@ -6,10 +6,13 @@ import { PDFDocument, StandardFonts } from "pdf-lib";
 import { describe, expect, it } from "vitest";
 import { AssinadorDePdf } from "../src/assinatura/certificado.js";
 import { encontrarLinhasDeAssinatura } from "../src/assinatura/linhas.js";
-import { finalizarDocumento, prepararDocumento, sha256 } from "../src/assinatura/pagina.js";
+import { carregarFontesDaMarca } from "../src/assinatura/fontes-node.js";
+import { finalizarDocumento, prepararDocumento, sha256, usarFontesDaMarca } from "../src/assinatura/pagina.js";
 import { lerTextoDoPdf } from "../src/assinatura/texto-node.js";
 
 const pasta = mkdtempSync(join(tmpdir(), "deacordo-"));
+// Os PDFs de teste saem com as fontes da marca, como no servidor
+usarFontesDaMarca(carregarFontesDaMarca());
 
 function pdfsigDisponivel(): boolean {
   try {

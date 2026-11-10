@@ -1,8 +1,18 @@
 import { createHash } from "node:crypto";
-import { PDFDocument, PDFString, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, PDFString, StandardFonts, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
 import { formatarCpf } from "../cpf.js";
 import { formatarTelefone } from "../telefone.js";
 import type { LinhaDeAssinatura } from "./linhas.js";
+import {
+  COR,
+  desenharAdesivo,
+  desenharMarcaHorizontal,
+  medirAdesivo,
+  prepararDesenhosDaMarca,
+  retanguloArredondado,
+  type DesenhosDaMarca,
+} from "./marca-pdf.js";
 import { desenharQrCarimbo } from "./qr-carimbo.js";
 
 export type SignatarioNaPagina = { papel: string; nome: string; telefone: string };
@@ -49,11 +59,20 @@ export function fundamentoLegal(avancada: boolean): string {
 const A4: [number, number] = [595.28, 841.89];
 const MARGEM = 56;
 const LARGURA_UTIL = A4[0] - 2 * MARGEM;
-const ALTURA_BLOCO = 118;
-const CINZA = rgb(0.35, 0.35, 0.35);
-const AZUL = rgb(0.05, 0.25, 0.55);
+/** Topo do conteúdo, abaixo do cabeçalho com a marca. */
+const TOPO_DO_CONTEUDO = A4[1] - 104;
+const ALTURA_BLOCO = 150;
 /** Diâmetro do carimbo com QR Code no certificado (~3,9 cm: lê com folga impresso ou na tela). */
 const TAMANHO_QR = 110;
+
+/** Fontes do design system (Newsreader e IBM Plex Mono), em TTF. Sem elas, o PDF usa Helvetica e Courier. */
+export type FontesDaMarca = { texto: Uint8Array; negrito: Uint8Array; italico: Uint8Array; mono: Uint8Array };
+let fontesDaMarca: FontesDaMarca | null = null;
+
+/** Define as fontes da marca para os PDFs gerados daqui em diante (o servidor chama ao iniciar). */
+export function usarFontesDaMarca(fontes: FontesDaMarca | null): void {
+  fontesDaMarca = fontes;
+}
 
 export function sha256(dados: Uint8Array): string {
   return createHash("sha256").update(dados).digest("hex");
@@ -84,40 +103,43 @@ export async function prepararDocumento(
   const e = await Escritor.criar(doc);
   const blocos: Bloco[] = linhasNoDocumento.map((l) => ({ ...l, origem: "documento" }));
 
-  e.titulo("PÁGINA DE ASSINATURAS");
-  e.texto(titulo, 11);
-  e.texto(`SHA-256 do documento original: ${hashOriginal}`, 7, CINZA);
+  e.rotulo("Página de assinaturas");
+  e.texto(titulo, 20, COR.grafite, e.negrito);
+  e.espaco(2);
+  e.texto(`SHA-256 do documento original: ${hashOriginal}`, 6.5, COR.apoio, e.mono);
+  e.espaco(4);
   e.texto(
     "As partes abaixo assinam eletronicamente este documento por meio do WhatsApp, nos termos da Lei 14.063/2020 " +
       "e do art. 10, § 2º, da MP 2.200-2/2001. O registro de cada assinatura consta no certificado ao final.",
-    8,
-    CINZA,
+    9.5,
+    COR.apoio,
   );
-  e.espaco(10);
+  e.espaco(12);
 
   signatarios.forEach((s, i) => {
     e.garantir(ALTURA_BLOCO);
     const topo = e.y;
-    e.pagina.drawRectangle({
+    const base = topo - ALTURA_BLOCO + 12;
+    e.pagina.drawSvgPath(retanguloArredondado(0, 0, LARGURA_UTIL, ALTURA_BLOCO - 12, 10), {
       x: MARGEM,
-      y: topo - ALTURA_BLOCO + 10,
-      width: LARGURA_UTIL,
-      height: ALTURA_BLOCO - 10,
-      borderColor: rgb(0.75, 0.75, 0.75),
-      borderWidth: 0.75,
+      y: topo,
+      borderColor: COR.borda,
+      borderWidth: 0.8,
     });
-    e.y -= 8;
-    e.texto(`${s.papel.toUpperCase()}: ${s.nome}`, 10, undefined, true, 10);
-    e.texto(`WhatsApp: ${formatarTelefone(s.telefone)}`, 8, CINZA, false, 10);
+    e.y -= 16;
+    e.texto(s.papel.toUpperCase(), 7, COR.tinta, e.mono, 18);
+    e.texto(s.nome, 13, COR.grafite, e.negrito, 18);
+    e.texto(`WhatsApp ${formatarTelefone(s.telefone)}`, 8.5, COR.apoio, e.fonte, 18);
 
-    const area = { x: MARGEM + 10, y: topo - ALTURA_BLOCO + 26, largura: LARGURA_UTIL - 20, altura: 46 };
+    // Linha de assinatura; o adesivo e os dados da assinatura entram acima dela no final
+    const area = { x: MARGEM + 18, y: base + 22, largura: LARGURA_UTIL - 36, altura: 46 };
     e.pagina.drawLine({
       start: { x: area.x, y: area.y },
       end: { x: area.x + area.largura, y: area.y },
-      thickness: 0.5,
-      color: CINZA,
+      thickness: 0.8,
+      color: COR.grafite,
     });
-    e.pagina.drawText("Assinatura eletrônica", { x: area.x, y: area.y - 10, size: 7, font: e.fonte, color: CINZA });
+    e.pagina.drawText("ASSINATURA ELETRÔNICA", { x: area.x, y: area.y - 11, size: 6.5, font: e.mono, color: COR.apoio });
     blocos.push({ signatario: i, pagina: doc.getPageCount() - 1, ...area, origem: "pagina" });
     e.y = topo - ALTURA_BLOCO;
   });
@@ -163,70 +185,74 @@ export async function finalizarDocumento(
   // ------------------------------------------------ certificado
   e.novaPagina();
   const topo = e.y;
-  desenharQrCarimbo(e.pagina, dados.urlVerificacao, A4[0] - MARGEM - TAMANHO_QR, topo, TAMANHO_QR);
-  const legenda = "Escaneie para verificar";
+  desenharQrCarimbo(e.pagina, e.desenhos, dados.urlVerificacao, A4[0] - MARGEM - TAMANHO_QR, topo, TAMANHO_QR);
+  const legenda = "ESCANEIE PARA VERIFICAR";
   e.pagina.drawText(legenda, {
-    x: A4[0] - MARGEM - TAMANHO_QR / 2 - e.fonte.widthOfTextAtSize(legenda, 7) / 2,
+    x: A4[0] - MARGEM - TAMANHO_QR / 2 - e.mono.widthOfTextAtSize(legenda, 6) / 2,
     y: topo - TAMANHO_QR - 10,
-    size: 7,
-    font: e.fonte,
-    color: CINZA,
+    size: 6,
+    font: e.mono,
+    color: COR.apoio,
   });
   adicionarLink(doc, e.pagina, [A4[0] - MARGEM - TAMANHO_QR, topo - TAMANHO_QR, A4[0] - MARGEM, topo], dados.urlVerificacao);
 
-  e.reservaDireita = TAMANHO_QR + 16;
-  e.titulo("CERTIFICADO DE ASSINATURA ELETRÔNICA");
-  e.texto(dados.titulo, 11);
-  e.espaco(4);
+  e.reservaDireita = TAMANHO_QR + 20;
+  e.rotulo("Certificado de assinatura eletrônica");
+  e.texto(dados.titulo, 20, COR.grafite, e.negrito);
+  e.espaco(6);
   e.campo("Código do documento", dados.codigo);
   e.campo("Enviado por", `${dados.remetente} (WhatsApp ${formatarTelefone(dados.remetenteTelefone)})`);
-  e.campo("SHA-256 do documento original", dados.hashOriginal);
-  e.campo("SHA-256 da versão assinada (com página de assinaturas)", hashApresentado);
-  e.y = Math.min(e.y, topo - TAMANHO_QR - 18);
+  e.campo("SHA-256 do documento original", dados.hashOriginal, true);
+  e.campo("SHA-256 da versão assinada (com página de assinaturas)", hashApresentado, true);
+  e.y = Math.min(e.y, topo - TAMANHO_QR - 22);
   e.reservaDireita = 0;
-  e.texto(`Verifique a autenticidade em: ${dados.urlVerificacao}`, 8, AZUL);
-  adicionarLink(doc, e.pagina, [MARGEM, e.y, MARGEM + LARGURA_UTIL, e.y + 12], dados.urlVerificacao);
-  e.espaco(8);
+  e.campo("Verifique a autenticidade em", dados.urlVerificacao, false, COR.tinta);
+  adicionarLink(doc, e.pagina, [MARGEM, e.y, MARGEM + LARGURA_UTIL, e.y + 22], dados.urlVerificacao);
 
-  e.titulo("Assinaturas");
+  e.secao("Assinaturas");
   for (const r of dados.registros) {
     const imagem = r.selfie ? await incorporarImagem(doc, r.selfie) : null;
     const alturaFoto = imagem ? Math.min(110, (imagem.height / imagem.width) * 82) : 0;
-    e.garantir(Math.max(90, alturaFoto + 24));
+    e.garantir(Math.max(150, alturaFoto + 30));
     const topo = e.y;
     if (imagem) {
       e.reservaDireita = 100;
       e.pagina.drawImage(imagem, { x: A4[0] - MARGEM - 82, y: topo - alturaFoto, width: 82, height: alturaFoto });
-      e.pagina.drawText("Selfie com documento", { x: A4[0] - MARGEM - 82, y: topo - alturaFoto - 9, size: 6.5, font: e.fonte, color: CINZA });
+      e.pagina.drawText("SELFIE COM DOCUMENTO", { x: A4[0] - MARGEM - 82, y: topo - alturaFoto - 9, size: 5.5, font: e.mono, color: COR.apoio });
+    } else {
+      // Sem selfie, o lugar da foto recebe o adesivo de assinatura daquela pessoa
+      e.reservaDireita = 150;
+      desenharAdesivo(e.pagina, A4[0] - MARGEM - 66, topo - 26, 1, dataDoAdesivo(r.assinadoEm), e);
     }
-    e.texto(`${r.nome} (${r.papel})`, 10, undefined, true);
+    e.texto(r.papel.toUpperCase(), 7, COR.tinta, e.mono);
+    e.texto(r.nome, 12, COR.grafite, e.negrito);
+    e.espaco(2);
     e.campo("CPF", formatarCpf(r.cpf));
     e.campo("WhatsApp", formatarTelefone(r.telefone));
     e.campo("Canal", "WhatsApp (documento recebido e assinado no número do signatário)");
     if (imagem) e.campo("Identidade", "selfie segurando documento de identidade, ao lado");
     e.campo("Data da assinatura", formatarDataHora(r.assinadoEm));
-    e.campo("ID da mensagem de confirmação", r.mensagemId);
-    if (imagem) e.y = Math.min(e.y, topo - alturaFoto - 14);
+    e.campo("ID da mensagem de confirmação", r.mensagemId, true);
+    if (imagem) e.y = Math.min(e.y, topo - alturaFoto - 16);
     e.reservaDireita = 0;
-    e.espaco(6);
+    e.espaco(10);
   }
 
+  e.secao("Eventos do documento");
+  e.texto("DATAS E HORÁRIOS DE BRASÍLIA", 6.5, COR.apoio, e.mono);
   e.espaco(4);
-  e.titulo("Eventos do documento");
-  e.texto("Datas e horários de Brasília", 7, CINZA);
   for (const ev of linhaDoTempo(dados)) {
-    e.garantir(14);
-    e.texto(`${formatarDataHora(ev.em, false)}   ${ev.texto}`, 8, undefined, false, 12);
+    e.garantir(16);
+    const y = e.y;
+    e.pagina.drawText(formatarDataHora(ev.em, false), { x: MARGEM, y: y - 8, size: 7, font: e.mono, color: COR.tinta });
+    e.texto(ev.texto, 9, COR.grafite, e.fonte, 96);
+    e.espaco(3);
   }
 
-  e.espaco(8);
-  e.garantir(110);
-  e.titulo("Provas de integridade");
+  e.secao("Provas de integridade");
+  e.garantir(140);
   const avancada = dados.avancada ?? false;
-  e.campo(
-    "Nível de assinatura",
-    avancada ? "Avançada (Lei 14.063/2020, art. 4º, II)" : "Simples (Lei 14.063/2020, art. 4º, I)",
-  );
+  e.campo("Nível de assinatura", avancada ? "Avançada (Lei 14.063/2020, art. 4º, II)" : "Simples (Lei 14.063/2020, art. 4º, I)");
   e.campo(
     "Fatores de autenticação",
     "posse do número de WhatsApp, CPF informado e confirmado na revisão" +
@@ -241,45 +267,55 @@ export async function finalizarDocumento(
     e.campo("Carimbo do tempo", "RFC 3161 sobre o SHA-256 da via final, verificável na página de verificação");
   }
 
-  e.espaco(8);
-  e.garantir(60);
-  e.texto("Documento assinado eletronicamente", 9, undefined, true);
-  e.texto(fundamentoLegal(avancada), 8, CINZA);
+  e.espaco(10);
+  e.garantir(70);
+  e.texto("Documento assinado eletronicamente", 11, COR.grafite, e.negrito);
+  e.espaco(2);
+  e.texto(fundamentoLegal(avancada), 9, COR.apoio);
   e.texto(
     "Cada signatário recebeu o documento no próprio WhatsApp, declarou ter lido e concordado, informou o CPF" +
       (avancada ? ", enviou selfie segurando documento de identidade" : "") +
       " e confirmou os dados antes de assinar. Os códigos SHA-256 permitem verificar que o conteúdo não foi alterado.",
-    8,
-    CINZA,
+    9,
+    COR.apoio,
   );
 
   rodape(doc, e, dados.codigo, dados.urlVerificacao);
   return doc.save();
 }
 
-/** Texto do carimbo, ajustado ao tamanho da área (menor na linha de assinatura do documento). */
+/** Data e hora curtas do adesivo, como no design system: "10/11/2026 14:32 · via WhatsApp". */
+function dataDoAdesivo(iso: string): string {
+  return `${formatarDataHora(iso, false).slice(0, 16)} · via WhatsApp`;
+}
+
+/**
+ * Assinatura de uma pessoa: o adesivo do design system (mini carimbo, "de acordo", data) e, ao lado,
+ * nome, CPF completo, WhatsApp e data e hora. Na linha de assinatura do próprio documento sai menor.
+ */
 function carimbar(pagina: PDFPage, b: Bloco, r: RegistroDeAssinatura, e: Escritor): void {
   const compacto = b.origem === "documento";
-  const tamanho = compacto ? 7.5 : 9;
+  const escala = compacto ? 0.7 : 1;
+  const data = dataDoAdesivo(r.assinadoEm);
+  const { largura, altura } = medirAdesivo(data, e);
+  const adesivoL = largura * escala;
+  desenharAdesivo(pagina, b.x + adesivoL / 2 + 2, b.y + (altura * escala) / 2 + (compacto ? 2 : 6), escala, data, e);
+
+  const x = b.x + adesivoL + (compacto ? 10 : 18);
+  const disponivel = b.x + b.largura - x;
   const linhas = [
-    { t: `Assinado eletronicamente por ${r.nome}`, negrito: true },
-    { t: `CPF ${formatarCpf(r.cpf)} · WhatsApp ${formatarTelefone(r.telefone)}`, negrito: false },
-    { t: `em ${formatarDataHora(r.assinadoEm)}`, negrito: false },
+    { t: `Assinado eletronicamente por ${r.nome}`, fonte: e.negrito, tamanho: compacto ? 7.5 : 10, cor: COR.grafite },
+    { t: `CPF ${formatarCpf(r.cpf)} · WhatsApp ${formatarTelefone(r.telefone)}`, fonte: e.fonte, tamanho: compacto ? 7 : 9, cor: COR.apoio },
+    { t: `em ${formatarDataHora(r.assinadoEm)}`, fonte: e.fonte, tamanho: compacto ? 7 : 9, cor: COR.apoio },
   ];
-  linhas.forEach((l, i) => {
-    const fonte = l.negrito ? e.negrito : e.fonte;
-    const texto = compativel(l.t, fonte);
-    const largura = fonte.widthOfTextAtSize(texto, tamanho);
-    // Na linha do documento o carimbo fica centralizado, como uma assinatura
-    const x = compacto ? b.x + Math.max(0, (b.largura - largura) / 2) : b.x + 4;
-    pagina.drawText(texto, {
-      x,
-      y: b.y + b.altura - tamanho - 3 - i * (tamanho * 1.35),
-      size: tamanho,
-      font: fonte,
-      color: AZUL,
-    });
-  });
+  let y = b.y + (compacto ? b.altura - 8 : b.altura - 10);
+  for (const l of linhas) {
+    const texto = compativel(l.t, l.fonte);
+    // Encolhe a linha se o nome for longo demais para o espaço ao lado do adesivo
+    const tamanho = Math.min(l.tamanho, (disponivel / l.fonte.widthOfTextAtSize(texto, l.tamanho)) * l.tamanho);
+    pagina.drawText(texto, { x, y, size: tamanho, font: l.fonte, color: l.cor });
+    y -= l.tamanho * (compacto ? 1.35 : 1.5);
+  }
 }
 
 type Evento = { em: string; texto: string };
@@ -313,26 +349,26 @@ function linhaDoTempo(dados: {
   return eventos.sort((a, b) => a.em.localeCompare(b.em));
 }
 
-/** Faixa no pé de todas as páginas com o código e o endereço de verificação. */
+/** Faixa no pé de todas as páginas com o código e o endereço de verificação, nas cores da marca. */
 function rodape(doc: PDFDocument, e: Escritor, codigo: string, url: string): void {
   const paginas = doc.getPages();
   paginas.forEach((pagina, i) => {
     const { width } = pagina.getSize();
-    pagina.drawRectangle({ x: 0, y: 0, width, height: 24, color: rgb(0.96, 0.97, 0.98), opacity: 0.95 });
-    pagina.drawLine({ start: { x: 0, y: 24 }, end: { x: width, y: 24 }, thickness: 0.4, color: rgb(0.8, 0.82, 0.85) });
+    pagina.drawRectangle({ x: 0, y: 0, width, height: 26, color: COR.papelQuente, opacity: 0.96 });
+    pagina.drawLine({ start: { x: 0, y: 26 }, end: { x: width, y: 26 }, thickness: 0.5, color: COR.borda });
     const linha1 = compativel(
-      `Documento assinado eletronicamente (Lei 14.063/2020 e MP 2.200-2/2001) · Código ${codigo} · Página ${i + 1} de ${paginas.length}`,
+      `DeAcordo · Documento assinado eletronicamente (Lei 14.063/2020 e MP 2.200-2/2001) · Código ${codigo} · Página ${i + 1} de ${paginas.length}`,
       e.fonte,
     );
-    const linha2 = compativel(`Verifique a autenticidade em ${url}`, e.fonte);
-    for (const [texto, y, cor] of [
-      [linha1, 14, CINZA],
-      [linha2, 5, AZUL],
+    const linha2 = compativel(`Verifique a autenticidade em ${url}`, e.mono);
+    for (const [texto, y, cor, fonte, maximo] of [
+      [linha1, 15, COR.apoio, e.fonte, 7],
+      [linha2, 6, COR.tinta, e.mono, 6.2],
     ] as const) {
-      const tamanho = Math.min(6.5, ((width - 24) / e.fonte.widthOfTextAtSize(texto, 6.5)) * 6.5);
-      const largura = e.fonte.widthOfTextAtSize(texto, tamanho);
-      pagina.drawText(texto, { x: (width - largura) / 2, y, size: tamanho, font: e.fonte, color: cor });
-      if (texto === linha2) adicionarLink(doc, pagina, [(width - largura) / 2, 3, (width + largura) / 2, 11], url);
+      const tamanho = Math.min(maximo, ((width - 24) / fonte.widthOfTextAtSize(texto, maximo)) * maximo);
+      const largura = fonte.widthOfTextAtSize(texto, tamanho);
+      pagina.drawText(texto, { x: (width - largura) / 2, y, size: tamanho, font: fonte, color: cor });
+      if (texto === linha2) adicionarLink(doc, pagina, [(width - largura) / 2, 4, (width + largura) / 2, 12], url);
     }
   });
 }
@@ -359,7 +395,7 @@ function adicionarLink(doc: PDFDocument, pagina: PDFPage, retangulo: [number, nu
   pagina.node.addAnnot(anotacao);
 }
 
-/** Escreve texto em sequência, quebrando linhas e páginas automaticamente. */
+/** Escreve texto em sequência, quebrando linhas e páginas automaticamente; cada página nova leva a marca no topo. */
 class Escritor {
   pagina!: PDFPage;
   y = 0;
@@ -370,17 +406,49 @@ class Escritor {
     private readonly doc: PDFDocument,
     readonly fonte: PDFFont,
     readonly negrito: PDFFont,
+    readonly italico: PDFFont,
+    readonly mono: PDFFont,
+    readonly desenhos: DesenhosDaMarca,
   ) {}
 
   static async criar(doc: PDFDocument, abrirPagina = true): Promise<Escritor> {
-    const e = new Escritor(doc, await doc.embedFont(StandardFonts.Helvetica), await doc.embedFont(StandardFonts.HelveticaBold));
+    let fontes: [PDFFont, PDFFont, PDFFont, PDFFont];
+    if (fontesDaMarca) {
+      doc.registerFontkit(fontkit);
+      const f = fontesDaMarca;
+      fontes = await Promise.all([
+        doc.embedFont(f.texto, { subset: true }),
+        doc.embedFont(f.negrito, { subset: true }),
+        doc.embedFont(f.italico, { subset: true }),
+        doc.embedFont(f.mono, { subset: true }),
+      ]);
+    } else {
+      fontes = await Promise.all([
+        doc.embedFont(StandardFonts.Helvetica),
+        doc.embedFont(StandardFonts.HelveticaBold),
+        doc.embedFont(StandardFonts.HelveticaBoldOblique),
+        doc.embedFont(StandardFonts.Courier),
+      ]);
+    }
+    const e = new Escritor(doc, ...fontes, prepararDesenhosDaMarca(doc));
     if (abrirPagina) e.novaPagina();
     return e;
   }
 
   novaPagina(): void {
     this.pagina = this.doc.addPage(A4);
-    this.y = A4[1] - MARGEM;
+    // Cabeçalho: marca horizontal à esquerda, o endereço à direita e um fio embaixo
+    desenharMarcaHorizontal(this.pagina, this.desenhos, MARGEM, A4[1] - 40, 30);
+    const nome = "DEACORDO.APP";
+    this.pagina.drawText(nome, {
+      x: A4[0] - MARGEM - this.mono.widthOfTextAtSize(nome, 7),
+      y: A4[1] - 58,
+      size: 7,
+      font: this.mono,
+      color: COR.apoio,
+    });
+    this.pagina.drawLine({ start: { x: MARGEM, y: A4[1] - 80 }, end: { x: A4[0] - MARGEM, y: A4[1] - 80 }, thickness: 0.6, color: COR.borda });
+    this.y = TOPO_DO_CONTEUDO;
   }
 
   garantir(altura: number): void {
@@ -391,17 +459,30 @@ class Escritor {
     this.y -= pontos;
   }
 
-  titulo(t: string): void {
-    this.texto(t, 14, undefined, true);
-    this.espaco(4);
+  /** Rótulo em maiúsculas, mono, na cor tinta (como os rótulos do site). */
+  rotulo(t: string): void {
+    this.texto(t.toUpperCase(), 7.5, COR.tinta, this.mono);
+    this.espaco(2);
   }
 
-  campo(rotulo: string, valor: string): void {
-    this.texto(`${rotulo}: ${valor}`, 8, undefined, false, 12);
+  /** Título de seção com um fio embaixo. */
+  secao(t: string): void {
+    this.espaco(10);
+    this.garantir(60);
+    this.texto(t, 14, COR.grafite, this.negrito);
+    this.pagina.drawLine({ start: { x: MARGEM, y: this.y + 1 }, end: { x: A4[0] - MARGEM, y: this.y + 1 }, thickness: 0.5, color: COR.borda });
+    this.espaco(8);
   }
 
-  texto(t: string, tamanho: number, cor = rgb(0, 0, 0), emNegrito = false, recuo = 0): void {
-    const fonte = emNegrito ? this.negrito : this.fonte;
+  /** Rótulo pequeno em cima e o valor embaixo; hashes e IDs saem em fonte mono. */
+  campo(rotulo: string, valor: string, mono = false, cor: RGB = COR.grafite): void {
+    this.garantir(24);
+    this.texto(rotulo.toUpperCase(), 6, COR.apoio, this.mono);
+    this.texto(valor, mono ? 7.5 : 9.5, cor, mono ? this.mono : this.fonte);
+    this.espaco(3);
+  }
+
+  texto(t: string, tamanho: number, cor: RGB = COR.grafite, fonte: PDFFont = this.fonte, recuo = 0): void {
     const largura = LARGURA_UTIL - recuo - this.reservaDireita;
     const altura = tamanho * 1.35;
     let linha = "";

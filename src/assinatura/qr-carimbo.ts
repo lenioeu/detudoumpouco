@@ -1,11 +1,9 @@
-import { rgb, type PDFPage } from "pdf-lib";
+import type { PDFPage } from "pdf-lib";
 import QRCode from "qrcode";
-import { ANEL_DO_CARIMBO, LETRAS_DA } from "./marca-vetores.js";
+import { COR, retanguloArredondado, usarDesenho, type DesenhosDaMarca } from "./marca-pdf.js";
+import { LETRAS_DA } from "./marca-vetores.js";
 
-// Cores da marca (design system DeAcordo, direção 4a)
-const GRAFITE = rgb(0x0b / 255, 0x14 / 255, 0x1a / 255);
-const DISCO = rgb(0x00 / 255, 0x5c / 255, 0x4b / 255);
-const PAPEL = rgb(1, 1, 1);
+const { grafite: GRAFITE, disco: DISCO, papel: PAPEL } = COR;
 
 /**
  * Texto que vai dentro do QR Code. Um link todo em maiúsculas cabe no modo alfanumérico do QR,
@@ -16,29 +14,26 @@ export function textoParaQr(url: string): string {
   return /^https?:\/\/[^/]+\/v\/[2-9A-HJ-NP-Z]{7}$/i.test(url) ? url.toUpperCase() : url;
 }
 
-/** Retângulo de cantos arredondados, como caminho SVG. */
-function retanguloArredondado(x: number, y: number, l: number, a: number, r: number): string {
-  return (
-    `M${x + r} ${y}H${x + l - r}Q${x + l} ${y} ${x + l} ${y + r}V${y + a - r}Q${x + l} ${y + a} ${x + l - r} ${y + a}` +
-    `H${x + r}Q${x} ${y + a} ${x} ${y + a - r}V${y + r}Q${x} ${y} ${x + r} ${y}Z`
-  );
-}
-
 /**
  * QR Code dentro do carimbo da marca: anel com "ASSINATURA ELETRÔNICA · DE ACORDO ·", o código no miolo
  * (pontos grafite, cantos arredondados) e o "dA" no centro. Correção de erros nível H: a marca no
  * centro cobre bem menos do que o leitor consegue recuperar.
  * `x` e `topo` são o canto superior esquerdo do quadrado que contém o carimbo, em pontos do PDF.
  */
-export function desenharQrCarimbo(pagina: PDFPage, url: string, x: number, topo: number, diametro: number): void {
+export function desenharQrCarimbo(
+  pagina: PDFPage,
+  desenhos: DesenhosDaMarca,
+  url: string,
+  x: number,
+  topo: number,
+  diametro: number,
+): void {
   const escala = diametro / 64; // o carimbo da marca é desenhado num quadro de 64×64
   const px = (u: number) => x + u * escala;
   const py = (u: number) => topo - u * escala;
 
   pagina.drawCircle({ x: px(32), y: py(32), size: 32 * escala, color: PAPEL });
-  pagina.drawCircle({ x: px(32), y: py(32), size: 31 * escala, borderColor: GRAFITE, borderWidth: 2 * escala });
-  pagina.drawSvgPath(ANEL_DO_CARIMBO, { x, y: topo, scale: escala, color: GRAFITE });
-  pagina.drawCircle({ x: px(32), y: py(32), size: 21.5 * escala, borderColor: GRAFITE, borderWidth: 1 * escala });
+  usarDesenho(pagina, desenhos.anel, x, topo, diametro);
 
   const qr = QRCode.create(textoParaQr(url), { errorCorrectionLevel: "H" });
   const n = qr.modules.size;

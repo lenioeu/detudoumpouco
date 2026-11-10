@@ -8,10 +8,15 @@ import { Fluxo } from "./conversa/fluxo.js";
 import { ColetaDeAssinaturas } from "./conversa/signatario.js";
 import { IdentificadorDePartes } from "./ia/partes.js";
 import { lerTextoDoPdf } from "./assinatura/texto-node.js";
+import { carregarFontesDaMarca } from "./assinatura/fontes-node.js";
+import { usarFontesDaMarca } from "./assinatura/pagina.js";
 import { criarServidor } from "./servidor.js";
 import { WhatsApp } from "./whatsapp/cliente.js";
 
 const config = carregarConfig();
+
+// PDFs com as fontes da marca (Newsreader e IBM Plex Mono)
+usarFontesDaMarca(carregarFontesDaMarca());
 const banco = new Banco(config.DATABASE_PATH);
 const whatsapp = new WhatsApp(config);
 const filas = new Filas();
