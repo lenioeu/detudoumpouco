@@ -56,7 +56,7 @@ p, li, .perguntas details p { text-align: justify; }
 .com-wa { white-space: nowrap; }
 .wa {
   display: inline-block; width: 0.8em; height: 0.8em; margin-left: 0.3em; vertical-align: -0.08em;
-  background: url(/marca/whatsapp.svg) center / contain no-repeat;
+  background: url(/marca/whatsapp.svg?v=a954f24a) center / contain no-repeat;
 }
 .titulo-1 .wa, .titulo-2 .wa { width: 26px; height: 26px; margin-left: 10px; vertical-align: 0.12em; }
 @media (max-width: 720px) { .titulo-1 .wa, .titulo-2 .wa { width: 22px; height: 22px; } }

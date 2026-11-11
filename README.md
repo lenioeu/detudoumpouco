@@ -188,7 +188,7 @@ Os trechos destacados (razão social, CNPJ, prazos, encarregado) precisam ser pr
 
 A seção "O documento vai assinado direto no seu WhatsApp, assim:" usa a via de exemplo em `site/exemplo/` (só a primeira página do certificado, com QR Code, hashes, assinaturas e o início da trilha de eventos, em WebP de 300 e 150 dpi; o PDF e as outras páginas não ficam no site), gerada com dados fictícios e marca d'água por `npx tsx scripts/gerar-exemplo-site.ts`. Rode de novo quando o visual do PDF mudar.
 
-Depois de mudar `site/estilo.css`, `site/tokens.css` ou `site/tema.js`, rode `npx tsx scripts/versionar-site.ts`: ele põe nos links o `?v=` com o hash de cada arquivo, para o navegador não juntar a página nova com o estilo antigo guardado em cache. O `site/_headers` define o cache no Cloudflare Pages.
+Depois de mudar qualquer arquivo do site (estilo, script, imagens, logos), rode `npx tsx scripts/versionar-site.ts`: ele põe em cada endereço o `?v=` com o hash do arquivo, para o navegador não mostrar a cópia antiga guardada em cache. O `site/_headers` define o cache no Cloudflare Pages.
 
 ## Segurança
 
