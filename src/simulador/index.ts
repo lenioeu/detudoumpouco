@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 /**
  * Simulador: roda o bot de verdade, mas no lugar do WhatsApp usa uma página no navegador
  * com três celulares (escritório e duas pessoas). Não precisa de conta na Meta.
@@ -18,7 +19,7 @@ import { IdentificadorDePartes } from "../ia/partes.js";
 import { lerTextoDoPdf } from "../assinatura/texto-node.js";
 import { carregarFontesDaMarca } from "../assinatura/fontes-node.js";
 import { usarFontesDaMarca } from "../assinatura/pagina.js";
-import { arquivoDoCarimbo, paginaDeVerificacao } from "../verificacao.js";
+import { registrarRotasDeVerificacao } from "../rotas-verificacao.js";
 import type { MensagemRecebida } from "../whatsapp/webhook.js";
 import { IaDeDemonstracao } from "./ia-demonstracao.js";
 import { WhatsAppSimulado } from "./whatsapp-simulado.js";
@@ -90,26 +91,9 @@ app.get("/eventos", (req, res) => {
   req.on("close", parar);
 });
 
-app.get("/verificar/:codigo/carimbo.tsr", (req, res) => {
-  const tsr = arquivoDoCarimbo(banco, req.params.codigo);
-  if (!tsr) {
-    res.sendStatus(404);
-    return;
-  }
-  res.type("application/timestamp-reply").set("Content-Disposition", `attachment; filename="carimbo-${req.params.codigo}.tsr"`);
-  res.send(Buffer.from(tsr));
-});
-
-app.get("/verificar/:codigo", (req, res) => {
-  const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
-  res.status(status).type("html").send(html);
-});
-
-// Link curto impresso no QR Code (maiúsculas ou minúsculas)
-app.get("/v/:codigo", (req, res) => {
-  const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
-  res.status(status).type("html").send(html);
-});
+// Verificação pública, igual à do servidor (com os estilos e a marca do site)
+app.use(express.static(fileURLToPath(new URL("../../site/", import.meta.url)), { index: false }));
+registrarRotasDeVerificacao(app, banco, config.SENDER_DISPLAY_NAME);
 
 app.get("/arquivo/:id", (req, res) => {
   const arquivo = whatsapp.arquivo(req.params.id);

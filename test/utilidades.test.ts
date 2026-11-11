@@ -174,3 +174,31 @@ describe("link curto de verificação", () => {
     expect(textoParaQr("https://deacordo.app/verificar/abc")).toBe("https://deacordo.app/verificar/abc");
   });
 });
+
+describe("dados na página pública de verificação", () => {
+  it("mostra só o primeiro nome e as iniciais", async () => {
+    const { nomeParcial } = await import("../src/verificacao.js");
+    expect(nomeParcial("KAMILA LOZER FONTANA CAZAROTO")).toBe("Kamila L. F. C.");
+    expect(nomeParcial("Maria da Silva")).toBe("Maria S.");
+    expect(nomeParcial("João dos Santos e Souza")).toBe("João S. S.");
+    expect(nomeParcial("Ana")).toBe("Ana");
+  });
+
+  it("oculta o meio do WhatsApp", async () => {
+    const { mascararTelefone } = await import("../src/telefone.js");
+    expect(mascararTelefone("5527998252600")).toBe("+55 (27) 9****-2600");
+    expect(mascararTelefone("552733334444")).toBe("+55 (27) 3****-4444");
+  });
+
+  it("limita consultas seguidas do mesmo IP", async () => {
+    const { limitarPorIp } = await import("../src/limite.js");
+    const limite = limitarPorIp(2, 60_000);
+    const respostas: number[] = [];
+    const res = { set: () => res, status: (s: number) => (respostas.push(s), res), type: () => res, send: () => res } as never;
+    let passou = 0;
+    for (let i = 0; i < 3; i++) limite({ ip: "1.2.3.4" } as never, res, () => passou++);
+    limite({ ip: "5.6.7.8" } as never, res, () => passou++);
+    expect(passou).toBe(3);
+    expect(respostas).toEqual([429]);
+  });
+});

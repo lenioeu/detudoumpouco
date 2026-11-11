@@ -4,6 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import type { Carimbo } from "./assinatura/carimbo.js";
 import type { Bloco } from "./assinatura/pagina.js";
 import { gerarCodigoCurto } from "./codigo-curto.js";
+import { createHash } from "node:crypto";
 import type { Estado } from "./conversa/estado.js";
 
 export type Envio = {
@@ -47,6 +48,8 @@ export type Signatario = {
 export type Selfie = { dados: Uint8Array; tipo: string };
 
 export type Pendencia = { id: number; telefone: string; texto: string; pdf: Uint8Array | null; nomeArquivo: string | null };
+
+const sha256 = (dados: Uint8Array) => createHash("sha256").update(dados).digest("hex");
 
 /** O que o bot usa do banco; implementado em SQLite (Banco) e em memória (simulador no navegador). */
 export type Repositorio = { [K in keyof Banco]: Banco[K] };
@@ -133,6 +136,7 @@ export class Banco {
       "ALTER TABLE envios ADD COLUMN carimbo_em TEXT",
       "ALTER TABLE envios ADD COLUMN carimbo_autoridade TEXT",
       "ALTER TABLE envios ADD COLUMN codigo_curto TEXT",
+      "ALTER TABLE envios ADD COLUMN hash_final TEXT",
       "ALTER TABLE signatarios ADD COLUMN selfie BLOB",
       "ALTER TABLE signatarios ADD COLUMN selfie_tipo TEXT",
       "ALTER TABLE signatarios ADD COLUMN selfie_em TEXT",
@@ -146,6 +150,14 @@ export class Banco {
       }
     }
     this.db.exec("CREATE UNIQUE INDEX IF NOT EXISTS envios_codigo_curto ON envios (codigo_curto)");
+    this.db.exec("CREATE INDEX IF NOT EXISTS envios_hash_final ON envios (hash_final)");
+    this.db.exec("CREATE INDEX IF NOT EXISTS envios_hash_original ON envios (hash_original)");
+    // Vias finais gravadas antes da coluna hash_final: calcula uma vez
+    const semHash = this.db.prepare("SELECT id, pdf_final FROM envios WHERE pdf_final IS NOT NULL AND hash_final IS NULL").all() as {
+      id: string;
+      pdf_final: Uint8Array;
+    }[];
+    for (const l of semHash) this.db.prepare("UPDATE envios SET hash_final = ? WHERE id = ?").run(sha256(l.pdf_final), l.id);
   }
 
   /** Marca a mensagem como processada; devolve false se ela já tinha sido (a Meta reenvia webhooks). */
@@ -274,7 +286,22 @@ export class Banco {
   }
 
   concluirEnvio(id: string, pdfFinal: Uint8Array): void {
-    this.db.prepare("UPDATE envios SET status = 'concluido', pdf_final = ? WHERE id = ?").run(pdfFinal, id);
+    this.db
+      .prepare("UPDATE envios SET status = 'concluido', pdf_final = ?, hash_final = ? WHERE id = ?")
+      .run(pdfFinal, sha256(pdfFinal), id);
+  }
+
+  /**
+   * Documento cujo arquivo tem este SHA-256: a via final assinada ou o PDF original enviado.
+   * Se o mesmo original foi enviado mais de uma vez, fica o envio mais recente.
+   */
+  envioPorHash(hash: string): { envio: Envio; arquivo: "final" | "original" } | null {
+    const final = this.db.prepare("SELECT id FROM envios WHERE hash_final = ? LIMIT 1").get(hash) as { id: string } | undefined;
+    if (final) return { envio: this.envio(final.id)!, arquivo: "final" };
+    const original = this.db
+      .prepare("SELECT id FROM envios WHERE hash_original = ? ORDER BY criado_em DESC LIMIT 1")
+      .get(hash) as { id: string } | undefined;
+    return original ? { envio: this.envio(original.id)!, arquivo: "original" } : null;
   }
 
   marcarEnvioRecusado(id: string): void {

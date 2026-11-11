@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Carimbo } from "../assinatura/carimbo.js";
 import { gerarCodigoCurto } from "../codigo-curto.js";
 import type { Envio, Pendencia, Repositorio, Selfie, Signatario } from "../banco.js";
@@ -8,7 +9,7 @@ import type { Estado } from "../conversa/estado.js";
 export class BancoMemoria implements Repositorio {
   private readonly processadas = new Set<string>();
   private readonly conversas = new Map<string, { estado: Estado; pdf: Uint8Array | null }>();
-  private readonly envios = new Map<string, Envio & { pdfFinal?: Uint8Array }>();
+  private readonly envios = new Map<string, Envio & { pdfFinal?: Uint8Array; hashFinal?: string }>();
   private readonly lista: Signatario[] = [];
   private readonly selfies = new Map<string, Selfie>();
   private readonly carimbos = new Map<string, Carimbo>();
@@ -85,7 +86,15 @@ export class BancoMemoria implements Repositorio {
 
   concluirEnvio(id: string, pdfFinal: Uint8Array): void {
     const e = this.envios.get(id);
-    if (e) Object.assign(e, { status: "concluido", pdfFinal });
+    if (e) Object.assign(e, { status: "concluido", pdfFinal, hashFinal: createHash("sha256").update(pdfFinal).digest("hex") });
+  }
+
+  envioPorHash(hash: string): { envio: Envio; arquivo: "final" | "original" } | null {
+    const todos = [...this.envios.values()];
+    const final = todos.find((e) => e.hashFinal === hash);
+    if (final) return { envio: { ...final }, arquivo: "final" };
+    const original = todos.filter((e) => e.hashOriginal === hash).sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))[0];
+    return original ? { envio: { ...original }, arquivo: "original" } : null;
   }
 
   marcarEnvioRecusado(id: string): void {

@@ -3,13 +3,15 @@ import express, { type Request } from "express";
 import type { Repositorio } from "./banco.js";
 import type { Config } from "./config.js";
 import type { Fluxo } from "./conversa/fluxo.js";
-import { arquivoDoCarimbo, paginaDeVerificacao } from "./verificacao.js";
+import { registrarRotasDeVerificacao } from "./rotas-verificacao.js";
 import { assinaturaValida, extrairEventos } from "./whatsapp/webhook.js";
 
 type ComCorpoBruto = Request & { corpoBruto?: Buffer };
 
 export function criarServidor(config: Config, fluxo: Fluxo, banco: Repositorio): express.Express {
   const app = express();
+  // Atrás do Caddy (rede interna do Docker): o IP real de quem acessa vem no X-Forwarded-For
+  app.set("trust proxy", "loopback, linklocal, uniquelocal");
   app.use(
     express.json({
       limit: "5mb",
@@ -26,27 +28,8 @@ export function criarServidor(config: Config, fluxo: Fluxo, banco: Repositorio):
   // Site institucional (página inicial, privacidade e termos), servido no mesmo domínio
   app.use(express.static(fileURLToPath(new URL("../site/", import.meta.url)), { extensions: ["html"] }));
 
-  // Página aberta pelo QR Code e pelo link do rodapé da via final
-  app.get("/verificar/:codigo/carimbo.tsr", (req, res) => {
-  const tsr = arquivoDoCarimbo(banco, req.params.codigo);
-  if (!tsr) {
-    res.sendStatus(404);
-    return;
-  }
-  res.type("application/timestamp-reply").set("Content-Disposition", `attachment; filename="carimbo-${req.params.codigo}.tsr"`);
-  res.send(Buffer.from(tsr));
-});
-
-  app.get("/verificar/:codigo", (req, res) => {
-    const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
-    res.status(status).type("html").send(html);
-  });
-
-  // Link curto impresso no QR Code (maiúsculas ou minúsculas)
-  app.get("/v/:codigo", (req, res) => {
-    const { status, html } = paginaDeVerificacao(banco, req.params.codigo, config.SENDER_DISPLAY_NAME);
-    res.status(status).type("html").send(html);
-  });
+  // Verificação pública: QR Code, link do rodapé, código digitado ou o próprio PDF
+  registrarRotasDeVerificacao(app, banco, config.SENDER_DISPLAY_NAME);
 
   // Verificação feita pela Meta ao cadastrar a URL do webhook
   app.get("/webhook/whatsapp", (req, res) => {

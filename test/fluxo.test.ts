@@ -9,7 +9,8 @@ import type { Analise } from "../src/ia/partes.js";
 import { IaDeDemonstracao } from "../src/simulador/ia-demonstracao.js";
 import { lerTextoDoPdf } from "../src/assinatura/texto-node.js";
 import { ErroWhatsApp } from "../src/whatsapp/cliente.js";
-import { paginaDeVerificacao } from "../src/verificacao.js";
+import { createHash } from "node:crypto";
+import { consultarPorHash, paginaDeVerificacao } from "../src/verificacao.js";
 import type { MensagemRecebida } from "../src/whatsapp/webhook.js";
 
 const ESCRITORIO = "5551911112222";
@@ -243,10 +244,29 @@ describe("assinatura pelo WhatsApp", () => {
     // página de verificação: concluído, com o CPF parcialmente oculto na internet
     const { status, html } = paginaDeVerificacao(banco, envioId, "Escritório Teste");
     expect(status).toBe(200);
-    expect(html).toContain("Assinado por todos");
+    expect(html).toContain("Documento assinado por todos");
+    expect(html).toContain("2 de 2");
     expect(html).toContain("***.982.247-**");
     expect(html).not.toContain("529.982.247-25");
+    // nome e WhatsApp parcialmente ocultos; fora dos buscadores; sem link para baixar o documento
+    expect(html).toContain("Maria S.");
+    expect(html).not.toContain("Maria da Silva");
+    expect(html).toContain("+55 (51) 9****-7777");
+    expect(html).not.toContain("98888-7777");
+    expect(html).toContain('content="noindex, nofollow"');
+    expect(html).not.toMatch(/href="[^"]*\.pdf/);
+    expect(html).toContain("Assinatura eletrônica simples");
     expect(paginaDeVerificacao(banco, "00000000-0000-0000-0000-000000000000", "x").status).toBe(404);
+    expect(paginaDeVerificacao(banco, "<script>", "x").html).not.toContain("<script>alert");
+
+    // conferência pelo arquivo: a via final e o original são achados pelo SHA-256; qualquer outro, não
+    const via = banco.pdfFinal(envioId)!;
+    const achado = consultarPorHash(banco, createHash("sha256").update(via).digest("hex"));
+    expect(achado).toMatchObject({ encontrado: true, arquivo: "final", situacao: "concluido" });
+    expect(achado && achado.encontrado && achado.endereco).toMatch(/^\/v\/[2-9A-HJ-NP-Z]{7}$/);
+    expect(consultarPorHash(banco, banco.envio(envioId)!.hashOriginal)).toMatchObject({ encontrado: true, arquivo: "original" });
+    expect(consultarPorHash(banco, "0".repeat(64))).toEqual({ encontrado: false });
+    expect(consultarPorHash(banco, "não é hash")).toBeNull();
 
     // depois de concluído, o botão só informa
     await de(MARIA, { tipo: "botao", botaoId: whatsapp.convites()[0]!.args[2] });
