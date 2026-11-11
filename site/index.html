@@ -28,7 +28,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500;1,6..72,600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="/tokens.css?v=888ee731">
-<link rel="stylesheet" href="/estilo.css?v=2b16f71e">
+<link rel="stylesheet" href="/estilo.css?v=b688be09">
 <script src="/tema.js?v=4b045d24" defer></script>
 </head>
 <body>
@@ -284,12 +284,39 @@
 </main>
 
 <footer class="rodape">
-  <div class="conteudo">
-    <span>DeAcordo™ · contato@deacordo.app</span>
-    <nav aria-label="Rodapé">
+  <!-- Dados ainda genéricos: WhatsApp, razão social, CNPJ, cidade e redes entram quando definidos -->
+  <div class="conteudo grade-rodape">
+    <div class="col-marca">
+      <a class="marca" href="/" aria-label="DeAcordo, página inicial">
+        <img class="so-escuro" src="/marca/marca-horizontal-fundo-escuro.svg?v=d04cd2f0" alt="DeAcordo">
+        <img class="so-claro" src="/marca/marca-horizontal-fundo-claro.svg?v=af76310a" alt="DeAcordo">
+      </a>
+      <p>Assinatura eletrônica dentro do WhatsApp, com prova de cada etapa.</p>
+      <a class="botao principal pequeno" href="mailto:contato@deacordo.app?subject=Quero%20experimentar%20o%20DeAcordo">Quero experimentar</a>
+    </div>
+    <nav aria-label="Produto">
+      <h4>Produto</h4>
+      <a href="/#como-funciona">Como funciona</a>
+      <a href="/#exemplo">Exemplo da via</a>
+      <a href="/#seguranca">Segurança</a>
+      <a href="/#validade">Validade jurídica</a>
+      <a href="/#duvidas">Dúvidas</a>
+    </nav>
+    <nav aria-label="Legal">
+      <h4>Legal</h4>
       <a href="/privacidade">Política de privacidade</a>
       <a href="/termos">Termos de uso</a>
+      <a href="/privacidade#direitos">Seus dados (LGPD)</a>
     </nav>
+    <div class="col-contato">
+      <h4>Contato</h4>
+      <a href="mailto:contato@deacordo.app">contato@deacordo.app</a>
+      <span>WhatsApp: em breve</span>
+    </div>
+  </div>
+  <div class="conteudo base-rodape">
+    <span>© 2026 DeAcordo™. Todos os direitos reservados.</span>
+    <span>Assinaturas nos termos da Lei 14.063/2020 e da MP 2.200-2/2001</span>
   </div>
 </footer>
 </body>
