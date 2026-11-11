@@ -135,37 +135,60 @@ Desenvolvimento: `npm run dev` (recarrega ao salvar), `npm test` e `npm run type
 
 Recomendado: um **servidor próprio (VPS) no Brasil**, com Docker. Os documentos e dados pessoais ficam em território nacional e sob controle do escritório.
 
+Como as peças se encaixam no deacordo.app:
+
+| Endereço | Quem atende |
+|---|---|
+| `deacordo.app` (site, privacidade, termos) | Cloudflare Pages, a partir da pasta `site/` |
+| `deacordo.app/v/…`, `/verificar…`, `/api/verificar` | Cloudflare Pages repassa ao bot (`functions/`) |
+| `app.deacordo.app` (webhook do WhatsApp, `/saude`) | o bot, na VPS, com HTTPS do Caddy |
+
+O QR Code das vias aponta para `deacordo.app/v/CODIGO` (variável `PUBLIC_URL`), então o link continua o mesmo se um dia o servidor mudar.
+
 ### 1. Contratar o servidor e apontar o domínio
 
 1. Contrate uma VPS com **Ubuntu 24.04**, 1 vCPU e 1 a 2 GB de RAM, em data center no Brasil (ex.: Hostinger, Locaweb, Magalu Cloud, AWS São Paulo).
-2. No painel do domínio do escritório, crie um registro **A** para um subdomínio (ex.: `assinaturas.seuescritorio.com.br`) apontando para o IP da VPS.
+2. No Cloudflare (DNS de deacordo.app), crie um registro **A** `app` apontando para o IP da VPS, com o proxy **desligado** (nuvem cinza), para o Caddy conseguir o certificado HTTPS.
 
 ### 2. Instalar e subir o bot
 
-Acesse a VPS por SSH e rode:
+Acesse a VPS por SSH como root e rode:
 
 ```bash
-curl -fsSL https://get.docker.com | sh          # instala o Docker
-git clone https://github.com/<usuario>/<repositorio>.git deacordo
-cd deacordo
-cp .env.example .env
-nano .env                                       # preencha tudo (veja abaixo)
-docker compose up -d --build
+curl -fsSL https://raw.githubusercontent.com/lenioeu/deacordo/main/scripts/servidor/instalar.sh -o instalar.sh
+bash instalar.sh
 ```
 
-No `.env`, além das chaves do WhatsApp e da Anthropic, preencha `DOMINIO` e `PUBLIC_URL` com o subdomínio, uma `CERTIFICATE_PASSWORD` forte e `AUTHORIZED_SENDERS` com o seu número e nome. Para usar o certificado A1 do escritório, copie o `.pfx` para `data/certificado.p12` e informe a senha dele.
+Se o repositório for privado, o `curl` acima não acessa o arquivo: copie-o do seu computador com `scp scripts/servidor/instalar.sh root@IP-DA-VPS:` e rode `bash instalar.sh` na VPS.
 
-O Caddy obtém o HTTPS sozinho. Confira em `https://<seu-subdomínio>/saude`: deve aparecer `{"ok":true}`.
+O script (`scripts/servidor/instalar.sh`) instala Docker, firewall (só SSH, HTTP e HTTPS) e atualizações automáticas, baixa o código em `/opt/deacordo` (se o repositório for privado, pede um token do GitHub só de leitura), cria o `.env` já com senhas fortes geradas (certificado, webhook e `PROXY_SECRET`) e agenda o backup diário. Ao final, mostra o que falta preencher.
 
-### 3. Ligar o WhatsApp
+Preencha no `/opt/deacordo/.env`: `AUTHORIZED_SENDERS` (seu número e nome), `SENDER_DISPLAY_NAME`, `SENDER_LOCATION`, as chaves do WhatsApp e a da Anthropic. Para usar o certificado A1 do escritório, copie o `.pfx` para `data/certificado.p12` e informe a senha dele. Depois:
 
-Na Meta, cadastre o webhook `https://<seu-subdomínio>/webhook/whatsapp` com o `WHATSAPP_VERIFY_TOKEN` do `.env` (passo a passo em "Instalação", acima).
+```bash
+cd /opt/deacordo && docker compose up -d --build
+```
+
+Confira em `https://app.deacordo.app/saude`: deve aparecer `{"ok":true}`.
+
+### 3. Ligar a verificação no deacordo.app
+
+No Cloudflare Pages (projeto `deacordo` → Settings → Variables and Secrets, ambiente Production), crie:
+
+- `BOT_ORIGEM` = `https://app.deacordo.app`
+- `PROXY_SEGREDO` = o valor de `PROXY_SECRET` do `.env` (o script de instalação mostra no final)
+
+e faça um novo deploy. Sem `BOT_ORIGEM`, o Pages não repassa nada e o site segue funcionando sozinho; se o bot estiver fora do ar, quem abrir um link de verificação vê um aviso de "fora do ar por alguns instantes".
+
+### 4. Ligar o WhatsApp
+
+Na Meta, cadastre o webhook `https://app.deacordo.app/webhook/whatsapp` com o `WHATSAPP_VERIFY_TOKEN` do `.env` (passo a passo em "Instalação", acima).
 
 ### Manutenção
 
-- **Atualizar:** `git pull && docker compose up -d --build`
-- **Ver o que está acontecendo:** `docker compose logs -f bot`
-- **Backup:** a pasta `data/` tem o banco (documentos, assinaturas, selfies) e o certificado. Copie-a com frequência para fora do servidor, por exemplo com um `cron` diário. Sem ela, as vias e as provas se perdem.
+- **Atualizar:** `bash /opt/deacordo/scripts/servidor/atualizar.sh` (faz um backup, baixa o código novo e reinicia o bot; os dados ficam).
+- **Ver o que está acontecendo:** `cd /opt/deacordo && docker compose logs -f bot`
+- **Backup:** `scripts/servidor/backup.sh` roda todo dia às 3h e guarda 14 dias em `/opt/deacordo-backups` (banco com documentos, assinaturas, selfies e provas, mais o certificado). **Copie essa pasta para fora do servidor** com frequência (ex.: `rsync` para outro lugar ou download pelo SFTP): se a VPS sumir, só o que estiver fora dela se salva.
 
 ### Alternativa sem administrar servidor
 
@@ -173,7 +196,7 @@ Serviços como o **Railway** constroem a imagem direto do GitHub a partir do `Do
 
 ## Site institucional
 
-A pasta `site/` tem a página inicial, a política de privacidade e os termos de uso, servidos pelo próprio bot em `/`, `/privacidade` e `/termos`, nos temas escuro e claro (segue o aparelho, com botão para trocar).
+A pasta `site/` tem a página inicial, a política de privacidade e os termos de uso, publicados no Cloudflare Pages (e também servidos pelo próprio bot) em `/`, `/privacidade` e `/termos`, nos temas escuro e claro (segue o aparelho, com botão para trocar).
 
 O visual segue o design system do DeAcordo (direção 4a · Disco tinta):
 

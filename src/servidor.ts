@@ -29,7 +29,7 @@ export function criarServidor(config: Config, fluxo: Fluxo, banco: Repositorio):
   app.use(express.static(fileURLToPath(new URL("../site/", import.meta.url)), { extensions: ["html"] }));
 
   // Verificação pública: QR Code, link do rodapé, código digitado ou o próprio PDF
-  registrarRotasDeVerificacao(app, banco, config.SENDER_DISPLAY_NAME);
+  registrarRotasDeVerificacao(app, banco, config.SENDER_DISPLAY_NAME, config.PROXY_SECRET);
 
   // Verificação feita pela Meta ao cadastrar a URL do webhook
   app.get("/webhook/whatsapp", (req, res) => {

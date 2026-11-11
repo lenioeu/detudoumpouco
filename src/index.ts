@@ -39,5 +39,6 @@ setInterval(() => {
 
 criarServidor(config, fluxo, banco).listen(config.PORT, () => {
   console.log(`DeAcordo ouvindo na porta ${config.PORT}`);
-  console.log(`  Webhook do WhatsApp: ${config.PUBLIC_URL}/webhook/whatsapp`);
+  console.log("  Webhook do WhatsApp: https://<domínio deste servidor>/webhook/whatsapp (ex.: https://app.deacordo.app/webhook/whatsapp)");
+  console.log(`  Links de verificação: ${config.PUBLIC_URL}/v/CODIGO`);
 });

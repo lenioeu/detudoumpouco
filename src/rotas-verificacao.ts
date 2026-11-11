@@ -18,9 +18,19 @@ import {
  *   /verificar/UUID        link completo
  *   POST /api/verificar    { hash } -> documento com aquele arquivo (o PDF nunca é enviado)
  * Todas fora dos buscadores e com limite de consultas por IP, contra quem tenta códigos ao acaso.
+ * Em produção, o site fica no Cloudflare Pages e functions/ repassa essas rotas para cá.
  */
-export function registrarRotasDeVerificacao(app: express.Express, banco: Repositorio, nomeDoEscritorio: string): void {
-  const limite = limitarPorIp(60, 60_000);
+export function registrarRotasDeVerificacao(
+  app: express.Express,
+  banco: Repositorio,
+  nomeDoEscritorio: string,
+  segredoDoProxy?: string,
+): void {
+  // Pedidos repassados pelo Cloudflare Pages (deacordo.app) chegam com o IP de quem acessou num
+  // cabeçalho; só vale quando vem junto a senha combinada, senão qualquer um poderia inventar um IP.
+  const ipDe = (req: express.Request) =>
+    segredoDoProxy && req.header("x-deacordo-proxy") === segredoDoProxy ? req.header("x-deacordo-ip") || req.ip || "?" : req.ip || "?";
+  const limite = limitarPorIp(60, 60_000, ipDe);
   const enviarPagina = (res: express.Response, { status, html }: { status: number; html: string }) =>
     res.status(status).set(CABECALHOS_DE_VERIFICACAO).type("html").send(html);
 

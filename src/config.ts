@@ -61,6 +61,12 @@ const esquema = z.object({
   REMINDER_AFTER_HOURS: z.coerce.number().positive().default(24),
   REMINDER_MAX: z.coerce.number().int().min(0).default(2),
 
+  /**
+   * Senha combinada com o Cloudflare Pages, que repassa ao bot as páginas de verificação de
+   * deacordo.app. Com ela, o bot confia no IP de quem acessou (para o limite de consultas).
+   */
+  PROXY_SECRET: z.string().min(16).optional(),
+
   // Claude (identificação das partes)
   ANTHROPIC_MODEL: z.string().default("claude-opus-5-5"),
 });
