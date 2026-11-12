@@ -154,6 +154,105 @@ section[id] { scroll-margin-top: 80px; }
 .anexo { display: flex; align-items: center; gap: 10px; }
 .selo-pdf { background: var(--verde-vivo); color: var(--grafite); font: var(--text-rotulo-pequeno); font-weight: 700; padding: 4px 6px; border-radius: var(--raio-sm); }
 
+/* Primeiro box: a conversa dentro de um iPhone desenhado só com CSS (texto nítido, segue o tema) */
+.celular {
+  --largura: 316px;
+  position: relative; justify-self: center; margin: 0;
+  width: var(--largura); aspect-ratio: 316 / 660;
+  padding: 11px; border-radius: 54px;
+  background: #0b141a;
+  box-shadow: inset 0 0 0 2px #2c3a42, inset 0 0 0 5px #0b141a, inset 0 0 0 6px #3a4a53,
+    0 40px 90px -20px rgba(11, 20, 26, 0.45);
+  animation: celular-entra 0.9s cubic-bezier(.2,.8,.2,1) both;
+}
+[data-theme="escuro"] .celular { box-shadow: inset 0 0 0 2px #3f515b, inset 0 0 0 5px #0b141a, inset 0 0 0 6px #52656f, 0 40px 90px -10px rgba(0,0,0,.7), 0 0 0 1px #2a3942; }
+/* botões laterais */
+.celular::before, .celular::after { content: ""; position: absolute; width: 3px; border-radius: 2px; background: #2c3a42; }
+.celular::before { left: -3px; top: 120px; height: 56px; box-shadow: 0 72px 0 #2c3a42; }
+.celular::after { right: -3px; top: 160px; height: 84px; }
+
+.tela {
+  height: 100%; border-radius: 43px; overflow: hidden;
+  display: flex; flex-direction: column;
+  background-color: var(--conversa-fundo);
+  background-image: radial-gradient(color-mix(in srgb, var(--texto) 8%, transparent) 1px, transparent 1.4px);
+  background-size: 16px 16px;
+}
+.status-cel {
+  position: relative; display: flex; justify-content: space-between; align-items: center;
+  height: 44px; padding: 6px 28px 0 30px; flex: none;
+  font: 600 14px/1 -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif; color: var(--texto);
+  background: var(--superficie-elevada);
+}
+[data-theme="claro"] .status-cel, [data-theme="claro"] .cabecalho-wa { background: #ffffff; }
+.ilha { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); width: 96px; height: 28px; border-radius: 20px; background: #000; }
+.sinais { display: flex; align-items: flex-end; gap: 2px; }
+.sinais i { width: 3px; background: currentColor; border-radius: 1px; }
+.sinais i:nth-child(1) { height: 5px; } .sinais i:nth-child(2) { height: 8px; } .sinais i:nth-child(3) { height: 11px; }
+.sinais b { width: 22px; height: 11px; margin-left: 5px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; }
+.sinais b::after { content: ""; position: absolute; inset: 1.5px 4px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+
+.cabecalho-wa {
+  display: flex; align-items: center; gap: 10px; flex: none;
+  padding: 6px 14px 10px 8px; color: var(--texto);
+  background: var(--superficie-elevada); border-bottom: 1px solid var(--borda);
+}
+.avatar-wa { width: 36px; height: 36px; border-radius: 50%; flex: none; }
+.contato-wa { flex: 1; display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.contato-wa strong { font: 600 16px/1.2 var(--font-texto); display: flex; align-items: center; gap: 4px; }
+.contato-wa span { font: var(--text-carimbo-data); font-size: 11px; color: var(--texto-suave); }
+.cabecalho-wa > svg { flex: none; opacity: .9; }
+.cabecalho-wa .voltar { margin-right: -4px; }
+
+.celular .conversa {
+  flex: 1; min-height: 0; max-width: none; width: auto;
+  background: none; border: 0; border-radius: 0; box-shadow: none;
+  padding: 12px 10px; gap: 8px; justify-content: flex-end; overflow: hidden;
+}
+.celular .balao, .abertura .celular .balao { font-size: 15px; line-height: 1.35; padding: 8px 11px; max-width: 90%; }
+.celular .balao.enviado { padding: 6px 10px; }
+.celular .de-acordo { font-size: 17px; }
+.celular .documento-mini { padding: 12px 12px 18px; }
+.celular .documento-mini h4 { font-size: 10px; }
+.celular .barra-wa { flex: none; padding: 6px 8px 14px; }
+.celular .campo-wa { font-size: 14px; }
+
+/* As mensagens chegam uma a uma */
+.celular .balao { animation: balao-chega .5s cubic-bezier(.2,.8,.2,1) both; }
+.celular .balao:nth-child(1) { animation-delay: .5s; }
+.celular .balao:nth-child(2) { animation-delay: 1.1s; }
+.celular .balao:nth-child(3) { animation-delay: 1.9s; }
+.celular .balao:nth-child(4) { animation-delay: 2.7s; }
+@keyframes balao-chega { from { opacity: 0; transform: translateY(10px) scale(.97); } }
+@keyframes celular-entra { from { opacity: 0; transform: translateY(24px) rotate(-1.5deg); } }
+
+/* Etiquetas flutuando em volta do celular */
+.etiqueta {
+  position: absolute; z-index: 1; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  padding: 9px 14px 9px 9px; border-radius: var(--raio-pill);
+  background: var(--superficie); color: var(--texto); border: 1px solid var(--borda);
+  font: 600 14px/1 var(--font-texto); box-shadow: 0 12px 30px -12px rgba(11, 20, 26, .35);
+  animation: etiqueta-entra .6s cubic-bezier(.2,.8,.2,1) both, flutuar 5s ease-in-out infinite;
+}
+.etiqueta b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--verde-vivo); color: var(--grafite); font: 700 13px/1 system-ui, sans-serif; }
+/* Cada uma ao lado do momento da conversa: convite, "De acordo" e via assinada */
+.e1 { right: -96px; top: 128px; animation-delay: 1.2s, 1.8s; }
+.e2 { left: -112px; top: 336px; animation-delay: 2.4s, 3s; }
+.e3 { left: 50%; bottom: -20px; transform: translateX(-50%); animation-delay: 3.3s, 4s; }
+@keyframes etiqueta-entra { from { opacity: 0; transform: translateY(8px) scale(.9); } }
+@keyframes flutuar { 50% { translate: 0 -6px; } }
+
+@media (max-width: 959px) {
+  .celular { --largura: min(316px, 84vw); }
+  /* no celular, as duas primeiras ficam na área vazia acima das mensagens */
+  .e1 { right: 4px; left: auto; top: 110px; }
+  .e2 { left: -8px; top: 156px; }
+  .etiqueta { font-size: 13px; padding: 7px 12px 7px 7px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .celular, .celular .balao, .etiqueta { animation: none; }
+}
+
 /* Documento e AdesivoAssinatura */
 .documento-mini {
   position: relative; background: var(--papel); border-radius: var(--raio-sm);
