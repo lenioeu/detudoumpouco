@@ -1,7 +1,12 @@
 const BASE_URL = 'https://api.lomadee.com.br';
 
-function toReais(cents) {
-  return cents / 100;
+function storeName(product, option) {
+  if (option.seller) return option.seller;
+  try {
+    return new URL(product.url).hostname.replace(/^www\./, '');
+  } catch {
+    return 'Lomadee';
+  }
 }
 
 async function lomadeeGet(apiKey, path, params = {}) {
@@ -19,14 +24,16 @@ function toDeal(product) {
   const pricing = option?.pricing?.[0];
   if (!option || !pricing || !pricing.listPrice || pricing.listPrice <= pricing.price) return null;
 
-  const price = toReais(pricing.price);
-  const originalPrice = toReais(pricing.listPrice);
+  // A doc descreve listPrice/price como centavos, mas a API em produção devolve
+  // reais em ponto flutuante (ex: 66.9) — já testado com a chave real.
+  const price = pricing.price;
+  const originalPrice = pricing.listPrice;
   const discountPct = ((originalPrice - price) / originalPrice) * 100;
 
   return {
     source: 'lomadee',
     organizationId: product.organizationId,
-    store: option.seller ?? 'Lomadee',
+    store: storeName(product, option),
     externalId: product.id,
     title: product.name,
     url: product.url,
