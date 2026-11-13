@@ -9,6 +9,31 @@ import { openDealStore } from '../src/deals/dealStore.js';
 const MIN_DISCOUNT_PCT = Number(process.env.MIN_DISCOUNT_PCT ?? 30);
 const MAX_POSTS_PER_CYCLE = Number(process.env.MAX_POSTS_PER_CYCLE ?? 3);
 
+async function notifySite(deal) {
+  const { SITE_API_URL, SITE_API_SECRET } = process.env;
+  if (!SITE_API_URL || !SITE_API_SECRET) return;
+
+  try {
+    await fetch(SITE_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-promozap-secret': SITE_API_SECRET },
+      body: JSON.stringify({
+        id: `${deal.store}:${deal.externalId}`,
+        store: deal.store,
+        title: deal.title,
+        url: deal.url,
+        price: deal.price,
+        originalPrice: deal.originalPrice,
+        discountPct: deal.discountPct,
+        image: deal.image,
+        postedAt: new Date().toISOString()
+      })
+    });
+  } catch (err) {
+    console.error('Falha ao avisar o site:', err.message);
+  }
+}
+
 export async function runCycle(sock) {
   const channelFile = new URL('../channel.json', import.meta.url).pathname;
   const { jid } = JSON.parse(await readFile(channelFile, 'utf8'));
@@ -29,6 +54,7 @@ export async function runCycle(sock) {
       await sock.sendMessage(jid, { text });
     }
     dealStore.markPosted(deal);
+    await notifySite(deal);
     console.log(`Publicado: ${deal.title} (${Math.round(deal.discountPct)}% off, ${deal.store})`);
   }
 

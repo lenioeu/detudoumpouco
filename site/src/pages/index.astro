@@ -1,0 +1,136 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE } from '../config';
+import '../styles/global.css';
+
+const canal = SITE.canalWhatsapp || '#entrar';
+---
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{SITE.nome} — achados com desconto no WhatsApp</title>
+    <meta
+      name="description"
+      content="Receba no WhatsApp os melhores achados com desconto do Mercado Livre, Americanas, Kabum e outras lojas, direto de APIs oficiais de afiliados."
+    />
+    <link rel="icon" href="data:," />
+    <meta name="lomadee" content="2324685" />
+  </head>
+  <body>
+    <Header />
+
+    <main>
+      <section class="hero container">
+        <h1>Achados com desconto, direto no seu WhatsApp</h1>
+        <p class="muted">
+          O {SITE.nome} publica várias vezes ao dia produtos com pelo menos 30% de desconto em lojas
+          como Mercado Livre, Americanas e Kabum — sem enrolação, sem spam.
+        </p>
+        <a class="btn" href={canal}>Entrar no canal do WhatsApp</a>
+      </section>
+
+      <section class="como-funciona container">
+        <h2>Como funciona</h2>
+        <ol class="passos">
+          <li><strong>Buscamos</strong> ofertas via API oficial das lojas (nada de scraping).</li>
+          <li><strong>Filtramos</strong> só o que tem desconto real, de verdade, acima de 30%.</li>
+          <li><strong>Publicamos</strong> no Canal do WhatsApp e aqui no site, em tempo real.</li>
+        </ol>
+      </section>
+
+      <section class="feed-section container">
+        <h2>Últimos achados</h2>
+        <div id="feed" class="feed-grid">
+          <p class="muted">Carregando achados…</p>
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+
+    <script>
+      import { carregarFeed } from '../lib/feed.js';
+      import { SITE } from '../config';
+
+      const container = document.getElementById('feed');
+      if (container) carregarFeed(container, SITE.apiAchados);
+    </script>
+  </body>
+</html>
+
+<style>
+  .hero {
+    padding: 64px 16px 48px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    margin: 0 0 16px;
+  }
+  .hero p {
+    max-width: 560px;
+    margin: 0 auto 28px;
+  }
+
+  .como-funciona {
+    padding: 32px 16px;
+  }
+  .passos {
+    display: grid;
+    gap: 16px;
+    padding: 0;
+    margin: 20px 0 0;
+    list-style: none;
+  }
+  .passos li {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .feed-section {
+    padding: 32px 16px 64px;
+  }
+  .feed-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    margin-top: 20px;
+  }
+
+  :global(.achado) {
+    text-decoration: none;
+    color: var(--fg);
+    display: block;
+  }
+  :global(.achado-img) {
+    border-radius: 10px;
+    margin-bottom: 10px;
+    aspect-ratio: 1;
+    object-fit: contain;
+    background: #fff;
+  }
+  :global(.achado-titulo) {
+    font-size: 0.95rem;
+    margin: 10px 0 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  :global(.achado-preco) {
+    margin: 0 0 4px;
+  }
+  :global(.achado-preco-de) {
+    text-decoration: line-through;
+    font-size: 0.85rem;
+    margin-right: 6px;
+  }
+  :global(.achado-loja) {
+    font-size: 0.8rem;
+    margin: 0;
+  }
+</style>

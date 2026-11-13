@@ -1,0 +1,72 @@
+// Worker do site. Os arquivos de dist/ são servidos direto pelo Cloudflare;
+// este código só roda em /api/* (ver run_worker_first no wrangler.jsonc).
+//
+// /api/achados  GET:  lista os últimos achados publicados no canal (público)
+//               POST: registra um achado publicado (o bot chama isso depois de postar no WhatsApp;
+//                     exige o cabeçalho x-promozap-secret igual ao secret POST_SECRET do Worker)
+
+function json(dados, status = 200) {
+  return new Response(JSON.stringify(dados), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+  });
+}
+
+async function listarAchados(env, url) {
+  const limit = Math.min(Number(url.searchParams.get('limit')) || 12, 50);
+  const { results } = await env.ACHADOS.prepare(
+    'SELECT id, store, title, url, price, original_price, discount_pct, image, posted_at FROM achados ORDER BY posted_at DESC LIMIT ?',
+  )
+    .bind(limit)
+    .all();
+  return json({ achados: results ?? [] });
+}
+
+async function registrarAchado(env, request) {
+  if (request.headers.get('x-promozap-secret') !== env.POST_SECRET) {
+    return json({ erro: 'não autorizado' }, 401);
+  }
+
+  const dados = await request.json().catch(() => null);
+  const obrigatorios = ['id', 'store', 'title', 'url', 'price', 'originalPrice', 'discountPct'];
+  if (!dados || obrigatorios.some((campo) => dados[campo] == null)) {
+    return json({ erro: 'dados incompletos' }, 400);
+  }
+
+  await env.ACHADOS.prepare(
+    `INSERT INTO achados (id, store, title, url, price, original_price, discount_pct, image, posted_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (id) DO UPDATE SET
+       price = excluded.price, original_price = excluded.original_price,
+       discount_pct = excluded.discount_pct, posted_at = excluded.posted_at`,
+  )
+    .bind(
+      dados.id,
+      dados.store,
+      dados.title,
+      dados.url,
+      dados.price,
+      dados.originalPrice,
+      dados.discountPct,
+      dados.image ?? null,
+      dados.postedAt ?? new Date().toISOString(),
+    )
+    .run();
+
+  return json({ ok: true });
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname !== '/api/achados') return json({ erro: 'não encontrado' }, 404);
+
+    try {
+      if (request.method === 'GET') return listarAchados(env, url);
+      if (request.method === 'POST') return registrarAchado(env, request);
+      return json({ erro: 'método não permitido' }, 405);
+    } catch {
+      return json({ erro: 'indisponível' }, 503);
+    }
+  },
+};

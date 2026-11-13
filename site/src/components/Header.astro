@@ -1,0 +1,31 @@
+---
+import { SITE } from '../config';
+---
+<header class="header">
+  <div class="container header-inner">
+    <a href="/" class="logo">🟢 {SITE.nome}</a>
+    <a class="btn btn-small" href={SITE.canalWhatsapp || '#entrar'}>Entrar no canal</a>
+  </div>
+</header>
+
+<style>
+  .header {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+  }
+  .logo {
+    font-weight: 800;
+    font-size: 1.1rem;
+    text-decoration: none;
+  }
+  .btn-small {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+</style>
