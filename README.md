@@ -97,9 +97,15 @@ npm run cycle    # roda um ciclo (coleta + publica) e encerra
 npm run daemon   # fica rodando, publicando a cada CRON_SCHEDULE (padrão: 2h em 2h)
 ```
 
-`MIN_DISCOUNT_PCT` (padrão 30) e `MAX_POSTS_PER_CYCLE` (padrão 3) controlam o
+`MIN_DISCOUNT_PCT` (padrão 5) e `MAX_POSTS_PER_CYCLE` (padrão 3) controlam o
 critério de publicação. Achados já publicados ficam registrados em
 `data/posted.json` por 30 dias, para não repetir.
+
+`MAIN_STORES` (nomes de marca separados por vírgula, como aparecem em
+`/affiliate/brands` da Lomadee) dá prioridade pras lojas grandes: dentro da
+mesma faixa de desconto (±15 pontos percentuais), uma loja da lista entra na
+frente de uma loja pequena/desconhecida com desconto parecido — sem excluir
+as pequenas, só desempatando a favor das conhecidas.
 
 ## Publicar um achado manualmente
 

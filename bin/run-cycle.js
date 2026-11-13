@@ -49,7 +49,11 @@ export async function runCycle(sock) {
 
   const dealStore = await openDealStore(sock ? 'whatsapp' : 'site');
   const deals = await collectDeals();
-  const candidates = selectCandidates(deals, { minDiscountPct: MIN_DISCOUNT_PCT, dealStore });
+  const candidates = selectCandidates(deals, {
+    minDiscountPct: MIN_DISCOUNT_PCT,
+    dealStore,
+    mainStores: process.env.MAIN_STORES
+  });
 
   let posted = 0;
   for (const deal of candidates.slice(0, MAX_CANDIDATES_TRIED)) {

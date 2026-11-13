@@ -19,7 +19,7 @@ async function lomadeeGet(apiKey, path, params = {}) {
   return res.json();
 }
 
-function toDeal(product, categoryByOrg) {
+function toDeal(product, brandByOrg) {
   const option = product.options?.[0];
   const pricing = option?.pricing?.[0];
   if (!option || !pricing || !pricing.listPrice || pricing.listPrice <= pricing.price) return null;
@@ -29,12 +29,16 @@ function toDeal(product, categoryByOrg) {
   const price = pricing.price;
   const originalPrice = pricing.listPrice;
   const discountPct = ((originalPrice - price) / originalPrice) * 100;
+  const brand = brandByOrg.get(product.organizationId);
 
   return {
     source: 'lomadee',
     organizationId: product.organizationId,
-    store: storeName(product, option),
-    category: categoryByOrg.get(product.organizationId) ?? null,
+    // Prefere o nome oficial da marca (vindo de /affiliate/brands) ao "seller"
+    // técnico do feed de produtos — além de mais legível, é o nome usado para
+    // reconhecer "lojas principais" no filtro.
+    store: brand?.name?.trim() || storeName(product, option),
+    category: brand?.segment ?? null,
     externalId: product.id,
     title: product.name,
     url: product.url,
@@ -69,15 +73,15 @@ export async function listBrands({ apiKey, maxPages = 10 }) {
   return brands;
 }
 
-async function categoryMapByOrg(apiKey) {
+async function brandMapByOrg(apiKey) {
   const brands = await listBrands({ apiKey });
-  return new Map(brands.map((brand) => [brand.organizationId, brand.segment]));
+  return new Map(brands.map((brand) => [brand.organizationId, brand]));
 }
 
 export async function fetchDeals({ apiKey, search, maxPages = 10 }) {
   if (!apiKey) return [];
 
-  const categoryByOrg = await categoryMapByOrg(apiKey);
+  const brandByOrg = await brandMapByOrg(apiKey);
 
   const deals = [];
   for (let page = 1; page <= maxPages; page++) {
@@ -90,7 +94,7 @@ export async function fetchDeals({ apiKey, search, maxPages = 10 }) {
     if (!data?.length) break;
 
     for (const product of data) {
-      const deal = toDeal(product, categoryByOrg);
+      const deal = toDeal(product, brandByOrg);
       if (deal) deals.push(deal);
     }
 
