@@ -22,14 +22,18 @@ function cardHtml(achado) {
   `;
 }
 
-export async function carregarFeed(container, apiUrl) {
+async function carregarFeed(container, apiUrl, category) {
   try {
-    const res = await fetch(`${apiUrl}?limit=12`);
+    const url = new URL(apiUrl, location.origin);
+    url.searchParams.set('limit', '12');
+    if (category) url.searchParams.set('category', category);
+
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { achados } = await res.json();
 
     if (!achados?.length) {
-      container.innerHTML = '<p class="muted">Nenhum achado publicado ainda. Volte em breve!</p>';
+      container.innerHTML = '<p class="muted">Nenhum achado nessa categoria ainda.</p>';
       return;
     }
 
@@ -37,4 +41,33 @@ export async function carregarFeed(container, apiUrl) {
   } catch {
     container.innerHTML = '<p class="muted">Não foi possível carregar os achados agora.</p>';
   }
+}
+
+async function carregarCategorias(select, apiUrl) {
+  try {
+    const url = new URL(`${apiUrl}/categorias`, location.origin);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { categorias } = await res.json();
+
+    for (const categoria of categorias ?? []) {
+      const option = document.createElement('option');
+      option.value = categoria;
+      option.textContent = categoria;
+      select.appendChild(option);
+    }
+  } catch {
+    // sem categorias, o filtro fica só com "Todas"
+  }
+}
+
+export async function initFeed({ container, select, apiUrl }) {
+  await carregarFeed(container, apiUrl);
+  if (!select) return;
+
+  await carregarCategorias(select, apiUrl);
+  select.addEventListener('change', () => {
+    container.innerHTML = '<p class="muted">Carregando achados…</p>';
+    carregarFeed(container, apiUrl, select.value || undefined);
+  });
 }

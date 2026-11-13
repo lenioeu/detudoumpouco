@@ -19,7 +19,7 @@ async function lomadeeGet(apiKey, path, params = {}) {
   return res.json();
 }
 
-function toDeal(product) {
+function toDeal(product, categoryByOrg) {
   const option = product.options?.[0];
   const pricing = option?.pricing?.[0];
   if (!option || !pricing || !pricing.listPrice || pricing.listPrice <= pricing.price) return null;
@@ -34,6 +34,7 @@ function toDeal(product) {
     source: 'lomadee',
     organizationId: product.organizationId,
     store: storeName(product, option),
+    category: categoryByOrg.get(product.organizationId) ?? null,
     externalId: product.id,
     title: product.name,
     url: product.url,
@@ -42,29 +43,6 @@ function toDeal(product) {
     discountPct,
     image: product.images?.[0]?.url ?? option.images?.[0]?.url
   };
-}
-
-export async function fetchDeals({ apiKey, search, maxPages = 2 }) {
-  if (!apiKey) return [];
-
-  const deals = [];
-  for (let page = 1; page <= maxPages; page++) {
-    const { data } = await lomadeeGet(apiKey, '/affiliate/products', {
-      page,
-      limit: 100,
-      isAvailable: true,
-      search
-    });
-    if (!data?.length) break;
-
-    for (const product of data) {
-      const deal = toDeal(product);
-      if (deal) deals.push(deal);
-    }
-
-    if (data.length < 100) break;
-  }
-  return deals;
 }
 
 export async function listBrands({ apiKey, maxPages = 10 }) {
@@ -77,7 +55,9 @@ export async function listBrands({ apiKey, maxPages = 10 }) {
       const channel = brand.channels?.[0];
       const approved = Boolean(channel?.availableChannel?.shortUrls?.length ?? channel?.shortUrls?.length);
       brands.push({
+        organizationId: brand.id,
         name: brand.name,
+        segment: brand.segment ?? null,
         exclusive: Boolean(brand.trait?.isExclusive),
         approved,
         message: channel?.message ?? null
@@ -87,6 +67,36 @@ export async function listBrands({ apiKey, maxPages = 10 }) {
     if (!pagination || page >= pagination.totalPages) break;
   }
   return brands;
+}
+
+async function categoryMapByOrg(apiKey) {
+  const brands = await listBrands({ apiKey });
+  return new Map(brands.map((brand) => [brand.organizationId, brand.segment]));
+}
+
+export async function fetchDeals({ apiKey, search, maxPages = 10 }) {
+  if (!apiKey) return [];
+
+  const categoryByOrg = await categoryMapByOrg(apiKey);
+
+  const deals = [];
+  for (let page = 1; page <= maxPages; page++) {
+    const { data } = await lomadeeGet(apiKey, '/affiliate/products', {
+      page,
+      limit: 100,
+      isAvailable: true,
+      search
+    });
+    if (!data?.length) break;
+
+    for (const product of data) {
+      const deal = toDeal(product, categoryByOrg);
+      if (deal) deals.push(deal);
+    }
+
+    if (data.length < 100) break;
+  }
+  return deals;
 }
 
 export async function resolveAffiliateUrl({ apiKey, organizationId, url }) {

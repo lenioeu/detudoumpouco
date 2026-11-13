@@ -2,13 +2,14 @@ import 'dotenv/config';
 import { readFile } from 'fs/promises';
 import { connect } from '../src/connection.js';
 import { collectDeals } from '../src/providers/index.js';
-import { selectDealsToPost } from '../src/deals/filter.js';
+import { selectCandidates } from '../src/deals/filter.js';
 import { formatDealMessage } from '../src/deals/format.js';
 import { openDealStore } from '../src/deals/dealStore.js';
 import { resolveAffiliateUrl as resolveLomadeeUrl } from '../src/providers/lomadee.js';
 
 const MIN_DISCOUNT_PCT = Number(process.env.MIN_DISCOUNT_PCT ?? 30);
 const MAX_POSTS_PER_CYCLE = Number(process.env.MAX_POSTS_PER_CYCLE ?? 3);
+const MAX_CANDIDATES_TRIED = MAX_POSTS_PER_CYCLE * 10;
 
 async function notifySite(deal) {
   const { SITE_API_URL, SITE_API_SECRET } = process.env;
@@ -27,6 +28,7 @@ async function notifySite(deal) {
         originalPrice: deal.originalPrice,
         discountPct: deal.discountPct,
         image: deal.image,
+        category: deal.category ?? null,
         postedAt: new Date().toISOString()
       })
     });
@@ -47,13 +49,12 @@ export async function runCycle(sock) {
 
   const dealStore = await openDealStore(sock ? 'whatsapp' : 'site');
   const deals = await collectDeals();
-  const toPost = selectDealsToPost(deals, {
-    minDiscountPct: MIN_DISCOUNT_PCT,
-    maxPerCycle: MAX_POSTS_PER_CYCLE,
-    dealStore
-  });
+  const candidates = selectCandidates(deals, { minDiscountPct: MIN_DISCOUNT_PCT, dealStore });
 
-  for (const deal of toPost) {
+  let posted = 0;
+  for (const deal of candidates.slice(0, MAX_CANDIDATES_TRIED)) {
+    if (posted >= MAX_POSTS_PER_CYCLE) break;
+
     if (deal.source === 'lomadee') {
       const affiliateUrl = await resolveLomadeeUrl({
         apiKey: process.env.LOMADEE_API_KEY,
@@ -78,15 +79,16 @@ export async function runCycle(sock) {
     dealStore.markPosted(deal);
     await notifySite(deal);
     console.log(`Publicado: ${deal.title} (${Math.round(deal.discountPct)}% off, ${deal.store})`);
+    posted++;
   }
 
   await dealStore.persist();
 
-  if (toPost.length === 0) {
+  if (posted === 0) {
     console.log('Nenhum achado novo acima do desconto mínimo neste ciclo.');
   }
 
-  return toPost.length;
+  return posted;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

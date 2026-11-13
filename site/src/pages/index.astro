@@ -41,7 +41,12 @@ const canal = SITE.canalWhatsapp || '#entrar';
       </section>
 
       <section class="feed-section container">
-        <h2>Últimos achados</h2>
+        <div class="feed-header">
+          <h2>Últimos achados</h2>
+          <select id="filtro-categoria" class="filtro">
+            <option value="">Todas as categorias</option>
+          </select>
+        </div>
         <div id="feed" class="feed-grid">
           <p class="muted">Carregando achados…</p>
         </div>
@@ -51,11 +56,12 @@ const canal = SITE.canalWhatsapp || '#entrar';
     <Footer />
 
     <script>
-      import { carregarFeed } from '../lib/feed.js';
+      import { initFeed } from '../lib/feed.js';
       import { SITE } from '../config';
 
       const container = document.getElementById('feed');
-      if (container) carregarFeed(container, SITE.apiAchados);
+      const select = document.getElementById('filtro-categoria');
+      if (container) initFeed({ container, select, apiUrl: SITE.apiAchados });
     </script>
   </body>
 </html>
@@ -93,6 +99,21 @@ const canal = SITE.canalWhatsapp || '#entrar';
 
   .feed-section {
     padding: 32px 16px 64px;
+  }
+  .feed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .filtro {
+    background: var(--surface);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.9rem;
   }
   .feed-grid {
     display: grid;
