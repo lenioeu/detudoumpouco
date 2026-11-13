@@ -1,5 +1,6 @@
 import { fetchDeals as fetchMercadoLivre } from './mercadolivre.js';
 import { fetchDeals as fetchAwin } from './awin.js';
+import { fetchDeals as fetchLomadee } from './lomadee.js';
 
 function parseAdvertisers(raw) {
   if (!raw) return [];
@@ -10,7 +11,7 @@ function parseAdvertisers(raw) {
 }
 
 export async function collectDeals(env = process.env) {
-  const [mercadoLivreDeals, awinDeals] = await Promise.all([
+  const [mercadoLivreDeals, awinDeals, lomadeeDeals] = await Promise.all([
     fetchMercadoLivre({
       clientId: env.MERCADOLIVRE_CLIENT_ID,
       clientSecret: env.MERCADOLIVRE_CLIENT_SECRET,
@@ -22,8 +23,12 @@ export async function collectDeals(env = process.env) {
       accessToken: env.AWIN_ACCESS_TOKEN,
       locale: env.AWIN_LOCALE,
       advertisers: parseAdvertisers(env.AWIN_ADVERTISERS)
+    }),
+    fetchLomadee({
+      apiKey: env.LOMADEE_API_KEY,
+      search: env.LOMADEE_SEARCH
     })
   ]);
 
-  return [...mercadoLivreDeals, ...awinDeals];
+  return [...mercadoLivreDeals, ...awinDeals, ...lomadeeDeals];
 }

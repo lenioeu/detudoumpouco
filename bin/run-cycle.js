@@ -5,6 +5,7 @@ import { collectDeals } from '../src/providers/index.js';
 import { selectDealsToPost } from '../src/deals/filter.js';
 import { formatDealMessage } from '../src/deals/format.js';
 import { openDealStore } from '../src/deals/dealStore.js';
+import { resolveAffiliateUrl as resolveLomadeeUrl } from '../src/providers/lomadee.js';
 
 const MIN_DISCOUNT_PCT = Number(process.env.MIN_DISCOUNT_PCT ?? 30);
 const MAX_POSTS_PER_CYCLE = Number(process.env.MAX_POSTS_PER_CYCLE ?? 3);
@@ -47,6 +48,19 @@ export async function runCycle(sock) {
   });
 
   for (const deal of toPost) {
+    if (deal.source === 'lomadee') {
+      const affiliateUrl = await resolveLomadeeUrl({
+        apiKey: process.env.LOMADEE_API_KEY,
+        organizationId: deal.organizationId,
+        url: deal.url
+      });
+      if (!affiliateUrl) {
+        console.error(`Lomadee não gerou link de afiliado para "${deal.title}", pulando.`);
+        continue;
+      }
+      deal.url = affiliateUrl;
+    }
+
     const text = formatDealMessage(deal);
     if (deal.image) {
       await sock.sendMessage(jid, { image: { url: deal.image }, caption: text });
