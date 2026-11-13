@@ -3,14 +3,18 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Bot para publicar achados de engenharia reversa em um Canal do WhatsApp",
+  "description": "Bot para publicar achados de produtos com desconto em um Canal do WhatsApp",
   "scripts": {
     "connect": "node bin/connect.js",
     "setup-channel": "node bin/setup-channel.js",
-    "post": "node bin/post-finding.js"
+    "post": "node bin/post-finding.js",
+    "cycle": "node bin/run-cycle.js",
+    "daemon": "node bin/daemon.js"
   },
   "dependencies": {
     "baileys": "^7.0.0-rc14",
+    "dotenv": "^18.0.10",
+    "node-cron": "^4.6.0",
     "pino": "^9.5.0"
   }
 }

@@ -1,5 +1,6 @@
 node_modules/
 auth/
 channel.json
+data/
 .env
 *.log
