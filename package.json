@@ -10,6 +10,7 @@
     "post": "node bin/post-finding.js",
     "cycle": "node bin/run-cycle.js",
     "sync-site": "node bin/sync-site.js",
+    "check-brands": "node bin/check-brands.js",
     "daemon": "node bin/daemon.js"
   },
   "dependencies": {

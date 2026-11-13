@@ -67,6 +67,28 @@ export async function fetchDeals({ apiKey, search, maxPages = 2 }) {
   return deals;
 }
 
+export async function listBrands({ apiKey, maxPages = 10 }) {
+  const brands = [];
+  for (let page = 1; page <= maxPages; page++) {
+    const { data, pagination } = await lomadeeGet(apiKey, '/affiliate/brands', { page, limit: 20 });
+    if (!data?.length) break;
+
+    for (const brand of data) {
+      const channel = brand.channels?.[0];
+      const approved = Boolean(channel?.availableChannel?.shortUrls?.length ?? channel?.shortUrls?.length);
+      brands.push({
+        name: brand.name,
+        exclusive: Boolean(brand.trait?.isExclusive),
+        approved,
+        message: channel?.message ?? null
+      });
+    }
+
+    if (!pagination || page >= pagination.totalPages) break;
+  }
+  return brands;
+}
+
 export async function resolveAffiliateUrl({ apiKey, organizationId, url }) {
   const res = await fetch(`${BASE_URL}/affiliate/shortener/url`, {
     method: 'POST',
