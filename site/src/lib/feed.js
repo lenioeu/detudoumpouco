@@ -22,18 +22,19 @@ function cardHtml(achado) {
   `;
 }
 
-async function carregarFeed(container, apiUrl, category) {
+async function carregarFeed(container, apiUrl, { category, minDiscount } = {}) {
   try {
     const url = new URL(apiUrl, location.origin);
     url.searchParams.set('limit', '12');
     if (category) url.searchParams.set('category', category);
+    if (minDiscount) url.searchParams.set('minDiscount', minDiscount);
 
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { achados } = await res.json();
 
     if (!achados?.length) {
-      container.innerHTML = '<p class="muted">Nenhum achado nessa categoria ainda.</p>';
+      container.innerHTML = '<p class="muted">Nenhum achado com esse filtro ainda.</p>';
       return;
     }
 
@@ -61,13 +62,24 @@ async function carregarCategorias(select, apiUrl) {
   }
 }
 
-export async function initFeed({ container, select, apiUrl }) {
-  await carregarFeed(container, apiUrl);
-  if (!select) return;
-
-  await carregarCategorias(select, apiUrl);
-  select.addEventListener('change', () => {
-    container.innerHTML = '<p class="muted">Carregando achados…</p>';
-    carregarFeed(container, apiUrl, select.value || undefined);
+export async function initFeed({ container, categorySelect, discountSelect, apiUrl }) {
+  const filtrosAtuais = () => ({
+    category: categorySelect?.value || undefined,
+    minDiscount: discountSelect?.value || undefined
   });
+
+  const recarregar = () => {
+    container.innerHTML = '<p class="muted">Carregando achados…</p>';
+    carregarFeed(container, apiUrl, filtrosAtuais());
+  };
+
+  await carregarFeed(container, apiUrl, filtrosAtuais());
+
+  if (categorySelect) {
+    await carregarCategorias(categorySelect, apiUrl);
+    categorySelect.addEventListener('change', recarregar);
+  }
+  if (discountSelect) {
+    discountSelect.addEventListener('change', recarregar);
+  }
 }

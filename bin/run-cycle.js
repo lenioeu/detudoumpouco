@@ -7,7 +7,7 @@ import { formatDealMessage } from '../src/deals/format.js';
 import { openDealStore } from '../src/deals/dealStore.js';
 import { resolveAffiliateUrl as resolveLomadeeUrl } from '../src/providers/lomadee.js';
 
-const MIN_DISCOUNT_PCT = Number(process.env.MIN_DISCOUNT_PCT ?? 30);
+const MIN_DISCOUNT_PCT = Number(process.env.MIN_DISCOUNT_PCT ?? 5);
 const MAX_POSTS_PER_CYCLE = Number(process.env.MAX_POSTS_PER_CYCLE ?? 3);
 const MAX_CANDIDATES_TRIED = MAX_POSTS_PER_CYCLE * 10;
 

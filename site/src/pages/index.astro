@@ -25,8 +25,9 @@ const canal = SITE.canalWhatsapp || '#entrar';
       <section class="hero container">
         <h1>Achados com desconto, direto no seu WhatsApp</h1>
         <p class="muted">
-          O {SITE.nome} publica várias vezes ao dia produtos com pelo menos 30% de desconto em lojas
-          como Mercado Livre, Americanas e Kabum — sem enrolação, sem spam.
+          O {SITE.nome} publica várias vezes ao dia produtos com desconto real em lojas como Mercado
+          Livre, Americanas e Kabum — sem enrolação, sem spam. Escolha a profundidade do desconto no
+          filtro abaixo.
         </p>
         <a class="btn" href={canal}>Entrar no canal do WhatsApp</a>
       </section>
@@ -35,7 +36,7 @@ const canal = SITE.canalWhatsapp || '#entrar';
         <h2>Como funciona</h2>
         <ol class="passos">
           <li><strong>Buscamos</strong> ofertas via API oficial das lojas (nada de scraping).</li>
-          <li><strong>Filtramos</strong> só o que tem desconto real, de verdade, acima de 30%.</li>
+          <li><strong>Filtramos</strong> só o que tem desconto real, de verdade — você escolhe a partir de quanto.</li>
           <li><strong>Publicamos</strong> no Canal do WhatsApp e aqui no site, em tempo real.</li>
         </ol>
       </section>
@@ -43,9 +44,19 @@ const canal = SITE.canalWhatsapp || '#entrar';
       <section class="feed-section container">
         <div class="feed-header">
           <h2>Últimos achados</h2>
-          <select id="filtro-categoria" class="filtro">
-            <option value="">Todas as categorias</option>
-          </select>
+          <div class="filtros">
+            <select id="filtro-desconto" class="filtro">
+              <option value="5">A partir de 5% off</option>
+              <option value="10">A partir de 10% off</option>
+              <option value="20">A partir de 20% off</option>
+              <option value="30">A partir de 30% off</option>
+              <option value="50">A partir de 50% off</option>
+              <option value="70">A partir de 70% off</option>
+            </select>
+            <select id="filtro-categoria" class="filtro">
+              <option value="">Todas as categorias</option>
+            </select>
+          </div>
         </div>
         <div id="feed" class="feed-grid">
           <p class="muted">Carregando achados…</p>
@@ -60,8 +71,11 @@ const canal = SITE.canalWhatsapp || '#entrar';
       import { SITE } from '../config';
 
       const container = document.getElementById('feed');
-      const select = document.getElementById('filtro-categoria');
-      if (container) initFeed({ container, select, apiUrl: SITE.apiAchados });
+      const categorySelect = document.getElementById('filtro-categoria');
+      const discountSelect = document.getElementById('filtro-desconto');
+      if (container) {
+        initFeed({ container, categorySelect, discountSelect, apiUrl: SITE.apiAchados });
+      }
     </script>
   </body>
 </html>
@@ -105,6 +119,11 @@ const canal = SITE.canalWhatsapp || '#entrar';
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
+  }
+  .filtros {
+    display: flex;
+    gap: 8px;
     flex-wrap: wrap;
   }
   .filtro {

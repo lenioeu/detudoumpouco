@@ -100,11 +100,16 @@ export async function fetchDeals({ apiKey, search, maxPages = 10 }) {
 }
 
 export async function resolveAffiliateUrl({ apiKey, organizationId, url }) {
-  const res = await fetch(`${BASE_URL}/affiliate/shortener/url`, {
-    method: 'POST',
-    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ organizationId, type: 'Custom', url })
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE_URL}/affiliate/shortener/url`, {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organizationId, type: 'Custom', url })
+    });
+  } catch {
+    return null;
+  }
   if (!res.ok) return null;
 
   const channels = await res.json();

@@ -17,16 +17,27 @@ function json(dados, status = 200) {
 async function listarAchados(env, url) {
   const limit = Math.min(Number(url.searchParams.get('limit')) || 12, 50);
   const category = url.searchParams.get('category');
+  const minDiscount = Number(url.searchParams.get('minDiscount')) || 0;
 
-  const query = category
-    ? env.ACHADOS.prepare(
-        'SELECT id, store, title, url, price, original_price, discount_pct, image, category, posted_at FROM achados WHERE category = ? ORDER BY posted_at DESC LIMIT ?',
-      ).bind(category, limit)
-    : env.ACHADOS.prepare(
-        'SELECT id, store, title, url, price, original_price, discount_pct, image, category, posted_at FROM achados ORDER BY posted_at DESC LIMIT ?',
-      ).bind(limit);
+  const where = [];
+  const binds = [];
+  if (category) {
+    where.push('category = ?');
+    binds.push(category);
+  }
+  if (minDiscount > 0) {
+    where.push('discount_pct >= ?');
+    binds.push(minDiscount);
+  }
+  const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
-  const { results } = await query.all();
+  const { results } = await env.ACHADOS.prepare(
+    `SELECT id, store, title, url, price, original_price, discount_pct, image, category, posted_at
+     FROM achados ${whereSql} ORDER BY posted_at DESC LIMIT ?`,
+  )
+    .bind(...binds, limit)
+    .all();
+
   return json({ achados: results ?? [] });
 }
 
