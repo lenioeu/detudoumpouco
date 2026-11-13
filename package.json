@@ -1,0 +1,16 @@
+{
+  "name": "canal-achados-whatsapp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bot para publicar achados de engenharia reversa em um Canal do WhatsApp",
+  "scripts": {
+    "connect": "node bin/connect.js",
+    "setup-channel": "node bin/setup-channel.js",
+    "post": "node bin/post-finding.js"
+  },
+  "dependencies": {
+    "baileys": "^7.0.0-rc14",
+    "pino": "^9.5.0"
+  }
+}
