@@ -4,3 +4,4 @@ channel.json
 data/
 .env
 *.log
+telegram-session.txt

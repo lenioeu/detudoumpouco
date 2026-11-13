@@ -6,36 +6,11 @@ import { selectCandidates } from '../src/deals/filter.js';
 import { formatDealMessage } from '../src/deals/format.js';
 import { openDealStore } from '../src/deals/dealStore.js';
 import { resolveAffiliateUrl as resolveLomadeeUrl } from '../src/providers/lomadee.js';
+import { notifySite } from '../src/deals/notifySite.js';
 
 const MIN_DISCOUNT_PCT = Number(process.env.MIN_DISCOUNT_PCT ?? 5);
 const MAX_POSTS_PER_CYCLE = Number(process.env.MAX_POSTS_PER_CYCLE ?? 3);
 const MAX_CANDIDATES_TRIED = MAX_POSTS_PER_CYCLE * 10;
-
-async function notifySite(deal) {
-  const { SITE_API_URL, SITE_API_SECRET } = process.env;
-  if (!SITE_API_URL || !SITE_API_SECRET) return;
-
-  try {
-    await fetch(SITE_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-promozap-secret': SITE_API_SECRET },
-      body: JSON.stringify({
-        id: `${deal.store}:${deal.externalId}`,
-        store: deal.store,
-        title: deal.title,
-        url: deal.url,
-        price: deal.price,
-        originalPrice: deal.originalPrice,
-        discountPct: deal.discountPct,
-        image: deal.image,
-        category: deal.category ?? null,
-        postedAt: new Date().toISOString()
-      })
-    });
-  } catch (err) {
-    console.error('Falha ao avisar o site:', err.message);
-  }
-}
 
 // Sem sock, publica só no site (não mexe com WhatsApp). O histórico de cada
 // canal é independente: publicar no site agora não impede de publicar no

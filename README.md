@@ -122,6 +122,28 @@ link de afiliado, não publica).
 4. Roda junto do `npm run daemon` — não tem um comando separado pra isso,
    porque usa a mesma conexão do WhatsApp.
 
+### Espelhar canais/grupos do Telegram (opcional)
+
+Mesma ideia, mas lendo do Telegram (canais como Pelando, Promoção na Veia
+etc.) — a API do Telegram é oficial e aberta, não tem bloqueio de anti-bot
+como loja. Usa a biblioteca
+[teleproto](https://www.npmjs.com/package/teleproto) (fork mantido da
+GramJS, que foi descontinuada).
+
+1. Pegue `api_id` e `api_hash` grátis em [my.telegram.org](https://my.telegram.org)
+   (fazendo login com seu número).
+2. Preencha `TELEGRAM_API_ID` e `TELEGRAM_API_HASH` no `.env`.
+3. Rode `npm run connect-telegram` uma vez — vai pedir seu número e o código
+   que chega no próprio Telegram. A sessão fica salva em
+   `telegram-session.txt` (não commitado).
+4. Entre nos canais/grupos que quiser espelhar com essa conta.
+5. Preencha `TELEGRAM_CHANNELS` no `.env` com o `@usuário` de cada um,
+   separados por vírgula.
+6. Roda junto do `npm run daemon`, igual o espelhamento do WhatsApp.
+
+Mesma regra: só repassa mensagem com link de loja aprovada na Lomadee,
+trocado pelo seu link de afiliado.
+
 ## Publicar um achado manualmente
 
 ```bash

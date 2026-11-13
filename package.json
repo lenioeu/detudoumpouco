@@ -12,12 +12,14 @@
     "sync-site": "node bin/sync-site.js",
     "check-brands": "node bin/check-brands.js",
     "list-groups": "node bin/list-groups.js",
+    "connect-telegram": "node bin/connect-telegram.js",
     "daemon": "node bin/daemon.js"
   },
   "dependencies": {
     "baileys": "^7.0.0-rc14",
     "dotenv": "^18.0.10",
     "node-cron": "^4.6.0",
-    "pino": "^9.5.0"
+    "pino": "^9.5.0",
+    "teleproto": "^1.233.0"
   }
 }
