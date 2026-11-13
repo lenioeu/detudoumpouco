@@ -35,11 +35,17 @@ async function notifySite(deal) {
   }
 }
 
+// Sem sock, publica só no site (não mexe com WhatsApp). O histórico de cada
+// canal é independente: publicar no site agora não impede de publicar no
+// WhatsApp depois, quando o número estiver conectado.
 export async function runCycle(sock) {
-  const channelFile = new URL('../channel.json', import.meta.url).pathname;
-  const { jid } = JSON.parse(await readFile(channelFile, 'utf8'));
+  let jid;
+  if (sock) {
+    const channelFile = new URL('../channel.json', import.meta.url).pathname;
+    ({ jid } = JSON.parse(await readFile(channelFile, 'utf8')));
+  }
 
-  const dealStore = await openDealStore();
+  const dealStore = await openDealStore(sock ? 'whatsapp' : 'site');
   const deals = await collectDeals();
   const toPost = selectDealsToPost(deals, {
     minDiscountPct: MIN_DISCOUNT_PCT,
@@ -61,11 +67,13 @@ export async function runCycle(sock) {
       deal.url = affiliateUrl;
     }
 
-    const text = formatDealMessage(deal);
-    if (deal.image) {
-      await sock.sendMessage(jid, { image: { url: deal.image }, caption: text });
-    } else {
-      await sock.sendMessage(jid, { text });
+    if (sock) {
+      const text = formatDealMessage(deal);
+      if (deal.image) {
+        await sock.sendMessage(jid, { image: { url: deal.image }, caption: text });
+      } else {
+        await sock.sendMessage(jid, { text });
+      }
     }
     dealStore.markPosted(deal);
     await notifySite(deal);

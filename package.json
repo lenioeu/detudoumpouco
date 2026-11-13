@@ -9,6 +9,7 @@
     "setup-channel": "node bin/setup-channel.js",
     "post": "node bin/post-finding.js",
     "cycle": "node bin/run-cycle.js",
+    "sync-site": "node bin/sync-site.js",
     "daemon": "node bin/daemon.js"
   },
   "dependencies": {

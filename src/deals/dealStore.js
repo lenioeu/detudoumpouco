@@ -24,19 +24,21 @@ function prune(entries) {
   );
 }
 
-function key(deal) {
-  return `${deal.store}:${deal.externalId}`;
+function key(namespace, deal) {
+  return `${namespace}:${deal.store}:${deal.externalId}`;
 }
 
-export async function openDealStore() {
+// namespace separa o histórico por canal (ex: "whatsapp" e "site" não bloqueiam
+// um ao outro — publicar no site não impede de publicar depois no WhatsApp).
+export async function openDealStore(namespace = 'whatsapp') {
   const entries = prune(await load());
 
   return {
     wasPosted(deal) {
-      return key(deal) in entries;
+      return key(namespace, deal) in entries;
     },
     markPosted(deal) {
-      entries[key(deal)] = new Date().toISOString();
+      entries[key(namespace, deal)] = new Date().toISOString();
     },
     async persist() {
       await save(entries);
