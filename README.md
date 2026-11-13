@@ -15,8 +15,11 @@ oficial da Meta). Isso significa:
   o número pode ser banido. Use com moderação (nada de envio em massa) e por
   sua conta e risco.
 
-Os achados vêm de duas fontes oficiais (nenhum scraping de site de loja):
+Os achados vêm de fontes oficiais (nenhum scraping de site de loja):
 
+- **Lomadee** — catálogo próprio via `/affiliate/products` (compara `listPrice`
+  com `price`), e gera o link de afiliado sob demanda com
+  `/affiliate/shortener/url`, só para os achados que vão ser publicados.
 - **Mercado Livre** — busca via API oficial (`/sites/MLB/search`), comparando
   `price` com `original_price` de cada item.
 - **Awin** — rede de afiliados que cobre Americanas, Kabum e outras grandes
@@ -52,6 +55,17 @@ Cria o canal e salva o JID em `channel.json`.
 ## Passo 3 — Configurar as fontes de achados
 
 Copie `.env.example` para `.env` e preencha as credenciais:
+
+### Lomadee
+
+1. No painel da sua conta Lomadee, vá em **Credenciais de API** e crie uma
+   chave nova com os escopos `products:read` e `shortener:write`.
+2. A chave completa só aparece uma vez — copie na hora.
+3. Preencha `LOMADEE_API_KEY` no `.env` (e `LOMADEE_SEARCH` se quiser filtrar
+   o catálogo por um termo).
+
+Essa fonte já cobre catálogo **e** link de afiliado sozinha — não depende do
+Mercado Livre nem da Awin pra funcionar.
 
 ### Mercado Livre
 
