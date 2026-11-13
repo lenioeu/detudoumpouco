@@ -1,9 +1,11 @@
-// Worker do site. Os arquivos de dist/ são servidos direto pelo Cloudflare;
-// este código só roda em /api/* (ver run_worker_first no wrangler.jsonc).
+// Worker do site. Serve a página (gerada em worker/site.generated.js a partir do
+// build do Astro) e a API em /api/*.
 //
 // /api/achados  GET:  lista os últimos achados publicados no canal (público)
 //               POST: registra um achado publicado (o bot chama isso depois de postar no WhatsApp;
 //                     exige o cabeçalho x-promozap-secret igual ao secret POST_SECRET do Worker)
+
+import { SITE_HTML } from './site.generated.js';
 
 function json(dados, status = 200) {
   return new Response(JSON.stringify(dados), {
@@ -59,6 +61,11 @@ async function registrarAchado(env, request) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    if (url.pathname === '/' || url.pathname === '/index.html') {
+      return new Response(SITE_HTML, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+    }
+
     if (url.pathname !== '/api/achados') return json({ erro: 'não encontrado' }, 404);
 
     try {

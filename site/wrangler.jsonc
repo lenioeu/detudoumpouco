@@ -1,20 +1,16 @@
 {
-  // O Cloudflare serve os arquivos gerados em ./dist. O código em worker/ só roda em /api/*
-  // (lista e recebe os achados que o bot publica no Canal do WhatsApp).
+  // O Worker serve a própria página (worker/site.generated.js, gerado do build do
+  // Astro) e a API em /api/*. Nada de upload de assets separado.
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "promozap",
   "main": "./worker/index.js",
   "compatibility_date": "2026-10-13",
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "404-page",
-    "run_worker_first": ["/api/*"]
-  },
+  "workers_dev": true,
   "d1_databases": [
     {
       "binding": "ACHADOS",
       "database_name": "promozap-achados",
-      "database_id": "PREENCHER_APOS_CRIAR_O_D1"
+      "database_id": "dd9ccb8d-44f9-4c2b-82d6-dcdf36bad617"
     }
   ]
 }

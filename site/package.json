@@ -5,13 +5,13 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/build-worker.mjs",
     "preview": "astro preview"
   },
   "dependencies": {
     "astro": "^5.18.2"
   },
   "devDependencies": {
-    "wrangler": "4.45.0"
+    "wrangler": "^4.161.0"
   }
 }
