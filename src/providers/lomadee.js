@@ -62,6 +62,7 @@ export async function listBrands({ apiKey, maxPages = 10 }) {
         organizationId: brand.id,
         name: brand.name,
         segment: brand.segment ?? null,
+        site: brand.site ?? null,
         exclusive: Boolean(brand.trait?.isExclusive),
         approved,
         message: channel?.message ?? null

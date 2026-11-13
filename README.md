@@ -107,6 +107,21 @@ mesma faixa de desconto (±15 pontos percentuais), uma loja da lista entra na
 frente de uma loja pequena/desconhecida com desconto parecido — sem excluir
 as pequenas, só desempatando a favor das conhecidas.
 
+## Passo 5 — Espelhar grupos de achadinho (opcional)
+
+Em vez de (ou além de) buscar ofertas via API, o bot pode escutar grupos do
+WhatsApp onde achadinhos já são postados por pessoas, e repassar pro seu
+canal — trocando o link pelo seu link de afiliado quando a loja do link for
+uma marca aprovada na Lomadee (casa o domínio do link com o campo `site` de
+`/affiliate/brands`). Mensagens de loja não reconhecida são ignoradas (sem
+link de afiliado, não publica).
+
+1. Entre nos grupos de achadinho que quiser espelhar com o número do bot.
+2. Descubra os JIDs desses grupos: `npm run list-groups`.
+3. Preencha `MIRROR_GROUP_JIDS` no `.env` (JIDs separados por vírgula).
+4. Roda junto do `npm run daemon` — não tem um comando separado pra isso,
+   porque usa a mesma conexão do WhatsApp.
+
 ## Publicar um achado manualmente
 
 ```bash

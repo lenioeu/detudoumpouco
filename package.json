@@ -11,6 +11,7 @@
     "cycle": "node bin/run-cycle.js",
     "sync-site": "node bin/sync-site.js",
     "check-brands": "node bin/check-brands.js",
+    "list-groups": "node bin/list-groups.js",
     "daemon": "node bin/daemon.js"
   },
   "dependencies": {
