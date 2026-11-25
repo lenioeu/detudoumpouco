@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 .wrangler/
 .dev.vars
 # dados reais nunca vão para o repositório (ele é público)
