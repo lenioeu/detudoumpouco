@@ -312,6 +312,11 @@ tr.pend td{background:var(--warn-soft)}
 .setores{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px}
 .setores li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}.setores li:last-child{border-bottom:0}
 /* ---- contratos ---- */
+.filtros{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:-4px 0 12px}
+.filtros label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+.filtros select{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font:inherit;font-size:13px;color:var(--ink);max-width:230px}
+.filtros label.chk{flex-direction:row;align-items:center;gap:6px;font-size:13px;color:var(--ink);padding-bottom:6px}
+.filtros .fcount{margin-left:auto;font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center;padding-bottom:4px}
 .semc{list-style:none;margin:8px 0 0;padding:0;max-height:320px;overflow:auto}.semc li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #f0d49a}
 details.card summary{cursor:pointer}
 .tbar.indet{background:repeating-linear-gradient(90deg,var(--s-ok) 0 14px,transparent 14px 20px);border-radius:0}.nodb.okb{background:var(--ok-soft);border:1px solid var(--brand-light)}
@@ -606,14 +611,38 @@ async function moverFase(id,fase){const p=S.proc.get(id);if(!p||p.fase===fase)re
 
 const incompleto=c=>contrAtivo(c)&&(!c.empresa||(!c.vigencia&&!c.indeterminado));
 const semContrato=()=>[...S.proc.values()].filter(p=>etapa(faseDe(p))==='execucao'&&!contratosDe(p).length).sort((a,b)=>(a.objeto||'').localeCompare(b.objeto||'','pt-BR'));
+const CF0={estado:'ativos',vig:'',pessoa:'',papel:'',setor:'',inc:false,ord:'vig'};
+const faixaVig=c=>{if(c.indeterminado||!c.vigencia)return'sem';const d=dias(c.vigencia);return d<0?'vencido':d<=30?'30':d<=JANELA()?'janela':'longe'};
+const equipeDe=c=>S.proc.get(c.processo)?.equipe||[];
 function vContratos(){
-  const fe=S.cEstado??'ativos';
-  const cs=[...S.contr.values()].filter(c=>fe==='todos'||(fe==='ativos'?contrAtivo(c):c.continuidade===fe)).map(c=>({c,st:contrStatus(c)})).filter(({c})=>!S.q||norm(c.objeto+' '+c.empresa+' '+c.sei+' '+(S.proc.get(c.processo)?.objeto||'')).includes(norm(S.q)))
-    .sort((a,b)=>incompleto(b.c)-incompleto(a.c)||a.st[2]-b.st[2]);
+  const F=S.cf||(S.cf={...CF0}),fe=F.estado,J=JANELA();
+  const todos=[...S.contr.values()];
+  const cs=todos.filter(c=>fe==='todos'||(fe==='ativos'?contrAtivo(c):c.continuidade===fe))
+    .filter(c=>!F.vig||faixaVig(c)===F.vig)
+    .filter(c=>!F.pessoa||equipeDe(c).some(e=>e.nome===F.pessoa&&(!F.papel||e.papel===F.papel)))
+    .filter(c=>!F.setor||(S.proc.get(c.processo)?.setor||'')===F.setor)
+    .filter(c=>!F.inc||incompleto(c))
+    .filter(c=>!S.q||norm([c.objeto,c.empresa,c.sei,c.situacao,S.proc.get(c.processo)?.objeto,equipeDe(c).map(e=>e.nome).join(' ')].join(' ')).includes(norm(S.q)))
+    .map(c=>({c,st:contrStatus(c)}))
+    .sort((a,b)=>F.ord==='objeto'?(a.c.objeto||'').localeCompare(b.c.objeto||'','pt-BR'):F.ord==='empresa'?(!a.c.empresa)-(!b.c.empresa)||(a.c.empresa||'').localeCompare(b.c.empresa||'','pt-BR')
+      :F.ord==='estado'?(b.c.estadoData||'').localeCompare(a.c.estadoData||''):incompleto(b.c)-incompleto(a.c)||a.st[2]-b.st[2]);
+  const pessoasC=[...new Set(todos.flatMap(c=>equipeDe(c).map(e=>e.nome)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const setoresC=[...new Set(todos.map(c=>S.proc.get(c.processo)?.setor).filter(Boolean))].sort();
+  const ativos=JSON.stringify(F)!==JSON.stringify(CF0)||!!S.q;
+  const op=(v,n,cur)=>`<option value="${esc(v)}" ${v===cur?'selected':''}>${esc(n)}</option>`;
   const sem=semContrato(),nInc=[...S.contr.values()].filter(incompleto).length;
-  $('#main').innerHTML=`<div class="bar"><input type="search" id="q" placeholder="Buscar objeto, empresa, SEI ou processo" value="${esc(S.q)}" aria-label="Buscar">
-    <select id="cEstado" aria-label="Estado atual">${[['ativos','Em execução e suspensos'],['Em execução','Só em execução'],['Suspenso','Só suspensos'],['Finalizado','Só finalizados'],['todos','Todos']].map(([k,n])=>`<option value="${k}" ${k===fe?'selected':''}>${n}</option>`).join('')}</select>
+  $('#main').innerHTML=`<div class="bar"><input type="search" id="q" placeholder="Buscar objeto, empresa, SEI, processo, gestor ou fiscal" value="${esc(S.q)}" aria-label="Buscar">
     <button class="btn pri" type="button" id="novoContr" ${S.write?'':'disabled'}>+ Novo contrato</button></div>
+  <div class="filtros" id="cfiltros">
+    <label>Estado atual<select data-f="estado">${[['ativos','Em execução e suspensos'],['Em execução','Em execução'],['Suspenso','Suspensos'],['Finalizado','Finalizados'],['todos','Todos']].map(([k,n])=>op(k,n,F.estado)).join('')}</select></label>
+    <label>Vigência<select data-f="vig">${[['','Todas'],['vencido','Vencidos'],['30','Vencem em até 30 dias'],['janela',`Vencem em 31 a ${J} dias`],['longe',`Mais de ${J} dias`],['sem','Sem data final ou prazo indeterminado']].map(([k,n])=>op(k,n,F.vig)).join('')}</select></label>
+    <label>Gestor ou fiscal<select data-f="pessoa">${op('','Todos',F.pessoa)}${pessoasC.map(n=>op(n,n,F.pessoa)).join('')}</select></label>
+    <label>Papel<select data-f="papel" ${F.pessoa?'':'disabled'}>${[['','Gestor ou fiscal'],['Gestor','Só como gestor'],['Fiscal','Só como fiscal']].map(([k,n])=>op(k,n,F.papel)).join('')}</select></label>
+    <label>Setor demandante<select data-f="setor">${op('','Todos',F.setor)}${setoresC.map(s=>op(s,s,F.setor)).join('')}</select></label>
+    <label>Ordenar por<select data-f="ord">${[['vig','Vigência mais próxima'],['estado','Data do estado (recentes)'],['objeto','Objeto (A–Z)'],['empresa','Empresa (A–Z)']].map(([k,n])=>op(k,n,F.ord)).join('')}</select></label>
+    <label class="chk"><input type="checkbox" data-f="inc" ${F.inc?'checked':''}> Só com dados a completar</label>
+    <span class="fcount"><b>${cs.length}</b> de ${todos.length} contratos ${ativos?'<button class="btn sm" type="button" id="limparF">Limpar filtros</button>':''}</span>
+  </div>
   <p class="muted small" style="margin:-4px 0 10px">Todo contrato pertence a um processo. Quando um processo entra em execução no fluxo, o contrato aparece aqui sozinho, para completar empresa e vigência.${nInc?` <b>${nInc} contrato(s) com dados a completar</b> estão no topo da lista.`:''}</p>
   ${sem.length?`<details class="card aviso-pend" style="margin-bottom:12px"><summary><b>${sem.length} processo(s) em execução ainda sem contrato</b> · decida para quais criar</summary>
     <p class="muted small">Compras de entrega única, eventos e cursos nem sempre têm contrato formal. Crie só para os que têm.</p>
@@ -625,7 +654,8 @@ function vContratos(){
   <p class="muted" style="font-size:12px">Ordenado pela vigência mais próxima. Faixas: até 30 dias em vermelho, até ${JANELA()} dias em laranja. Clique para editar.</p>`;
   const q=$('#q');q.oninput=()=>{S.q=q.value;const p=q.selectionStart;vContratos();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
   $('#novoContr').onclick=()=>abrirContrato(null,novoContrato(''));
-  $('#cEstado').onchange=e=>{S.cEstado=e.target.value;vContratos()};
+  $('#cfiltros').onchange=e=>{const k=e.target.dataset.f;if(!k)return;F[k]=e.target.type==='checkbox'?e.target.checked:e.target.value;if(k==='pessoa'&&!F.pessoa)F.papel='';vContratos()};
+  if($('#limparF'))$('#limparF').onclick=()=>{S.cf={...CF0};S.q='';vContratos()};
   const M=$('#main');M.onclick=e=>{const pr=e.target.closest('[data-proc]');if(pr){e.preventDefault();return abrirFicha(pr.dataset.proc)}
     const cr=e.target.closest('[data-criar]');if(cr)return abrirContrato(null,novoContrato(cr.dataset.criar));
     const r=e.target.closest('tr[data-id]');if(r)abrirContrato(r.dataset.id)};
@@ -1185,7 +1215,7 @@ async function vConfig(){
   const cont=id=>[...S.proc.values()].filter(p=>faseDe(p)===id).length;
   const pes=[...S.pessoas.values()].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
   $('#main').innerHTML=`<div class="cfg">
-   <nav class="cfg-nav" aria-label="Seções"><a href="#cfg-colunas">Colunas do fluxo</a><a href="#cfg-usuarios">Usuários e acesso</a><a href="#cfg-equipe">Equipe</a><a href="#cfg-setores">Setores demandantes</a><a href="#cfg-param">Parâmetros</a><a href="#cfg-email">Relatório diário</a></nav>
+   <nav class="cfg-nav" aria-label="Seções"><a href="#cfg-colunas">Colunas do fluxo</a><a href="#cfg-usuarios">Usuários e acesso</a><a href="#cfg-equipe">Equipe</a><a href="#cfg-setores">Setores demandantes</a><a href="#cfg-param">Parâmetros</a></nav>
    <section class="card" id="cfg-colunas"><h2>Colunas do fluxo de processos</h2>
     <p class="muted small">Renomeie, reordene, crie ou remova colunas. A <b>etapa</b> diz ao sistema o que a coluna significa, e é ela que alimenta o Painel do PCA e os indicadores. Marque <b>exige gestor e fiscal</b> nas colunas em que o processo já precisa de designação.</p>
     <div class="tbl"><table class="cfgt"><thead><tr><th>Ordem</th><th>Nome da coluna</th><th>Etapa</th><th>Exige gestor e fiscal</th><th>Processos</th><th></th></tr></thead><tbody id="colsBody">
@@ -1230,15 +1260,6 @@ async function vConfig(){
      <p class="full muted small" style="margin:0">Usada nos alertas, no calendário, na linha do tempo e nos indicadores. Padrão: 120 dias.</p>
      <div class="full"><span id="prmsg" class="muted small"></span> <button class="btn pri">Salvar parâmetros</button></div></form></section>
 
-   <section class="card" id="cfg-email"><h2>Relatório diário por e-mail</h2>
-    <p class="muted small">Todo dia às <b>20h</b>, o SELIC-15 envia a planilha completa (a mesma do "Exportar tudo") para os e-mails abaixo, com um resumo do dia no corpo da mensagem.</p>
-    <div id="relStatus" class="aviso small">Verificando…</div>
-    <form class="form" id="frel" style="max-width:640px">
-     <label class="full" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="rl-ativo" style="width:auto" ${(S.config.get('relatorio')||{}).ativo?'checked':''}> Enviar o relatório todo dia às 20h</label>
-     <label class="full">E-mail remetente (o mesmo verificado no Brevo)<input type="email" id="rl-remetente" value="${esc((S.config.get('relatorio')||{}).remetente||'')}" placeholder="ex.: selic@crefito15.org.br"></label>
-     <label class="full">Quem recebe (um e-mail por linha)<textarea id="rl-dest" placeholder="nome@crefito15.org.br">${esc(((S.config.get('relatorio')||{}).destinatarios||[]).join('\n'))}</textarea></label>
-     <div class="full" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span id="rlmsg" class="muted small" style="margin-right:auto"></span>
-      <button class="btn" type="button" id="rlTeste">Enviar agora para testar</button><button class="btn pri">Salvar</button></div></form></section>
   </div>`;
   // colunas
   const body=$('#colsBody');
@@ -1300,20 +1321,6 @@ async function vConfig(){
   $('#fset').onsubmit=e=>{e.preventDefault();const s=$('#ns-nome').value.trim().toUpperCase();if(!s)return;
     if(SETORES().some(x=>norm(x)===norm(s)))return $('#setmsg').textContent='Esse setor já está na lista.';
     salvarSetores([...SETORES(),s].sort((a,b)=>a.localeCompare(b,'pt-BR')),`Setor "${s}" adicionado`)};
-  // relatório diário
-  const statusRel=async()=>{try{const s=await API('GET','/relatorio');const u=s.ultimo;
-    $('#relStatus').innerHTML=(s.chave?'✓ Chave do Brevo cadastrada na Cloudflare.':'<b>Falta cadastrar a chave do Brevo</b> (BREVO_API_KEY) na Cloudflare. Enquanto isso, o envio não funciona.')
-      +'<br>'+(u?`Último envio: ${new Date(u.em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})} · ${u.tipo==='relatorio'?'enviado':'falhou'} · ${esc(u.texto||'')}`:'Nenhum envio ainda.');
-    $('#relStatus').className='aviso small'+(s.chave&&(!u||u.tipo==='relatorio')?' ok-box':'')}catch{$('#relStatus').textContent='Não foi possível verificar o relatório.'}};
-  statusRel();
-  const dadosRel=()=>({ativo:$('#rl-ativo').checked,remetente:$('#rl-remetente').value.trim(),destinatarios:$('#rl-dest').value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean)});
-  $('#frel').onsubmit=async e=>{e.preventDefault();const d=dadosRel();
-    if(d.ativo&&(!d.remetente||!d.destinatarios.length))return $('#rlmsg').textContent='Para ativar, informe o remetente e pelo menos um destinatário.';
-    try{await API('PUT','/docs/config/relatorio',{data:d,texto:'Relatório diário: '+(d.ativo?'ativado para '+d.destinatarios.length+' destinatário(s)':'desativado')});await sync();$('#rlmsg').textContent='Salvo.';toast('Configuração do relatório diário salva')}catch(er){$('#rlmsg').textContent='Não foi possível salvar.'}};
-  $('#rlTeste').onclick=async()=>{const b=$('#rlTeste');b.disabled=true;$('#rlmsg').textContent='Salvando e enviando…';
-    try{await API('PUT','/docs/config/relatorio',{data:dadosRel(),texto:'Relatório diário: configuração salva'});await sync();
-      const r=await API('POST','/relatorio');$('#rlmsg').textContent=`Enviado para ${r.para} destinatário(s). Confira a caixa de entrada (e o spam).`}
-    catch(er){$('#rlmsg').textContent=er.message||'Não foi possível enviar.'}finally{b.disabled=false;statusRel()}};
   // parâmetros
   $('#fparam').onsubmit=async e=>{e.preventDefault();const j=Math.max(30,Math.min(365,+$('#pr-janela').value||120));
     const ant=copia(S.config.get('parametros')||{});delete ant.id;

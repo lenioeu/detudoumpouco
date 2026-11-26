@@ -12,14 +12,14 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 | Indicadores | Indicadores do setor com faixas e variação e gráficos por coluna, urgência, responsável e vigência |
 | Fluxo de processos | Kanban com colunas configuráveis, arrastar para mudar de coluna, urgência por cor (baixa verde, média amarela, urgente vermelha) e ficha completa |
 | Tabela | Todos os processos em linhas, com filtros, ordenação e exportação dos processos filtrados |
-| Contratos | Contratos ordenados pela vigência mais próxima. Todo contrato pertence a um processo; o contrato aparece sozinho quando o processo entra em execução, para completar empresa e vigência |
+| Contratos | Contratos com filtros por estado, vigência, gestor ou fiscal, setor e dados a completar, e ordenação. Todo contrato pertence a um processo; o contrato aparece sozinho quando o processo entra em execução, para completar empresa e vigência |
 | Linha do tempo | Vigência restante de cada contrato assinado e a janela de 120 dias para renovar |
 | Calendário | Prazos de tarefas, fins de vigência, início das janelas de renovação e agenda do setor |
 | Tarefas da equipe | Tarefas por responsável, com histórico de mudanças de prazo |
 | Gestores e fiscais | Gráfico de processos ativos por pessoa, pizzas com o % dos contratos de cada gestor e fiscal, quem acompanha cada processo e o que está sem designação |
 | Parcerias | Tabela de parceiros: credenciamentos, convênios e acordos, com vigência e contato |
 | Painel do PCA | Previsto × realizado, por setor, dependências do COFFITO e o que foi feito fora do plano |
-| Configurações | Só administradores: colunas do fluxo, usuários e níveis de acesso, equipe, setores demandantes, parâmetros e relatório diário |
+| Configurações | Só administradores: colunas do fluxo, usuários e níveis de acesso, equipe, setores demandantes e parâmetros |
 
 ## Como funciona
 
@@ -39,11 +39,9 @@ O botão **Exportar tudo (Excel)**, no topo, baixa uma planilha com todas as inf
 
 A aba Tabela tem a sua própria exportação, que leva só os processos filtrados na tela.
 
-## Relatório diário por e-mail
+## Relatório diário por e-mail (desativado)
 
-Todo dia às 20h (Brasília), o SELIC-15 gera a planilha completa e envia por e-mail, com um resumo do dia no corpo da mensagem. Os destinatários, o remetente e o liga/desliga ficam em **Configurações → Relatório diário**, onde também há um botão para enviar um teste na hora.
-
-O envio usa o **Brevo** (gratuito até 300 e-mails por dia). A chave fica como segredo `BREVO_API_KEY` no Worker, cadastrada pelo painel da Cloudflare e nunca neste repositório. O remetente precisa estar verificado no Brevo.
+A seção de configuração foi retirada de Configurações. O código de envio, com planilha e resumo pelo Brevo, continua no Worker (`src/relatorio.js`), mas não envia nada enquanto não for reativado.
 
 ## Níveis de acesso
 
