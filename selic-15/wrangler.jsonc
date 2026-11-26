@@ -15,6 +15,9 @@
   // Fotografia diária dos indicadores às 23h50 (horário de Brasília)
   "triggers": { "crons": ["50 2 * * *"] },
   "observability": { "enabled": true },
-  // Preenchidos depois de ativar o Cloudflare Access (ver README). Vazios = sistema bloqueado.
-  "vars": { "ACCESS_TEAM_DOMAIN": "", "ACCESS_AUD": "" }
+  // Login via Cloudflare Access (equipe selic15). Vazios = sistema bloqueado.
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "selic15.cloudflareaccess.com",
+    "ACCESS_AUD": "670468af3ab662d27bbcbf14006f73e12a725b9a9a2e27b6581a028237d60144"
+  }
 }

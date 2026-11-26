@@ -55,6 +55,8 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 4. Na mesma aplicação, copie o **Application Audience (AUD) Tag**. Anote também o domínio da equipe (`<nome>.cloudflareaccess.com`).
 5. Preencha `ACCESS_TEAM_DOMAIN` e `ACCESS_AUD` em `wrangler.jsonc` e publique de novo (`npm run deploy`).
 
+Situação atual: equipe `selic15`, aplicação protegendo todo o tráfego do `selic-15`, login por código no e-mail (One-time PIN). Para dar acesso a alguém, inclua o e-mail na política da aplicação, em Zero Trust → Access → Applications.
+
 ## Desenvolvimento
 
 ```bash
