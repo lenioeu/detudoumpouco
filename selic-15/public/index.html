@@ -328,6 +328,10 @@ tr.pend td{background:var(--warn-soft)}
 .ajuda-sec h3{margin:0 auto 0 0;font-size:17px;color:var(--brand-dark)}.ajuda-sec a.btn{text-decoration:none;color:var(--ink)}
 .ajuda-sec ul,.ajuda-sec ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-width:75ch}.ajuda-sec p{margin:0 0 8px;max-width:75ch}
 .faq dt{font-weight:700;margin-top:10px}.faq dd{margin:4px 0 0;color:var(--muted);max-width:75ch}
+/* ---- validação do SEI ---- */
+.sei-msg{color:var(--crit);font-size:12px;font-weight:600}.sei-msg:empty{display:none}
+input.invalido{border-color:var(--crit)!important;background:var(--crit-soft)!important}
+.confirma.aviso-tom .confirma-box{border-top-color:var(--warn)}.confirma.aviso-tom .perigo-pri{background:var(--brand-dark);border-color:var(--brand-dark)}
 /* ---- contratos ---- */
 .filtros{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:-4px 0 12px}
 .filtros label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
@@ -508,8 +512,28 @@ function toast(m,desfazer){const t=$('#toast');toastDesf=desfazer||null;
   t.hidden=false;t.classList.remove('in');void t.offsetWidth;t.classList.add('in');
   const tempo=desfazer?7000:3200,esconder=()=>{clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;toastDesf=null},tempo)};
   t.onmouseenter=()=>clearTimeout(toastT);t.onmouseleave=esconder;t.onfocusin=()=>clearTimeout(toastT);esconder()}
-function confirmar({titulo,texto,botao='Confirmar'}){return new Promise(res=>{
-  const d=document.createElement('div');d.className='confirma';
+/* número SEI: padrão do CREFITO-15 (18 dígitos) ou padrão federal de outros órgãos (17 dígitos) */
+const SEI_OK=/^(15\.15\d{2}\.\d{6}\/\d{4}-\d{2}|(?!1515)\d{5}\.\d{6}\/\d{4}-\d{2})(\s*\(.*\))?$/;
+const digSEI=v=>String(v||'').replace(/\(.*\)/,'').replace(/\D/g,'');
+function formatarSEI(v){const s=String(v||'').trim();if(!s)return'';const m=s.match(/^(.*?)(\s*\(.*\))?$/),nota=m[2]?' '+m[2].trim():'',d=m[1].replace(/\D/g,'');
+  if(d.length===18&&d.startsWith('15'))return`${d.slice(0,2)}.${d.slice(2,6)}.${d.slice(6,12)}/${d.slice(12,16)}-${d.slice(16)}`+nota;
+  if(d.length===17&&!d.startsWith('1515'))return`${d.slice(0,5)}.${d.slice(5,11)}/${d.slice(11,15)}-${d.slice(15)}`+nota;
+  return s}
+function erroSEI(v){if(!v||SEI_OK.test(v))return'';const n=digSEI(v).length;
+  return n<17||(n===17&&digSEI(v).startsWith('1515'))?`Número SEI incompleto: tem ${n} dígito${n===1?'':'s'}. O padrão do CREFITO-15 tem 18 (ex.: 15.1511.000082/2026-55).`
+    :n>18?`Número SEI com dígitos a mais (${n}). O padrão do CREFITO-15 tem 18 (ex.: 15.1511.000082/2026-55).`
+    :'Número SEI fora do padrão. Use 15.15XX.NNNNNN/AAAA-NN (ex.: 15.1511.000082/2026-55).'}
+// Liga a formatação automática e o aviso a um campo de SEI. Retorna uma função que valida antes de salvar.
+function ligarSEI(inp){
+  const msg=document.createElement('small');msg.className='sei-msg';msg.setAttribute('role','alert');inp.insertAdjacentElement('afterend',msg);
+  const marcar=e=>{msg.textContent=e;inp.classList.toggle('invalido',!!e);inp.setAttribute('aria-invalid',e?'true':'false')};
+  const fmt=()=>{const n=formatarSEI(inp.value);if(n!==inp.value)inp.value=n;marcar(erroSEI(inp.value))};
+  inp.addEventListener('blur',fmt);
+  inp.addEventListener('input',()=>{const dd=digSEI(inp.value),n=dd.length;if(n===18||(n===17&&!dd.startsWith('1515')))fmt();else if(inp.classList.contains('invalido'))marcar('')});
+  return()=>{fmt();if(msg.textContent){inp.focus();return false}return true};
+}
+function confirmar({titulo,texto,botao='Confirmar',tom}){return new Promise(res=>{
+  const d=document.createElement('div');d.className='confirma'+(tom==='aviso'?' aviso-tom':'');
   d.innerHTML=`<div class="confirma-box" role="alertdialog" aria-modal="true" aria-labelledby="cf-t" aria-describedby="cf-x"><h3 id="cf-t">${esc(titulo)}</h3><p id="cf-x">${esc(texto)}</p>
     <div class="confirma-acoes"><button class="btn" type="button" data-n>Cancelar</button><button class="btn perigo-pri" type="button" data-s>${esc(botao)}</button></div></div>`;
   document.body.appendChild(d);
@@ -1214,7 +1238,7 @@ function abrirParceria(id,novo){
     <label>CNPJ<input id="pa-cnpj" value="${esc(x.cnpj||'')}" placeholder="00.000.000/0000-00" style="font-family:var(--mono)"></label>
     <label>Tipo<select id="pa-tipo">${TIPOS_PARC.map(o=>`<option ${o===x.tipo?'selected':''}>${o}</option>`).join('')}</select></label>
     <label class="full">Objeto ou benefício<textarea id="pa-objeto" placeholder="Ex.: desconto em cursos de inglês para profissionais inscritos">${esc(x.objeto||'')}</textarea></label>
-    <label>Número SEI<input id="pa-sei" value="${esc(x.sei||'')}" style="font-family:var(--mono)"></label>
+    <label>Número SEI<input id="pa-sei" value="${esc(x.sei||'')}" placeholder="15.1511.000000/2026-00" inputmode="numeric" style="font-family:var(--mono)"></label>
     <label>Situação<select id="pa-situacao">${['Em tratativa','Vigente','Encerrada'].map(o=>`<option ${o===x.situacao?'selected':''}>${o}</option>`).join('')}</select></label>
     <label>Início da vigência<input type="date" id="pa-inicio" value="${esc(x.inicio||'')}"></label>
     <label>Fim da vigência<input type="date" id="pa-fim" value="${esc(x.fim||'')}"></label>
@@ -1222,7 +1246,8 @@ function abrirParceria(id,novo){
     <label class="full">Observações<textarea id="pa-obs">${esc(x.obs||'')}</textarea></label>
     <div class="full" style="display:flex;gap:8px;align-items:center"><span id="pamsg" class="muted" style="margin-right:auto"></span>
      ${id?`<button class="btn" type="button" id="paDel" ${S.write?'':'disabled'}>Excluir</button>`:''}<button class="btn pri" ${S.write?'':'disabled'}>Salvar</button></div></form></section>`);
-  $('#fpa').onsubmit=async e=>{e.preventDefault();const v=k=>$('#pa-'+k).value.trim();
+  const seiParcOk=ligarSEI($('#pa-sei'));
+  $('#fpa').onsubmit=async e=>{e.preventDefault();if(!seiParcOk())return;const v=k=>$('#pa-'+k).value.trim();
     const d={nome:v('nome'),cnpj:v('cnpj'),tipo:v('tipo'),objeto:v('objeto'),sei:v('sei'),situacao:v('situacao'),inicio:v('inicio'),fim:v('fim'),contato:v('contato'),obs:v('obs')};
     try{if(id){if(!await upd('parcerias',id,d,'Parceria atualizada: '+d.nome,'edicao'))return}else await criar('parcerias',d);fechar();if(S.view==='parcerias')vParcerias()}
     catch(er){$('#pamsg').textContent='Não foi possível salvar ('+(er.message||er.code)+').'}};
@@ -1383,6 +1408,7 @@ const AJUDA=[
   <li><b>Atividade recente:</b> quem fez o quê no sistema.</li></ul>`},
  {id:'fluxo',t:'Fluxo de processos',aba:'quadro',h:`<p>Cada coluna é uma fase do processo, como num quadro de cartões.</p><ul>
   <li><b>Cadastrar:</b> botão "+ Novo processo", no topo. Preencha e clique em "Cadastrar processo". Nada é criado antes disso.</li>
+  <li><b>Número SEI:</b> digite só os números; o sistema coloca os pontos, a barra e o traço. Número incompleto não é aceito, e o sistema avisa se o número já estiver em outro processo (inclusive quando só os dois últimos dígitos mudam, o que costuma ser erro de digitação).</li>
   <li><b>Mudar de fase:</b> arraste o cartão para outra coluna, ou mude o campo "Fase" na ficha.</li>
   <li><b>Abrir a ficha:</b> clique no cartão. Ali você edita os dados, define gestor e fiscal, registra andamentos e vê o histórico.</li>
   <li><b>Urgência:</b> na ficha, escolha Baixa (verde), Média (amarela) ou Urgente (vermelha). A cor aparece no cartão, e os urgentes sobem para o topo da coluna.</li>
@@ -1481,7 +1507,7 @@ function abrirFicha(id,novo){
    <section><h4>Dados do processo</h4>
     <form class="form" id="fp">
      <label class="full">Objeto<input id="f-objeto" value="${esc(p.objeto)}" required placeholder="Ex.: Aquisição de cadeiras para a sala de reunião"></label>
-     <label>Número SEI<input id="f-sei" value="${esc(p.sei)}" placeholder="15.1511.000000/2026-00" style="font-family:var(--mono)"></label>
+     <label>Número SEI<input id="f-sei" value="${esc(p.sei)}" placeholder="Digite só os números" inputmode="numeric" style="font-family:var(--mono)"></label>
      <label>Fase<select id="f-fase">${FASES.map(([k])=>opt(k,faseDe(p))).join('')}</select></label>
      <label>Urgência<select id="f-urgencia"><option value="">Não definida</option>${Object.entries(URG).reverse().map(([k,n])=>`<option value="${k}" ${k===p.urgencia?'selected':''}>${n}</option>`).join('')}</select></label>
      <label>Setor demandante<select id="f-setor"><option value="">Não informado</option>${[...SETORES(),...(p.setor&&!SETORES().includes(p.setor)?[p.setor]:[])].map(s=>`<option value="${esc(s)}" ${s===p.setor?'selected':''}>${esc(s)}${SETORES().includes(s)?'':' (fora da lista)'}</option>`).join('')}</select></label>
@@ -1508,11 +1534,18 @@ function abrirFicha(id,novo){
   $('#eq').oninput=e=>{const t=e.target;if(t.dataset.i)eq[+t.dataset.i][t.dataset.k]=t.value};
   $('#eq').onclick=e=>{const r=e.target.closest('[data-rm]');if(r){eq.splice(+r.dataset.rm,1);drawEq()}};
   $('#addEq').onclick=()=>{eq.push({nome:'',papel:eq.some(x=>x.papel==='Gestor')?'Fiscal':'Gestor',obs:''});drawEq()};
+  const seiValido=ligarSEI($('#f-sei'));
   $('#fp').onsubmit=async e=>{e.preventDefault();
     const v=k=>$('#f-'+k)?.value.trim()??'';
     const patch={objeto:v('objeto'),sei:v('sei'),fase:v('fase'),urgencia:v('urgencia'),setor:v('setor'),tipo:v('tipo'),obs:v('obs'),
       pca:{s:true,n:false}[v('pca')]??null,coffito:$('#f-coffito').checked,equipe:eq.map(x=>({nome:x.nome.trim(),papel:x.papel,obs:x.obs||''}))};
     if($('#f-demanda'))patch.demanda=v('demanda');
+    if(!seiValido())return;patch.sei=$('#f-sei').value.trim();
+    const ds=digSEI(patch.sei);
+    if(ds&&ds!==digSEI(p.sei)){const dup=[...S.proc.values()].find(x=>x.id!==id&&digSEI(x.sei).slice(0,ds.length-2)===ds.slice(0,-2));
+      if(dup&&!await confirmar({tom:'aviso',titulo:'Este número SEI já está em outro processo',
+        texto:`"${dup.objeto}" usa o SEI ${dup.sei}${digSEI(dup.sei)!==ds?' (só os dois últimos dígitos mudam, o que costuma ser erro de digitação)':''}. É o mesmo processo? Se for, use a ficha que já existe, para não duplicar.`,
+        botao:'Salvar mesmo assim'}))return}
     if(!id){if(!patch.objeto){$('#fmsg').textContent='Informe o objeto do processo.';$('#f-objeto').focus();return}
       try{const nid=await criar('processos',{...NOVO_PROC(),...patch});abrirFicha(nid)}catch(er){$('#fmsg').textContent='Não foi possível cadastrar ('+(er.message||er.code)+').'}
       return}
@@ -1569,7 +1602,7 @@ function abrirContrato(id,novo){
    <section><h4>Contrato</h4><form class="form" id="fc">
     <label class="full">Processo vinculado (obrigatório)<select id="c-processo" required><option value="">Escolha o processo…</option>${procs.map(x=>`<option value="${esc(x.id)}" ${x.id===c.processo?'selected':''}>${esc((x.objeto||'').slice(0,80))}${x.sei?' · '+esc(x.sei):''}</option>`).join('')}</select></label>
     <label class="full">Objeto do contrato<input id="c-objeto" value="${esc(c.objeto)}" required></label>
-    <label>Número SEI<input id="c-sei" value="${esc(c.sei)}" style="font-family:var(--mono)"></label>
+    <label>Número SEI<input id="c-sei" value="${esc(c.sei)}" placeholder="15.1511.000000/2026-00" inputmode="numeric" style="font-family:var(--mono)"></label>
     <label>Empresa contratada<input id="c-empresa" value="${esc(c.empresa)}"></label>
     <label>Vigência (data final)<input type="date" id="c-vigencia" value="${esc(c.vigencia||'')}" ${c.indeterminado?'disabled':''}></label>
     <label style="flex-direction:row;align-items:center;gap:8px;align-self:end"><input type="checkbox" id="c-indeterminado" ${c.indeterminado?'checked':''} style="width:auto"> Prazo indeterminado (sem data final)</label>
@@ -1579,12 +1612,14 @@ function abrirContrato(id,novo){
     <div class="full" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${id&&S.write?'<button class="btn perigo" type="button" id="delContr">Excluir contrato</button>':''}<span id="cmsg" class="muted" style="margin-right:auto"></span>
      ${p?`<button class="btn" type="button" id="verP">Abrir processo</button>`:''}<button class="btn pri" ${S.write?'':'disabled'}>${id?'Salvar':'Cadastrar contrato'}</button></div></form></section>`);
   if(p)$('#verP').onclick=()=>abrirFicha(p.id);
+  const seiContrOk=ligarSEI($('#c-sei'));
   $('#c-indeterminado').onchange=e=>{$('#c-vigencia').disabled=e.target.checked;if(e.target.checked)$('#c-vigencia').value=''};
   $('#c-continuidade').onchange=()=>{$('#c-estadoData').value=isoOf(hoje())};
   $('#c-processo').onchange=e=>{const x=S.proc.get(e.target.value);if(!x)return;if(!$('#c-objeto').value.trim())$('#c-objeto').value=x.objeto||'';if(!$('#c-sei').value.trim())$('#c-sei').value=x.sei||''};
   $('#fc').onsubmit=async e=>{e.preventDefault();const v=k=>$('#c-'+k).value.trim();
     const patch={processo:v('processo'),objeto:v('objeto'),sei:v('sei'),empresa:v('empresa'),vigencia:$('#c-indeterminado').checked?null:(v('vigencia')||null),indeterminado:$('#c-indeterminado').checked,continuidade:v('continuidade'),estadoData:v('estadoData')||null,situacao:v('situacao')};
     if(!patch.processo)return $('#cmsg').textContent='Escolha o processo deste contrato.';
+    if(!seiContrOk())return;patch.sei=$('#c-sei').value.trim();
     if(!id){try{const nid=await criar('contratos',patch);abrirContrato(nid)}catch(er){$('#cmsg').textContent='Não foi possível cadastrar ('+(er.message||er.code)+').'}return}
     if(await upd('contratos',id,patch,'Contrato atualizado: '+(patch.objeto||''),'contrato')){$('#cmsg').textContent='Salvo.';
       const pp=S.proc.get(patch.processo);if(pp&&c.vigencia!==patch.vigencia)upd('processos',pp.id,{},`Vigência do contrato (${patch.empresa||patch.objeto}): ${br(c.vigencia)} → ${br(patch.vigencia)}`,'registro');abrirContrato(id)}};
