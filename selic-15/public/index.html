@@ -200,7 +200,7 @@ header{border-top:4px solid var(--brand)}
 nav.tabs a[aria-current="page"]{border-bottom:3px solid var(--brand);color:var(--brand-dark)}
 h1,h2,h3{font-family:var(--serif)}
 .small{font-size:12px}
-.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--brand-dark);color:#fff;padding:10px 18px;border-radius:99px;font-weight:600;z-index:40;box-shadow:0 6px 20px rgba(19,39,23,.3)}
+.toast{display:flex;align-items:center;gap:10px;position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--brand-dark);color:#fff;padding:10px 18px;border-radius:99px;font-weight:600;z-index:40;box-shadow:0 6px 20px rgba(19,39,23,.3)}
 @media (max-width:640px){.sys small,.user{display:none}.brand img{height:44px}#xlsTudo{font-size:12px;padding:6px 8px}}
 /* ---- painel ---- */
 .dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
@@ -299,6 +299,15 @@ body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera #xlsTud
 nav.tabs a .n.alerta{background:var(--crit);color:#fff}
 .aviso-pend{background:var(--warn-soft);border-color:#f0d49a}.aviso-pend a{color:var(--accent);font-weight:600}
 tr.pend td{background:var(--warn-soft)}
+/* ---- avisos e confirmações ---- */
+.toast{z-index:60}.toast .tk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:var(--brand-dark);font-size:12px;font-weight:800}
+.confirma{position:fixed;inset:0;background:rgba(10,20,22,.5);z-index:50;display:grid;place-items:center;padding:16px}
+.confirma-box{background:var(--surface);border-radius:14px;max-width:460px;width:100%;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.25);border-top:4px solid var(--crit)}
+.confirma-box h3{margin:0 0 8px;font-size:18px;color:var(--brand-dark)}.confirma-box p{margin:0 0 18px;color:var(--muted)}
+.confirma-acoes{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.btn.perigo{color:var(--crit);border-color:#e7b9b5}.btn.perigo:hover{background:var(--crit-soft);border-color:var(--crit)}
+.btn.perigo-pri{background:var(--crit);border-color:var(--crit);color:#fff}.btn.perigo-pri:hover{background:#951f18}
+@media (prefers-reduced-motion:no-preference){.toast.in{animation:tin .22s ease-out}@keyframes tin{from{transform:translate(-50%,12px);opacity:0}}}
 @media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
 </style>
 </head>
@@ -408,21 +417,38 @@ function telaEspera(){
 function note(m){const n=$('#notice');n.textContent=m;n.hidden=false}
 let raf=0;function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(render)}
 const quem=e=>!e?'alguém da equipe':S.names[e]||(String(e).includes('@')?String(e).split('@')[0]:e);
-async function upd(col,id,patch,texto,acao){
+const MSG_SALVO={processos:'Processo salvo',contratos:'Contrato salvo',tarefas:'Tarefa salva',agenda:'Evento salvo',metas:'Meta salva',parcerias:'Parceria salva',pessoas:'Dados da pessoa salvos'};
+const MSG_ACAO={tarefa_concluida:'Tarefa concluída',reabrir:'Tarefa reaberta',pendencia:'Pendência marcada como resolvida',andamento:'Andamento registrado no histórico',contrato:'Contrato salvo'};
+const MSG_CRIADO={processos:'Processo cadastrado',tarefas:'Tarefa criada',agenda:'Evento adicionado à agenda',metas:'Meta criada',parcerias:'Parceria cadastrada',pessoas:'Pessoa adicionada à equipe'};
+const MSG_EXCLUIDO={processos:'Processo excluído',agenda:'Evento excluído',metas:'Meta excluída',parcerias:'Parceria excluída',pessoas:'Pessoa excluída da equipe'};
+async function upd(col,id,patch,texto,acao,silencio){
   try{const r=await API('PATCH',`/docs/${col}/${encodeURIComponent(id)}`,{patch,texto:texto||'',acao:acao||'edicao'});
-    aplicar(r.doc);schedule();carregarPainel();return true}
+    aplicar(r.doc);schedule();carregarPainel();
+    if(!silencio&&acao!=='registro')toast(acao==='fase'&&patch.fase?`Processo movido para "${FNOME[patch.fase]||''}"`:MSG_ACAO[acao]||MSG_SALVO[col]||'Alterações salvas');
+    return true}
   catch(e){if(e.code!=='sessao')note('Não foi possível salvar ('+(e.message||e.code)+'). Tente de novo.');return false}
 }
-async function criar(col,data){const r=await API('POST','/docs/'+col,{data});aplicar(r.doc);schedule();carregarPainel();return r.doc.id}
-async function apagar(col,id){const r=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(r.doc);schedule()}
-let toastT=0;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+async function criar(col,data,silencio){const r=await API('POST','/docs/'+col,{data});aplicar(r.doc);schedule();carregarPainel();if(!silencio)toast(MSG_CRIADO[col]||'Salvo');return r.doc.id}
+async function apagar(col,id){const r=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(r.doc);schedule();carregarPainel();toast(MSG_EXCLUIDO[col]||'Excluído')}
+let toastT=0;function toast(m){const t=$('#toast');t.innerHTML='<span class="tk" aria-hidden="true">✓</span>';t.append(document.createTextNode(m));t.hidden=false;
+  t.classList.remove('in');void t.offsetWidth;t.classList.add('in');clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+function confirmar({titulo,texto,botao='Confirmar'}){return new Promise(res=>{
+  const d=document.createElement('div');d.className='confirma';
+  d.innerHTML=`<div class="confirma-box" role="alertdialog" aria-modal="true" aria-labelledby="cf-t" aria-describedby="cf-x"><h3 id="cf-t">${esc(titulo)}</h3><p id="cf-x">${esc(texto)}</p>
+    <div class="confirma-acoes"><button class="btn" type="button" data-n>Cancelar</button><button class="btn perigo-pri" type="button" data-s>${esc(botao)}</button></div></div>`;
+  document.body.appendChild(d);
+  const kd=e=>{if(e.key==='Escape'){e.stopImmediatePropagation();fim(false)}};
+  const fim=v=>{d.remove();document.removeEventListener('keydown',kd,true);res(v)};
+  document.addEventListener('keydown',kd,true);
+  d.querySelector('[data-n]').onclick=()=>fim(false);d.querySelector('[data-s]').onclick=()=>fim(true);d.onclick=e=>{if(e.target===d)fim(false)};
+  d.querySelector('[data-n]').focus()})}
 function pintarUsuario(){$('#quem').textContent=S.meuNome||quem(S.me)||'entrar'}
 $('#quem').onclick=()=>{S.ficha={tipo:'perfil'};
   shell(`<button class="btn sm close" type="button">Fechar</button><span class="sei">${esc(S.me||'')}</span><h2>Como seu nome aparece</h2>
    <section><form class="form" id="fu"><label class="full">Nome exibido para a equipe<input id="u-nome" value="${esc(S.meuNome)}" placeholder="Ex.: Anna Souza" maxlength="80"></label>
    <div class="full" style="display:flex;justify-content:flex-end"><button class="btn pri">Salvar</button></div></form></section>`);
   $('#fu').onsubmit=async e=>{e.preventDefault();const nome=$('#u-nome').value.trim();
-    try{const u=await API('PUT','/me',{nome});S.meuNome=u.nome;S.names[u.email]=u.nome;pintarUsuario();fechar();schedule()}catch{note('Não foi possível salvar o nome.')}}};
+    try{const u=await API('PUT','/me',{nome});S.meuNome=u.nome;S.names[u.email]=u.nome;pintarUsuario();fechar();schedule();toast('Seu nome foi atualizado')}catch{note('Não foi possível salvar o nome.')}}};
 function baixar(nome,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nome;document.body.appendChild(a);a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
 
@@ -1144,7 +1170,7 @@ async function vConfig(){
     if(fica.some(c=>!c.nome.trim()))return $('#colmsg').textContent='Dê um nome a todas as colunas.';
     $('#colmsg').textContent='Salvando…';
     try{for(const c of cfgCols.filter(c=>c._remover)){const dest=fica.find(o=>o.id===c.destino)||fica[0];
-        for(const p of [...S.proc.values()].filter(p=>faseDe(p)===c.id))await upd('processos',p.id,{fase:dest.id},`Coluna "${c.nome}" removida; processo movido para "${dest.nome}"`,'fase')}
+        for(const p of [...S.proc.values()].filter(p=>faseDe(p)===c.id))await upd('processos',p.id,{fase:dest.id},`Coluna "${c.nome}" removida; processo movido para "${dest.nome}"`,'fase',true)}
       await API('PUT','/docs/config/quadro',{data:{colunas:fica.map(c=>({id:c.id,nome:c.nome.trim(),etapa:c.etapa,designacao:!!c.designacao}))},texto:'Colunas do quadro alteradas'});
       await sync();cfgCols=null;vConfig();toast('Colunas salvas')}
     catch(er){$('#colmsg').textContent='Não foi possível salvar ('+(er.message||er.code)+').'}};
@@ -1173,7 +1199,7 @@ async function vConfig(){
     const gest=new Set(),fisc=new Set();for(const p of S.proc.values())for(const e of p.equipe||[])if(e.nome)(e.papel==='Gestor'?gest:fisc).add(e.nome);
     const novos=nomesEquipe().filter(n=>!ja.has(norm(n)));if(!novos.length)return $('#pesmsg').textContent='Nenhum nome novo para importar.';
     $('#pesmsg').textContent=`Importando ${novos.length}…`;
-    for(const n of novos)await criar('pessoas',{nome:n,funcao:gest.has(n)?'Gestor(a) de contrato':fisc.has(n)?'Fiscal de contrato':'Servidor(a) da SELIC',setor:'',email:''});
+    for(const n of novos)await criar('pessoas',{nome:n,funcao:gest.has(n)?'Gestor(a) de contrato':fisc.has(n)?'Fiscal de contrato':'Servidor(a) da SELIC',setor:'',email:''},true);
     toast(`${novos.length} pessoas importadas`);vConfig()};
   // relatório diário
   const statusRel=async()=>{try{const s=await API('GET','/relatorio');const u=s.ultimo;
@@ -1184,14 +1210,14 @@ async function vConfig(){
   const dadosRel=()=>({ativo:$('#rl-ativo').checked,remetente:$('#rl-remetente').value.trim(),destinatarios:$('#rl-dest').value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean)});
   $('#frel').onsubmit=async e=>{e.preventDefault();const d=dadosRel();
     if(d.ativo&&(!d.remetente||!d.destinatarios.length))return $('#rlmsg').textContent='Para ativar, informe o remetente e pelo menos um destinatário.';
-    try{await API('PUT','/docs/config/relatorio',{data:d,texto:'Relatório diário: '+(d.ativo?'ativado para '+d.destinatarios.length+' destinatário(s)':'desativado')});await sync();$('#rlmsg').textContent='Salvo.'}catch(er){$('#rlmsg').textContent='Não foi possível salvar.'}};
+    try{await API('PUT','/docs/config/relatorio',{data:d,texto:'Relatório diário: '+(d.ativo?'ativado para '+d.destinatarios.length+' destinatário(s)':'desativado')});await sync();$('#rlmsg').textContent='Salvo.';toast('Configuração do relatório diário salva')}catch(er){$('#rlmsg').textContent='Não foi possível salvar.'}};
   $('#rlTeste').onclick=async()=>{const b=$('#rlTeste');b.disabled=true;$('#rlmsg').textContent='Salvando e enviando…';
     try{await API('PUT','/docs/config/relatorio',{data:dadosRel(),texto:'Relatório diário: configuração salva'});await sync();
       const r=await API('POST','/relatorio');$('#rlmsg').textContent=`Enviado para ${r.para} destinatário(s). Confira a caixa de entrada (e o spam).`}
     catch(er){$('#rlmsg').textContent=er.message||'Não foi possível enviar.'}finally{b.disabled=false;statusRel()}};
   // parâmetros
   $('#fparam').onsubmit=async e=>{e.preventDefault();const j=Math.max(30,Math.min(365,+$('#pr-janela').value||120));
-    try{await API('PUT','/docs/config/parametros',{data:{...(S.config.get('parametros')||{}),janela:j},texto:`Janela de renovação: ${j} dias`});await sync();carregarPainel();$('#prmsg').textContent='Salvo.'}
+    try{await API('PUT','/docs/config/parametros',{data:{...(S.config.get('parametros')||{}),janela:j},texto:`Janela de renovação: ${j} dias`});await sync();carregarPainel();$('#prmsg').textContent='Salvo.';toast('Parâmetros salvos')}
     catch(er){$('#prmsg').textContent='Não foi possível salvar.'}};
 }
 function abrirPessoa(id,novo){
@@ -1215,16 +1241,17 @@ function shell(html){const f=$('#ficha');f.hidden=false;f.innerHTML=`<div class=
 function fechar(){S.ficha=null;$('#ficha').hidden=true;$('#ficha').innerHTML='';document.onkeydown=null}
 const opt=(v,cur)=>`<option value="${esc(v)}" ${v===cur?'selected':''}>${esc(FNOME[v]||v)}</option>`;
 
-function abrirFicha(id){
-  const p=S.proc.get(id);if(!p)return;S.ficha={tipo:'proc',id};
+const NOVO_PROC=()=>({sei:'',seiExtras:[],objeto:'',setor:'',pca:null,tipo:'',fase:COLUNAS[0].id,urgencia:'',obs:'',demanda:'',coffito:false,fontes:[],equipe:[],alertas:[]});
+function abrirFicha(id,novo){
+  const p=id?S.proc.get(id):novo;if(!p)return;S.ficha={tipo:'proc',id:id||null};
   const nomes=nomesEquipe();
   shell(`<button class="btn sm close" type="button">Fechar</button>
-   <span class="sei">${esc(p.sei||'sem SEI')}${(p.seiExtras||[]).length?' · também '+esc(p.seiExtras.join(', ')):''}</span>
-   <h2>${esc(p.objeto)}</h2>
+   <span class="sei">${id?esc(p.sei||'sem SEI')+((p.seiExtras||[]).length?' · também '+esc(p.seiExtras.join(', ')):''):'Preencha os dados e clique em "Cadastrar processo"'}</span>
+   <h2>${id?esc(p.objeto):'Novo processo'}</h2>
    <div id="fdyn-top"></div>
    <section><h4>Dados do processo</h4>
     <form class="form" id="fp">
-     <label class="full">Objeto<input id="f-objeto" value="${esc(p.objeto)}"></label>
+     <label class="full">Objeto<input id="f-objeto" value="${esc(p.objeto)}" required placeholder="Ex.: Aquisição de cadeiras para a sala de reunião"></label>
      <label>Número SEI<input id="f-sei" value="${esc(p.sei)}" placeholder="15.1511.000000/2026-00" style="font-family:var(--mono)"></label>
      <label>Fase<select id="f-fase">${FASES.map(([k])=>opt(k,faseDe(p))).join('')}</select></label>
      <label>Urgência<select id="f-urgencia"><option value="">Não definida</option>${Object.entries(URG).reverse().map(([k,n])=>`<option value="${k}" ${k===p.urgencia?'selected':''}>${n}</option>`).join('')}</select></label>
@@ -1236,8 +1263,9 @@ function abrirFicha(id){
      <label class="full">Observações<textarea id="f-obs">${esc(p.obs)}</textarea></label>
      <div class="full"><b style="font-size:12px;color:var(--muted)">Gestor e fiscal</b><div id="eq" style="margin-top:6px"></div>
       <button class="btn sm" type="button" id="addEq">+ Adicionar pessoa</button></div>
-     <div class="full" style="display:flex;gap:8px;justify-content:flex-end"><span id="fmsg" class="muted" style="margin-right:auto;align-self:center"></span>
-      <button class="btn pri" type="submit" ${S.write?'':'disabled'}>Salvar alterações</button></div>
+     <div class="full" style="display:flex;gap:8px;justify-content:flex-end">${id&&S.write?'<button class="btn perigo" type="button" id="delProc">Excluir processo</button>':''}
+      <span id="fmsg" class="muted" style="margin-right:auto;align-self:center"></span>
+      <button class="btn pri" type="submit" ${S.write?'':'disabled'}>${id?'Salvar alterações':'Cadastrar processo'}</button></div>
     </form>
     <datalist id="dl-pess">${nomes.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
     <datalist id="dl-setor"><option value="DIRETORIA"><option value="SEFIN"><option value="SELIC"><option value="PRESIDÊNCIA"></datalist>
@@ -1257,6 +1285,9 @@ function abrirFicha(id){
     const patch={objeto:v('objeto'),sei:v('sei'),fase:v('fase'),urgencia:v('urgencia'),setor:v('setor'),tipo:v('tipo'),obs:v('obs'),
       pca:{s:true,n:false}[v('pca')]??null,coffito:$('#f-coffito').checked,equipe:eq.map(x=>({nome:x.nome.trim(),papel:x.papel,obs:x.obs||''}))};
     if($('#f-demanda'))patch.demanda=v('demanda');
+    if(!id){if(!patch.objeto){$('#fmsg').textContent='Informe o objeto do processo.';$('#f-objeto').focus();return}
+      try{const nid=await criar('processos',{...NOVO_PROC(),...patch});abrirFicha(nid)}catch(er){$('#fmsg').textContent='Não foi possível cadastrar ('+(er.message||er.code)+').'}
+      return}
     const cur=S.proc.get(id),mud=[];
     for(const k of Object.keys(patch))if(JSON.stringify(patch[k])!==JSON.stringify(cur[k]??(k==='pca'?null:k==='equipe'?[]:k==='coffito'?false:'')))mud.push(k);
     if(!mud.length){$('#fmsg').textContent='Nada mudou.';return}
@@ -1264,11 +1295,20 @@ function abrirFicha(id){
     const txt=mud.includes('fase')?`Fase: ${FNOME[cur.fase]} → ${FNOME[patch.fase]}`+(mud.length>1?'; também '+mud.filter(k=>k!=='fase').map(k=>nomesC[k]).join(', '):''):'Alterado: '+mud.map(k=>nomesC[k]).join(', ');
     if(await upd('processos',id,patch,txt))$('#fmsg').textContent='Salvo.';
   };
+  if($('#delProc'))$('#delProc').onclick=async()=>{
+    const nt=[...S.tar.values()].filter(x=>x.processo===id).length,nc=[...S.contr.values()].filter(x=>x.processo===id).length;
+    const ok=await confirmar({titulo:'Tem certeza que quer excluir este processo?',
+      texto:`"${p.objeto}" sai do quadro, da tabela e dos indicadores.${nt||nc?` As ${nt} tarefa(s) e ${nc} contrato(s) ligados a ele continuam no sistema, sem o vínculo.`:''} Não é possível desfazer pela tela.`,
+      botao:'Sim, excluir processo'});
+    if(!ok)return;
+    try{await apagar('processos',id);fechar()}catch(er){$('#fmsg').textContent='Não foi possível excluir ('+(er.message||er.code)+').'}};
+  if(!id)setTimeout(()=>$('#f-objeto')?.focus(),50);
   renderFichaDyn();
 }
 function renderFichaDyn(){
   const F=S.ficha;if(!F)return;
   if(F.tipo!=='proc')return;
+  if(!F.id){$('#fdyn-top').innerHTML='';$('#fdyn').innerHTML='<section class="muted small">Depois de cadastrar, aqui aparecem os contratos, as tarefas e o histórico do processo.</section>';return}
   const p=S.proc.get(F.id);if(!p){fechar();return}
   const cs=[...S.contr.values()].filter(c=>c.processo===p.id);
   const ts=[...S.tar.values()].filter(t=>t.processo===p.id);
@@ -1307,22 +1347,26 @@ function abrirContrato(id){
     if(await upd('contratos',id,patch,'Contrato atualizado: '+(c.objeto||''),'contrato')){$('#cmsg').textContent='Salvo.';
       if(p&&c.vigencia!==patch.vigencia)upd('processos',p.id,{},`Vigência do contrato (${c.empresa||c.objeto}): ${br(c.vigencia)} → ${br(patch.vigencia)}`,'registro')}};
 }
-function abrirTarefa(id){
-  const t=S.tar.get(id);if(!t)return;S.ficha={tipo:'tar',id};
-  shell(`<button class="btn sm close" type="button">Fechar</button><span class="sei">${esc(t.responsavel||'Sem responsável')}</span><h2>${esc(t.titulo)}</h2>
+function abrirTarefa(id,novo){
+  const t=id?S.tar.get(id):novo;if(!t)return;S.ficha={tipo:'tar',id:id||null};
+  const pv=S.proc.get(t.processo);
+  shell(`<button class="btn sm close" type="button">Fechar</button><span class="sei">${id?esc(t.responsavel||'Sem responsável'):pv?'Para o processo: '+esc(pv.objeto):'Preencha e clique em "Criar tarefa"'}</span><h2>${id?esc(t.titulo):'Nova tarefa'}</h2>
    <section><h4>Tarefa</h4><form class="form" id="ft">
-    <label class="full">Título<input id="t-titulo" value="${esc(t.titulo)}"></label>
+    <label class="full">Título<input id="t-titulo" value="${esc(t.titulo)}" required placeholder="Ex.: Pedir parecer à PROJUR"></label>
     <label>Responsável<input id="t-responsavel" value="${esc(t.responsavel)}" list="dl-resp2"></label>
     <label>Prazo<input type="date" id="t-prazo" value="${esc(t.prazo||'')}"></label>
     <label class="full">Ação a fazer<textarea id="t-acao">${esc(t.acao)}</textarea></label>
     <label class="full">Anotações<textarea id="t-notas">${esc(t.notas)}</textarea></label>
     <div class="full" style="display:flex;gap:8px;align-items:center"><span id="tmsg" class="muted" style="margin-right:auto"></span>
-     ${t.processo&&S.proc.has(t.processo)?'<button class="btn" type="button" id="verP">Abrir processo</button>':''}<button class="btn pri" ${S.write?'':'disabled'}>Salvar</button></div></form>
+     ${t.processo&&S.proc.has(t.processo)?'<button class="btn" type="button" id="verP">Abrir processo</button>':''}<button class="btn pri" ${S.write?'':'disabled'}>${id?'Salvar':'Criar tarefa'}</button></div></form>
     <datalist id="dl-resp2">${nomesEquipe().map(r=>`<option value="${esc(r)}">`).join('')}</datalist></section>
    <section><h4>Histórico</h4><ul class="list hist">${[...(t.historico||[])].reverse().map(h=>`<li><span>${esc(h.texto)}</span><small>${new Date(h.em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})} · ${esc(quem(h.por))}</small></li>`).join('')||'<li class="muted">Sem registros desde a importação. Mudanças de prazo passam a ficar registradas aqui.</li>'}</ul></section>`);
   if($('#verP'))$('#verP').onclick=()=>abrirFicha(t.processo);
   $('#ft').onsubmit=async e=>{e.preventDefault();const v=k=>$('#t-'+k).value.trim();
     const patch={titulo:v('titulo'),responsavel:v('responsavel'),prazo:v('prazo')||null,acao:v('acao'),notas:v('notas')};
+    if(!id){if(!patch.titulo){$('#tmsg').textContent='Informe o título da tarefa.';return}
+      try{const nid=await criar('tarefas',{...patch,status:'andamento',processo:t.processo||'',sei:t.sei||''});abrirTarefa(nid)}catch(er){$('#tmsg').textContent='Não foi possível criar ('+(er.message||er.code)+').'}
+      return}
     const ms=[];if(patch.prazo!==t.prazo)ms.push(`Prazo: ${br(t.prazo)} → ${br(patch.prazo)}`);
     if(patch.responsavel!==t.responsavel)ms.push(`Responsável: ${t.responsavel||'—'} → ${patch.responsavel||'—'}`);
     if(['titulo','acao','notas'].some(k=>patch[k]!==(t[k]||'')))ms.push('Descrição atualizada');
@@ -1332,14 +1376,9 @@ function abrirTarefa(id){
 async function novaTarefa(proc){
   if(!S.write)return note('Sem permissão para editar.');
   const p=S.proc.get(proc);
-  try{const nid=await criar('tarefas',{titulo:p?'Nova tarefa – '+p.objeto.slice(0,60):'Nova tarefa',acao:'',responsavel:S.meuNome||'',prazo:null,status:'andamento',notas:'',processo:proc||'',sei:p?.sei||''});abrirTarefa(nid)}
-  catch(e){note('Não foi possível criar a tarefa ('+e.code+').')}
+  abrirTarefa(null,{titulo:'',acao:'',responsavel:S.meuNome||'',prazo:null,status:'andamento',notas:'',processo:proc||'',sei:p?.sei||'',historico:[]});
 }
-$('#novoProc').onclick=async()=>{
-  try{const nid=await criar('processos',{sei:'',seiExtras:[],objeto:'Novo processo',setor:'',pca:null,tipo:'',fase:'previsto',obs:'',demanda:'',coffito:false,fontes:[],equipe:[],alertas:[]});
-    abrirFicha(nid);$('#f-objeto').select()}
-  catch(e){note('Não foi possível criar o processo ('+e.code+').')}
-};
+$('#novoProc').onclick=()=>{if(!S.write)return note('Sem permissão para editar.');abrirFicha(null,NOVO_PROC())};
 $('#xlsTudo').onclick=()=>exportar(true);
 $('#attn').onclick=e=>{const b=e.target.closest('[data-go]');if(!b)return;const g=b.dataset.go;
   if(g==='pend'){S.pend=true;S.q='';if(location.hash!=='#quadro')location.hash='#quadro';else vQuadro()}else location.hash='#'+g};
