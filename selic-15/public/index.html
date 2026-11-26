@@ -300,6 +300,17 @@ body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera #xlsTud
 nav.tabs a .n.alerta{background:var(--crit);color:#fff}
 .aviso-pend{background:var(--warn-soft);border-color:#f0d49a}.aviso-pend a{color:var(--accent);font-weight:600}
 tr.pend td{background:var(--warn-soft)}
+/* ---- pizzas e setores ---- */
+.pizzas{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px}
+.pizza{display:grid;grid-template-columns:200px minmax(0,1fr);column-gap:18px;align-items:start}
+.pizza h3{grid-column:1/-1;margin:0 0 8px;font-size:15px;color:var(--brand-dark)}.pz{width:200px;height:200px}
+.fatia{stroke:var(--surface);stroke-width:2;cursor:pointer}.fatia:hover{opacity:.85}
+.pz-leg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.pz-leg li{display:grid;grid-template-columns:12px minmax(0,1fr) 40px 28px;gap:8px;align-items:center}
+.pz-leg i{width:12px;height:12px;border-radius:3px}.pz-leg span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pz-leg b,.pz-leg small{text-align:right}.pz-leg small{color:var(--muted)}
+@media (max-width:560px){.pizza{grid-template-columns:1fr}.pz{margin:0 auto 10px}}
+.setores{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px}
+.setores li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}.setores li:last-child{border-bottom:0}
 /* ---- avisos e confirmações ---- */
 .toast{z-index:60}.toast .tk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:var(--brand-dark);font-size:12px;font-weight:800}
 .confirma{position:fixed;inset:0;background:rgba(10,20,22,.5);z-index:50;display:grid;place-items:center;padding:16px}
@@ -325,17 +336,17 @@ tr.pend td{background:var(--warn-soft)}
   </div>
   <nav class="tabs wrap" id="tabs" aria-label="Vistas">
     <a href="#painel" data-v="painel">Painel</a>
-    <a href="#indicadores" data-v="indicadores">Indicadores</a>
-    <a href="#quadro" data-v="quadro">Quadro de processos<span class="n" id="n-quadro">–</span></a>
+    <a href="#quadro" data-v="quadro">Fluxo de processos<span class="n" id="n-quadro">–</span></a>
+    <a href="#tarefas" data-v="tarefas">Tarefas da equipe<span class="n" id="n-tarefas">–</span></a>
     <a href="#tabela" data-v="tabela">Tabela</a>
     <a href="#contratos" data-v="contratos">Contratos<span class="n" id="n-contratos">–</span></a>
     <a href="#linha" data-v="linha">Linha do tempo</a>
     <a href="#calendario" data-v="calendario">Calendário</a>
-    <a href="#tarefas" data-v="tarefas">Tarefas da equipe<span class="n" id="n-tarefas">–</span></a>
     <a href="#equipe" data-v="equipe">Gestores e fiscais<span class="n" id="n-equipe">–</span></a>
     <a href="#parcerias" data-v="parcerias">Parcerias</a>
     <a href="#pca" data-v="pca">Painel do PCA</a>
     <a href="#config" data-v="config" id="tab-config" hidden>Configurações</a>
+    <a href="#indicadores" data-v="indicadores">Indicadores</a>
   </nav>
 </header>
 <div class="wrap">
@@ -356,6 +367,8 @@ const ETAPAS={nao_iniciado:'Não iniciado',andamento:'Em andamento',execucao:'Em
 let COLUNAS=COLUNAS_PADRAO,FASES=[],FNOME={},CMETA={};
 function aplicarConfig(){const q=S.config.get('quadro');COLUNAS=q?.colunas?.length?q.colunas:COLUNAS_PADRAO;
   FASES=COLUNAS.map(c=>[c.id,c.nome]);FNOME=Object.fromEntries(FASES);CMETA=Object.fromEntries(COLUNAS.map(c=>[c.id,c]))}
+const SETORES_PADRAO=['DIRETORIA','PRESIDÊNCIA','SEFIN','SELIC'];
+const SETORES=()=>{const l=S.config.get('setores')?.lista;return Array.isArray(l)?l:SETORES_PADRAO};
 const JANELA=()=>+(S.config.get('parametros')?.janela)||120;
 const faseDe=p=>CMETA[p.fase]?p.fase:COLUNAS[0].id;
 const etapa=f=>(CMETA[f]||CMETA[COLUNAS[0].id])?.etapa||'nao_iniciado';
@@ -1001,7 +1014,31 @@ function graficoEquipe(){
   linhas.sort((a,b)=>b.partes[0].v+b.partes[1].v-(a.partes[0].v+a.partes[1].v)||a.rotulo.localeCompare(b.rotulo));
   return `<section class="card wide" style="margin-bottom:14px"><h2>Contratos e processos ativos por pessoa</h2>
    <p class="muted small" style="margin-top:-6px">Quantos processos em andamento cada pessoa acompanha como gestor ou fiscal. Passe o mouse na barra para ver quantos já têm contrato cadastrado; clique para ir à lista da pessoa.</p>
-   ${barrasH(linhas,{legenda:[['Gestor','var(--s-and)'],['Fiscal','var(--s-ok)']],vazio:'Nenhuma designação em processos ativos.',clique:'pessoa'})}</section>`;
+   ${barrasH(linhas,{legenda:[['Gestor','var(--s-and)'],['Fiscal','var(--s-ok)']],vazio:'Nenhuma designação em processos ativos.',clique:'pessoa'})}</section>
+   <section class="card wide" style="margin-bottom:14px"><h2>Participação nos contratos</h2>
+    <p class="muted small" style="margin-top:-6px">Percentual dos ${S.contr.size} contratos cadastrados em que cada servidor é gestor ou fiscal (pela designação do processo ligado ao contrato).</p>
+    <div class="pizzas">${pizzaPapel('Gestor')}${pizzaPapel('Fiscal')}</div></section>`;
+}
+
+const CAT=['#257de0','#f47230','#00b894','#f2a600','#ee7fac','#008a17','#6a4ce2'];
+function pizzaPapel(papel){
+  const tot=S.contr.size;if(!tot)return '';
+  const cont=new Map();let sem=0;
+  for(const c of S.contr.values()){const p=S.proc.get(c.processo);const ns=[...new Set((p?.equipe||[]).filter(e=>e.papel===papel&&e.nome).map(e=>e.nome))];
+    if(!ns.length)sem++;else ns.forEach(n=>cont.set(n,(cont.get(n)||0)+1))}
+  const ord=[...cont].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR'));
+  const fat=ord.slice(0,7).map(([n,v],i)=>({n,v,cor:CAT[i]}));
+  const resto=ord.slice(7);if(resto.length===1)fat.push({n:resto[0][0],v:resto[0][1],cor:'#808285'});else if(resto.length)fat.push({n:`Outros (${resto.length} servidores)`,v:resto.reduce((s,x)=>s+x[1],0),cor:'#808285'});
+  if(sem)fat.push({n:`Sem ${papel.toLowerCase()} designado`,v:sem,cor:'#d6dfd8',sem:true});
+  const soma=fat.reduce((s,f)=>s+f.v,0),R=80,C=100;let a=-Math.PI/2;
+  const arco=f=>{const ang=f.v/soma*2*Math.PI,dica=`${esc(f.n)}: ${f.v} de ${tot} contratos (${Math.round(f.v/tot*100)}%)`;
+    if(ang>=2*Math.PI-1e-6){a+=ang;return `<circle cx="${C}" cy="${C}" r="${R}" fill="${f.cor}" class="fatia" data-tip="${dica}"/>`}
+    const x1=C+R*Math.cos(a),y1=C+R*Math.sin(a);a+=ang;const x2=C+R*Math.cos(a),y2=C+R*Math.sin(a);
+    return `<path d="M${C},${C} L${x1.toFixed(2)},${y1.toFixed(2)} A${R},${R} 0 ${ang>Math.PI?1:0} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z" fill="${f.cor}" class="fatia" data-tip="${dica}"/>`};
+  const titulo=papel==='Gestor'?'Gestores':'Fiscais';
+  return `<div class="pizza"><h3>${titulo}</h3>
+   <svg viewBox="0 0 200 200" class="pz" role="img" aria-label="${titulo}: ${esc(fat.map(f=>f.n+' '+Math.round(f.v/tot*100)+'%').join(', '))}">${fat.map(arco).join('')}</svg>
+   <ul class="pz-leg">${fat.map(f=>`<li class="${f.sem?'muted':''}"><i style="background:${f.cor}"></i><span title="${esc(f.n)}">${esc(f.n)}</span><b>${Math.round(f.v/tot*100)}%</b><small>${f.v}</small></li>`).join('')}</ul></div>`;
 }
 
 /* ---------- indicadores ---------- */
@@ -1047,7 +1084,7 @@ function vIndicadores(){
      return `<div class="kpi ${cl}">${anel(v,cl)}<div><b>${esc(n)}</b><span class="fx">${fx}</span><small class="muted">${esc(sub)}</small>${d}</div></div>`}).join('')}</div>
     <p class="muted small" style="margin:10px 0 0">Faixas: Atenção (abaixo de 50) · Em evolução (50 a 74) · Bom (75 a 89) · Exemplar (90 ou mais).</p></section>
    <section class="card wide"><h2>Tendência do Índice de Saúde</h2>${linhaTendencia(h)}</section>
-   <section class="card half"><h2>Processos por coluna do quadro</h2>${barrasH(porCol,{clique:'col'})}</section>
+   <section class="card half"><h2>Processos por coluna do fluxo</h2>${barrasH(porCol,{clique:'col'})}</section>
    <section class="card half"><h2>Processos em andamento por urgência</h2>${barrasH(porUrg)}</section>
    <section class="card half"><h2>Tarefas abertas por responsável</h2>${barrasH(porResp,{legenda:[['No prazo','var(--s-ok)'],['Atrasadas','var(--crit)']],vazio:'Nenhuma tarefa aberta.'})}</section>
    <section class="card half"><h2>Contratos por situação da vigência</h2>${barrasH(porVig)}</section>
@@ -1108,8 +1145,8 @@ async function vConfig(){
   const cont=id=>[...S.proc.values()].filter(p=>faseDe(p)===id).length;
   const pes=[...S.pessoas.values()].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
   $('#main').innerHTML=`<div class="cfg">
-   <nav class="cfg-nav" aria-label="Seções"><a href="#cfg-colunas">Colunas do quadro</a><a href="#cfg-usuarios">Usuários e acesso</a><a href="#cfg-equipe">Equipe</a><a href="#cfg-param">Parâmetros</a><a href="#cfg-email">Relatório diário</a></nav>
-   <section class="card" id="cfg-colunas"><h2>Colunas do quadro de processos</h2>
+   <nav class="cfg-nav" aria-label="Seções"><a href="#cfg-colunas">Colunas do fluxo</a><a href="#cfg-usuarios">Usuários e acesso</a><a href="#cfg-equipe">Equipe</a><a href="#cfg-setores">Setores demandantes</a><a href="#cfg-param">Parâmetros</a><a href="#cfg-email">Relatório diário</a></nav>
+   <section class="card" id="cfg-colunas"><h2>Colunas do fluxo de processos</h2>
     <p class="muted small">Renomeie, reordene, crie ou remova colunas. A <b>etapa</b> diz ao sistema o que a coluna significa, e é ela que alimenta o Painel do PCA e os indicadores. Marque <b>exige gestor e fiscal</b> nas colunas em que o processo já precisa de designação.</p>
     <div class="tbl"><table class="cfgt"><thead><tr><th>Ordem</th><th>Nome da coluna</th><th>Etapa</th><th>Exige gestor e fiscal</th><th>Processos</th><th></th></tr></thead><tbody id="colsBody">
      ${cfgCols.map((c,i)=>`<tr data-i="${i}"><td style="white-space:nowrap"><button class="btn sm" type="button" data-up="${i}" ${i?'':'disabled'} aria-label="Subir">↑</button> <button class="btn sm" type="button" data-down="${i}" ${i<cfgCols.length-1?'':'disabled'} aria-label="Descer">↓</button></td>
@@ -1138,6 +1175,14 @@ async function vConfig(){
       <td style="white-space:nowrap"><button class="btn sm" type="button" data-pe="${esc(x.id)}">Editar</button></td></tr>`).join('')||'<tr><td colspan="5" class="muted">Ninguém cadastrado ainda.</td></tr>'}</tbody></table></div>
     <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn" type="button" id="novaPessoa">+ Nova pessoa</button>
      <button class="btn" type="button" id="importPess">Importar nomes já usados no sistema</button><span id="pesmsg" class="muted small" style="align-self:center"></span></div></section>
+
+   <section class="card" id="cfg-setores"><h2>Setores demandantes</h2>
+    <p class="muted small">Setores que aparecem na ficha do processo e no Painel do PCA. Remover um setor não apaga a informação dos processos que já o usam: eles continuam mostrando o nome, marcado como "fora da lista", até alguém trocar.</p>
+    <ul class="setores" id="setLista">${SETORES().map((s,i)=>{const n=[...S.proc.values()].filter(p=>p.setor===s).length;
+      return `<li><b>${esc(s)}</b><span class="muted small">${n} processo(s)</span><button class="btn sm" type="button" data-rmset="${i}">Remover</button></li>`}).join('')||'<li class="muted">Nenhum setor cadastrado.</li>'}</ul>
+    <form id="fset" class="form" style="grid-template-columns:minmax(0,320px) auto;align-items:end;margin-top:10px">
+     <label>Novo setor<input id="ns-nome" maxlength="60" placeholder="Ex.: COMUNICAÇÃO"></label><button class="btn pri">Adicionar setor</button>
+     <span id="setmsg" class="muted small full"></span></form></section>
 
    <section class="card" id="cfg-param"><h2>Parâmetros</h2>
     <form class="form" id="fparam" style="max-width:520px"><label class="full">Janela de renovação de contratos (dias antes do fim da vigência)
@@ -1168,12 +1213,12 @@ async function vConfig(){
   $('#resetCol').onclick=()=>{cfgCols=null;vConfig()};
   $('#saveCol').onclick=async()=>{
     const fica=cfgCols.filter(c=>!c._remover);
-    if(!fica.length)return $('#colmsg').textContent='O quadro precisa de pelo menos uma coluna.';
+    if(!fica.length)return $('#colmsg').textContent='O fluxo precisa de pelo menos uma coluna.';
     if(fica.some(c=>!c.nome.trim()))return $('#colmsg').textContent='Dê um nome a todas as colunas.';
     $('#colmsg').textContent='Salvando…';
     try{for(const c of cfgCols.filter(c=>c._remover)){const dest=fica.find(o=>o.id===c.destino)||fica[0];
         for(const p of [...S.proc.values()].filter(p=>faseDe(p)===c.id))await upd('processos',p.id,{fase:dest.id},`Coluna "${c.nome}" removida; processo movido para "${dest.nome}"`,'fase',true)}
-      await API('PUT','/docs/config/quadro',{data:{colunas:fica.map(c=>({id:c.id,nome:c.nome.trim(),etapa:c.etapa,designacao:!!c.designacao}))},texto:'Colunas do quadro alteradas'});
+      await API('PUT','/docs/config/quadro',{data:{colunas:fica.map(c=>({id:c.id,nome:c.nome.trim(),etapa:c.etapa,designacao:!!c.designacao}))},texto:'Colunas do fluxo de processos alteradas'});
       await sync();cfgCols=null;vConfig();toast('Colunas salvas')}
     catch(er){$('#colmsg').textContent='Não foi possível salvar ('+(er.message||er.code)+').'}};
   // usuários
@@ -1203,6 +1248,15 @@ async function vConfig(){
     $('#pesmsg').textContent=`Importando ${novos.length}…`;
     for(const n of novos)await criar('pessoas',{nome:n,funcao:gest.has(n)?'Gestor(a) de contrato':fisc.has(n)?'Fiscal de contrato':'Servidor(a) da SELIC',setor:'',email:''},true);
     toast(`${novos.length} pessoas importadas`);vConfig()};
+  // setores demandantes
+  const salvarSetores=async(lista,msg)=>{try{await API('PUT','/docs/config/setores',{data:{lista},texto:msg});await sync();toast(msg);vConfig();setTimeout(()=>document.getElementById('cfg-setores')?.scrollIntoView({block:'start'}),50)}
+    catch(er){$('#setmsg').textContent='Não foi possível salvar ('+(er.message||er.code)+').'}};
+  $('#setLista').onclick=async e=>{const b=e.target.closest('[data-rmset]');if(!b)return;const s=SETORES()[+b.dataset.rmset],n=[...S.proc.values()].filter(p=>p.setor===s).length;
+    if(!await confirmar({titulo:`Remover o setor "${s}"?`,texto:n?`${n} processo(s) usam este setor e vão continuar mostrando o nome, marcado como "fora da lista".`:'Nenhum processo usa este setor.',botao:'Sim, remover'}))return;
+    salvarSetores(SETORES().filter(x=>x!==s),`Setor "${s}" removido`)};
+  $('#fset').onsubmit=e=>{e.preventDefault();const s=$('#ns-nome').value.trim().toUpperCase();if(!s)return;
+    if(SETORES().some(x=>norm(x)===norm(s)))return $('#setmsg').textContent='Esse setor já está na lista.';
+    salvarSetores([...SETORES(),s].sort((a,b)=>a.localeCompare(b,'pt-BR')),`Setor "${s}" adicionado`)};
   // relatório diário
   const statusRel=async()=>{try{const s=await API('GET','/relatorio');const u=s.ultimo;
     $('#relStatus').innerHTML=(s.chave?'✓ Chave do Brevo cadastrada na Cloudflare.':'<b>Falta cadastrar a chave do Brevo</b> (BREVO_API_KEY) na Cloudflare. Enquanto isso, o envio não funciona.')
@@ -1257,7 +1311,7 @@ function abrirFicha(id,novo){
      <label>Número SEI<input id="f-sei" value="${esc(p.sei)}" placeholder="15.1511.000000/2026-00" style="font-family:var(--mono)"></label>
      <label>Fase<select id="f-fase">${FASES.map(([k])=>opt(k,faseDe(p))).join('')}</select></label>
      <label>Urgência<select id="f-urgencia"><option value="">Não definida</option>${Object.entries(URG).reverse().map(([k,n])=>`<option value="${k}" ${k===p.urgencia?'selected':''}>${n}</option>`).join('')}</select></label>
-     <label>Setor demandante<input id="f-setor" value="${esc(p.setor)}" list="dl-setor"></label>
+     <label>Setor demandante<select id="f-setor"><option value="">Não informado</option>${[...SETORES(),...(p.setor&&!SETORES().includes(p.setor)?[p.setor]:[])].map(s=>`<option value="${esc(s)}" ${s===p.setor?'selected':''}>${esc(s)}${SETORES().includes(s)?'':' (fora da lista)'}</option>`).join('')}</select></label>
      <label>Previsto no PCA<select id="f-pca"><option value="">Não informado</option><option value="s" ${p.pca===true?'selected':''}>Sim</option><option value="n" ${p.pca===false?'selected':''}>Não</option></select></label>
      <label>Tipo de contratação<input id="f-tipo" value="${esc(p.tipo)}" list="dl-tipo"></label>
      <label style="flex-direction:row;align-items:center;gap:8px;align-self:end"><input type="checkbox" id="f-coffito" ${p.coffito?'checked':''} style="width:auto"> Conduzido com apoio do COFFITO</label>
@@ -1270,7 +1324,6 @@ function abrirFicha(id,novo){
       <button class="btn pri" type="submit" ${S.write?'':'disabled'}>${id?'Salvar alterações':'Cadastrar processo'}</button></div>
     </form>
     <datalist id="dl-pess">${nomes.map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
-    <datalist id="dl-setor"><option value="DIRETORIA"><option value="SEFIN"><option value="SELIC"><option value="PRESIDÊNCIA"></datalist>
     <datalist id="dl-tipo"><option value="Aquisição"><option value="Serviço"><option value="Execução Continuada"><option value="Eventos"><option value="Curso/Capacitação"></datalist>
    </section>
    <div id="fdyn"></div>`);
@@ -1300,7 +1353,7 @@ function abrirFicha(id,novo){
   if($('#delProc'))$('#delProc').onclick=async()=>{
     const nt=[...S.tar.values()].filter(x=>x.processo===id).length,nc=[...S.contr.values()].filter(x=>x.processo===id).length;
     const ok=await confirmar({titulo:'Tem certeza que quer excluir este processo?',
-      texto:`"${p.objeto}" sai do quadro, da tabela e dos indicadores.${nt||nc?` As ${nt} tarefa(s) e ${nc} contrato(s) ligados a ele continuam no sistema, sem o vínculo.`:''} Não é possível desfazer pela tela.`,
+      texto:`"${p.objeto}" sai do fluxo de processos, da tabela e dos indicadores.${nt||nc?` As ${nt} tarefa(s) e ${nc} contrato(s) ligados a ele continuam no sistema, sem o vínculo.`:''} Não é possível desfazer pela tela.`,
       botao:'Sim, excluir processo'});
     if(!ok)return;
     try{await apagar('processos',id);fechar()}catch(er){$('#fmsg').textContent='Não foi possível excluir ('+(er.message||er.code)+').'}};

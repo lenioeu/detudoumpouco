@@ -10,16 +10,16 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 |---|---|
 | Painel | Índice de Saúde do setor, metas definidas pela equipe, próximos 7 dias e atividade recente |
 | Indicadores | Indicadores do setor com faixas e variação, tendência e gráficos por coluna, urgência, responsável e vigência |
-| Quadro de processos | Kanban com colunas configuráveis, arrastar para mudar de coluna, urgência por cor (baixa verde, média amarela, urgente vermelha) e ficha completa |
+| Fluxo de processos | Kanban com colunas configuráveis, arrastar para mudar de coluna, urgência por cor (baixa verde, média amarela, urgente vermelha) e ficha completa |
 | Tabela | Todos os processos em linhas, com filtros, ordenação e exportação dos processos filtrados |
 | Contratos | Contratos ordenados pela vigência mais próxima |
 | Linha do tempo | Vigência restante de cada contrato assinado e a janela de 120 dias para renovar |
 | Calendário | Prazos de tarefas, fins de vigência, início das janelas de renovação e agenda do setor |
 | Tarefas da equipe | Tarefas por responsável, com histórico de mudanças de prazo |
-| Gestores e fiscais | Gráfico de processos ativos por pessoa (gestor e fiscal), quem acompanha cada processo e o que está sem designação |
+| Gestores e fiscais | Gráfico de processos ativos por pessoa, pizzas com o % dos contratos de cada gestor e fiscal, quem acompanha cada processo e o que está sem designação |
 | Parcerias | Tabela de parceiros: credenciamentos, convênios e acordos, com vigência e contato |
 | Painel do PCA | Previsto × realizado, por setor, dependências do COFFITO e o que foi feito fora do plano |
-| Configurações | Só administradores: colunas do quadro, usuários e níveis de acesso, equipe e parâmetros |
+| Configurações | Só administradores: colunas do fluxo, usuários e níveis de acesso, equipe, setores demandantes, parâmetros e relatório diário |
 
 ## Como funciona
 
