@@ -312,6 +312,8 @@ tr.pend td{background:var(--warn-soft)}
 .setores{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px}
 .setores li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}.setores li:last-child{border-bottom:0}
 /* ---- avisos e confirmações ---- */
+.toast .tbtn{margin-left:6px;background:transparent;border:1px solid var(--brand-light);color:#fff;border-radius:99px;padding:4px 12px;font-weight:700;cursor:pointer}
+.toast .tbtn:hover,.toast .tbtn:focus-visible{background:var(--brand);color:var(--brand-dark);outline:none}.toast .tbtn:disabled{opacity:.7;cursor:default}
 .toast{z-index:60}.toast .tk{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:var(--brand-dark);font-size:12px;font-weight:800}
 .confirma{position:fixed;inset:0;background:rgba(10,20,22,.5);z-index:50;display:grid;place-items:center;padding:16px}
 .confirma-box{background:var(--surface);border-radius:14px;max-width:460px;width:100%;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,.25);border-top:4px solid var(--crit)}
@@ -436,17 +438,38 @@ const MSG_SALVO={processos:'Processo salvo',contratos:'Contrato salvo',tarefas:'
 const MSG_ACAO={tarefa_concluida:'Tarefa concluída',reabrir:'Tarefa reaberta',pendencia:'Pendência marcada como resolvida',andamento:'Andamento registrado no histórico',contrato:'Contrato salvo'};
 const MSG_CRIADO={processos:'Processo cadastrado',tarefas:'Tarefa criada',agenda:'Evento adicionado à agenda',metas:'Meta criada',parcerias:'Parceria cadastrada',pessoas:'Pessoa adicionada à equipe'};
 const MSG_EXCLUIDO={processos:'Processo excluído',agenda:'Evento excluído',metas:'Meta excluída',parcerias:'Parceria excluída',pessoas:'Pessoa excluída da equipe'};
+const copia=v=>v===undefined?null:JSON.parse(JSON.stringify(v));
+// Depois de desfazer, a ficha aberta daquele item é redesenhada (ou fechada, se o item deixou de existir).
+function reabrirSeAberta(col,id){const F=S.ficha;if(!F||F.id!==id)return;const m=MAPAS[col];
+  if(!m?.has(id))return fechar();
+  ({processos:()=>abrirFicha(id),tarefas:()=>abrirTarefa(id),contratos:()=>abrirContrato(id),agenda:()=>abrirEvento(id),metas:()=>abrirMeta(id),parcerias:()=>abrirParceria(id),pessoas:()=>abrirPessoa(id)})[col]?.()}
 async function upd(col,id,patch,texto,acao,silencio){
+  const cur=MAPAS[col]?.get(id)||{},antes={};for(const k of Object.keys(patch))antes[k]=copia(cur[k]);
   try{const r=await API('PATCH',`/docs/${col}/${encodeURIComponent(id)}`,{patch,texto:texto||'',acao:acao||'edicao'});
     aplicar(r.doc);schedule();carregarPainel();
-    if(!silencio&&acao!=='registro')toast(acao==='fase'&&patch.fase?`Processo movido para "${FNOME[patch.fase]||''}"`:MSG_ACAO[acao]||MSG_SALVO[col]||'Alterações salvas');
+    if(!silencio&&acao!=='registro'&&acao!=='desfazer'){
+      const novo=texto?(r.doc.data.historico||[]).slice(-1)[0]:null;
+      toast(acao==='fase'&&patch.fase?`Processo movido para "${FNOME[patch.fase]||''}"`:MSG_ACAO[acao]||MSG_SALVO[col]||'Alterações salvas',async()=>{
+        const d=await API('PATCH',`/docs/${col}/${encodeURIComponent(id)}`,{patch:antes,texto:'',removerHistorico:novo?.em||'',acao:'desfazer'});
+        aplicar(d.doc);schedule();carregarPainel();reabrirSeAberta(col,id)})}
     return true}
   catch(e){if(e.code!=='sessao')note('Não foi possível salvar ('+(e.message||e.code)+'). Tente de novo.');return false}
 }
-async function criar(col,data,silencio){const r=await API('POST','/docs/'+col,{data});aplicar(r.doc);schedule();carregarPainel();if(!silencio)toast(MSG_CRIADO[col]||'Salvo');return r.doc.id}
-async function apagar(col,id){const r=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(r.doc);schedule();carregarPainel();toast(MSG_EXCLUIDO[col]||'Excluído')}
-let toastT=0;function toast(m){const t=$('#toast');t.innerHTML='<span class="tk" aria-hidden="true">✓</span>';t.append(document.createTextNode(m));t.hidden=false;
-  t.classList.remove('in');void t.offsetWidth;t.classList.add('in');clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+async function criar(col,data,silencio){const r=await API('POST','/docs/'+col,{data});aplicar(r.doc);schedule();carregarPainel();const id=r.doc.id;
+  if(!silencio)toast(MSG_CRIADO[col]||'Salvo',async()=>{const d=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(d.doc);schedule();carregarPainel();reabrirSeAberta(col,id)});
+  return id}
+async function apagar(col,id){const r=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(r.doc);schedule();carregarPainel();
+  toast(MSG_EXCLUIDO[col]||'Excluído',async()=>{const d=await API('POST',`/docs/${col}/${encodeURIComponent(id)}/restaurar`);aplicar(d.doc);schedule();carregarPainel()})}
+let toastT=0,toastDesf=null;
+function toast(m,desfazer){const t=$('#toast');toastDesf=desfazer||null;
+  t.innerHTML='<span class="tk" aria-hidden="true">✓</span>';t.append(document.createTextNode(m));
+  if(desfazer){const b=document.createElement('button');b.type='button';b.className='tbtn';b.textContent='Desfazer';
+    b.onclick=async()=>{const f=toastDesf;if(!f)return;toastDesf=null;b.disabled=true;b.textContent='Desfazendo…';
+      try{await f();toast('Alteração desfeita')}catch(e){t.hidden=true;note('Não foi possível desfazer ('+(e.message||e.code||'erro')+').')}};
+    t.append(b)}
+  t.hidden=false;t.classList.remove('in');void t.offsetWidth;t.classList.add('in');
+  const tempo=desfazer?7000:3200,esconder=()=>{clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true;toastDesf=null},tempo)};
+  t.onmouseenter=()=>clearTimeout(toastT);t.onmouseleave=esconder;t.onfocusin=()=>clearTimeout(toastT);esconder()}
 function confirmar({titulo,texto,botao='Confirmar'}){return new Promise(res=>{
   const d=document.createElement('div');d.className='confirma';
   d.innerHTML=`<div class="confirma-box" role="alertdialog" aria-modal="true" aria-labelledby="cf-t" aria-describedby="cf-x"><h3 id="cf-t">${esc(titulo)}</h3><p id="cf-x">${esc(texto)}</p>
@@ -1233,8 +1256,10 @@ async function vConfig(){
   carregarUsr();
   $('#usrBody').onclick=async e=>{const tr=e.target.closest('tr[data-em]');if(!tr)return;const em=tr.dataset.em;
     const apr=e.target.closest('[data-apr]');if(apr){const u=S.usuarios.find(x=>x.email===em);
-      try{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:u?.nome||'',nivel:apr.dataset.apr});toast(apr.dataset.apr==='bloqueado'?'Acesso recusado':'Acesso aprovado');carregarUsr();carregarPainel()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível salvar.'}return}
-    if(e.target.matches('[data-save]')){try{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:tr.querySelector('[data-k=nome]').value.trim(),nivel:tr.querySelector('[data-k=nivel]').value});toast('Usuário atualizado');carregarUsr()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível salvar.'}}
+      try{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:u?.nome||'',nivel:apr.dataset.apr});
+        toast(apr.dataset.apr==='bloqueado'?'Acesso recusado':'Acesso aprovado',async()=>{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:u?.nome||'',nivel:u?.nivel||'pendente'});carregarUsr();carregarPainel()});carregarUsr();carregarPainel()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível salvar.'}return}
+    if(e.target.matches('[data-save]')){const u0=S.usuarios.find(x=>x.email===em);try{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:tr.querySelector('[data-k=nome]').value.trim(),nivel:tr.querySelector('[data-k=nivel]').value});
+      toast('Usuário atualizado',u0&&(async()=>{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:u0.nome||'',nivel:u0.nivel});carregarUsr()}));carregarUsr()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível salvar.'}}
     if(e.target.matches('[data-del]')){const b=e.target;if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Confirmar';return}
       try{await API('DELETE','/usuarios/'+encodeURIComponent(em));toast('Usuário removido do sistema');carregarUsr()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível remover.'}}};
   $('#fusr').onsubmit=async e=>{e.preventDefault();try{await API('POST','/usuarios',{email:$('#nu-email').value.trim(),nome:$('#nu-nome').value.trim(),nivel:$('#nu-nivel').value});
@@ -1249,7 +1274,8 @@ async function vConfig(){
     for(const n of novos)await criar('pessoas',{nome:n,funcao:gest.has(n)?'Gestor(a) de contrato':fisc.has(n)?'Fiscal de contrato':'Servidor(a) da SELIC',setor:'',email:''},true);
     toast(`${novos.length} pessoas importadas`);vConfig()};
   // setores demandantes
-  const salvarSetores=async(lista,msg)=>{try{await API('PUT','/docs/config/setores',{data:{lista},texto:msg});await sync();toast(msg);vConfig();setTimeout(()=>document.getElementById('cfg-setores')?.scrollIntoView({block:'start'}),50)}
+  const salvarSetores=async(lista,msg)=>{const ant=[...SETORES()];try{await API('PUT','/docs/config/setores',{data:{lista},texto:msg});await sync();
+    toast(msg,async()=>{await API('PUT','/docs/config/setores',{data:{lista:ant},texto:'Alteração de setores desfeita'});await sync();if(S.view==='config')vConfig()});vConfig();setTimeout(()=>document.getElementById('cfg-setores')?.scrollIntoView({block:'start'}),50)}
     catch(er){$('#setmsg').textContent='Não foi possível salvar ('+(er.message||er.code)+').'}};
   $('#setLista').onclick=async e=>{const b=e.target.closest('[data-rmset]');if(!b)return;const s=SETORES()[+b.dataset.rmset],n=[...S.proc.values()].filter(p=>p.setor===s).length;
     if(!await confirmar({titulo:`Remover o setor "${s}"?`,texto:n?`${n} processo(s) usam este setor e vão continuar mostrando o nome, marcado como "fora da lista".`:'Nenhum processo usa este setor.',botao:'Sim, remover'}))return;
@@ -1273,7 +1299,9 @@ async function vConfig(){
     catch(er){$('#rlmsg').textContent=er.message||'Não foi possível enviar.'}finally{b.disabled=false;statusRel()}};
   // parâmetros
   $('#fparam').onsubmit=async e=>{e.preventDefault();const j=Math.max(30,Math.min(365,+$('#pr-janela').value||120));
-    try{await API('PUT','/docs/config/parametros',{data:{...(S.config.get('parametros')||{}),janela:j},texto:`Janela de renovação: ${j} dias`});await sync();carregarPainel();$('#prmsg').textContent='Salvo.';toast('Parâmetros salvos')}
+    const ant=copia(S.config.get('parametros')||{});delete ant.id;
+    try{await API('PUT','/docs/config/parametros',{data:{...ant,janela:j},texto:`Janela de renovação: ${j} dias`});await sync();carregarPainel();$('#prmsg').textContent='Salvo.';
+      toast('Parâmetros salvos',async()=>{await API('PUT','/docs/config/parametros',{data:ant,texto:'Alteração de parâmetros desfeita'});await sync();carregarPainel();if(S.view==='config')vConfig()})}
     catch(er){$('#prmsg').textContent='Não foi possível salvar.'}};
 }
 function abrirPessoa(id,novo){

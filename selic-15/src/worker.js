@@ -193,6 +193,14 @@ async function api(req, env, url, email) {
     return json({ doc: { col, id, data, version: 1, updated_at: t, deleted: false } });
   }
   const atual = await env.DB.prepare('SELECT * FROM docs WHERE col=? AND id=?').bind(col, id).first();
+  // Desfazer uma exclusão: o registro nunca é apagado de fato, só marcado como excluído.
+  if (m === 'POST' && p[3] === 'restaurar') {
+    if (!atual) return json({ erro: 'Registro não encontrado' }, 404);
+    await env.DB.prepare('UPDATE docs SET deleted=0, version=version+1, updated_at=?, updated_by=? WHERE col=? AND id=?').bind(t, email, col, id).run();
+    const d = JSON.parse(atual.data);
+    await evento(env, t, email, col, id, 'restauracao', String(d.titulo || d.objeto || d.nome || '').slice(0, 140));
+    return json({ doc: { col, id, data: d, version: atual.version + 1, updated_at: t, deleted: false } });
+  }
   if (!atual || atual.deleted) return json({ erro: 'Registro não encontrado' }, 404);
   const antes = JSON.parse(atual.data);
 
@@ -206,6 +214,8 @@ async function api(req, env, url, email) {
     delete patch.historico;
     const depois = { ...antes, ...patch };
     if (corpo.texto && COM_HISTORICO.has(col)) depois.historico = [...(antes.historico || []), { em: t, por: email, texto: String(corpo.texto).slice(0, 500) }];
+    // Desfazer: retira do histórico o registro da ação desfeita (só o da própria pessoa).
+    if (corpo.removerHistorico && COM_HISTORICO.has(col)) depois.historico = (depois.historico || []).filter(h => !(h.em === corpo.removerHistorico && h.por === email));
     await env.DB.prepare('UPDATE docs SET data=?, version=version+1, updated_at=?, updated_by=? WHERE col=? AND id=?').bind(JSON.stringify(depois), t, email, col, id).run();
     if (corpo.acao) await evento(env, t, email, col, id, tipoAcao(corpo.acao, antes, depois), String(corpo.texto || '').slice(0, 300));
     return json({ doc: { col, id, data: depois, version: atual.version + 1, updated_at: t, deleted: false } });
