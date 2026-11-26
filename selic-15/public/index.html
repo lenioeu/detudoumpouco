@@ -726,8 +726,6 @@ async function exportar(tudo){
       [...S.parcerias.values()].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(x=>[x.nome,x.cnpj,x.tipo,x.objeto,x.sei,x.situacao,D(x.inicio),D(x.fim),x.contato]));
     aba('Agenda',[['Data',12],['Hora',8],['Título',44],['Tipo',18],['Processo',40],['Anotações',50]],
       [...S.agenda.values()].sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||''))).map(e=>[D(e.data),e.hora||'',e.titulo,e.tipo,S.proc.get(e.processo)?.objeto||'',e.notas||'']));
-    aba('Metas',[['Meta',46],['Acompanhamento',40],['Progresso',30],['Prazo',12],['Responsável',24],['Situação',14],['Observações',40]],
-      [...S.metas.values()].map(m=>{const pr=progMeta(m);return[m.titulo,S.painel?.indicadores?.[m.indicador]?.nome||'Manual',pr.txt+' ('+Math.round(pr.f*100)+'%)',D(m.prazo),m.responsavel||'',m.arquivada?'Arquivada':pr.f>=1?'Cumprida':'Em andamento',m.notas||'']}));
     aba('Equipe',[['Nome',36],['Função',24],['Setor',16],['E-mail',32]],[...S.pessoas.values()].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR')).map(x=>[x.nome,x.funcao||'',x.setor||'',x.email||'']));
     const hist=[];for(const [tipo,mapa,nome] of [['Processo',S.proc,x=>x.objeto],['Tarefa',S.tar,x=>x.titulo]])for(const x of mapa.values())for(const h of x.historico||[])hist.push([new Date(Date.parse(h.em)-new Date(h.em).getTimezoneOffset()*6e4),quem(h.por),tipo,nome(x)||'',x.sei||'',h.texto]);
     hist.sort((a,b)=>b[0]-a[0]);
@@ -904,15 +902,9 @@ function vPainel(){
    ${S.nivel==='admin'&&pendentes().length?`<section class="card wide aviso-pend"><b>${pendentes().length} pessoa(s) aguardando aprovação para entrar no SELIC-15:</b> ${pendentes().map(u=>esc(u.nome||u.email)).join(', ')}. <a href="#config">Aprovar em Configurações</a></section>`:''}
    <section class="card saude ${nivelCls}"><h2>Índice de Saúde do SELIC</h2>
     <div class="saude-row">${gauge(P.saude)}<div class="saude-txt"><span class="lvl">${nivelTxt}</span>
-      <p>Mede, de 0 a 100, se contratos, prazos, pendências e designações estão em ordem.</p>${spark(P.historico)}</div>
+      <p>Mede, de 0 a 100, se contratos, prazos, pendências e designações estão em ordem.</p></div>
      <ul class="comp">${comp.map(([c,n,w])=>{const v=Math.round((P.comp[c]??1)*100);return `<li><span>${n} <small>peso ${w}</small></span><span class="mbar"><i style="width:${v}%"></i></span><b>${v}%</b></li>`}).join('')}</ul></div></section>
 
-   <section class="card wide"><div class="card-head"><h2>Metas da equipe</h2>
-     ${nArq?`<label class="small muted"><input type="checkbox" id="mArq" ${S.metasArq?'checked':''}> Mostrar arquivadas (${nArq})</label>`:''}
-     <button class="btn sm" type="button" id="novaMeta">+ Nova meta</button></div>
-    ${metas.length?`<div class="metas">${metas.map(metaHTML).join('')}</div>`
-     :`<p class="muted">Nenhuma meta cadastrada. A equipe define o que quer acompanhar: uma meta pode seguir um indicador do sistema, que se atualiza sozinho, ou ser acompanhada manualmente.</p>
-       <p class="small muted" style="margin-bottom:6px">Sugestões para começar:</p><div class="chips">${SUGESTOES.map((s,i)=>`<button type="button" class="btn sm" data-sug="${i}">+ ${esc(s.titulo)}</button>`).join('')}</div>`}</section>
 
    <section class="card half"><h2>Próximos 7 dias</h2>
     ${prox.length?`<ul class="feed">${prox.map(x=>`<li data-ab="${esc(x.ab)}" tabindex="0" style="cursor:pointer"><span><b>${esc(x.txt)}</b><br><small class="muted">${esc(x.sub)}</small></span>
@@ -928,7 +920,6 @@ function vPainel(){
     const sg=e.target.closest('[data-sug]');if(sg)return abrirMeta(null,{...SUGESTOES[+sg.dataset.sug]});
     const ab=e.target.closest('[data-ab]');if(ab){const [k,id]=ab.dataset.ab.split(':');({t:abrirTarefa,c:abrirContrato,a:abrirEvento})[k](id)}};
   m.onkeydown=e=>{const ab=e.target.closest('[data-ab]');if(ab&&e.key==='Enter')ab.click()};
-  if($('#mArq'))$('#mArq').onchange=e=>{S.metasArq=e.target.checked;vPainel()};
 }
 function abrirMeta(id,novo){
   const m=id?S.metas.get(id):novo;if(!m)return;S.ficha={tipo:'meta',id};
@@ -1106,7 +1097,6 @@ function vIndicadores(){
    <section class="card wide"><h2>Indicadores do setor</h2><div class="kpis">${kpis.map(([n,v,sub,d])=>{const [fx,cl]=FAIXA(v);
      return `<div class="kpi ${cl}">${anel(v,cl)}<div><b>${esc(n)}</b><span class="fx">${fx}</span><small class="muted">${esc(sub)}</small>${d}</div></div>`}).join('')}</div>
     <p class="muted small" style="margin:10px 0 0">Faixas: Atenção (abaixo de 50) · Em evolução (50 a 74) · Bom (75 a 89) · Exemplar (90 ou mais).</p></section>
-   <section class="card wide"><h2>Tendência do Índice de Saúde</h2>${linhaTendencia(h)}</section>
    <section class="card half"><h2>Processos por coluna do fluxo</h2>${barrasH(porCol,{clique:'col'})}</section>
    <section class="card half"><h2>Processos em andamento por urgência</h2>${barrasH(porUrg)}</section>
    <section class="card half"><h2>Tarefas abertas por responsável</h2>${barrasH(porResp,{legenda:[['No prazo','var(--s-ok)'],['Atrasadas','var(--crit)']],vazio:'Nenhuma tarefa aberta.'})}</section>
@@ -1184,7 +1174,7 @@ async function vConfig(){
 
    <section class="card" id="cfg-usuarios"><h2>Usuários e níveis de acesso</h2>
     <div class="aviso small"><b>Como funciona o acesso:</b> para entrar no SELIC-15, o e-mail precisa estar liberado no login da Cloudflare (Zero Trust → Access → Applications → SELIC-15 → política da equipe). O nível abaixo define o que a pessoa pode fazer depois de entrar. Quem entra pela primeira vez sem estar nesta lista fica <b>aguardando aprovação</b> e não vê nenhum dado até você aprovar. Se preferir, cadastre o e-mail antes, já com o nível certo, e a pessoa entra direto.</div>
-    <ul class="niveis small"><li><b>Administrador:</b> tudo, inclusive configurações, usuários e colunas.</li><li><b>Editor:</b> cria e altera processos, contratos, tarefas, agenda, metas e parcerias.</li><li><b>Leitor:</b> só consulta (indicado para gestores e fiscais).</li></ul>
+    <ul class="niveis small"><li><b>Administrador:</b> tudo, inclusive configurações, usuários e colunas.</li><li><b>Editor:</b> cria e altera processos, contratos, tarefas, agenda e parcerias.</li><li><b>Leitor:</b> só consulta (indicado para gestores e fiscais).</li></ul>
     <div class="tbl"><table class="cfgt"><thead><tr><th>Nome</th><th>E-mail</th><th>Nível</th><th></th></tr></thead><tbody id="usrBody"><tr><td colspan="4" class="muted">Carregando…</td></tr></tbody></table></div>
     <form id="fusr" class="form" style="margin-top:12px;grid-template-columns:1fr 1fr 160px auto;align-items:end">
      <label>Nome<input id="nu-nome" placeholder="Ex.: Anna Souza"></label><label>E-mail<input id="nu-email" type="email" required placeholder="nome@exemplo.com"></label>

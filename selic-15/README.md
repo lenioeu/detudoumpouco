@@ -8,8 +8,8 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 
 | Aba | Para que serve |
 |---|---|
-| Painel | Índice de Saúde do setor, metas definidas pela equipe, próximos 7 dias e atividade recente |
-| Indicadores | Indicadores do setor com faixas e variação, tendência e gráficos por coluna, urgência, responsável e vigência |
+| Painel | Índice de Saúde do setor, alertas do dia, próximos 7 dias e atividade recente |
+| Indicadores | Indicadores do setor com faixas e variação e gráficos por coluna, urgência, responsável e vigência |
 | Fluxo de processos | Kanban com colunas configuráveis, arrastar para mudar de coluna, urgência por cor (baixa verde, média amarela, urgente vermelha) e ficha completa |
 | Tabela | Todos os processos em linhas, com filtros, ordenação e exportação dos processos filtrados |
 | Contratos | Contratos ordenados pela vigência mais próxima |
@@ -26,7 +26,7 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 - **Cloudflare Worker** (`src/worker.js`) serve a página e a API. A página, as imagens e a biblioteca de Excel vão embutidas no próprio Worker.
 - **Cloudflare D1** (banco `selic-15`) guarda os dados. O esquema está em `schema.sql`.
 - **Cloudflare Access** faz o login: só e-mails autorizados entram, com um código enviado ao próprio e-mail. O Worker confere a assinatura do login em toda requisição. Sem o Access configurado, o sistema fica **bloqueado**.
-- Uma tarefa agendada fotografa os indicadores todo dia às 23h50 (horário de Brasília), para a tendência e as sequências do painel.
+- Uma tarefa agendada fotografa os indicadores todo dia às 23h50 (horário de Brasília), usada na variação dos indicadores.
 
 **Os dados não ficam neste repositório**, que é público. Eles estão só no banco D1.
 
@@ -34,7 +34,7 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 
 O botão **Exportar tudo (Excel)**, no topo, baixa uma planilha com todas as informações do sistema, em abas:
 - Processos, Contratos, Tarefas, Designações, Parcerias e Agenda;
-- Metas, Equipe e Histórico (todos os registros de processos e tarefas, com data, hora e autor);
+- Equipe e Histórico (todos os registros de processos e tarefas, com data, hora e autor);
 - Indicadores e uma aba "Sobre" com a data de geração.
 
 A aba Tabela tem a sua própria exportação, que leva só os processos filtrados na tela.
@@ -50,30 +50,21 @@ O envio usa o **Brevo** (gratuito até 300 e-mails por dia). A chave fica como s
 | Nível | O que pode fazer |
 |---|---|
 | Administrador | Tudo, inclusive a aba Configurações (colunas, usuários, equipe, parâmetros) |
-| Editor | Cria e altera processos, contratos, tarefas, agenda, metas e parcerias |
+| Editor | Cria e altera processos, contratos, tarefas, agenda e parcerias |
 | Leitor | Só consulta |
 
 As permissões são conferidas no servidor.
 
 **Novos usuários:** o login da Cloudflare libera o domínio institucional inteiro (e-mails terminados em `@<domínio do CREFITO>`). Quem entra pela primeira vez fica **aguardando aprovação** e não vê nenhum dado. O administrador aprova como Editor ou Leitor, ou recusa, em Configurações → Usuários e acesso. O Painel avisa quando há alguém esperando. Também dá para cadastrar o e-mail antes, já com o nível, para a pessoa entrar direto.
 
-## Painel e metas da equipe
+## Painel
 
 - **Índice de Saúde (0 a 100)**:
   - 30% contratos com vigência em dia;
   - 30% tarefas dentro do prazo;
   - 20% pendências resolvidas;
   - 20% processos ativos com gestor e fiscal.
-- **Faixas do índice**: Atenção (abaixo de 50), Em evolução (50 a 74), Bom (75 a 89), Exemplar (90 ou mais). Uma fotografia diária registra a tendência.
-- **Metas**: a equipe cadastra as próprias metas, com prazo e responsável. Cada meta pode seguir um indicador do sistema, que se atualiza sozinho:
-  - tarefas atrasadas;
-  - pendências abertas;
-  - contratos vencidos;
-  - PCA com setor informado;
-  - processos ativos com gestor e fiscal;
-  - contratos a vencer em 120 dias com tarefa aberta.
-
-  Ou pode ser acompanhada manualmente, informando o valor atual. Metas concluídas ou abandonadas podem ser arquivadas.
+- **Faixas do índice**: Atenção (abaixo de 50), Em evolução (50 a 74), Bom (75 a 89), Exemplar (90 ou mais).
 - **Próximos 7 dias**: prazos de tarefas, eventos da agenda e fins de vigência.
 - **Atividade recente**: quem fez o quê no sistema.
 
