@@ -4,6 +4,7 @@
   "name": "selic-15",
   "main": "src/worker.js",
   "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "preview_urls": false,
   // Página, imagens e biblioteca de Excel embutidas no Worker
@@ -12,12 +13,14 @@
     { "type": "Data", "globs": ["**/*.png"], "fallthrough": true }
   ],
   "d1_databases": [{ "binding": "DB", "database_name": "selic-15", "database_id": "211013d8-9321-4f88-bcbe-c68fd47218c7" }],
-  // Fotografia diária dos indicadores às 23h50 (horário de Brasília)
-  "triggers": { "crons": ["50 2 * * *"] },
+  // 20h (Brasília): relatório diário por e-mail · 23h50 (Brasília): fotografia diária dos indicadores
+  "triggers": { "crons": ["0 23 * * *", "50 2 * * *"] },
   "observability": { "enabled": true },
   // Login via Cloudflare Access (equipe selic15). Vazios = sistema bloqueado.
   "vars": {
     "ACCESS_TEAM_DOMAIN": "selic15.cloudflareaccess.com",
-    "ACCESS_AUD": "670468af3ab662d27bbcbf14006f73e12a725b9a9a2e27b6581a028237d60144"
+    "ACCESS_AUD": "670468af3ab662d27bbcbf14006f73e12a725b9a9a2e27b6581a028237d60144",
+    "SITE_URL": "https://selic-15.leniogoularte.workers.dev"
   }
+  // Segredo (não fica aqui): BREVO_API_KEY, cadastrado no painel da Cloudflare.
 }

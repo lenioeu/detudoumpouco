@@ -290,6 +290,7 @@ h1,h2,h3{font-family:var(--serif)}
 .cfgt{min-width:640px}.cfgt td{vertical-align:middle}.cfgt input:not([type=checkbox]),.cfgt select{padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font:inherit;max-width:100%}
 .aviso{background:var(--warn-soft);border:1px solid #f0d49a;border-radius:8px;padding:10px 12px;margin-bottom:10px}
 .niveis{margin:0 0 10px;padding-left:18px;color:var(--muted)}
+.aviso.ok-box{background:var(--ok-soft);border-color:var(--brand-light)}
 @media (max-width:700px){#fusr{grid-template-columns:1fr!important}}
 /* ---- aprovação de acesso ---- */
 body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera #xlsTudo,body.espera .user{display:none!important}
@@ -792,7 +793,7 @@ function carregarPainel(){clearTimeout(painelT);painelT=setTimeout(async()=>{
 const NIVEL_SAUDE=s=>s>=90?['Exemplar','ex']:s>=75?['Bom','bom']:s>=50?['Em evolução','evo']:['Atenção','aten'];
 const TIPO_EV={tarefa_no_prazo:'concluiu uma tarefa no prazo',tarefa_atrasada:'concluiu uma tarefa atrasada',tarefa_concluida:'concluiu uma tarefa',pendencia:'resolveu uma pendência',andamento:'registrou um andamento',
   fase:'mudou a fase de um processo',contrato:'atualizou um contrato',agenda:'marcou um evento na agenda',novo_processo:'cadastrou um processo',nova_tarefa:'criou uma tarefa',
-  nova_meta:'criou uma meta',meta:'atualizou uma meta',nova_parceria:'cadastrou uma parceria',nova_pessoa:'cadastrou uma pessoa na equipe',novo_registro:'cadastrou um registro',configuracao:'alterou as configurações',backup:'gerou o backup completo',edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
+  nova_meta:'criou uma meta',meta:'atualizou uma meta',nova_parceria:'cadastrou uma parceria',nova_pessoa:'cadastrou uma pessoa na equipe',novo_registro:'cadastrou um registro',configuracao:'alterou as configurações',backup:'baixou o backup completo',relatorio:'enviou o relatório diário',relatorio_erro:'tentou enviar o relatório diário (falhou)',edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
 function gauge(v){const r=52,c=2*Math.PI*r,f=Math.max(0,Math.min(100,v))/100;
   return `<svg viewBox="0 0 128 128" class="gauge" role="img" aria-label="Índice de saúde ${v} de 100"><circle cx="64" cy="64" r="${r}" class="g-bg"/>
    <circle cx="64" cy="64" r="${r}" class="g-fg" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 64 64)"/>
@@ -1079,7 +1080,7 @@ async function vConfig(){
   const cont=id=>[...S.proc.values()].filter(p=>faseDe(p)===id).length;
   const pes=[...S.pessoas.values()].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR'));
   $('#main').innerHTML=`<div class="cfg">
-   <nav class="cfg-nav" aria-label="Seções"><a href="#cfg-colunas">Colunas do quadro</a><a href="#cfg-usuarios">Usuários e acesso</a><a href="#cfg-equipe">Equipe</a><a href="#cfg-param">Parâmetros</a></nav>
+   <nav class="cfg-nav" aria-label="Seções"><a href="#cfg-colunas">Colunas do quadro</a><a href="#cfg-usuarios">Usuários e acesso</a><a href="#cfg-equipe">Equipe</a><a href="#cfg-param">Parâmetros</a><a href="#cfg-email">Relatório diário</a></nav>
    <section class="card" id="cfg-colunas"><h2>Colunas do quadro de processos</h2>
     <p class="muted small">Renomeie, reordene, crie ou remova colunas. A <b>etapa</b> diz ao sistema o que a coluna significa, e é ela que alimenta o Painel do PCA e os indicadores. Marque <b>exige gestor e fiscal</b> nas colunas em que o processo já precisa de designação.</p>
     <div class="tbl"><table class="cfgt"><thead><tr><th>Ordem</th><th>Nome da coluna</th><th>Etapa</th><th>Exige gestor e fiscal</th><th>Processos</th><th></th></tr></thead><tbody id="colsBody">
@@ -1115,6 +1116,16 @@ async function vConfig(){
      <input type="number" id="pr-janela" min="30" max="365" value="${JANELA()}"></label>
      <p class="full muted small" style="margin:0">Usada nos alertas, no calendário, na linha do tempo e nos indicadores. Padrão: 120 dias.</p>
      <div class="full"><span id="prmsg" class="muted small"></span> <button class="btn pri">Salvar parâmetros</button></div></form></section>
+
+   <section class="card" id="cfg-email"><h2>Relatório diário por e-mail</h2>
+    <p class="muted small">Todo dia às <b>20h</b>, o SELIC-15 envia a planilha completa (a mesma do "Exportar tudo") para os e-mails abaixo, com um resumo do dia no corpo da mensagem.</p>
+    <div id="relStatus" class="aviso small">Verificando…</div>
+    <form class="form" id="frel" style="max-width:640px">
+     <label class="full" style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="rl-ativo" style="width:auto" ${(S.config.get('relatorio')||{}).ativo?'checked':''}> Enviar o relatório todo dia às 20h</label>
+     <label class="full">E-mail remetente (o mesmo verificado no Brevo)<input type="email" id="rl-remetente" value="${esc((S.config.get('relatorio')||{}).remetente||'')}" placeholder="ex.: selic@crefito15.org.br"></label>
+     <label class="full">Quem recebe (um e-mail por linha)<textarea id="rl-dest" placeholder="nome@crefito15.org.br">${esc(((S.config.get('relatorio')||{}).destinatarios||[]).join('\n'))}</textarea></label>
+     <div class="full" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span id="rlmsg" class="muted small" style="margin-right:auto"></span>
+      <button class="btn" type="button" id="rlTeste">Enviar agora para testar</button><button class="btn pri">Salvar</button></div></form></section>
   </div>`;
   // colunas
   const body=$('#colsBody');
@@ -1164,6 +1175,20 @@ async function vConfig(){
     $('#pesmsg').textContent=`Importando ${novos.length}…`;
     for(const n of novos)await criar('pessoas',{nome:n,funcao:gest.has(n)?'Gestor(a) de contrato':fisc.has(n)?'Fiscal de contrato':'Servidor(a) da SELIC',setor:'',email:''});
     toast(`${novos.length} pessoas importadas`);vConfig()};
+  // relatório diário
+  const statusRel=async()=>{try{const s=await API('GET','/relatorio');const u=s.ultimo;
+    $('#relStatus').innerHTML=(s.chave?'✓ Chave do Brevo cadastrada na Cloudflare.':'<b>Falta cadastrar a chave do Brevo</b> (BREVO_API_KEY) na Cloudflare. Enquanto isso, o envio não funciona.')
+      +'<br>'+(u?`Último envio: ${new Date(u.em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})} · ${u.tipo==='relatorio'?'enviado':'falhou'} · ${esc(u.texto||'')}`:'Nenhum envio ainda.');
+    $('#relStatus').className='aviso small'+(s.chave&&(!u||u.tipo==='relatorio')?' ok-box':'')}catch{$('#relStatus').textContent='Não foi possível verificar o relatório.'}};
+  statusRel();
+  const dadosRel=()=>({ativo:$('#rl-ativo').checked,remetente:$('#rl-remetente').value.trim(),destinatarios:$('#rl-dest').value.split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean)});
+  $('#frel').onsubmit=async e=>{e.preventDefault();const d=dadosRel();
+    if(d.ativo&&(!d.remetente||!d.destinatarios.length))return $('#rlmsg').textContent='Para ativar, informe o remetente e pelo menos um destinatário.';
+    try{await API('PUT','/docs/config/relatorio',{data:d,texto:'Relatório diário: '+(d.ativo?'ativado para '+d.destinatarios.length+' destinatário(s)':'desativado')});await sync();$('#rlmsg').textContent='Salvo.'}catch(er){$('#rlmsg').textContent='Não foi possível salvar.'}};
+  $('#rlTeste').onclick=async()=>{const b=$('#rlTeste');b.disabled=true;$('#rlmsg').textContent='Salvando e enviando…';
+    try{await API('PUT','/docs/config/relatorio',{data:dadosRel(),texto:'Relatório diário: configuração salva'});await sync();
+      const r=await API('POST','/relatorio');$('#rlmsg').textContent=`Enviado para ${r.para} destinatário(s). Confira a caixa de entrada (e o spam).`}
+    catch(er){$('#rlmsg').textContent=er.message||'Não foi possível enviar.'}finally{b.disabled=false;statusRel()}};
   // parâmetros
   $('#fparam').onsubmit=async e=>{e.preventDefault();const j=Math.max(30,Math.min(365,+$('#pr-janela').value||120));
     try{await API('PUT','/docs/config/parametros',{data:{...(S.config.get('parametros')||{}),janela:j},texto:`Janela de renovação: ${j} dias`});await sync();carregarPainel();$('#prmsg').textContent='Salvo.'}

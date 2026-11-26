@@ -39,9 +39,11 @@ O botão **Exportar tudo (Excel)**, no topo, baixa uma planilha com todas as inf
 
 A aba Tabela tem a sua própria exportação, que leva só os processos filtrados na tela.
 
-## Backup diário no Google Drive
+## Relatório diário por e-mail
 
-Um script da conta Google do CREFITO-15 salva todo dia, por volta das 6h, uma planilha e um arquivo `.json` com todos os dados numa pasta do Drive. Os backups com mais de 90 dias vão para a lixeira. O script usa uma credencial de serviço do Cloudflare Access que só consegue baixar o backup. Instalação e código em [`backup-google-drive/`](backup-google-drive/LEIAME.md).
+Todo dia às 20h (Brasília), o SELIC-15 gera a planilha completa e envia por e-mail, com um resumo do dia no corpo da mensagem. Os destinatários, o remetente e o liga/desliga ficam em **Configurações → Relatório diário**, onde também há um botão para enviar um teste na hora.
+
+O envio usa o **Brevo** (gratuito até 300 e-mails por dia). A chave fica como segredo `BREVO_API_KEY` no Worker, cadastrada pelo painel da Cloudflare e nunca neste repositório. O remetente precisa estar verificado no Brevo.
 
 ## Níveis de acesso
 

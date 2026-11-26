@@ -1,6 +1,7 @@
 // SELIC-15 · Worker: autenticação (Cloudflare Access), API de dados e painel.
 // Os arquivos da página vão embutidos no próprio Worker (regras em wrangler.jsonc).
 import INDEX from '../public/index.html';
+import { enviarRelatorio } from './relatorio.js';
 import EXCELJS from '../public/vendor/exceljs.min.js';
 import LOGO_H from '../public/img/crefito15-horizontal.png';
 import LOGO_R from '../public/img/crefito15-horizontal-reduzida.png';
@@ -36,12 +37,16 @@ export default {
     const auth = await autenticar(req, env);
     if (!auth.ok) return auth.resp;
     if (url.pathname.startsWith('/api/')) {
-      try { return auth.servico ? await apiServico(req, env, url, auth) : await api(req, env, url, auth.email); }
+      try { return await api(req, env, url, auth.email); }
       catch (e) { return json({ erro: 'Erro interno: ' + (e.message || e) }, 500); }
     }
     return estatico(url.pathname) || new Response('Página não encontrada', { status: 404 });
   },
-  async scheduled(_evt, env, ctx) { ctx.waitUntil(painel(env, true)); },
+  async scheduled(evt, env, ctx) {
+    // 23:00 UTC = 20h em Brasília: relatório diário por e-mail. Os demais horários: fotografia dos indicadores.
+    if (evt.cron === '0 23 * * *') ctx.waitUntil(rodarRelatorio(env, 'envio automático', true).catch(() => {}));
+    else ctx.waitUntil(painel(env, true));
+  },
 };
 
 function estatico(path) {
@@ -63,8 +68,6 @@ async function autenticar(req, env) {
   if (!token) return { ok: false, resp: semAcesso() };
   try {
     const p = await verificarJWT(token, team, aud);
-    // Credencial de serviço do Cloudflare Access (usada pelo backup automático): não tem e-mail.
-    if (!p.email && p.common_name) return { ok: true, servico: true, nome: String(p.common_name) };
     if (!p.email) throw new Error('sem e-mail');
     return { ok: true, email: String(p.email).toLowerCase() };
   } catch { return { ok: false, resp: semAcesso() }; }
@@ -141,7 +144,18 @@ async function api(req, env, url, email) {
   if (p[0] === 'painel' && m === 'GET') return json(await painel(env, false));
   if (p[0] === 'backup' && m === 'GET') {
     if (eu.nivel !== 'admin') return json({ erro: 'Só administradores baixam o backup completo.' }, 403);
-    return json(await backup(env, email));
+    return json(await backup(env, email, true));
+  }
+  if (p[0] === 'relatorio') {
+    if (eu.nivel !== 'admin') return json({ erro: 'Só administradores configuram o relatório.' }, 403);
+    if (m === 'GET') {
+      const ult = await env.DB.prepare("SELECT em,email,tipo,texto FROM eventos WHERE tipo IN ('relatorio','relatorio_erro') ORDER BY id DESC LIMIT 1").first();
+      return json({ chave: !!env.BREVO_API_KEY, ultimo: ult || null });
+    }
+    if (m === 'POST') {
+      try { return json({ ok: true, ...(await rodarRelatorio(env, email, false)) }); }
+      catch (e) { return json({ erro: e.message || String(e) }, 400); }
+    }
   }
   if (p[0] !== 'docs') return json({ erro: 'Rota inexistente' }, 404);
 
@@ -207,19 +221,28 @@ function tipoAcao(acao, antes, depois) {
 const evento = (env, em, email, col, doc, tipo, texto) =>
   env.DB.prepare('INSERT INTO eventos(em,email,col,doc,tipo,pontos,texto) VALUES(?,?,?,?,?,0,?)').bind(em, email, col, doc, tipo, texto).run();
 
-// Credencial de serviço: só pode baixar o backup.
-async function apiServico(req, env, url, auth) {
-  if (req.method === 'GET' && url.pathname === '/api/backup') return json(await backup(env, 'backup automático'));
-  return json({ erro: 'Esta credencial só pode ser usada para o backup.' }, 403);
+async function rodarRelatorio(env, quem, automatico) {
+  const cfg = ((await env.DB.prepare("SELECT data FROM docs WHERE col='config' AND id='relatorio' AND deleted=0").first()) || {}).data;
+  const c = cfg ? JSON.parse(cfg) : {};
+  if (automatico && !c.ativo) return { pulado: true };
+  try {
+    const dados = await backup(env, quem, false), resumo = await painel(env, false);
+    const r = await enviarRelatorio(env, dados, resumo, c, env.SITE_URL || 'https://selic-15.leniogoularte.workers.dev');
+    await evento(env, agoraISO(), quem, 'sistema', 'relatorio', 'relatorio', `Relatório enviado para ${r.para} destinatário(s)`);
+    return r;
+  } catch (e) {
+    await evento(env, agoraISO(), quem, 'sistema', 'relatorio', 'relatorio_erro', String(e.message || e).slice(0, 300));
+    throw e;
+  }
 }
-async function backup(env, quem) {
+async function backup(env, quem, registrar) {
   const t = agoraISO();
   const rows = (await env.DB.prepare('SELECT col,id,data,updated_at,updated_by FROM docs WHERE deleted=0').all()).results;
   const colecoes = {};
   for (const r of rows) (colecoes[r.col] ||= []).push({ id: r.id, ...JSON.parse(r.data), _atualizado_em: r.updated_at, _atualizado_por: r.updated_by });
   const usuarios = (await env.DB.prepare('SELECT email,nome,nivel,criado_em FROM usuarios').all()).results;
   const metricas = (await env.DB.prepare('SELECT dia,data FROM metricas ORDER BY dia').all()).results.map(m => ({ dia: m.dia, ...JSON.parse(m.data) }));
-  await evento(env, t, quem, 'sistema', 'backup', 'backup', 'Backup completo gerado');
+  if (registrar) await evento(env, t, quem, 'sistema', 'backup', 'backup', 'Backup completo baixado');
   return { sistema: 'SELIC-15', versao: 1, gerado_em: t, colecoes, usuarios, metricas };
 }
 
