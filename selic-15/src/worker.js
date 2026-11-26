@@ -36,7 +36,7 @@ export default {
     const auth = await autenticar(req, env);
     if (!auth.ok) return auth.resp;
     if (url.pathname.startsWith('/api/')) {
-      try { return await api(req, env, url, auth.email); }
+      try { return auth.servico ? await apiServico(req, env, url, auth) : await api(req, env, url, auth.email); }
       catch (e) { return json({ erro: 'Erro interno: ' + (e.message || e) }, 500); }
     }
     return estatico(url.pathname) || new Response('Página não encontrada', { status: 404 });
@@ -63,7 +63,10 @@ async function autenticar(req, env) {
   if (!token) return { ok: false, resp: semAcesso() };
   try {
     const p = await verificarJWT(token, team, aud);
-    return { ok: true, email: String(p.email || '').toLowerCase() };
+    // Credencial de serviço do Cloudflare Access (usada pelo backup automático): não tem e-mail.
+    if (!p.email && p.common_name) return { ok: true, servico: true, nome: String(p.common_name) };
+    if (!p.email) throw new Error('sem e-mail');
+    return { ok: true, email: String(p.email).toLowerCase() };
   } catch { return { ok: false, resp: semAcesso() }; }
 }
 function cookie(req, nome) {
@@ -136,6 +139,10 @@ async function api(req, env, url, email) {
     return json(await env.DB.prepare('SELECT email,nome,nivel,criado_em FROM usuarios WHERE email=?').bind(em).first());
   }
   if (p[0] === 'painel' && m === 'GET') return json(await painel(env, false));
+  if (p[0] === 'backup' && m === 'GET') {
+    if (eu.nivel !== 'admin') return json({ erro: 'Só administradores baixam o backup completo.' }, 403);
+    return json(await backup(env, email));
+  }
   if (p[0] !== 'docs') return json({ erro: 'Rota inexistente' }, 404);
 
   if (m === 'GET' && !p[1]) {
@@ -199,6 +206,22 @@ function tipoAcao(acao, antes, depois) {
 }
 const evento = (env, em, email, col, doc, tipo, texto) =>
   env.DB.prepare('INSERT INTO eventos(em,email,col,doc,tipo,pontos,texto) VALUES(?,?,?,?,?,0,?)').bind(em, email, col, doc, tipo, texto).run();
+
+// Credencial de serviço: só pode baixar o backup.
+async function apiServico(req, env, url, auth) {
+  if (req.method === 'GET' && url.pathname === '/api/backup') return json(await backup(env, 'backup automático'));
+  return json({ erro: 'Esta credencial só pode ser usada para o backup.' }, 403);
+}
+async function backup(env, quem) {
+  const t = agoraISO();
+  const rows = (await env.DB.prepare('SELECT col,id,data,updated_at,updated_by FROM docs WHERE deleted=0').all()).results;
+  const colecoes = {};
+  for (const r of rows) (colecoes[r.col] ||= []).push({ id: r.id, ...JSON.parse(r.data), _atualizado_em: r.updated_at, _atualizado_por: r.updated_by });
+  const usuarios = (await env.DB.prepare('SELECT email,nome,nivel,criado_em FROM usuarios').all()).results;
+  const metricas = (await env.DB.prepare('SELECT dia,data FROM metricas ORDER BY dia').all()).results.map(m => ({ dia: m.dia, ...JSON.parse(m.data) }));
+  await evento(env, t, quem, 'sistema', 'backup', 'backup', 'Backup completo gerado');
+  return { sistema: 'SELIC-15', versao: 1, gerado_em: t, colecoes, usuarios, metricas };
+}
 
 async function usuario(env, email) {
   let u = await env.DB.prepare('SELECT email,nome,nivel FROM usuarios WHERE email=?').bind(email).first();

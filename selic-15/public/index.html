@@ -792,7 +792,7 @@ function carregarPainel(){clearTimeout(painelT);painelT=setTimeout(async()=>{
 const NIVEL_SAUDE=s=>s>=90?['Exemplar','ex']:s>=75?['Bom','bom']:s>=50?['Em evolução','evo']:['Atenção','aten'];
 const TIPO_EV={tarefa_no_prazo:'concluiu uma tarefa no prazo',tarefa_atrasada:'concluiu uma tarefa atrasada',tarefa_concluida:'concluiu uma tarefa',pendencia:'resolveu uma pendência',andamento:'registrou um andamento',
   fase:'mudou a fase de um processo',contrato:'atualizou um contrato',agenda:'marcou um evento na agenda',novo_processo:'cadastrou um processo',nova_tarefa:'criou uma tarefa',
-  nova_meta:'criou uma meta',meta:'atualizou uma meta',nova_parceria:'cadastrou uma parceria',nova_pessoa:'cadastrou uma pessoa na equipe',novo_registro:'cadastrou um registro',configuracao:'alterou as configurações',edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
+  nova_meta:'criou uma meta',meta:'atualizou uma meta',nova_parceria:'cadastrou uma parceria',nova_pessoa:'cadastrou uma pessoa na equipe',novo_registro:'cadastrou um registro',configuracao:'alterou as configurações',backup:'gerou o backup completo',edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
 function gauge(v){const r=52,c=2*Math.PI*r,f=Math.max(0,Math.min(100,v))/100;
   return `<svg viewBox="0 0 128 128" class="gauge" role="img" aria-label="Índice de saúde ${v} de 100"><circle cx="64" cy="64" r="${r}" class="g-bg"/>
    <circle cx="64" cy="64" r="${r}" class="g-fg" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 64 64)"/>
