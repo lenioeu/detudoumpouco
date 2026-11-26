@@ -148,7 +148,7 @@ th.sort[aria-sort="descending"]::after{content:" ▼"}
 .ev{font-size:11px;line-height:1.3;padding:2px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid;background:var(--sunk)}
 .ev.tarefa{border-color:var(--accent)} .ev.atraso{border-color:var(--crit);background:var(--crit-soft)}
 .ev.vigencia{border-color:var(--crit)} .ev.alerta{border-color:var(--warn);background:var(--warn-soft)}
-.ev.agenda{border-color:var(--ok);background:var(--ok-soft)} .ev.feito{opacity:.55;text-decoration:line-through}
+.ev.agenda{border-color:var(--ok);background:var(--ok-soft)} .ev.feito{color:var(--muted);text-decoration:line-through}
 .evmore{font-size:11px;color:var(--muted)}
 @media (max-width:640px){.cal .day{min-height:56px}.cal .day .ev{font-size:0;height:6px;padding:0;border-left-width:0}.cal .dow{padding:4px;font-size:10px}}
 .daylist{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
@@ -227,7 +227,7 @@ h1,h2,h3{font-family:var(--serif)}
 .metas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
 .card-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.card-head h2{margin:0 auto 0 0}
 .meta{display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);cursor:pointer;font:inherit;color:inherit}
-.meta:hover{border-color:var(--brand)}.meta.arq{opacity:.6}
+.meta:hover{border-color:var(--brand)}
 .meta .mt{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:14px}
 .meta.ok .mbar i{background:var(--brand-dark)}
 .feed{list-style:none;margin:0;padding:0}.feed li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.feed li:last-child{border-bottom:0}
@@ -294,7 +294,7 @@ h1,h2,h3{font-family:var(--serif)}
 @media (max-width:700px){#fusr{grid-template-columns:1fr!important}}
 /* ---- aprovação de acesso ---- */
 .btn.sair{text-decoration:none;color:var(--muted)}.btn.sair:hover{color:var(--crit);border-color:var(--crit)}
-body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera #xlsTudo,body.espera .user{display:none!important}
+body.espera #conexao,body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera #xlsTudo,body.espera .user{display:none!important}
 .espera-card{max-width:560px;margin:48px auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
 .espera-card h2{margin:8px 0 0;font-size:22px}.espera-card p{color:var(--muted);margin:0}.espera-card .form{width:100%}
 nav.tabs a .n.alerta{background:var(--crit);color:#fff}
@@ -311,6 +311,23 @@ tr.pend td{background:var(--warn-soft)}
 @media (max-width:560px){.pizza{grid-template-columns:1fr}.pz{margin:0 auto 10px}}
 .setores{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px}
 .setores li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}.setores li:last-child{border-bottom:0}
+/* ---- conexão ---- */
+.conexao{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);border-radius:99px;padding:4px 10px;font:inherit;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.conexao i,.con-dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--line)}
+.conexao.ok i,.con-dot.ok{background:var(--brand)}.conexao.sync i,.con-dot.sync{background:var(--warn)}.conexao.off i,.con-dot.off{background:var(--crit)}
+.conexao.off{border-color:var(--crit);color:var(--crit);font-weight:600;background:var(--crit-soft)}
+@media (prefers-reduced-motion:no-preference){.conexao.sync i{animation:pisca 1s ease-in-out infinite}@keyframes pisca{50%{opacity:.3}}}
+@media (max-width:640px){.conexao span{display:none}.conexao{padding:6px}}
+/* ---- ajuda ---- */
+.ajuda{display:flex;flex-direction:column;gap:12px;max-width:980px}
+.ajuda-topo{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.ajuda-topo h2{margin:0 auto 0 0;font-size:22px;color:var(--brand-dark)}
+.ajuda-topo input{flex:0 1 380px;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+.ajuda-indice{display:flex;flex-wrap:wrap;gap:6px}.ajuda-indice a{padding:5px 11px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);text-decoration:none;font-size:13px}
+.ajuda-indice a:hover{border-color:var(--brand)}
+.ajuda-sec{scroll-margin-top:150px}
+.ajuda-sec h3{margin:0 auto 0 0;font-size:17px;color:var(--brand-dark)}.ajuda-sec a.btn{text-decoration:none;color:var(--ink)}
+.ajuda-sec ul,.ajuda-sec ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;max-width:75ch}.ajuda-sec p{margin:0 0 8px;max-width:75ch}
+.faq dt{font-weight:700;margin-top:10px}.faq dd{margin:4px 0 0;color:var(--muted);max-width:75ch}
 /* ---- contratos ---- */
 .filtros{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:-4px 0 12px}
 .filtros label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
@@ -340,6 +357,7 @@ details.card summary{cursor:pointer}
   <div class="wrap top">
     <a class="brand" href="#painel" aria-label="SELIC-15, início"><img src="/img/crefito15-horizontal-reduzida.png" alt="CREFITO-15" width="121" height="52">
       <span class="sys"><b>SELIC-15</b><small>Setor de Licitações e Contratos</small></span></a>
+    <button type="button" id="conexao" class="conexao sync" aria-live="polite"><i aria-hidden="true"></i><span>Conectando…</span></button>
     <span class="user">Olá, <button id="quem" class="linklike" type="button" title="Alterar como seu nome aparece">…</button></span>
     <a class="btn sair" id="sair" href="/cdn-cgi/access/logout" title="Encerrar a sessão neste navegador">Sair</a>
     <button class="btn" id="xlsTudo" type="button" title="Baixa um Excel com todas as informações do sistema">Exportar tudo (Excel)</button>
@@ -356,6 +374,7 @@ details.card summary{cursor:pointer}
     <a href="#parcerias" data-v="parcerias">Parcerias</a>
     <a href="#pca" data-v="pca">Painel do PCA</a>
     <a href="#indicadores" data-v="indicadores">Indicadores</a>
+    <a href="#ajuda" data-v="ajuda">Como usar?</a>
     <a href="#tabela" data-v="tabela">Tabela</a>
     <a href="#config" data-v="config" id="tab-config" hidden>Configurações</a>
   </nav>
@@ -407,11 +426,14 @@ const MAPAS={processos:S.proc,contratos:S.contr,tarefas:S.tar,agenda:S.agenda,me
 let since='';
 function aplicar(d){const m=MAPAS[d.col];if(!m)return;if(d.deleted)m.delete(d.id);else m.set(d.id,{id:d.id,...d.data})}
 async function sync(){
+  CON.buscando=true;pintarConexao();
   try{const r=await API('GET','/docs'+(since?'?since='+encodeURIComponent(since):''));
+    CON.ultimo=Date.now();CON.erro=false;if(!$('#notice').hidden&&/conexão/.test($('#notice').textContent))$('#notice').hidden=true;
     r.docs.forEach(aplicar);aplicarConfig();const primeira=!since;since=r.agora;
     if(primeira){Object.keys(S.ok).forEach(k=>S.ok[k]=1);$('#notice').hidden=true}
     if(primeira||r.docs.length){schedule();if(!primeira)carregarPainel()}
-  }catch(e){if(e.code!=='sessao')note('Sem conexão com o servidor. A página tenta de novo sozinha.')}
+  }catch(e){if(e.code!=='sessao'){CON.erro=true;note('Sem conexão com o servidor. A página tenta de novo sozinha.')}}
+  finally{CON.buscando=false;pintarConexao()}
 }
 async function boot(){
   route();
@@ -423,6 +445,9 @@ async function boot(){
   marcarPendentes();
   pintarUsuario();await sync();carregarPainel();
   setInterval(()=>{if(!document.hidden)sync()},20000);
+  setInterval(pintarConexao,5000);
+  addEventListener('offline',()=>{CON.erro=true;pintarConexao()});addEventListener('online',()=>sync());
+  $('#conexao').onclick=()=>sync();
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
 }
 const pendentes=()=>(S.usuarios||[]).filter(u=>u.nivel==='pendente');
@@ -525,7 +550,7 @@ function contagens(){
 }
 
 /* ---------- render ---------- */
-function route(){const v=(location.hash||'#painel').slice(1);S.view=['painel','indicadores','quadro','tabela','contratos','linha','calendario','tarefas','equipe','parcerias','pca','config'].includes(v)?v:'painel';
+function route(){const v=(location.hash||'#painel').slice(1);S.view=['painel','ajuda','indicadores','quadro','tabela','contratos','linha','calendario','tarefas','equipe','parcerias','pca','config'].includes(v)?v:'painel';
   document.querySelectorAll('#tabs a').forEach(a=>{if(a.dataset.v===S.view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
   render()}
 addEventListener('hashchange',route);
@@ -547,7 +572,7 @@ function render(){
     return}
   const M=$('#main');M.onclick=M.onkeydown=M.onpointermove=M.onpointerleave=null;
   $('#attn').hidden=S.view!=='painel';
-  ({painel:vPainel,indicadores:vIndicadores,parcerias:vParcerias,config:vConfig,linha:vLinha,quadro:vQuadro,tabela:vTabela,contratos:vContratos,calendario:vCalendario,tarefas:vTarefas,equipe:vEquipe,pca:vPCA})[S.view]();
+  ({painel:vPainel,ajuda:vAjuda,indicadores:vIndicadores,parcerias:vParcerias,config:vConfig,linha:vLinha,quadro:vQuadro,tabela:vTabela,contratos:vContratos,calendario:vCalendario,tarefas:vTarefas,equipe:vEquipe,pca:vPCA})[S.view]();
   if(S.ficha)renderFichaDyn();
 }
 
@@ -1341,6 +1366,102 @@ function abrirPessoa(id,novo){
     try{if(id){if(!await upd('pessoas',id,d,'','edicao'))return}else await criar('pessoas',d);fechar();if(S.view==='config')vConfig()}catch(er){$('#pemsg').textContent='Não foi possível salvar.'}};
   if(id)$('#peDel').onclick=async ev=>{const b=ev.currentTarget;if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Confirmar exclusão';return}
     try{await apagar('pessoas',id);fechar();if(S.view==='config')vConfig()}catch{$('#pemsg').textContent='Não foi possível excluir.'}};
+}
+
+/* ---------- aba "Como usar?" ---------- */
+const AJUDA=[
+ {id:'inicio',t:'Primeiros passos',aba:'painel',h:`<ol>
+  <li><b>Entrar:</b> abra o SELIC-15, digite seu e-mail e use o código de 6 dígitos que chega na sua caixa de entrada. A sessão dura 24 horas.</li>
+  <li><b>Primeiro acesso:</b> se aparecer "aguardando aprovação", um administrador precisa liberar seu acesso. A página abre sozinha quando isso acontecer.</li>
+  <li><b>Seu nome:</b> clique no seu nome, no canto superior direito, para definir como ele aparece para a equipe.</li>
+  <li><b>Sair:</b> botão "Sair", ao lado do seu nome.</li></ol>
+  <p><b>Níveis de acesso:</b> <em>Administrador</em> faz tudo, inclusive Configurações. <em>Editor</em> cria e altera. <em>Leitor</em> só consulta.</p>`},
+ {id:'painel',t:'Painel',aba:'painel',h:`<p>É a tela inicial: um resumo do que pede atenção hoje.</p><ul>
+  <li><b>Alertas do dia</b> (os quadros no topo): contratos vencidos ou perto de vencer, tarefas atrasadas e processos com pendência. Clique em um quadro para ir direto à lista.</li>
+  <li><b>Índice de Saúde do SELIC:</b> nota de 0 a 100. Considera contratos em dia (30%), tarefas no prazo (30%), pendências resolvidas (20%) e processos ativos com gestor e fiscal (20%).</li>
+  <li><b>Próximos 7 dias:</b> prazos de tarefas, eventos da agenda e fins de vigência. Clique para abrir.</li>
+  <li><b>Atividade recente:</b> quem fez o quê no sistema.</li></ul>`},
+ {id:'fluxo',t:'Fluxo de processos',aba:'quadro',h:`<p>Cada coluna é uma fase do processo, como num quadro de cartões.</p><ul>
+  <li><b>Cadastrar:</b> botão "+ Novo processo", no topo. Preencha e clique em "Cadastrar processo". Nada é criado antes disso.</li>
+  <li><b>Mudar de fase:</b> arraste o cartão para outra coluna, ou mude o campo "Fase" na ficha.</li>
+  <li><b>Abrir a ficha:</b> clique no cartão. Ali você edita os dados, define gestor e fiscal, registra andamentos e vê o histórico.</li>
+  <li><b>Urgência:</b> na ficha, escolha Baixa (verde), Média (amarela) ou Urgente (vermelha). A cor aparece no cartão, e os urgentes sobem para o topo da coluna.</li>
+  <li><b>Registrar andamento:</b> na ficha, escreva no campo do histórico (ex.: "enviado à PROJUR") e clique em "Registrar". Fica gravado com data e seu nome.</li>
+  <li><b>Pendências:</b> avisos do sistema (ex.: status diferente entre planilhas). Depois de conferir, clique em "Resolvido".</li>
+  <li><b>Excluir:</b> botão vermelho "Excluir processo", na ficha. O sistema pede confirmação.</li>
+  <li><b>Filtros:</b> busca, setor, urgência e "só com pendência", acima das colunas.</li></ul>`},
+ {id:'tarefas',t:'Tarefas da equipe',aba:'tarefas',h:`<ul>
+  <li>As tarefas aparecem agrupadas por responsável. As atrasadas ficam em vermelho.</li>
+  <li><b>Nova tarefa:</b> botão "+ Nova tarefa", ou "+ Tarefa para este processo" dentro da ficha do processo.</li>
+  <li><b>Concluir:</b> botão "Concluir". Errou? Use "Desfazer" no aviso ou "Reabrir".</li>
+  <li><b>Mudar o prazo:</b> abra a tarefa em "Detalhes" e altere a data. A mudança fica registrada no histórico, sem precisar anotar.</li></ul>`},
+ {id:'contratos',t:'Contratos',aba:'contratos',h:`<ul>
+  <li><b>Todo contrato pertence a um processo.</b> Quando um processo entra em execução no fluxo, o contrato aparece aqui sozinho, com a etiqueta "completar dados".</li>
+  <li><b>Completar dados:</b> clique no contrato e preencha a empresa e a vigência (data final). Se não houver data final, marque "Prazo indeterminado".</li>
+  <li><b>Estado atual:</b> Em execução, Suspenso ou Finalizado. Ao mudar o estado, a "Data do estado" é preenchida com a data de hoje. Finalizados e suspensos não geram alerta de vencimento.</li>
+  <li><b>Novo contrato:</b> botão "+ Novo contrato" (escolha o processo) ou "+ Cadastrar contrato" na ficha do processo.</li>
+  <li><b>Filtros:</b> estado, vigência, gestor ou fiscal, papel, setor demandante, só com dados a completar e ordenação. Use "Limpar filtros" para voltar a ver tudo.</li>
+  <li><b>Processos em execução sem contrato:</b> o aviso amarelo no topo lista esses processos. Crie o contrato só para os que têm contrato formal.</li></ul>`},
+ {id:'linha',t:'Linha do tempo',aba:'linha',h:`<p>Mostra quanto falta para acabar cada contrato em execução. A barra azul é a vigência restante. O trecho laranja são os últimos ${'${JANELA()}'} dias, quando a renovação ou a nova contratação já deveria estar em andamento.</p>
+  <p>Use os botões "Próximos 12 meses", "24 meses" e "Até o último contrato" para mudar o período. Clique em uma linha para abrir o contrato.</p>`},
+ {id:'calendario',t:'Calendário',aba:'calendario',h:`<ul>
+  <li>Reúne os prazos de tarefas, os fins de vigência, o início da janela de renovação e a agenda do setor.</li>
+  <li><b>Novo evento:</b> "+ Evento" (reunião, sessão pública, entrega…). Pode ser ligado a um processo e aparece no histórico dele.</li>
+  <li>Clique em um dia para ver tudo daquele dia, e em um item para abri-lo.</li></ul>`},
+ {id:'equipe',t:'Gestores e fiscais',aba:'equipe',h:`<ul>
+  <li><b>Gráfico de barras:</b> quantos processos em andamento cada servidor acompanha como gestor (azul) ou fiscal (verde).</li>
+  <li><b>Pizzas:</b> em quantos % dos contratos cada servidor é gestor ou fiscal. A fatia cinza-clara mostra os contratos ainda sem designação.</li>
+  <li><b>Sem designação:</b> lista dos processos ativos sem gestor ou fiscal. Para designar, abra a ficha do processo.</li></ul>`},
+ {id:'parcerias',t:'Parcerias',aba:'parcerias',h:`<p>Tabela de parceiros: credenciamentos, convênios e acordos. Use "+ Nova parceria" para cadastrar. A situação mostra se está vigente, perto de vencer ou vencida.</p>`},
+ {id:'pca',t:'Painel do PCA',aba:'pca',h:`<p>Mostra quanto do Plano de Contratações Anual já foi realizado, por setor demandante, o que ainda não começou, o que depende do COFFITO e o que foi contratado fora do plano. Para o gráfico por setor ficar fiel, informe o setor na ficha de cada processo.</p>`},
+ {id:'indicadores',t:'Indicadores',aba:'indicadores',h:`<p>Os indicadores do setor em faixas: <b>Atenção</b> (abaixo de 50), <b>Em evolução</b> (50 a 74), <b>Bom</b> (75 a 89) e <b>Exemplar</b> (90 ou mais). Também mostra quanto cada um variou nos últimos 7 dias e gráficos por coluna do fluxo, urgência, responsável e vigência.</p>`},
+ {id:'tabela',t:'Tabela e Excel',aba:'tabela',h:`<ul>
+  <li>A aba Tabela mostra todos os processos em linhas. Clique no título de uma coluna para ordenar e use os filtros.</li>
+  <li>"Exportar para Excel", dentro da aba Tabela, leva só os processos filtrados.</li>
+  <li>"Exportar tudo (Excel)", no topo da tela, baixa uma planilha com todas as informações do sistema.</li></ul>`},
+ {id:'desfazer',t:'Avisos e Desfazer',h:`<p>Toda ação salva mostra um aviso na parte de baixo da tela, por alguns segundos. O botão <b>Desfazer</b> volta a última ação: uma edição, uma mudança de coluna, um andamento, um cadastro ou uma exclusão. Com o mouse em cima, o aviso não some.</p>`},
+ {id:'conexao',t:'Indicador de conexão',h:`<p>O indicador no topo mostra se a tela está em dia com o servidor:</p><ul>
+  <li><span class="con-dot ok"></span> <b>Atualizado:</b> você vê o que a equipe fez, com atraso de no máximo 20 segundos.</li>
+  <li><span class="con-dot sync"></span> <b>Atualizando:</b> buscando novidades.</li>
+  <li><span class="con-dot off"></span> <b>Sem conexão:</b> a internet caiu ou o servidor não respondeu. O sistema tenta de novo sozinho. Clique no indicador para tentar na hora. Enquanto estiver vermelho, evite fazer alterações.</li></ul>`},
+ {id:'config',t:'Configurações (administradores)',aba:'config',h:`<ul>
+  <li><b>Colunas do fluxo:</b> renomear, criar, reordenar e remover colunas. A "etapa" de cada coluna alimenta os indicadores e cria o contrato automático (etapa "Em execução").</li>
+  <li><b>Usuários e acesso:</b> aprovar quem pediu acesso e mudar o nível de cada pessoa.</li>
+  <li><b>Equipe:</b> nomes sugeridos nos campos de responsável, gestor e fiscal.</li>
+  <li><b>Setores demandantes:</b> adicionar e remover setores.</li>
+  <li><b>Parâmetros:</b> janela de renovação de contratos (padrão: 120 dias).</li></ul>`},
+ {id:'faq',t:'Perguntas frequentes',h:`<dl class="faq">
+  <dt>Errei uma alteração. Como volto?</dt><dd>Clique em "Desfazer" no aviso que aparece embaixo. Se o aviso já sumiu, corrija na ficha; o histórico mostra o que era antes.</dd>
+  <dt>Por que um contrato apareceu sozinho?</dt><dd>O processo dele entrou em execução no fluxo. Complete a empresa e a vigência.</dd>
+  <dt>O que significa "fora da lista" no setor?</dt><dd>O setor foi removido em Configurações, mas o processo ainda usa o nome antigo. Escolha um setor da lista na ficha.</dd>
+  <dt>Uma colega não consegue entrar.</dt><dd>Se o e-mail dela é institucional, ela entra e fica "aguardando aprovação". Um administrador aprova em Configurações → Usuários e acesso. Outros e-mails precisam ser liberados no login da Cloudflare.</dd>
+  <dt>As informações de uma colega não apareceram na minha tela.</dt><dd>Espere alguns segundos ou clique no indicador de conexão, no topo, para atualizar na hora.</dd>
+  <dt>O SEI continua valendo?</dt><dd>Sim. O SEI é a fonte oficial dos processos. O SELIC-15 serve para a organização interna do setor.</dd></dl>`},
+];
+function vAjuda(){
+  const q=norm(S.qa||'');
+  const ls=AJUDA.map(s=>({...s,h:s.h.replace('${JANELA()}',JANELA())})).filter(s=>!q||norm(s.t+' '+s.h.replace(/<[^>]+>/g,' ')).includes(q));
+  $('#main').innerHTML=`<div class="ajuda">
+   <div class="ajuda-topo"><h2>Como usar o SELIC-15</h2>
+    <input type="search" id="qa" placeholder="Procurar na ajuda (ex.: contrato, desfazer, urgência)" value="${esc(S.qa||'')}" aria-label="Procurar na ajuda"></div>
+   <nav class="ajuda-indice" aria-label="Assuntos">${AJUDA.map(s=>`<a href="#" data-ir="${s.id}">${esc(s.t)}</a>`).join('')}</nav>
+   ${ls.map(s=>`<section class="card ajuda-sec" id="aj-${s.id}"><div class="card-head"><h3>${esc(s.t)}</h3>${s.aba?`<a class="btn sm" href="#${s.aba}">Ir para a aba</a>`:''}</div>${s.h}</section>`).join('')
+     ||'<div class="empty">Nada encontrado. Tente outra palavra.</div>'}</div>`;
+  const qa=$('#qa');qa.oninput=()=>{S.qa=qa.value;const p=qa.selectionStart;vAjuda();const n=$('#qa');n.focus();n.setSelectionRange(p,p)};
+  $('#main').onclick=e=>{const a=e.target.closest('[data-ir]');if(!a)return;e.preventDefault();S.qa='';if(!document.getElementById('aj-'+a.dataset.ir))vAjuda();
+    document.getElementById('aj-'+a.dataset.ir)?.scrollIntoView({behavior:'smooth',block:'start'})};
+}
+
+/* ---------- indicador de conexão ---------- */
+const CON={ultimo:0,erro:false,buscando:false};
+function pintarConexao(){
+  const el=$('#conexao');if(!el)return;const s=Math.round((Date.now()-CON.ultimo)/1000);
+  let cls,txt,dica;
+  if(CON.erro||!navigator.onLine){cls='off';txt='Sem conexão';dica='Sem conexão com o servidor. O sistema tenta de novo sozinho. Clique para tentar agora.'}
+  else if(CON.buscando&&!CON.ultimo){cls='sync';txt='Conectando…';dica='Conectando ao servidor'}
+  else if(CON.buscando){cls='sync';txt='Atualizando…';dica='Buscando novidades da equipe'}
+  else{cls='ok';txt=s<15?'Atualizado agora':s<60?`Atualizado há ${s} s`:`Atualizado há ${Math.round(s/60)} min`;dica='Tudo em dia com o servidor. Clique para atualizar agora.'}
+  el.className='conexao '+cls;el.querySelector('span').textContent=txt;el.title=dica;el.setAttribute('aria-label',dica);
 }
 
 /* ---------- ficha do processo ---------- */

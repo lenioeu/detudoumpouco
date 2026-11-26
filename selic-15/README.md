@@ -18,6 +18,7 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 | Tarefas da equipe | Tarefas por responsável, com histórico de mudanças de prazo |
 | Gestores e fiscais | Gráfico de processos ativos por pessoa, pizzas com o % dos contratos de cada gestor e fiscal, quem acompanha cada processo e o que está sem designação |
 | Parcerias | Tabela de parceiros: credenciamentos, convênios e acordos, com vigência e contato |
+| Como usar? | Ajuda do sistema: como usar cada aba, avisos e Desfazer, indicador de conexão e perguntas frequentes, com busca |
 | Painel do PCA | Previsto × realizado, por setor, dependências do COFFITO e o que foi feito fora do plano |
 | Configurações | Só administradores: colunas do fluxo, usuários e níveis de acesso, equipe, setores demandantes e parâmetros |
 
