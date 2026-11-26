@@ -19,10 +19,12 @@ const ESTATICOS = {
 };
 const PUBLICOS = new Set(['/img/crefito15-horizontal.png', '/img/globo-32.png']);
 const seguranca = { 'x-content-type-options': 'nosniff', 'referrer-policy': 'same-origin', 'x-frame-options': 'DENY' };
-const COLECOES = new Set(['processos', 'contratos', 'tarefas', 'agenda', 'metas']);
+const COLECOES = new Set(['processos', 'contratos', 'tarefas', 'agenda', 'metas', 'parcerias', 'pessoas', 'config']);
+const NIVEIS = new Set(['admin', 'editor', 'leitor']);
 const COM_HISTORICO = new Set(['processos', 'tarefas']);
 const ORDEM_FASE = ['previsto', 'planejamento', 'juridico', 'selecao', 'contratacao', 'execucao', 'finalizado'];
-const ATIVAS = new Set(['selecao', 'contratacao', 'execucao']);
+// Colunas que exigem gestor e fiscal, quando o quadro ainda não foi configurado.
+const ATIVAS_PADRAO = ['selecao', 'contratacao', 'execucao'];
 
 
 export default {
@@ -99,19 +101,35 @@ const linhaDoc = r => ({ col: r.col, id: r.id, data: JSON.parse(r.data), version
 
 async function api(req, env, url, email) {
   const m = req.method, p = url.pathname.replace(/^\/api/, '').split('/').filter(Boolean);
+  const eu = await usuario(env, email);
   if (p[0] === 'me') {
     if (m === 'PUT') {
       const { nome } = await req.json();
-      await env.DB.prepare('INSERT INTO usuarios(email,nome,criado_em) VALUES(?,?,?) ON CONFLICT(email) DO UPDATE SET nome=excluded.nome').bind(email, String(nome || '').slice(0, 80), agoraISO()).run();
-    } else {
-      await env.DB.prepare('INSERT OR IGNORE INTO usuarios(email,nome,criado_em) VALUES(?,?,?)').bind(email, '', agoraISO()).run();
+      await env.DB.prepare('UPDATE usuarios SET nome=? WHERE email=?').bind(String(nome || '').slice(0, 80), email).run();
+      eu.nome = String(nome || '').slice(0, 80);
     }
-    const u = await env.DB.prepare('SELECT email,nome FROM usuarios WHERE email=?').bind(email).first();
-    return json(u);
+    return json(eu);
   }
-  if (p[0] === 'usuarios' && m === 'GET') {
-    const r = await env.DB.prepare('SELECT email,nome FROM usuarios').all();
-    return json(r.results);
+  if (p[0] === 'usuarios') {
+    if (m === 'GET') return json((await env.DB.prepare('SELECT email,nome,nivel,criado_em FROM usuarios ORDER BY nome,email').all()).results);
+    if (eu.nivel !== 'admin') return json({ erro: 'Só administradores podem gerenciar usuários.' }, 403);
+    const alvo = decodeURIComponent(p[1] || '').toLowerCase().trim();
+    if (m === 'DELETE') {
+      if (alvo === email) return json({ erro: 'Você não pode remover a si mesmo.' }, 400);
+      await env.DB.prepare('DELETE FROM usuarios WHERE email=?').bind(alvo).run();
+      return json({ ok: true });
+    }
+    const b = await req.json().catch(() => ({}));
+    const em = (alvo || String(b.email || '')).toLowerCase().trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return json({ erro: 'E-mail inválido.' }, 400);
+    const nivel = NIVEIS.has(b.nivel) ? b.nivel : 'editor';
+    if (em === email && nivel !== 'admin') {
+      const n = (await env.DB.prepare("SELECT COUNT(*) n FROM usuarios WHERE nivel='admin' AND email<>?").bind(email).first()).n;
+      if (!n) return json({ erro: 'O sistema precisa de pelo menos um administrador.' }, 400);
+    }
+    await env.DB.prepare('INSERT INTO usuarios(email,nome,nivel,criado_em) VALUES(?,?,?,?) ON CONFLICT(email) DO UPDATE SET nome=excluded.nome, nivel=excluded.nivel')
+      .bind(em, String(b.nome || '').slice(0, 80), nivel, agoraISO()).run();
+    return json(await env.DB.prepare('SELECT email,nome,nivel,criado_em FROM usuarios WHERE email=?').bind(em).first());
   }
   if (p[0] === 'painel' && m === 'GET') return json(await painel(env, false));
   if (p[0] !== 'docs') return json({ erro: 'Rota inexistente' }, 404);
@@ -125,6 +143,8 @@ async function api(req, env, url, email) {
   }
   const col = p[1];
   if (!COLECOES.has(col)) return json({ erro: 'Coleção inválida' }, 400);
+  if (eu.nivel === 'leitor') return json({ erro: 'Seu acesso é só de leitura.' }, 403);
+  if (col === 'config' && eu.nivel !== 'admin') return json({ erro: 'Só administradores alteram as configurações.' }, 403);
   const corpo = m === 'DELETE' ? {} : await req.json().catch(() => ({}));
   if (JSON.stringify(corpo).length > 200000) return json({ erro: 'Conteúdo grande demais' }, 413);
   const t = agoraISO();
@@ -135,18 +155,25 @@ async function api(req, env, url, email) {
     if (COM_HISTORICO.has(col)) data.historico = [{ em: t, por: email, texto: col === 'processos' ? 'Processo cadastrado' : 'Tarefa criada' }];
     if (col === 'agenda' || col === 'metas') { data.criadoPor = email; data.criadoEm = t; }
     await env.DB.prepare('INSERT INTO docs(col,id,data,version,updated_at,updated_by) VALUES(?,?,?,?,?,?)').bind(col, id, JSON.stringify(data), 1, t, email).run();
-    const tipo = { processos: 'novo_processo', tarefas: 'nova_tarefa', agenda: 'agenda', metas: 'nova_meta' }[col];
-    await evento(env, t, email, col, id, tipo, (data.titulo || data.objeto || '').slice(0, 140));
+    const tipo = { processos: 'novo_processo', tarefas: 'nova_tarefa', agenda: 'agenda', metas: 'nova_meta', parcerias: 'nova_parceria', pessoas: 'nova_pessoa' }[col] || 'novo_registro';
+    await evento(env, t, email, col, id, tipo, String(data.titulo || data.objeto || data.nome || '').slice(0, 140));
     return json({ doc: { col, id, data, version: 1, updated_at: t, deleted: false } });
   }
   const id = decodeURIComponent(p[2] || '');
+  if (m === 'PUT' && id) {
+    const data = corpo.data || {};
+    await env.DB.prepare('INSERT INTO docs(col,id,data,version,updated_at,updated_by,deleted) VALUES(?,?,?,1,?,?,0) ON CONFLICT(col,id) DO UPDATE SET data=excluded.data, version=version+1, updated_at=excluded.updated_at, updated_by=excluded.updated_by, deleted=0')
+      .bind(col, id, JSON.stringify(data), t, email).run();
+    await evento(env, t, email, col, id, 'configuracao', String(corpo.texto || 'Configuração alterada').slice(0, 300));
+    return json({ doc: { col, id, data, version: 1, updated_at: t, deleted: false } });
+  }
   const atual = await env.DB.prepare('SELECT * FROM docs WHERE col=? AND id=?').bind(col, id).first();
   if (!atual || atual.deleted) return json({ erro: 'Registro não encontrado' }, 404);
   const antes = JSON.parse(atual.data);
 
   if (m === 'DELETE') {
     await env.DB.prepare('UPDATE docs SET deleted=1, version=version+1, updated_at=?, updated_by=? WHERE col=? AND id=?').bind(t, email, col, id).run();
-    await evento(env, t, email, col, id, 'exclusao', (antes.titulo || antes.objeto || '').slice(0, 140));
+    await evento(env, t, email, col, id, 'exclusao', String(antes.titulo || antes.objeto || antes.nome || '').slice(0, 140));
     return json({ doc: { col, id, data: antes, version: atual.version + 1, updated_at: t, deleted: true } });
   }
   if (m === 'PATCH') {
@@ -169,6 +196,17 @@ function tipoAcao(acao, antes, depois) {
 const evento = (env, em, email, col, doc, tipo, texto) =>
   env.DB.prepare('INSERT INTO eventos(em,email,col,doc,tipo,pontos,texto) VALUES(?,?,?,?,?,0,?)').bind(em, email, col, doc, tipo, texto).run();
 
+async function usuario(env, email) {
+  let u = await env.DB.prepare('SELECT email,nome,nivel FROM usuarios WHERE email=?').bind(email).first();
+  if (!u) {
+    // Quem passa pelo login da Cloudflare e ainda não está cadastrado entra como editor; o administrador ajusta depois.
+    await env.DB.prepare('INSERT OR IGNORE INTO usuarios(email,nome,nivel,criado_em) VALUES(?,?,?,?)').bind(email, '', 'editor', agoraISO()).run();
+    u = { email, nome: '', nivel: 'editor' };
+  }
+  if (!NIVEIS.has(u.nivel)) u.nivel = 'editor';
+  return u;
+}
+
 /* ---------------- painel e indicadores ---------------- */
 const diasAte = (iso, hoje) => Math.round((Date.parse(iso + 'T00:00:00Z') - Date.parse(hoje + 'T00:00:00Z')) / 864e5);
 const razao = (a, b) => (b ? a / b : 1);
@@ -176,13 +214,17 @@ const razao = (a, b) => (b ? a / b : 1);
 async function painel(env, soFotografar) {
   const hoje = hojeBR();
   const rows = (await env.DB.prepare('SELECT col,id,data FROM docs WHERE deleted=0').all()).results;
-  const D = { processos: [], contratos: [], tarefas: [], agenda: [], metas: [] };
+  const D = { processos: [], contratos: [], tarefas: [], agenda: [], metas: [], parcerias: [], pessoas: [], config: [] };
   for (const r of rows) D[r.col]?.push({ id: r.id, ...JSON.parse(r.data) });
+  const cfg = id => D.config.find(c => c.id === id) || {};
+  const colunas = cfg('quadro').colunas;
+  const ATIVAS = new Set(colunas?.length ? colunas.filter(c => c.designacao).map(c => c.id) : ATIVAS_PADRAO);
+  const JANELA = +cfg('parametros').janela || 120;
 
   const comVig = D.contratos.filter(c => c.vigencia);
   const vencidos = comVig.filter(c => diasAte(c.vigencia, hoje) < 0);
   const v30 = comVig.filter(c => { const d = diasAte(c.vigencia, hoje); return d >= 0 && d <= 30; });
-  const v120 = comVig.filter(c => { const d = diasAte(c.vigencia, hoje); return d >= 0 && d <= 120; });
+  const v120 = comVig.filter(c => { const d = diasAte(c.vigencia, hoje); return d >= 0 && d <= JANELA; });
   const abertas = D.tarefas.filter(t => t.status === 'andamento');
   const atrasadas = abertas.filter(t => t.prazo && t.prazo < hoje);
   const pendAbertas = D.processos.reduce((s, p) => s + (p.alertas || []).length, 0);
@@ -214,7 +256,7 @@ async function painel(env, soFotografar) {
     vencidos: { nome: 'Contratos com vigência vencida', valor: vencidos.length, sentido: 'reduzir' },
     pcaSetor: { nome: 'Itens do PCA com setor informado', valor: pcaSetor.length, total: pca.length, sentido: 'aumentar' },
     designados: { nome: 'Processos ativos com gestor e fiscal', valor: designados.length, total: ativos.length, sentido: 'aumentar' },
-    renovacao: { nome: 'Contratos a vencer em 120 dias com tarefa aberta', valor: renovComPlano.length, total: v120.length, sentido: 'aumentar' },
+    renovacao: { nome: `Contratos a vencer em ${JANELA} dias com tarefa aberta`, valor: renovComPlano.length, total: v120.length, sentido: 'aumentar' },
   };
   return {
     hoje, saude, comp, foto,

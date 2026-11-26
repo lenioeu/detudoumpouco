@@ -16,10 +16,11 @@ CREATE INDEX IF NOT EXISTS docs_updated ON docs (updated_at);
 CREATE TABLE IF NOT EXISTS usuarios (
   email     TEXT PRIMARY KEY,
   nome      TEXT,
+  nivel     TEXT NOT NULL DEFAULT 'editor',   -- admin | editor | leitor
   criado_em TEXT
 );
 
--- Registro de ações: alimenta o histórico de atividade e a pontuação da equipe.
+-- Registro de ações: alimenta a atividade recente do painel.
 CREATE TABLE IF NOT EXISTS eventos (
   id     INTEGER PRIMARY KEY AUTOINCREMENT,
   em     TEXT NOT NULL,
