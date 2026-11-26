@@ -205,9 +205,8 @@ h1,h2,h3{font-family:var(--serif)}
 .dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0;grid-column:span 12}
 .card h2{font-size:15px;font-weight:700;margin:0 0 12px;color:var(--brand-dark)}
-.card.saude{grid-column:span 6}.card.seq,.card.nivel{grid-column:span 3}.card.half{grid-column:span 6}
-@media (max-width:1000px){.card.saude{grid-column:span 12}.card.seq,.card.nivel,.card.half{grid-column:span 6}}
-@media (max-width:640px){.card.seq,.card.nivel,.card.half{grid-column:span 12}}
+.card.saude{grid-column:span 12}.card.half{grid-column:span 6}
+@media (max-width:900px){.card.half{grid-column:span 12}}
 .saude-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .saude-txt{flex:1;min-width:200px}.saude-txt p{margin:4px 0 8px;color:var(--muted);font-size:13px}
 .gauge{width:128px;height:128px;flex:none}
@@ -217,30 +216,21 @@ h1,h2,h3{font-family:var(--serif)}
 .lvl{font:700 20px var(--serif)}.saude.aten .lvl{color:var(--crit)}.saude.evo .lvl{color:var(--warn)}.saude.bom .lvl,.saude.ex .lvl{color:var(--accent)}
 .spark{width:100%;max-width:320px;height:56px;display:block}
 .sp-line{fill:none;stroke:var(--brand-dark);stroke-width:2;stroke-linejoin:round}.sp-area{fill:var(--accent-soft)}.sp-ref{stroke:var(--line);stroke-dasharray:3 3}.sp-dot{fill:var(--brand-dark);stroke:var(--surface);stroke-width:2}
-.comp{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-.comp li,.contrib li{display:grid;grid-template-columns:minmax(0,1fr) minmax(80px,140px) 42px;gap:10px;align-items:center;font-size:13px}
-.comp small{color:var(--muted)}.comp b,.contrib b{text-align:right}
+.comp{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;flex:1 1 340px;min-width:0}
+.comp li{display:grid;grid-template-columns:minmax(0,1fr) minmax(80px,140px) 42px;gap:10px;align-items:center;font-size:13px}
+.comp small{color:var(--muted)}.comp b{text-align:right}
 .mbar{display:block;height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
 .mbar i{display:block;height:100%;background:var(--brand);border-radius:4px}
 .mbar.lg{height:12px;margin:12px 0 6px}
 .big{font:700 40px/1.05 var(--serif);color:var(--brand-dark)}.big small{font-size:16px;font-weight:500;color:var(--muted)}
-.dots{display:flex;gap:4px;margin-top:12px}.dots i{flex:1;height:22px;border-radius:4px}
-.good{background:var(--brand)}.bad{background:var(--crit)}.nd{background:var(--sunk);outline:1px dashed var(--line);outline-offset:-1px}
-.lgd{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin:0 3px 0 8px}.lgd:first-child{margin-left:0}
-.metas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
-.meta .mt{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:14px}
+.metas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.card-head h2{margin:0 auto 0 0}
+.meta{display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface);cursor:pointer;font:inherit;color:inherit}
+.meta:hover{border-color:var(--brand)}.meta.arq{opacity:.6}
+.meta .mt{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:14px}
 .meta.ok .mbar i{background:var(--brand-dark)}
-.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-.badge{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:12px 8px;border:1px solid var(--line);border-radius:10px;background:var(--sunk)}
-.badge.on{background:var(--accent-soft);border-color:var(--brand-light)}
-.badge b{font-size:13px;margin-top:4px}.badge span{font-size:12px;color:var(--muted)}.badge small{font-size:11px;font-weight:600;margin-top:4px;color:var(--muted)}.badge.on small{color:var(--accent)}
-.medal{width:44px;height:52px}.medal .rib{fill:var(--line)}.medal .disc{fill:var(--surface);stroke:var(--line);stroke-width:3}
-.medal.on .rib{fill:var(--brand-light)}.medal.on .disc{fill:var(--brand);stroke:var(--brand-dark)}
-.medal .mk{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.medal .lk{fill:var(--muted)}.medal .lkb{fill:none;stroke:var(--muted);stroke-width:2.5}
-.contrib{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .feed{list-style:none;margin:0;padding:0}.feed li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.feed li:last-child{border-bottom:0}
 .fr{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
-.regras{margin-top:14px;font-size:13px}.regras summary{cursor:pointer;color:var(--accent);font-weight:600}.regras ul{margin:8px 0 0;padding-left:18px;color:var(--muted)}
 /* ---- linha do tempo ---- */
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
 .seg button{border:0;background:none;padding:7px 12px;cursor:pointer;color:var(--muted);font-weight:500}
@@ -307,7 +297,7 @@ const FASES=[
  ['selecao','Seleção do fornecedor'],['contratacao','Contratação / assinatura'],['execucao','Em execução'],
  ['finalizado','Finalizado'],['encerrado','Deserto, fracassado ou cancelado']];
 const FNOME=Object.fromEntries(FASES);
-const S={painel:null,meuNome:'',proc:new Map(),contr:new Map(),tar:new Map(),agenda:new Map(),ok:{processos:0,contratos:0,tarefas:0,agenda:0},
+const S={painel:null,meuNome:'',metas:new Map(),metasArq:false,proc:new Map(),contr:new Map(),tar:new Map(),agenda:new Map(),ok:{processos:0,contratos:0,tarefas:0,agenda:0},
   tab:{sort:'objeto',dir:1,fase:'',pca:''},cal:null,
   view:'quadro',q:'',setor:'',pend:false,abertas:{finalizado:false,encerrado:false},feitas:false,resp:'',
   ficha:null,me:null,write:true,names:{}};
@@ -325,7 +315,7 @@ const API=async(method,path,body)=>{
   catch{throw{code:'rede'}}
   if(r.status===401||r.status===403||r.redirected||!(r.headers.get('content-type')||'').includes('json')){note('Sua sessão expirou. Recarregue a página para entrar de novo.');throw{code:'sessao'}}
   const d=await r.json().catch(()=>({}));if(!r.ok)throw{code:r.status,message:d.erro||''};return d};
-const MAPAS={processos:S.proc,contratos:S.contr,tarefas:S.tar,agenda:S.agenda};
+const MAPAS={processos:S.proc,contratos:S.contr,tarefas:S.tar,agenda:S.agenda,metas:S.metas};
 let since='';
 function aplicar(d){const m=MAPAS[d.col];if(!m)return;if(d.deleted)m.delete(d.id);else m.set(d.id,{id:d.id,...d.data})}
 async function sync(){
@@ -348,7 +338,7 @@ let raf=0;function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFram
 const quem=e=>!e?'alguém da equipe':S.names[e]||(String(e).includes('@')?String(e).split('@')[0]:e);
 async function upd(col,id,patch,texto,acao){
   try{const r=await API('PATCH',`/docs/${col}/${encodeURIComponent(id)}`,{patch,texto:texto||'',acao:acao||'edicao'});
-    aplicar(r.doc);schedule();if(r.pontos>0)toast(`+${r.pontos} pontos para a equipe`);carregarPainel();return true}
+    aplicar(r.doc);schedule();carregarPainel();return true}
   catch(e){if(e.code!=='sessao')note('Não foi possível salvar ('+(e.message||e.code)+'). Tente de novo.');return false}
 }
 async function criar(col,data){const r=await API('POST','/docs/'+col,{data});aplicar(r.doc);schedule();carregarPainel();return r.doc.id}
@@ -704,15 +694,15 @@ function vPCA(){
   m.onkeydown=e=>{const r=e.target.closest('li[data-id]');if(r&&e.key==='Enter')abrirFicha(r.dataset.id)};
 }
 
-/* ---------- painel (gamificação) ---------- */
+/* ---------- painel e metas da equipe ---------- */
 let painelReq=null,painelT=0;
 function carregarPainel(){clearTimeout(painelT);painelT=setTimeout(async()=>{
   if(painelReq)return;painelReq=API('GET','/painel');
   try{S.painel=await painelReq;if(S.view==='painel')vPainel()}catch{}finally{painelReq=null}},300)}
 const NIVEL_SAUDE=s=>s>=90?['Exemplar','ex']:s>=75?['Bom','bom']:s>=50?['Em evolução','evo']:['Atenção','aten'];
-const TIPO_EV={tarefa_no_prazo:'concluiu uma tarefa no prazo',tarefa_atrasada:'concluiu uma tarefa atrasada',pendencia:'resolveu uma pendência',andamento:'registrou um andamento',
-  fase:'avançou a fase de um processo',contrato:'atualizou um contrato',agenda:'marcou um evento na agenda',novo_processo:'cadastrou um processo',nova_tarefa:'criou uma tarefa',
-  edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
+const TIPO_EV={tarefa_no_prazo:'concluiu uma tarefa no prazo',tarefa_atrasada:'concluiu uma tarefa atrasada',tarefa_concluida:'concluiu uma tarefa',pendencia:'resolveu uma pendência',andamento:'registrou um andamento',
+  fase:'mudou a fase de um processo',contrato:'atualizou um contrato',agenda:'marcou um evento na agenda',novo_processo:'cadastrou um processo',nova_tarefa:'criou uma tarefa',
+  nova_meta:'criou uma meta',meta:'atualizou uma meta',edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
 function gauge(v){const r=52,c=2*Math.PI*r,f=Math.max(0,Math.min(100,v))/100;
   return `<svg viewBox="0 0 128 128" class="gauge" role="img" aria-label="Índice de saúde ${v} de 100"><circle cx="64" cy="64" r="${r}" class="g-bg"/>
    <circle cx="64" cy="64" r="${r}" class="g-fg" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 64 64)"/>
@@ -723,46 +713,101 @@ function spark(h){if(h.length<2)return '<p class="muted small">A tendência apar
   return `<svg viewBox="0 0 ${W} ${H}" class="spark" role="img" aria-label="Índice nos últimos ${h.length} dias"><line x1="0" x2="${W}" y1="${y(75)}" y2="${y(75)}" class="sp-ref"/>
    <polygon points="${x(0)},${H} ${pts} ${x(h.length-1)},${H}" class="sp-area"/><polyline points="${pts}" class="sp-line"/>
    <circle cx="${x(h.length-1)}" cy="${y(h[h.length-1].saude)}" r="4" class="sp-dot"/></svg><span class="muted small">últimos ${h.length} dias · linha de referência em 75</span>`}
-const MEDALHA=(ok)=>`<svg viewBox="0 0 48 56" class="medal ${ok?'on':''}" aria-hidden="true"><path d="M14 2h8l4 14h-8zM26 2h8l-4 14h-8z" class="rib"/><circle cx="24" cy="34" r="17" class="disc"/>
-  ${ok?'<path d="M16 34l6 6 11-12" class="mk"/>':'<rect x="18" y="32" width="12" height="10" rx="2" class="lk"/><path d="M20.5 32v-3a3.5 3.5 0 0 1 7 0v3" class="lkb"/>'}</svg>`;
+function progMeta(m){
+  const I=S.painel?.indicadores?.[m.indicador],cl=f=>Math.max(0,Math.min(1,isFinite(f)?f:0));
+  if(!m.indicador||!I){const a=+m.atual||0,al=+m.alvo||0;return{f:cl(al?a/al:0),txt:`${a} de ${al}${m.unidade?' '+m.unidade:''}`}}
+  if(I.sentido==='aumentar'){const al=(m.alvo===''||m.alvo==null)?(I.total||0):+m.alvo;return{f:cl(al?I.valor/al:1),txt:`${I.valor} de ${al}`}}
+  const base=+m.base||0,al=+m.alvo||0,v=I.valor;
+  return{f:cl(v<=al?1:base>al?(base-v)/(base-al):0),txt:v<=al?`Alvo atingido (${v})`:`${v} agora · eram ${base} · alvo ${al}`};
+}
+const SUGESTOES=[
+  {titulo:'Zerar as tarefas atrasadas',indicador:'atrasadas',alvo:0},
+  {titulo:'Informar o setor de todos os itens do PCA',indicador:'pcaSetor'},
+  {titulo:'Gestor e fiscal em todo processo ativo',indicador:'designados'},
+  {titulo:'Plano de renovação para cada contrato que vence em 120 dias',indicador:'renovacao'}];
+function metaHTML(m){
+  const p=progMeta(m),ok=p.f>=1,d=m.prazo?dias(m.prazo):null,I=S.painel?.indicadores?.[m.indicador];
+  return `<button type="button" class="meta ${ok?'ok':''} ${m.arquivada?'arq':''}" data-meta="${esc(m.id)}">
+   <span class="mt"><b>${esc(m.titulo)}</b>${ok?'<span class="chip ok">cumprida</span>':m.arquivada?'<span class="chip">arquivada</span>':''}</span>
+   <span class="mbar"><i style="width:${Math.round(p.f*100)}%"></i></span>
+   <span class="muted small">${esc(p.txt)}</span>
+   <span class="chips">${I?`<span class="chip">${esc(I.nome)}</span>`:'<span class="chip">acompanhamento manual</span>'}
+    ${m.prazo?`<span class="chip ${!ok&&d<0?'crit':!ok&&d<=7?'warn':''}">até ${br(m.prazo)}${!ok&&d<0?' · prazo vencido':''}</span>`:''}
+    ${m.responsavel?`<span class="chip acc">${esc(m.responsavel)}</span>`:''}</span></button>`;
+}
 function vPainel(){
   const P=S.painel;
   if(!P){$('#main').innerHTML='<div class="empty">Calculando os indicadores do setor…</div>';carregarPainel();return}
-  const [nivelTxt,nivelCls]=NIVEL_SAUDE(P.saude),k=P.contagens,pt=P.pontos;
+  const [nivelTxt,nivelCls]=NIVEL_SAUDE(P.saude);
   const comp=[['contratos','Contratos com vigência em dia',30],['tarefas','Tarefas dentro do prazo',30],['pendencias','Pendências resolvidas',20],['designacoes','Processos ativos com gestor e fiscal',20]];
-  const dias=[];for(let i=13;i>=0;i--){const d=new Date(hoje());d.setDate(d.getDate()-i);const iso=isoOf(d),h=P.historico.find(x=>x.dia===iso);dias.push({iso,h})}
-  const pessoas=Object.entries(pt.porPessoa).sort((a,b)=>b[1]-a[1]),maxP=Math.max(1,...pessoas.map(p=>p[1]));
-  const faixa=pt.proximo?((pt.total-pt.nivelBase)/(pt.proximo-pt.nivelBase)):1;
+  const metas=[...S.metas.values()].filter(m=>S.metasArq||!m.arquivada).sort((a,b)=>(a.arquivada-b.arquivada)||(a.prazo||'9').localeCompare(b.prazo||'9'));
+  const prox=[...[...S.tar.values()].filter(t=>t.status==='andamento'&&t.prazo&&dias(t.prazo)>=0&&dias(t.prazo)<=7).map(t=>({d:t.prazo,txt:t.titulo,sub:(t.responsavel||'Sem responsável')+' · tarefa',ab:`t:${t.id}`})),
+    ...[...S.contr.values()].filter(c=>c.vigencia&&dias(c.vigencia)>=0&&dias(c.vigencia)<=30).map(c=>({d:c.vigencia,txt:'Fim da vigência: '+c.objeto,sub:c.empresa||'',ab:`c:${c.id}`})),
+    ...[...S.agenda.values()].filter(e=>e.data&&dias(e.data)>=0&&dias(e.data)<=7).map(e=>({d:e.data,txt:(e.hora?e.hora+' · ':'')+e.titulo,sub:e.tipo||'agenda',ab:`a:${e.id}`}))].sort((a,b)=>a.d.localeCompare(b.d));
+  const nArq=[...S.metas.values()].filter(m=>m.arquivada).length;
   $('#main').innerHTML=`<div class="dash">
    <section class="card saude ${nivelCls}"><h2>Índice de Saúde do SELIC</h2>
     <div class="saude-row">${gauge(P.saude)}<div class="saude-txt"><span class="lvl">${nivelTxt}</span>
-      <p>Mede, de 0 a 100, se contratos, prazos, pendências e designações estão em ordem. Sobe quando a equipe resolve o que está pendente.</p>${spark(P.historico)}</div></div>
-    <ul class="comp">${comp.map(([c,n,w])=>{const v=Math.round((P.comp[c]??1)*100);return `<li><span>${n} <small>peso ${w}</small></span><span class="mbar"><i style="width:${v}%"></i></span><b>${v}%</b></li>`}).join('')}</ul></section>
-   <section class="card seq"><h2>Sequência sem atrasos</h2><div class="big">${P.sequencia}<small> dia${P.sequencia===1?'':'s'}</small></div>
-    <p class="muted small">Dias seguidos com nenhuma tarefa vencida em aberto.</p>
-    <div class="dots" aria-label="Últimos 14 dias">${dias.map(({iso,h})=>`<i class="${!h?'nd':h.atrasadas?'bad':'good'}" title="${br(iso)}: ${!h?'sem registro':h.atrasadas?h.atrasadas+' atrasada(s)':'sem atrasos'}"></i>`).join('')}</div>
-    <p class="muted small" style="margin-top:6px"><i class="lgd good"></i> sem atraso <i class="lgd bad"></i> com atraso <i class="lgd nd"></i> sem registro</p></section>
-   <section class="card nivel"><h2>Nível da equipe</h2><div class="big">Nível ${pt.nivel}</div>
-    <div class="mbar lg"><i style="width:${Math.round(faixa*100)}%"></i></div>
-    <p class="muted small">${pt.total} pontos acumulados${pt.proximo?` · faltam ${pt.proximo-pt.total} para o nível ${pt.nivel+1}`:''}</p>
-    <p class="small"><b>${pt.mes}</b> pontos neste mês</p></section>
+      <p>Mede, de 0 a 100, se contratos, prazos, pendências e designações estão em ordem.</p>${spark(P.historico)}</div>
+     <ul class="comp">${comp.map(([c,n,w])=>{const v=Math.round((P.comp[c]??1)*100);return `<li><span>${n} <small>peso ${w}</small></span><span class="mbar"><i style="width:${v}%"></i></span><b>${v}%</b></li>`}).join('')}</ul></div></section>
 
-   <section class="card wide"><h2>Metas do mês</h2><div class="metas">${P.metas.map(m=>{const f=m.alvo?m.atual/m.alvo:1,ok=f>=1;
-     return `<div class="meta ${ok?'ok':''}"><div class="mt"><b>${esc(m.titulo)}</b>${ok?'<span class="chip ok">cumprida</span>':''}</div>
-      <div class="mbar"><i style="width:${Math.round(Math.min(1,f)*100)}%"></i></div><span class="muted small">${esc(m.texto)}</span></div>`}).join('')}</div></section>
+   <section class="card wide"><div class="card-head"><h2>Metas da equipe</h2>
+     ${nArq?`<label class="small muted"><input type="checkbox" id="mArq" ${S.metasArq?'checked':''}> Mostrar arquivadas (${nArq})</label>`:''}
+     <button class="btn sm" type="button" id="novaMeta">+ Nova meta</button></div>
+    ${metas.length?`<div class="metas">${metas.map(metaHTML).join('')}</div>`
+     :`<p class="muted">Nenhuma meta cadastrada. A equipe define o que quer acompanhar: uma meta pode seguir um indicador do sistema, que se atualiza sozinho, ou ser acompanhada manualmente.</p>
+       <p class="small muted" style="margin-bottom:6px">Sugestões para começar:</p><div class="chips">${SUGESTOES.map((s,i)=>`<button type="button" class="btn sm" data-sug="${i}">+ ${esc(s.titulo)}</button>`).join('')}</div>`}</section>
 
-   <section class="card wide"><h2>Conquistas da equipe <small class="muted">${P.conquistas.filter(c=>c.ok).length} de ${P.conquistas.length}</small></h2>
-    <div class="badges">${P.conquistas.map(c=>`<div class="badge ${c.ok?'on':''}">${MEDALHA(c.ok)}<b>${esc(c.nome)}</b><span>${esc(c.desc)}</span><small>${c.ok?'Conquistada':esc(c.prog)}</small></div>`).join('')}</div></section>
-
-   <section class="card half"><h2>Contribuições do mês</h2>
-    ${pessoas.length?`<ul class="contrib">${pessoas.map(([e,v])=>`<li><span>${esc(quem(e))}</span><span class="mbar"><i style="width:${v/maxP*100}%"></i></span><b>${v}</b></li>`).join('')}</ul>`:'<p class="muted">Ainda não há ações registradas neste mês. Cada tarefa concluída, pendência resolvida ou andamento registrado soma pontos para a equipe.</p>'}
-    <details class="regras"><summary>Como os pontos funcionam</summary><ul>
-     <li>Tarefa concluída no prazo: 10 · com atraso: 4</li><li>Pendência resolvida: 8</li><li>Contrato atualizado: 5</li><li>Processo avançou de fase: 3 · processo cadastrado: 3</li>
-     <li>Andamento registrado ou evento na agenda: 2</li><li>Ficha atualizada: 1 · tarefa criada: 1</li><li>Andamentos e edições contam até 15 por pessoa por dia.</li></ul></details></section>
+   <section class="card half"><h2>Próximos 7 dias</h2>
+    ${prox.length?`<ul class="feed">${prox.map(x=>`<li data-ab="${esc(x.ab)}" tabindex="0" style="cursor:pointer"><span><b>${esc(x.txt)}</b><br><small class="muted">${esc(x.sub)}</small></span>
+      <span class="fr"><span class="chip ${dias(x.d)<=1?'warn':''}">${dias(x.d)===0?'hoje':dias(x.d)===1?'amanhã':br(x.d)}</span></span></li>`).join('')}</ul>`:'<p class="muted">Nenhum prazo, evento ou fim de vigência nos próximos dias.</p>'}</section>
    <section class="card half"><h2>Atividade recente</h2>
     ${P.recentes.length?`<ul class="feed">${P.recentes.map(e=>`<li><span><b>${esc(quem(e.email))}</b> ${esc(TIPO_EV[e.tipo]||e.tipo)}${e.texto?`<br><small class="muted">${esc(e.texto.slice(0,110))}</small>`:''}</span>
-      <span class="fr">${e.pontos?`<span class="chip ok">+${e.pontos}</span>`:''}<small class="muted">${new Date(e.em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small></span></li>`).join('')}</ul>`:'<p class="muted">Nenhuma ação registrada ainda.</p>'}</section>
+      <span class="fr"><small class="muted">${new Date(e.em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small></span></li>`).join('')}</ul>`:'<p class="muted">Nenhuma ação registrada ainda.</p>'}</section>
   </div>`;
+  const m=$('#main');
+  m.onclick=async e=>{
+    const mt=e.target.closest('[data-meta]');if(mt)return abrirMeta(mt.dataset.meta);
+    if(e.target.id==='novaMeta')return abrirMeta(null,{});
+    const sg=e.target.closest('[data-sug]');if(sg)return abrirMeta(null,{...SUGESTOES[+sg.dataset.sug]});
+    const ab=e.target.closest('[data-ab]');if(ab){const [k,id]=ab.dataset.ab.split(':');({t:abrirTarefa,c:abrirContrato,a:abrirEvento})[k](id)}};
+  m.onkeydown=e=>{const ab=e.target.closest('[data-ab]');if(ab&&e.key==='Enter')ab.click()};
+  if($('#mArq'))$('#mArq').onchange=e=>{S.metasArq=e.target.checked;vPainel()};
+}
+function abrirMeta(id,novo){
+  const m=id?S.metas.get(id):novo;if(!m)return;S.ficha={tipo:'meta',id};
+  const IND=S.painel?.indicadores||{},nomes=[...new Set([...pessoas().keys(),...[...S.tar.values()].map(t=>t.responsavel).filter(Boolean)])].sort();
+  shell(`<button class="btn sm close" type="button">Fechar</button><span class="sei">Metas da equipe</span><h2>${id?esc(m.titulo):'Nova meta'}</h2>
+   <section><form class="form" id="fm">
+    <label class="full">O que a equipe quer alcançar<input id="m-titulo" value="${esc(m.titulo||'')}" required placeholder="Ex.: Concluir a pesquisa de preços dos itens do PCA 2027"></label>
+    <label class="full">Como acompanhar<select id="m-indicador"><option value="">Manualmente (a equipe informa o andamento)</option>
+     ${Object.entries(IND).map(([k,I])=>`<option value="${k}" ${k===m.indicador?'selected':''}>Indicador do sistema: ${esc(I.nome)} (hoje: ${I.valor}${I.total!=null?' de '+I.total:''})</option>`).join('')}</select></label>
+    <label id="l-alvo">Alvo<input type="number" id="m-alvo" min="0" step="1" value="${esc(m.alvo??'')}"></label>
+    <label id="l-atual">Valor atual<input type="number" id="m-atual" min="0" step="1" value="${esc(m.atual??0)}"></label>
+    <label id="l-unid">Unidade (opcional)<input id="m-unidade" value="${esc(m.unidade||'')}" placeholder="Ex.: processos, itens"></label>
+    <label>Prazo<input type="date" id="m-prazo" value="${esc(m.prazo||'')}"></label>
+    <label>Responsável (opcional)<input id="m-responsavel" value="${esc(m.responsavel||'')}" list="dl-mresp"></label>
+    <label class="full">Observações<textarea id="m-notas">${esc(m.notas||'')}</textarea></label>
+    <p class="full muted small" id="m-dica"></p>
+    <div class="full" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span id="mmsg" class="muted" style="margin-right:auto"></span>
+     ${id?`<button class="btn" type="button" id="mArqBtn">${m.arquivada?'Reativar':'Arquivar'}</button><button class="btn" type="button" id="mDel">Excluir</button>`:''}
+     <button class="btn pri">Salvar</button></div></form>
+    <datalist id="dl-mresp">${nomes.map(n=>`<option value="${esc(n)}">`).join('')}</datalist></section>`);
+  const ajustar=()=>{const k=$('#m-indicador').value,I=IND[k];
+    $('#l-atual').hidden=!!I;$('#l-unid').hidden=!!I;
+    $('#m-dica').textContent=!I?'Atualize o "valor atual" sempre que houver avanço.':I.sentido==='reduzir'
+      ?`Este indicador deve diminuir. Deixe o alvo em 0 para "zerar". O ponto de partida é o valor de hoje (${I.valor}).`
+      :`Este indicador deve aumentar. Sem alvo, a meta é chegar ao total atual (${I.total}).`;
+    if(I&&I.sentido==='reduzir'&&$('#m-alvo').value==='')$('#m-alvo').value=0};
+  $('#m-indicador').onchange=ajustar;ajustar();
+  $('#fm').onsubmit=async e=>{e.preventDefault();const v=k=>$('#m-'+k).value.trim(),k=v('indicador'),I=IND[k];
+    const d={titulo:v('titulo'),indicador:k,alvo:v('alvo')===''?'':+v('alvo'),atual:I?0:+v('atual')||0,unidade:I?'':v('unidade'),prazo:v('prazo'),responsavel:v('responsavel'),notas:v('notas'),arquivada:!!m.arquivada};
+    if(I&&I.sentido==='reduzir'&&(!id||m.indicador!==k))d.base=I.valor;else if(id)d.base=m.base??'';
+    try{if(id){if(!await upd('metas',id,d,'Meta atualizada: '+d.titulo,'meta'))return}else await criar('metas',d);fechar();vPainel()}
+    catch(er){$('#mmsg').textContent='Não foi possível salvar ('+(er.message||er.code)+').'}};
+  if(id){$('#mArqBtn').onclick=async()=>{if(await upd('metas',id,{arquivada:!m.arquivada},(m.arquivada?'Meta reativada: ':'Meta arquivada: ')+m.titulo,'meta')){fechar();vPainel()}};
+    $('#mDel').onclick=async ev=>{const b=ev.currentTarget;if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Confirmar exclusão';return}
+      try{await apagar('metas',id);fechar();vPainel()}catch(er){$('#mmsg').textContent='Não foi possível excluir.'}}}
 }
 
 /* ---------- linha do tempo dos contratos ---------- */

@@ -8,7 +8,7 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 
 | Aba | Para que serve |
 |---|---|
-| Painel | Índice de Saúde do setor, sequência sem atrasos, nível da equipe, metas do mês, conquistas e atividade recente |
+| Painel | Índice de Saúde do setor, metas definidas pela equipe, próximos 7 dias e atividade recente |
 | Quadro de processos | Kanban por fase (arrastar para mudar a fase) e ficha completa de cada processo |
 | Tabela | Todos os processos em linhas, com filtros, ordenação e **exportação para Excel** |
 | Contratos | Contratos ordenados pela vigência mais próxima |
@@ -27,29 +27,25 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 
 **Os dados não ficam neste repositório**, que é público. Eles estão só no banco D1.
 
-## Gamificação
+## Painel e metas da equipe
 
-Toda a pontuação é calculada no servidor.
-
-| Ação | Pontos |
-|---|---|
-| Tarefa concluída no prazo | 10 |
-| Tarefa concluída com atraso | 4 |
-| Pendência resolvida | 8 |
-| Contrato atualizado | 5 |
-| Processo avançou de fase, ou processo cadastrado | 3 |
-| Andamento registrado, ou evento na agenda | 2 |
-| Ficha atualizada, ou tarefa criada | 1 |
-
-- Andamentos e edições pontuam até 15 vezes por pessoa por dia.
-- Concluir e reabrir a mesma tarefa não pontua de novo.
 - **Índice de Saúde (0 a 100)**:
   - 30% contratos com vigência em dia;
   - 30% tarefas dentro do prazo;
   - 20% pendências resolvidas;
   - 20% processos ativos com gestor e fiscal.
-- **Faixas**: Atenção (abaixo de 50), Em evolução (50 a 74), Bom (75 a 89), Exemplar (90 ou mais).
-- **Níveis da equipe**: 100, 250, 500, 1.000, 2.000, 4.000 e 8.000 pontos.
+- **Faixas do índice**: Atenção (abaixo de 50), Em evolução (50 a 74), Bom (75 a 89), Exemplar (90 ou mais). Uma fotografia diária registra a tendência.
+- **Metas**: a equipe cadastra as próprias metas, com prazo e responsável. Cada meta pode seguir um indicador do sistema, que se atualiza sozinho:
+  - tarefas atrasadas;
+  - pendências abertas;
+  - contratos vencidos;
+  - PCA com setor informado;
+  - processos ativos com gestor e fiscal;
+  - contratos a vencer em 120 dias com tarefa aberta.
+
+  Ou pode ser acompanhada manualmente, informando o valor atual. Metas concluídas ou abandonadas podem ser arquivadas.
+- **Próximos 7 dias**: prazos de tarefas, eventos da agenda e fins de vigência.
+- **Atividade recente**: quem fez o quê no sistema.
 
 ## Ativar o login (Cloudflare Access)
 

@@ -19,17 +19,11 @@ const ESTATICOS = {
 };
 const PUBLICOS = new Set(['/img/crefito15-horizontal.png', '/img/globo-32.png']);
 const seguranca = { 'x-content-type-options': 'nosniff', 'referrer-policy': 'same-origin', 'x-frame-options': 'DENY' };
-const COLECOES = new Set(['processos', 'contratos', 'tarefas', 'agenda']);
+const COLECOES = new Set(['processos', 'contratos', 'tarefas', 'agenda', 'metas']);
 const COM_HISTORICO = new Set(['processos', 'tarefas']);
 const ORDEM_FASE = ['previsto', 'planejamento', 'juridico', 'selecao', 'contratacao', 'execucao', 'finalizado'];
 const ATIVAS = new Set(['selecao', 'contratacao', 'execucao']);
 
-// Pontuação da equipe por tipo de ação (calculada no servidor).
-const PONTOS = {
-  novo_processo: 3, nova_tarefa: 1, agenda: 2, andamento: 2, pendencia: 8,
-  contrato: 5, edicao: 1, fase: 3, tarefa_no_prazo: 10, tarefa_atrasada: 4,
-};
-const NIVEIS = [0, 100, 250, 500, 1000, 2000, 4000, 8000];
 
 export default {
   async fetch(req, env, ctx) {
@@ -139,10 +133,10 @@ async function api(req, env, url, email) {
     const id = crypto.randomUUID().slice(0, 13);
     const data = { ...(corpo.data || {}) };
     if (COM_HISTORICO.has(col)) data.historico = [{ em: t, por: email, texto: col === 'processos' ? 'Processo cadastrado' : 'Tarefa criada' }];
-    if (col === 'agenda') { data.criadoPor = email; data.criadoEm = t; }
+    if (col === 'agenda' || col === 'metas') { data.criadoPor = email; data.criadoEm = t; }
     await env.DB.prepare('INSERT INTO docs(col,id,data,version,updated_at,updated_by) VALUES(?,?,?,?,?,?)').bind(col, id, JSON.stringify(data), 1, t, email).run();
-    const tipo = { processos: 'novo_processo', tarefas: 'nova_tarefa', agenda: 'agenda' }[col];
-    await evento(env, t, email, col, id, tipo, PONTOS[tipo] || 0, (data.titulo || data.objeto || '').slice(0, 140));
+    const tipo = { processos: 'novo_processo', tarefas: 'nova_tarefa', agenda: 'agenda', metas: 'nova_meta' }[col];
+    await evento(env, t, email, col, id, tipo, (data.titulo || data.objeto || '').slice(0, 140));
     return json({ doc: { col, id, data, version: 1, updated_at: t, deleted: false } });
   }
   const id = decodeURIComponent(p[2] || '');
@@ -152,7 +146,7 @@ async function api(req, env, url, email) {
 
   if (m === 'DELETE') {
     await env.DB.prepare('UPDATE docs SET deleted=1, version=version+1, updated_at=?, updated_by=? WHERE col=? AND id=?').bind(t, email, col, id).run();
-    await evento(env, t, email, col, id, 'exclusao', 0, (antes.titulo || antes.objeto || '').slice(0, 140));
+    await evento(env, t, email, col, id, 'exclusao', (antes.titulo || antes.objeto || '').slice(0, 140));
     return json({ doc: { col, id, data: antes, version: atual.version + 1, updated_at: t, deleted: true } });
   }
   if (m === 'PATCH') {
@@ -160,45 +154,29 @@ async function api(req, env, url, email) {
     delete patch.historico;
     const depois = { ...antes, ...patch };
     if (corpo.texto && COM_HISTORICO.has(col)) depois.historico = [...(antes.historico || []), { em: t, por: email, texto: String(corpo.texto).slice(0, 500) }];
-    const pts = pontuar(col, corpo.acao, antes, depois);
-    if (corpo.acao === 'tarefa_concluida') {
-      const ja = await env.DB.prepare("SELECT 1 FROM eventos WHERE col=? AND doc=? AND tipo IN ('tarefa_no_prazo','tarefa_atrasada') AND pontos>0").bind(col, id).first();
-      if (ja || antes.status === 'feito') pts.pontos = 0;
-    }
-    if (pts.pontos && (pts.tipo === 'edicao' || pts.tipo === 'andamento')) {
-      const n = (await env.DB.prepare('SELECT COUNT(*) n FROM eventos WHERE email=? AND tipo=? AND pontos>0 AND em>=?').bind(email, pts.tipo, hojeBR() + 'T03:00:00Z').first()).n;
-      if (n >= 15) pts.pontos = 0;
-    }
     await env.DB.prepare('UPDATE docs SET data=?, version=version+1, updated_at=?, updated_by=? WHERE col=? AND id=?').bind(JSON.stringify(depois), t, email, col, id).run();
-    if (corpo.acao) await evento(env, t, email, col, id, pts.tipo, pts.pontos, String(corpo.texto || '').slice(0, 300));
-    return json({ doc: { col, id, data: depois, version: atual.version + 1, updated_at: t, deleted: false }, pontos: pts.pontos });
+    if (corpo.acao) await evento(env, t, email, col, id, tipoAcao(corpo.acao, antes, depois), String(corpo.texto || '').slice(0, 300));
+    return json({ doc: { col, id, data: depois, version: atual.version + 1, updated_at: t, deleted: false } });
   }
   return json({ erro: 'Método não suportado' }, 405);
 }
 
-function pontuar(col, acao, antes, depois) {
-  if (acao === 'tarefa_concluida') {
-    const noPrazo = !depois.prazo || depois.prazo >= hojeBR();
-    const tipo = noPrazo ? 'tarefa_no_prazo' : 'tarefa_atrasada';
-    return { tipo, pontos: PONTOS[tipo] };
-  }
-  if (acao === 'fase' || (acao === 'edicao' && antes.fase !== depois.fase)) {
-    const a = ORDEM_FASE.indexOf(antes.fase), d = ORDEM_FASE.indexOf(depois.fase);
-    return { tipo: 'fase', pontos: d > a && a >= 0 ? PONTOS.fase : 0 };
-  }
-  return { tipo: acao || 'edicao', pontos: PONTOS[acao] ?? 0 };
+function tipoAcao(acao, antes, depois) {
+  if (acao === 'tarefa_concluida') return !depois.prazo || depois.prazo >= hojeBR() ? 'tarefa_no_prazo' : 'tarefa_atrasada';
+  if (acao === 'edicao' && antes.fase !== depois.fase) return 'fase';
+  return acao;
 }
-const evento = (env, em, email, col, doc, tipo, pontos, texto) =>
-  env.DB.prepare('INSERT INTO eventos(em,email,col,doc,tipo,pontos,texto) VALUES(?,?,?,?,?,?,?)').bind(em, email, col, doc, tipo, pontos, texto).run();
+const evento = (env, em, email, col, doc, tipo, texto) =>
+  env.DB.prepare('INSERT INTO eventos(em,email,col,doc,tipo,pontos,texto) VALUES(?,?,?,?,?,0,?)').bind(em, email, col, doc, tipo, texto).run();
 
-/* ---------------- painel e gamificação ---------------- */
+/* ---------------- painel e indicadores ---------------- */
 const diasAte = (iso, hoje) => Math.round((Date.parse(iso + 'T00:00:00Z') - Date.parse(hoje + 'T00:00:00Z')) / 864e5);
 const razao = (a, b) => (b ? a / b : 1);
 
 async function painel(env, soFotografar) {
-  const hoje = hojeBR(), mes = hoje.slice(0, 7);
+  const hoje = hojeBR();
   const rows = (await env.DB.prepare('SELECT col,id,data FROM docs WHERE deleted=0').all()).results;
-  const D = { processos: [], contratos: [], tarefas: [], agenda: [] };
+  const D = { processos: [], contratos: [], tarefas: [], agenda: [], metas: [] };
   for (const r of rows) D[r.col]?.push({ id: r.id, ...JSON.parse(r.data) });
 
   const comVig = D.contratos.filter(c => c.vigencia);
@@ -228,42 +206,19 @@ async function painel(env, soFotografar) {
   if (soFotografar) return foto;
 
   const hist = (await env.DB.prepare('SELECT dia,data FROM metricas ORDER BY dia DESC LIMIT 60').all()).results.map(r => ({ dia: r.dia, ...JSON.parse(r.data) }));
-  let sequencia = 0;
-  for (let i = 0, d = hoje; i < hist.length; i++) {
-    if (hist[i].dia !== d || hist[i].atrasadas > 0) break;
-    sequencia++; const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() - 1); d = x.toISOString().slice(0, 10);
-  }
-  const inicioMes = hist.filter(h => h.dia.startsWith(mes)).pop();
-  const evMes = (await env.DB.prepare('SELECT email,tipo,pontos FROM eventos WHERE em >= ?').bind(mes + '-01T03:00:00Z').all()).results;
-  const ptsTot = (await env.DB.prepare('SELECT COALESCE(SUM(pontos),0) n, COUNT(*) c FROM eventos').first());
-  const recentes = (await env.DB.prepare('SELECT em,email,col,doc,tipo,pontos,texto FROM eventos ORDER BY id DESC LIMIT 12').all()).results;
-  const porPessoa = {};
-  for (const e of evMes) if (e.email) porPessoa[e.email] = (porPessoa[e.email] || 0) + e.pontos;
-  const resolvidasMes = evMes.filter(e => e.tipo === 'pendencia').length;
-  const nivelIdx = NIVEIS.filter(n => ptsTot.n >= n).length - 1;
-
-  const base = Math.max(inicioMes?.atrasadas ?? atrasadas.length, atrasadas.length);
-  const metas = [
-    { id: 'atrasos', titulo: 'Zerar as tarefas atrasadas', atual: base - atrasadas.length, alvo: base, texto: atrasadas.length ? `${atrasadas.length} ainda atrasada(s)` : 'Nenhuma tarefa atrasada' },
-    { id: 'pendencias', titulo: 'Resolver 20 pendências no mês', atual: Math.min(resolvidasMes, 20), alvo: 20, texto: `${resolvidasMes} resolvida(s) neste mês` },
-    { id: 'pca', titulo: 'Informar o setor de todo o PCA', atual: pcaSetor.length, alvo: pca.length, texto: `${pcaSetor.length} de ${pca.length} itens` },
-    { id: 'renov', titulo: 'Plano para cada contrato que vence em 120 dias', atual: renovComPlano.length, alvo: v120.length, texto: v120.length ? `${renovComPlano.length} de ${v120.length} com tarefa aberta` : 'Nenhum contrato nessa janela' },
-  ];
-  const conquistas = [
-    { id: 'prazo', nome: 'Prazo em dia', desc: 'Nenhuma tarefa atrasada', ok: atrasadas.length === 0, prog: `${atrasadas.length} atrasada(s)` },
-    { id: 'surpresa', nome: 'Sem surpresas', desc: 'Nenhum contrato com vigência vencida', ok: vencidos.length === 0, prog: `${vencidos.length} vencido(s)` },
-    { id: 'casa', nome: 'Casa arrumada', desc: 'Nenhuma pendência aberta nas fichas', ok: pendAbertas === 0, prog: `${pendAbertas} aberta(s)` },
-    { id: 'designados', nome: 'Todos designados', desc: 'Gestor e fiscal em todo processo ativo', ok: ativos.length > 0 && designados.length === ativos.length, prog: `${designados.length} de ${ativos.length}` },
-    { id: 'pca', nome: 'PCA mapeado', desc: 'Setor demandante em todos os itens do PCA', ok: pca.length > 0 && pcaSetor.length === pca.length, prog: `${pcaSetor.length} de ${pca.length}` },
-    { id: 'seq7', nome: 'Semana impecável', desc: '7 dias seguidos sem tarefa atrasada', ok: sequencia >= 7, prog: `${Math.min(sequencia, 7)} de 7 dias` },
-    { id: 'seq30', nome: 'Mês impecável', desc: '30 dias seguidos sem tarefa atrasada', ok: sequencia >= 30, prog: `${Math.min(sequencia, 30)} de 30 dias` },
-    { id: 'acoes', nome: 'Equipe engajada', desc: '200 ações registradas no sistema', ok: ptsTot.c >= 200, prog: `${Math.min(ptsTot.c, 200)} de 200` },
-  ];
+  const recentes = (await env.DB.prepare('SELECT em,email,col,doc,tipo,texto FROM eventos ORDER BY id DESC LIMIT 12').all()).results;
+  // Indicadores que as metas da equipe podem acompanhar.
+  const indicadores = {
+    atrasadas: { nome: 'Tarefas atrasadas', valor: atrasadas.length, sentido: 'reduzir' },
+    pendencias: { nome: 'Pendências abertas nas fichas', valor: pendAbertas, sentido: 'reduzir' },
+    vencidos: { nome: 'Contratos com vigência vencida', valor: vencidos.length, sentido: 'reduzir' },
+    pcaSetor: { nome: 'Itens do PCA com setor informado', valor: pcaSetor.length, total: pca.length, sentido: 'aumentar' },
+    designados: { nome: 'Processos ativos com gestor e fiscal', valor: designados.length, total: ativos.length, sentido: 'aumentar' },
+    renovacao: { nome: 'Contratos a vencer em 120 dias com tarefa aberta', valor: renovComPlano.length, total: v120.length, sentido: 'aumentar' },
+  };
   return {
     hoje, saude, comp, foto,
     contagens: { vencidos: vencidos.length, v30: v30.length, v120: v120.length, atrasadas: atrasadas.length, pendAbertas, abertas: abertas.length },
-    historico: hist.slice(0, 30).reverse(), sequencia, metas, conquistas,
-    pontos: { total: ptsTot.n, mes: evMes.reduce((s, e) => s + e.pontos, 0), nivel: nivelIdx + 1, nivelBase: NIVEIS[nivelIdx], proximo: NIVEIS[nivelIdx + 1] ?? null, porPessoa },
-    recentes,
+    historico: hist.slice(0, 30).reverse(), indicadores, recentes,
   };
 }
