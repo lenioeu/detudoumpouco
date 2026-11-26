@@ -257,7 +257,7 @@ async function contratoAutomatico(env, procId, proc, email, t) {
   const ja = await env.DB.prepare("SELECT 1 FROM docs WHERE col='contratos' AND deleted=0 AND json_extract(data,'$.processo')=?").bind(procId).first();
   if (ja) return null;
   const id = 'ct-' + crypto.randomUUID().slice(0, 10);
-  const data = { processo: procId, sei: proc.sei || '', objeto: proc.objeto || '', empresa: '', vigencia: null, continuidade: 'Em execução',
+  const data = { processo: procId, sei: proc.sei || '', objeto: proc.objeto || '', empresa: '', vigencia: null, indeterminado: false, continuidade: 'Em execução', estadoData: hojeBR(),
     situacao: 'Contrato criado automaticamente quando o processo entrou em execução. Complete a empresa contratada e a vigência.', automatico: true };
   await env.DB.prepare('INSERT INTO docs(col,id,data,version,updated_at,updated_by) VALUES(?,?,?,?,?,?)').bind('contratos', id, JSON.stringify(data), 1, t, email).run();
   await evento(env, t, email, 'contratos', id, 'contrato_auto', String(data.objeto).slice(0, 140));
@@ -314,7 +314,8 @@ async function painel(env, soFotografar) {
   const ATIVAS = new Set(colunas?.length ? colunas.filter(c => c.designacao).map(c => c.id) : ATIVAS_PADRAO);
   const JANELA = +cfg('parametros').janela || 120;
 
-  const comVig = D.contratos.filter(c => c.vigencia);
+  // Contratos finalizados ou suspensos não geram alerta de vencimento; prazo indeterminado não tem data final.
+  const comVig = D.contratos.filter(c => c.vigencia && !c.indeterminado && c.continuidade !== 'Finalizado' && c.continuidade !== 'Suspenso');
   const vencidos = comVig.filter(c => diasAte(c.vigencia, hoje) < 0);
   const v30 = comVig.filter(c => { const d = diasAte(c.vigencia, hoje); return d >= 0 && d <= 30; });
   const v120 = comVig.filter(c => { const d = diasAte(c.vigencia, hoje); return d >= 0 && d <= JANELA; });

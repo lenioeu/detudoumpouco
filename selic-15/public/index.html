@@ -314,6 +314,7 @@ tr.pend td{background:var(--warn-soft)}
 /* ---- contratos ---- */
 .semc{list-style:none;margin:8px 0 0;padding:0;max-height:320px;overflow:auto}.semc li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #f0d49a}
 details.card summary{cursor:pointer}
+.tbar.indet{background:repeating-linear-gradient(90deg,var(--s-ok) 0 14px,transparent 14px 20px);border-radius:0}.nodb.okb{background:var(--ok-soft);border:1px solid var(--brand-light)}
 /* ---- avisos e confirmações ---- */
 .toast .tbtn{margin-left:6px;background:transparent;border:1px solid var(--brand-light);color:#fff;border-radius:99px;padding:4px 12px;font-weight:700;cursor:pointer}
 .toast .tbtn:hover,.toast .tbtn:focus-visible{background:var(--brand);color:var(--brand-dark);outline:none}.toast .tbtn:disabled{opacity:.7;cursor:default}
@@ -498,7 +499,12 @@ function baixar(nome,blob){const a=document.createElement('a');a.href=URL.create
   setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000)}
 
 /* ---------- derivados ---------- */
+const ESTADOS=['Em execução','Suspenso','Finalizado'];
+const contrAtivo=c=>c.continuidade!=='Finalizado';
 function contrStatus(c){
+  if(c.continuidade==='Finalizado')return['finalizado','',99998];
+  if(c.continuidade==='Suspenso')return['suspenso','warn',99997];
+  if(c.indeterminado)return['prazo indeterminado','ok',99996];
   const d=dias(c.vigencia);
   if(d===null)return['sem vigência','',99999];
   if(d<0)return['vencido há '+(-d)+' d','crit',d];
@@ -598,30 +604,33 @@ function vQuadro(){
 async function moverFase(id,fase){const p=S.proc.get(id);if(!p||p.fase===fase)return;
   await upd('processos',id,{fase},`Fase: ${FNOME[faseDe(p)]||p.fase} → ${FNOME[fase]}`,'fase')}
 
-const incompleto=c=>!c.empresa||!c.vigencia;
+const incompleto=c=>contrAtivo(c)&&(!c.empresa||(!c.vigencia&&!c.indeterminado));
 const semContrato=()=>[...S.proc.values()].filter(p=>etapa(faseDe(p))==='execucao'&&!contratosDe(p).length).sort((a,b)=>(a.objeto||'').localeCompare(b.objeto||'','pt-BR'));
 function vContratos(){
-  const cs=[...S.contr.values()].map(c=>({c,st:contrStatus(c)})).filter(({c})=>!S.q||norm(c.objeto+' '+c.empresa+' '+c.sei+' '+(S.proc.get(c.processo)?.objeto||'')).includes(norm(S.q)))
+  const fe=S.cEstado??'ativos';
+  const cs=[...S.contr.values()].filter(c=>fe==='todos'||(fe==='ativos'?contrAtivo(c):c.continuidade===fe)).map(c=>({c,st:contrStatus(c)})).filter(({c})=>!S.q||norm(c.objeto+' '+c.empresa+' '+c.sei+' '+(S.proc.get(c.processo)?.objeto||'')).includes(norm(S.q)))
     .sort((a,b)=>incompleto(b.c)-incompleto(a.c)||a.st[2]-b.st[2]);
   const sem=semContrato(),nInc=[...S.contr.values()].filter(incompleto).length;
   $('#main').innerHTML=`<div class="bar"><input type="search" id="q" placeholder="Buscar objeto, empresa, SEI ou processo" value="${esc(S.q)}" aria-label="Buscar">
+    <select id="cEstado" aria-label="Estado atual">${[['ativos','Em execução e suspensos'],['Em execução','Só em execução'],['Suspenso','Só suspensos'],['Finalizado','Só finalizados'],['todos','Todos']].map(([k,n])=>`<option value="${k}" ${k===fe?'selected':''}>${n}</option>`).join('')}</select>
     <button class="btn pri" type="button" id="novoContr" ${S.write?'':'disabled'}>+ Novo contrato</button></div>
   <p class="muted small" style="margin:-4px 0 10px">Todo contrato pertence a um processo. Quando um processo entra em execução no fluxo, o contrato aparece aqui sozinho, para completar empresa e vigência.${nInc?` <b>${nInc} contrato(s) com dados a completar</b> estão no topo da lista.`:''}</p>
   ${sem.length?`<details class="card aviso-pend" style="margin-bottom:12px"><summary><b>${sem.length} processo(s) em execução ainda sem contrato</b> · decida para quais criar</summary>
     <p class="muted small">Compras de entrega única, eventos e cursos nem sempre têm contrato formal. Crie só para os que têm.</p>
     <ul class="semc">${sem.map(p=>`<li><span>${esc(p.objeto)} <span class="sei">${esc(p.sei||'sem SEI')}</span></span><button class="btn sm" type="button" data-criar="${esc(p.id)}" ${S.write?'':'disabled'}>Criar contrato</button></li>`).join('')}</ul></details>`:''}
-  <div class="tbl"><table><thead><tr><th>Vigência</th><th>Objeto e processo</th><th>Empresa</th><th>Continuidade</th><th>Situação</th></tr></thead><tbody>
-  ${cs.map(({c,st})=>{const pr=S.proc.get(c.processo);return `<tr class="click" data-id="${esc(c.id)}"><td class="num">${incompleto(c)?'<span class="chip warn">⚠ completar dados</span>':`<span class="chip ${st[1]}">${esc(st[0])}</span>`}<br><span class="sei">${br(c.vigencia)}</span></td>
-   <td><b>${esc(c.objeto)}</b><br><span class="sei">${esc(c.sei)}</span>${pr?`<br><a href="#" data-proc="${esc(pr.id)}" class="small">Processo: ${esc(pr.objeto.slice(0,60))}</a>`:''}</td><td>${esc(c.empresa||'—')}</td><td>${esc(c.continuidade)}</td>
-   <td><span class="clamp">${esc(c.situacao)}</span></td></tr>`}).join('')||'<tr><td colspan="5" class="muted">Nenhum contrato.</td></tr>'}</tbody></table></div>
+  <div class="tbl"><table><thead><tr><th>Vigência</th><th>Objeto e processo</th><th>Empresa</th><th>Estado atual</th><th>Data do estado</th><th>Situação</th></tr></thead><tbody>
+  ${cs.map(({c,st})=>{const pr=S.proc.get(c.processo);return `<tr class="click" data-id="${esc(c.id)}"><td class="num">${incompleto(c)?'<span class="chip warn">⚠ completar dados</span>':`<span class="chip ${st[1]}">${esc(st[0])}</span>`}<br><span class="sei">${c.indeterminado?'sem data final':br(c.vigencia)}</span></td>
+   <td><b>${esc(c.objeto)}</b><br><span class="sei">${esc(c.sei)}</span>${pr?`<br><a href="#" data-proc="${esc(pr.id)}" class="small">Processo: ${esc(pr.objeto.slice(0,60))}</a>`:''}</td><td>${esc(c.empresa||'—')}</td><td><span class="chip ${({'Em execução':'ok','Suspenso':'warn'})[c.continuidade]||''}">${esc(c.continuidade||'—')}</span></td><td class="sei" style="white-space:nowrap">${br(c.estadoData)}</td>
+   <td><span class="clamp">${esc(c.situacao)}</span></td></tr>`}).join('')||'<tr><td colspan="6" class="muted">Nenhum contrato com esse filtro.</td></tr>'}</tbody></table></div>
   <p class="muted" style="font-size:12px">Ordenado pela vigência mais próxima. Faixas: até 30 dias em vermelho, até ${JANELA()} dias em laranja. Clique para editar.</p>`;
   const q=$('#q');q.oninput=()=>{S.q=q.value;const p=q.selectionStart;vContratos();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
   $('#novoContr').onclick=()=>abrirContrato(null,novoContrato(''));
+  $('#cEstado').onchange=e=>{S.cEstado=e.target.value;vContratos()};
   const M=$('#main');M.onclick=e=>{const pr=e.target.closest('[data-proc]');if(pr){e.preventDefault();return abrirFicha(pr.dataset.proc)}
     const cr=e.target.closest('[data-criar]');if(cr)return abrirContrato(null,novoContrato(cr.dataset.criar));
     const r=e.target.closest('tr[data-id]');if(r)abrirContrato(r.dataset.id)};
 }
-const novoContrato=procId=>{const p=S.proc.get(procId);return{processo:procId||'',sei:p?.sei||'',objeto:p?.objeto||'',empresa:'',vigencia:null,continuidade:'Em execução',situacao:''}};
+const novoContrato=procId=>{const p=S.proc.get(procId);return{processo:procId||'',sei:p?.sei||'',objeto:p?.objeto||'',empresa:'',vigencia:null,indeterminado:false,continuidade:'Em execução',estadoData:isoOf(hoje()),situacao:''}};
 function vTarefas(){
   const ts=[...S.tar.values()].filter(t=>(S.feitas||t.status==='andamento')&&(!S.q||norm(t.titulo+' '+t.acao+' '+t.notas+' '+t.sei).includes(norm(S.q))));
   const g=new Map();for(const t of ts){const r=t.responsavel||'Sem responsável';if(!g.has(r))g.set(r,[]);g.get(r).push(t)}
@@ -733,8 +742,8 @@ async function exportar(tudo){
     const rows=tudo?[...S.proc.values()].sort((a,b)=>(a.objeto||'').localeCompare(b.objeto||'','pt-BR')):linhasTabela();
     aba('Processos',[['Objeto',48],['SEI',24],['Fase',24],['Urgência',10],['Setor',13],['PCA',7],['Tipo',18],['Gestor',26],['Fiscal',26],['Contrato e vigência',34],['Tarefas abertas',10],['Pendências',44],['COFFITO',9],['Observações',60]],
       rows.map(p=>[...COLS.map(([k,,g])=>k==='pend'?(p.alertas||[]).join('\n'):g(p)),p.obs||'']));
-    aba('Contratos',[['Objeto',42],['Empresa',36],['SEI',24],['Vigência até',13],['Dias restantes',11],['Continuidade',18],['Situação',60]],
-      [...S.contr.values()].sort((a,b)=>(a.vigencia||'9').localeCompare(b.vigencia||'9')).map(c=>[c.objeto,c.empresa,c.sei,D(c.vigencia),c.vigencia?dias(c.vigencia):null,c.continuidade,c.situacao]));
+    aba('Contratos',[['Objeto',42],['Processo',40],['Empresa',36],['SEI',24],['Vigência até',16],['Dias restantes',11],['Estado atual',14],['Data do estado',14],['Situação',60]],
+      [...S.contr.values()].sort((a,b)=>(a.vigencia||'9').localeCompare(b.vigencia||'9')).map(c=>[c.objeto,S.proc.get(c.processo)?.objeto||'',c.empresa,c.sei,c.indeterminado?'Prazo indeterminado':D(c.vigencia),c.vigencia&&!c.indeterminado?dias(c.vigencia):null,c.continuidade,D(c.estadoData),c.situacao]));
     aba('Tarefas',[['Responsável',16],['Tarefa',44],['Ação',44],['Prazo',12],['Situação',12],['Processo (SEI)',24],['Anotações',60],['Último registro',40]],
       [...S.tar.values()].sort((a,b)=>(a.responsavel||'').localeCompare(b.responsavel||'')||(a.prazo||'9').localeCompare(b.prazo||'9'))
       .map(t=>[t.responsavel,t.titulo,t.acao,D(t.prazo),{andamento:atrasada(t)?'Atrasada':'Em andamento',feito:'Concluída',encerrado:'Encerrada'}[t.status]||t.status,t.sei||S.proc.get(t.processo)?.sei||'',t.notas,(t.historico||[]).slice(-1)[0]?.texto||'']));
@@ -770,7 +779,7 @@ const isoOf=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${S
 function eventos(){
   const m=new Map(),add=(iso,e)=>{if(iso){if(!m.has(iso))m.set(iso,[]);m.get(iso).push(e)}};
   for(const e of S.agenda.values())add(e.data,{tipo:'agenda',titulo:(e.hora?e.hora+' · ':'')+e.titulo,sub:[e.tipo,S.proc.get(e.processo)?.objeto].filter(Boolean).join(' · '),abrir:()=>abrirEvento(e.id),o:0});
-  for(const c of S.contr.values())if(c.vigencia){
+  for(const c of S.contr.values())if(c.vigencia&&!c.indeterminado&&c.continuidade==='Em execução'){
     add(c.vigencia,{tipo:'vigencia',titulo:'Fim da vigência: '+c.objeto,sub:c.empresa||'',abrir:()=>abrirContrato(c.id),o:1});
     const a=new Date(c.vigencia+'T00:00:00');a.setDate(a.getDate()-JANELA());
     add(isoOf(a),{tipo:'alerta',titulo:'Iniciar renovação: '+c.objeto,sub:'Faltam '+JANELA()+' dias para o fim da vigência ('+br(c.vigencia)+')',abrir:()=>abrirContrato(c.id),o:3})}
@@ -980,8 +989,8 @@ S.zoom='12';S.janela=true;
 const assinado=c=>!/^em processo/i.test((c.continuidade||'').trim())||/assinad/i.test(c.situacao||'');
 function vLinha(){
   const today=hoje(),JAN=JANELA(),MES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  const all=[...S.contr.values()],com=all.filter(c=>c.vigencia).map(c=>({...c,fim:new Date(c.vigencia+'T00:00:00')})).sort((a,b)=>a.fim-b.fim);
-  const semData=all.filter(c=>!c.vigencia&&assinado(c)),emProc=all.filter(c=>!c.vigencia&&!assinado(c));
+  const all=[...S.contr.values()].filter(contrAtivo),com=all.filter(c=>c.vigencia&&!c.indeterminado).map(c=>({...c,fim:new Date(c.vigencia+'T00:00:00')})).sort((a,b)=>a.fim-b.fim);
+  const semData=all.filter(c=>!c.vigencia||c.indeterminado),emProc=[];
   if(!com.length&&!semData.length){$('#main').innerHTML='<div class="empty">Nenhum contrato assinado cadastrado.</div>';return}
   const last=com.length?com[com.length-1].fim:today,start=new Date(today.getFullYear(),today.getMonth(),1);
   const end=S.zoom==='all'?new Date(last.getFullYear()+1,0,1):new Date(start.getFullYear(),start.getMonth()+(+S.zoom)+1,1);
@@ -989,11 +998,11 @@ function vLinha(){
   if(S.zoom==='all'){for(let y=start.getFullYear()+1;y<end.getFullYear()+1;y++)ticks.push([new Date(y,0,1),String(y)])}
   else{const st=S.zoom==='24'?3:1;for(let i=0;;i+=st){const d=new Date(start.getFullYear(),start.getMonth()+i,1);if(d>=end)break;ticks.push([d,MES[d.getMonth()]+(d.getMonth()===0||i===0?' '+String(d.getFullYear()).slice(2):'')])}}
   const grid=ticks.map(([d])=>`<i class="gridl" style="left:${x(d)}%"></i>`).join('');
-  const rowHTML=(c,marks)=>`<div class="tl-row" data-id="${esc(c.id)}" tabindex="0"><div class="lbl"><b title="${esc(c.objeto)}">${esc(c.objeto)}</b><small>${esc(c.empresa||'Empresa a definir')}</small></div>
+  const rowHTML=(c,marks)=>`<div class="tl-row" data-id="${esc(c.id)}" tabindex="0"><div class="lbl"><b title="${esc(c.objeto)}">${esc(c.objeto)}${c.continuidade==='Suspenso'?' <span class="chip warn">suspenso</span>':''}</b><small>${esc(c.empresa||'Empresa a definir')}</small></div>
     <div class="track">${grid}<i class="today" style="left:${tx}%"></i>${marks}</div></div>`;
   let h=`<div class="tl-row axis"><div class="lbl"><small>${com.length+semData.length} contratos assinados</small></div><div class="track">
     ${ticks.map(([d,l])=>`<i class="tick" style="left:${x(d)}%"><span>${l}</span></i>`).join('')}<i class="today" style="left:${tx}%"><span>hoje ${br(isoOf(today))}</span></i></div></div>`;
-  if(semData.length){h+=`<div class="grp">Assinados sem data final informada (${semData.length})</div>`+semData.map(c=>rowHTML(c,`<i class="nod" style="left:${tx}%;right:0"></i><span class="nodb" style="left:calc(${tx}% + 8px)">⚠ Data final não informada</span>`)).join('')+`<div class="grp">Com data final (${com.length})</div>`}
+  if(semData.length){h+=`<div class="grp">Sem data final (${semData.length})</div>`+semData.map(c=>rowHTML(c,c.indeterminado?`<i class="tbar indet" style="left:${tx}%;right:0;width:auto"></i><span class="nodb okb" style="left:calc(${tx}% + 8px)">Prazo indeterminado</span>`:`<i class="nod" style="left:${tx}%;right:0"></i><span class="nodb" style="left:calc(${tx}% + 8px)">⚠ Data final não informada</span>`)).join('')+`<div class="grp">Com data final (${com.length})</div>`}
   h+=com.map(c=>{const d=Math.round((c.fim-today)/864e5),w=new Date(c.fim-JAN*864e5);let m='';
     if(d<0)m=`<span class="late">vencido há ${-d} dias · ${br(c.vigencia)}</span>`;
     else{const fx=x(c.fim),inR=c.fim<end,ws=new Date(Math.max(+today,+w));
@@ -1108,8 +1117,8 @@ function vIndicadores(){
     .map(([k,n,c])=>({rotulo:n,partes:[{v:ativos.filter(p=>(p.urgencia||'')===k).length,cor:c,nome:'processos em andamento'}]}));
   const resp=new Map();for(const t of S.tar.values())if(t.status==='andamento'){const r=t.responsavel||'Sem responsável';if(!resp.has(r))resp.set(r,[0,0]);resp.get(r)[atrasada(t)?1:0]++}
   const porResp=[...resp].sort((a,b)=>b[1][0]+b[1][1]-a[1][0]-a[1][1]).map(([r,[ok,at]])=>({rotulo:r,partes:[{v:ok,cor:'var(--s-ok)',nome:'no prazo'},{v:at,cor:'var(--crit)',nome:'atrasadas'}]}));
-  const J=JANELA(),cs=[...S.contr.values()].filter(c=>c.vigencia||assinado(c)),faixa=c=>{const d=dias(c.vigencia);return d==null?4:d<0?0:d<=30?1:d<=J?2:3};
-  const porVig=[['Vigência vencida','var(--crit)'],['Vence em até 30 dias','var(--u-media)'],[`Vence em 31 a ${J} dias`,'var(--s-nao)'],[`Mais de ${J} dias`,'var(--s-ok)'],['Assinado, sem data final','var(--line)']]
+  const J=JANELA(),cs=[...S.contr.values()].filter(c=>c.continuidade==='Em execução'),faixa=c=>{const d=c.indeterminado?null:dias(c.vigencia);return d==null?4:d<0?0:d<=30?1:d<=J?2:3};
+  const porVig=[['Vigência vencida','var(--crit)'],['Vence em até 30 dias','var(--u-media)'],[`Vence em 31 a ${J} dias`,'var(--s-nao)'],[`Mais de ${J} dias`,'var(--s-ok)'],['Sem data final ou prazo indeterminado','var(--line)']]
     .map(([n,c],i)=>({rotulo:n,partes:[{v:cs.filter(x=>faixa(x)===i).length,cor:c,nome:'contratos'}]}));
   $('#main').innerHTML=`<div class="dash">
    <section class="card wide"><h2>Indicadores do setor</h2><div class="kpis">${kpis.map(([n,v,sub,d])=>{const [fx,cl]=FAIXA(v);
@@ -1434,15 +1443,19 @@ function abrirContrato(id,novo){
     <label class="full">Objeto do contrato<input id="c-objeto" value="${esc(c.objeto)}" required></label>
     <label>Número SEI<input id="c-sei" value="${esc(c.sei)}" style="font-family:var(--mono)"></label>
     <label>Empresa contratada<input id="c-empresa" value="${esc(c.empresa)}"></label>
-    <label>Vigência (data final)<input type="date" id="c-vigencia" value="${esc(c.vigencia||'')}"></label>
-    <label>Continuidade<select id="c-continuidade">${['Em execução','Renovação Contratual','Novo Contrato','Em Processo','ATENÇÃO','Encerrado'].map(v=>`<option ${v===c.continuidade?'selected':''}>${v}</option>`).join('')}</select></label>
+    <label>Vigência (data final)<input type="date" id="c-vigencia" value="${esc(c.vigencia||'')}" ${c.indeterminado?'disabled':''}></label>
+    <label style="flex-direction:row;align-items:center;gap:8px;align-self:end"><input type="checkbox" id="c-indeterminado" ${c.indeterminado?'checked':''} style="width:auto"> Prazo indeterminado (sem data final)</label>
+    <label>Estado atual<select id="c-continuidade">${[...ESTADOS,...(c.continuidade&&!ESTADOS.includes(c.continuidade)?[c.continuidade]:[])].map(v=>`<option ${v===c.continuidade?'selected':''}>${v}</option>`).join('')}</select></label>
+    <label>Data do estado<input type="date" id="c-estadoData" value="${esc(c.estadoData||'')}"></label>
     <label class="full">Situação e próximos passos<textarea id="c-situacao">${esc(c.situacao)}</textarea></label>
     <div class="full" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${id&&S.write?'<button class="btn perigo" type="button" id="delContr">Excluir contrato</button>':''}<span id="cmsg" class="muted" style="margin-right:auto"></span>
      ${p?`<button class="btn" type="button" id="verP">Abrir processo</button>`:''}<button class="btn pri" ${S.write?'':'disabled'}>${id?'Salvar':'Cadastrar contrato'}</button></div></form></section>`);
   if(p)$('#verP').onclick=()=>abrirFicha(p.id);
+  $('#c-indeterminado').onchange=e=>{$('#c-vigencia').disabled=e.target.checked;if(e.target.checked)$('#c-vigencia').value=''};
+  $('#c-continuidade').onchange=()=>{$('#c-estadoData').value=isoOf(hoje())};
   $('#c-processo').onchange=e=>{const x=S.proc.get(e.target.value);if(!x)return;if(!$('#c-objeto').value.trim())$('#c-objeto').value=x.objeto||'';if(!$('#c-sei').value.trim())$('#c-sei').value=x.sei||''};
   $('#fc').onsubmit=async e=>{e.preventDefault();const v=k=>$('#c-'+k).value.trim();
-    const patch={processo:v('processo'),objeto:v('objeto'),sei:v('sei'),empresa:v('empresa'),vigencia:v('vigencia')||null,continuidade:v('continuidade'),situacao:v('situacao')};
+    const patch={processo:v('processo'),objeto:v('objeto'),sei:v('sei'),empresa:v('empresa'),vigencia:$('#c-indeterminado').checked?null:(v('vigencia')||null),indeterminado:$('#c-indeterminado').checked,continuidade:v('continuidade'),estadoData:v('estadoData')||null,situacao:v('situacao')};
     if(!patch.processo)return $('#cmsg').textContent='Escolha o processo deste contrato.';
     if(!id){try{const nid=await criar('contratos',patch);abrirContrato(nid)}catch(er){$('#cmsg').textContent='Não foi possível cadastrar ('+(er.message||er.code)+').'}return}
     if(await upd('contratos',id,patch,'Contrato atualizado: '+(patch.objeto||''),'contrato')){$('#cmsg').textContent='Salvo.';
