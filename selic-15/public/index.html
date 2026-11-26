@@ -293,6 +293,7 @@ h1,h2,h3{font-family:var(--serif)}
 .aviso.ok-box{background:var(--ok-soft);border-color:var(--brand-light)}
 @media (max-width:700px){#fusr{grid-template-columns:1fr!important}}
 /* ---- aprovação de acesso ---- */
+.btn.sair{text-decoration:none;color:var(--muted)}.btn.sair:hover{color:var(--crit);border-color:var(--crit)}
 body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera #xlsTudo,body.espera .user{display:none!important}
 .espera-card{max-width:560px;margin:48px auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
 .espera-card h2{margin:8px 0 0;font-size:22px}.espera-card p{color:var(--muted);margin:0}.espera-card .form{width:100%}
@@ -318,6 +319,7 @@ tr.pend td{background:var(--warn-soft)}
     <a class="brand" href="#painel" aria-label="SELIC-15, início"><img src="/img/crefito15-horizontal-reduzida.png" alt="CREFITO-15" width="121" height="52">
       <span class="sys"><b>SELIC-15</b><small>Setor de Licitações e Contratos</small></span></a>
     <span class="user">Olá, <button id="quem" class="linklike" type="button" title="Alterar como seu nome aparece">…</button></span>
+    <a class="btn sair" id="sair" href="/cdn-cgi/access/logout" title="Encerrar a sessão neste navegador">Sair</a>
     <button class="btn" id="xlsTudo" type="button" title="Baixa um Excel com todas as informações do sistema">Exportar tudo (Excel)</button>
     <button class="btn pri" id="novoProc" type="button">+ Novo processo</button>
   </div>
