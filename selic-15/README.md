@@ -9,9 +9,9 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 | Aba | Para que serve |
 |---|---|
 | Painel | Índice de Saúde do setor, metas definidas pela equipe, próximos 7 dias e atividade recente |
-| Indicadores | Indicadores do setor com faixas e variação, marcos, tendência e gráficos por coluna, urgência, responsável e vigência |
+| Indicadores | Indicadores do setor com faixas e variação, tendência e gráficos por coluna, urgência, responsável e vigência |
 | Quadro de processos | Kanban com colunas configuráveis, arrastar para mudar de coluna, urgência por cor (baixa verde, média amarela, urgente vermelha) e ficha completa |
-| Tabela | Todos os processos em linhas, com filtros, ordenação e **exportação para Excel** |
+| Tabela | Todos os processos em linhas, com filtros, ordenação e exportação dos processos filtrados |
 | Contratos | Contratos ordenados pela vigência mais próxima |
 | Linha do tempo | Vigência restante de cada contrato assinado e a janela de 120 dias para renovar |
 | Calendário | Prazos de tarefas, fins de vigência, início das janelas de renovação e agenda do setor |
@@ -29,6 +29,15 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 - Uma tarefa agendada fotografa os indicadores todo dia às 23h50 (horário de Brasília), para a tendência e as sequências do painel.
 
 **Os dados não ficam neste repositório**, que é público. Eles estão só no banco D1.
+
+## Exportar para Excel
+
+O botão **Exportar tudo (Excel)**, no topo, baixa uma planilha com todas as informações do sistema, em abas:
+- Processos, Contratos, Tarefas, Designações, Parcerias e Agenda;
+- Metas, Equipe e Histórico (todos os registros de processos e tarefas, com data, hora e autor);
+- Indicadores e uma aba "Sobre" com a data de geração.
+
+A aba Tabela tem a sua própria exportação, que leva só os processos filtrados na tela.
 
 ## Níveis de acesso
 

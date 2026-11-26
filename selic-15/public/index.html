@@ -201,7 +201,7 @@ nav.tabs a[aria-current="page"]{border-bottom:3px solid var(--brand);color:var(-
 h1,h2,h3{font-family:var(--serif)}
 .small{font-size:12px}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateX(-50%);background:var(--brand-dark);color:#fff;padding:10px 18px;border-radius:99px;font-weight:600;z-index:40;box-shadow:0 6px 20px rgba(19,39,23,.3)}
-@media (max-width:640px){.sys small,.user{display:none}.brand img{height:44px}}
+@media (max-width:640px){.sys small,.user{display:none}.brand img{height:44px}#xlsTudo{font-size:12px;padding:6px 8px}}
 /* ---- painel ---- */
 .dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0;grid-column:span 12}
@@ -283,9 +283,6 @@ h1,h2,h3{font-family:var(--serif)}
 .anel{width:76px;height:76px;flex:none}.anel.aten .g-fg{stroke:var(--crit)}.anel.evo .g-fg{stroke:var(--warn)}.anel.ex .g-fg{stroke:var(--brand-dark)}
 .anel .g-bg,.anel .g-fg{stroke-width:9}.a-num{font:700 16px var(--serif);fill:var(--ink)}
 .dl{font-size:12px;font-weight:600}.dl.up{color:var(--accent)}.dl.down{color:var(--crit)}
-.marcos{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
-.marco{display:flex;flex-direction:column;gap:2px;padding:14px;border-radius:10px;background:var(--accent-soft);border:1px solid var(--brand-light)}
-.mv{font:700 28px/1.1 var(--serif);color:var(--brand-dark)}.marco b{font-size:13px}
 .trend{width:100%;height:auto;max-height:240px;display:block}.trend .gr{stroke:var(--sunk)}.trend .ax{font-size:11px;fill:var(--muted)}.trend .hit{fill:transparent;cursor:pointer}
 /* ---- configurações ---- */
 .cfg{display:flex;flex-direction:column;gap:14px}
@@ -295,7 +292,7 @@ h1,h2,h3{font-family:var(--serif)}
 .niveis{margin:0 0 10px;padding-left:18px;color:var(--muted)}
 @media (max-width:700px){#fusr{grid-template-columns:1fr!important}}
 /* ---- aprovação de acesso ---- */
-body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera .user{display:none!important}
+body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera #xlsTudo,body.espera .user{display:none!important}
 .espera-card{max-width:560px;margin:48px auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
 .espera-card h2{margin:8px 0 0;font-size:22px}.espera-card p{color:var(--muted);margin:0}.espera-card .form{width:100%}
 nav.tabs a .n.alerta{background:var(--crit);color:#fff}
@@ -311,6 +308,7 @@ tr.pend td{background:var(--warn-soft)}
     <a class="brand" href="#painel" aria-label="SELIC-15, início"><img src="/img/crefito15-horizontal-reduzida.png" alt="CREFITO-15" width="121" height="52">
       <span class="sys"><b>SELIC-15</b><small>Setor de Licitações e Contratos</small></span></a>
     <span class="user">Olá, <button id="quem" class="linklike" type="button" title="Alterar como seu nome aparece">…</button></span>
+    <button class="btn" id="xlsTudo" type="button" title="Baixa um Excel com todas as informações do sistema">Exportar tudo (Excel)</button>
     <button class="btn pri" id="novoProc" type="button">+ Novo processo</button>
   </div>
   <nav class="tabs wrap" id="tabs" aria-label="Vistas">
@@ -628,7 +626,7 @@ function vTabela(){
   $('#tp').onchange=e=>{T.pca=e.target.value;vTabela()};$('#pend').onchange=e=>{S.pend=e.target.checked;vTabela()};
   $('#main thead').onclick=e=>{const th=e.target.closest('th');if(!th)return;if(T.sort===th.dataset.k)T.dir*=-1;else{T.sort=th.dataset.k;T.dir=1}vTabela()};
   $('#main tbody').onclick=e=>{const r=e.target.closest('tr[data-id]');if(r)abrirFicha(r.dataset.id)};
-  $('#xls').onclick=exportar;
+  $('#xls').onclick=()=>exportar(false);
 }
 let excelLib=null;
 function loadExcel(){
@@ -638,8 +636,8 @@ function loadExcel(){
     s.onload=()=>window.ExcelJS?res(window.ExcelJS):rej();s.onerror=()=>{s.remove();rej()};document.head.appendChild(s)})),Promise.reject());
   excelLib.catch(()=>{excelLib=null});return excelLib;
 }
-async function exportar(){
-  const msg=$('#xmsg'),btn=$('#xls');btn.disabled=true;msg.textContent='Preparando a planilha…';
+async function exportar(tudo){
+  const msg=tudo?{set textContent(v){toast(v)}}:$('#xmsg'),btn=tudo?$('#xlsTudo'):$('#xls');btn.disabled=true;msg.textContent='Preparando a planilha…';
   try{
     const X=await loadExcel().catch(()=>{throw{code:'lib'}});
     const wb=new X.Workbook();wb.creator='Lenio Goularte';wb.lastModifiedBy='Lenio Goularte';wb.created=new Date();wb.title='SELIC-15 – CREFITO-15';
@@ -649,7 +647,7 @@ async function exportar(){
       ws.eachRow((r,i)=>r.eachCell({includeEmpty:true},c=>{c.font=i===1?{...F,bold:true,color:{argb:'FFFFFFFF'}}:F;c.alignment={vertical:'top',wrapText:true};
         if(i===1)c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0D6B70'}};if(c.value instanceof Date)c.numFmt='dd/mm/yyyy'}));
       if(linhas.length)ws.autoFilter={from:{row:1,column:1},to:{row:1,column:cols.length}};return ws};
-    const rows=linhasTabela();
+    const rows=tudo?[...S.proc.values()].sort((a,b)=>(a.objeto||'').localeCompare(b.objeto||'','pt-BR')):linhasTabela();
     aba('Processos',[['Objeto',48],['SEI',24],['Fase',24],['Urgência',10],['Setor',13],['PCA',7],['Tipo',18],['Gestor',26],['Fiscal',26],['Contrato e vigência',34],['Tarefas abertas',10],['Pendências',44],['COFFITO',9],['Observações',60]],
       rows.map(p=>[...COLS.map(([k,,g])=>k==='pend'?(p.alertas||[]).join('\n'):g(p)),p.obs||'']));
     aba('Contratos',[['Objeto',42],['Empresa',36],['SEI',24],['Vigência até',13],['Dias restantes',11],['Continuidade',18],['Situação',60]],
@@ -663,9 +661,20 @@ async function exportar(){
       [...S.parcerias.values()].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(x=>[x.nome,x.cnpj,x.tipo,x.objeto,x.sei,x.situacao,D(x.inicio),D(x.fim),x.contato]));
     aba('Agenda',[['Data',12],['Hora',8],['Título',44],['Tipo',18],['Processo',40],['Anotações',50]],
       [...S.agenda.values()].sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||''))).map(e=>[D(e.data),e.hora||'',e.titulo,e.tipo,S.proc.get(e.processo)?.objeto||'',e.notas||'']));
+    aba('Metas',[['Meta',46],['Acompanhamento',40],['Progresso',30],['Prazo',12],['Responsável',24],['Situação',14],['Observações',40]],
+      [...S.metas.values()].map(m=>{const pr=progMeta(m);return[m.titulo,S.painel?.indicadores?.[m.indicador]?.nome||'Manual',pr.txt+' ('+Math.round(pr.f*100)+'%)',D(m.prazo),m.responsavel||'',m.arquivada?'Arquivada':pr.f>=1?'Cumprida':'Em andamento',m.notas||'']}));
+    aba('Equipe',[['Nome',36],['Função',24],['Setor',16],['E-mail',32]],[...S.pessoas.values()].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR')).map(x=>[x.nome,x.funcao||'',x.setor||'',x.email||'']));
+    const hist=[];for(const [tipo,mapa,nome] of [['Processo',S.proc,x=>x.objeto],['Tarefa',S.tar,x=>x.titulo]])for(const x of mapa.values())for(const h of x.historico||[])hist.push([new Date(Date.parse(h.em)-new Date(h.em).getTimezoneOffset()*6e4),quem(h.por),tipo,nome(x)||'',x.sei||'',h.texto]);
+    hist.sort((a,b)=>b[0]-a[0]);
+    const wsH=aba('Histórico',[['Data e hora',18],['Quem',22],['Tipo',10],['Item',46],['SEI',24],['Registro',70]],hist);wsH.getColumn(1).eachCell((c,i)=>{if(i>1)c.numFmt='dd/mm/yyyy hh:mm'});
+    if(S.painel){const P=S.painel,pc=v=>Math.round(v*100)+'%';
+      aba('Indicadores',[['Indicador',46],['Valor',16],['Detalhe',50]],[['Índice de Saúde do SELIC',P.saude+' de 100',NIVEL_SAUDE(P.saude)[0]],['Tarefas dentro do prazo',pc(P.comp.tarefas),`${P.contagens.atrasadas} atrasada(s) de ${P.contagens.abertas} abertas`],
+        ['Contratos com vigência em dia',pc(P.comp.contratos),`${P.contagens.vencidos} com vigência vencida`],['Pendências resolvidas',pc(P.comp.pendencias),`${P.contagens.pendAbertas} ainda abertas`],
+        ['Processos ativos com gestor e fiscal',pc(P.comp.designacoes),`${P.indicadores.designados.valor} de ${P.indicadores.designados.total}`],
+        ...Object.values(P.indicadores).map(I=>[I.nome,String(I.valor)+(I.total!=null?' de '+I.total:''),''])])}
     const filtros=[S.q&&`busca "${S.q}"`,S.tab.fase&&`fase ${FNOME[S.tab.fase]}`,S.setor&&`setor ${S.setor}`,S.tab.pca&&{s:'no PCA',n:'fora do PCA',x:'PCA não informado'}[S.tab.pca],S.pend&&'só com pendência'].filter(Boolean);
     aba('Sobre',[['Item',26],['Valor',70]],[['Gerado em',new Date().toLocaleString('pt-BR')],['Origem','SELIC-15 – Setor de Licitações e Contratos do CREFITO-15'],
-      ['Filtros da aba Processos',filtros.join('; ')||'nenhum (todos os processos)'],['Processos exportados',rows.length+' de '+S.proc.size]]);
+      ['Filtros da aba Processos',tudo?'nenhum (exportação completa)':filtros.join('; ')||'nenhum (todos os processos)'],['Processos exportados',rows.length+' de '+S.proc.size]]);
     const buf=await wb.xlsx.writeBuffer();
     baixar(`selic-15-${isoOf(new Date())}.xlsx`,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
     msg.textContent='Planilha gerada. Verifique a pasta de downloads.';
@@ -1004,20 +1013,10 @@ function vIndicadores(){
   const J=JANELA(),cs=[...S.contr.values()].filter(c=>c.vigencia||assinado(c)),faixa=c=>{const d=dias(c.vigencia);return d==null?4:d<0?0:d<=30?1:d<=J?2:3};
   const porVig=[['Vigência vencida','var(--crit)'],['Vence em até 30 dias','var(--u-media)'],[`Vence em 31 a ${J} dias`,'var(--s-nao)'],[`Mais de ${J} dias`,'var(--s-ok)'],['Assinado, sem data final','var(--line)']]
     .map(([n,c],i)=>({rotulo:n,partes:[{v:cs.filter(x=>faixa(x)===i).length,cor:c,nome:'contratos'}]}));
-  const melhor=h.reduce((m,d)=>!m||d.saude>m.saude?d:m,null),menosAtr=h.reduce((m,d)=>!m||d.atrasadas<m.atrasadas?d:m,null);
-  let semVenc=0;for(let i=h.length-1;i>=0&&!h[i].vencidos;i--)semVenc++;
-  const metas=[...S.metas.values()].filter(m=>!m.arquivada),cumpridas=metas.filter(m=>progMeta(m).f>=1).length;
-  const marcos=[
-    ['Melhor Índice de Saúde',melhor?`${melhor.saude}`:'—',melhor?`registrado em ${br(melhor.dia)}`:'aparece com o uso diário'],
-    ['Menos tarefas atrasadas',menosAtr?`${menosAtr.atrasadas}`:'—',menosAtr?`registrado em ${br(menosAtr.dia)}`:'aparece com o uso diário'],
-    ['Dias seguidos sem contrato vencido',`${semVenc}`,semVenc?'contando a partir de hoje':'há contrato com vigência vencida'],
-    ['Metas da equipe cumpridas',`${cumpridas} de ${metas.length}`,metas.length?'metas ativas no painel':'nenhuma meta cadastrada'],
-  ];
   $('#main').innerHTML=`<div class="dash">
    <section class="card wide"><h2>Indicadores do setor</h2><div class="kpis">${kpis.map(([n,v,sub,d])=>{const [fx,cl]=FAIXA(v);
      return `<div class="kpi ${cl}">${anel(v,cl)}<div><b>${esc(n)}</b><span class="fx">${fx}</span><small class="muted">${esc(sub)}</small>${d}</div></div>`}).join('')}</div>
     <p class="muted small" style="margin:10px 0 0">Faixas: Atenção (abaixo de 50) · Em evolução (50 a 74) · Bom (75 a 89) · Exemplar (90 ou mais).</p></section>
-   <section class="card wide"><h2>Marcos do setor</h2><div class="marcos">${marcos.map(([n,v,s])=>`<div class="marco"><span class="mv">${esc(v)}</span><b>${esc(n)}</b><small class="muted">${esc(s)}</small></div>`).join('')}</div></section>
    <section class="card wide"><h2>Tendência do Índice de Saúde</h2>${linhaTendencia(h)}</section>
    <section class="card half"><h2>Processos por coluna do quadro</h2>${barrasH(porCol,{clique:'col'})}</section>
    <section class="card half"><h2>Processos em andamento por urgência</h2>${barrasH(porUrg)}</section>
@@ -1316,6 +1315,7 @@ $('#novoProc').onclick=async()=>{
     abrirFicha(nid);$('#f-objeto').select()}
   catch(e){note('Não foi possível criar o processo ('+e.code+').')}
 };
+$('#xlsTudo').onclick=()=>exportar(true);
 $('#attn').onclick=e=>{const b=e.target.closest('[data-go]');if(!b)return;const g=b.dataset.go;
   if(g==='pend'){S.pend=true;S.q='';if(location.hash!=='#quadro')location.hash='#quadro';else vQuadro()}else location.hash='#'+g};
 boot();
