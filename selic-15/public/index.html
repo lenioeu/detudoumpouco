@@ -294,6 +294,13 @@ h1,h2,h3{font-family:var(--serif)}
 .aviso{background:var(--warn-soft);border:1px solid #f0d49a;border-radius:8px;padding:10px 12px;margin-bottom:10px}
 .niveis{margin:0 0 10px;padding-left:18px;color:var(--muted)}
 @media (max-width:700px){#fusr{grid-template-columns:1fr!important}}
+/* ---- aprovação de acesso ---- */
+body.espera nav.tabs,body.espera #attn,body.espera #novoProc,body.espera .user{display:none!important}
+.espera-card{max-width:560px;margin:48px auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.espera-card h2{margin:8px 0 0;font-size:22px}.espera-card p{color:var(--muted);margin:0}.espera-card .form{width:100%}
+nav.tabs a .n.alerta{background:var(--crit);color:#fff}
+.aviso-pend{background:var(--warn-soft);border-color:#f0d49a}.aviso-pend a{color:var(--accent);font-weight:600}
+tr.pend td{background:var(--warn-soft)}
 @media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
 </style>
 </head>
@@ -374,12 +381,30 @@ async function sync(){
 }
 async function boot(){
   route();
-  try{const me=await API('GET','/me');S.me=me.email;S.meuNome=me.nome||'';S.nivel=me.nivel||'editor';S.write=S.nivel!=='leitor'}catch{}
+  try{const me=await API('GET','/me');S.me=me.email;S.meuNome=me.nome||'';S.nivel=me.nivel||'pendente';S.write=S.nivel==='admin'||S.nivel==='editor'}catch{}
+  if(!['admin','editor','leitor'].includes(S.nivel))return telaEspera();
   $('#tab-config').hidden=S.nivel!=='admin';
-  try{(await API('GET','/usuarios')).forEach(u=>{if(u.nome)S.names[u.email]=u.nome})}catch{}
+  $('#novoProc').hidden=!S.write;
+  try{S.usuarios=await API('GET','/usuarios');S.usuarios.forEach(u=>{if(u.nome)S.names[u.email]=u.nome})}catch{}
+  marcarPendentes();
   pintarUsuario();await sync();carregarPainel();
   setInterval(()=>{if(!document.hidden)sync()},20000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
+}
+const pendentes=()=>(S.usuarios||[]).filter(u=>u.nivel==='pendente');
+function marcarPendentes(){const n=pendentes().length,a=$('#tab-config');if(!a)return;a.querySelector('.n')?.remove();
+  if(S.nivel==='admin'&&n)a.insertAdjacentHTML('beforeend',`<span class="n alerta" title="Aguardando aprovação">${n}</span>`)}
+function telaEspera(){
+  document.body.classList.add('espera');const bloq=S.nivel==='bloqueado';
+  $('#main').innerHTML=`<section class="espera-card"><img src="/img/crefito15-horizontal.png" alt="CREFITO-15" width="300">
+   <h2>${bloq?'Acesso não autorizado':'Seu acesso está aguardando aprovação'}</h2>
+   <p>${bloq?'Um administrador do SELIC-15 não liberou este e-mail. Se acha que é um engano, fale com o Setor de Licitações e Contratos.'
+     :'Você entrou com <b>'+esc(S.me||'')+'</b>. Um administrador do Setor de Licitações e Contratos precisa aprovar seu acesso. Quando isso acontecer, esta página abre o sistema sozinha.'}</p>
+   ${bloq?'':`<form id="fesp" class="form" style="grid-template-columns:1fr auto;align-items:end;text-align:left"><label>Seu nome, para o administrador saber quem é você<input id="esp-nome" value="${esc(S.meuNome)}" placeholder="Ex.: Anna Souza" maxlength="80"></label>
+    <button class="btn pri">Enviar</button><span id="espmsg" class="muted small full"></span></form>`}</section>`;
+  if(bloq)return;
+  $('#fesp').onsubmit=async e=>{e.preventDefault();try{await API('PUT','/me',{nome:$('#esp-nome').value.trim()});$('#espmsg').textContent='Obrigado. Seu nome já aparece para o administrador.'}catch{$('#espmsg').textContent='Não foi possível enviar. Tente de novo.'}};
+  setInterval(async()=>{try{const me=await API('GET','/me');if(['admin','editor','leitor'].includes(me.nivel))location.reload()}catch{}},30000);
 }
 function note(m){const n=$('#notice');n.textContent=m;n.hidden=false}
 let raf=0;function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(render)}
@@ -802,6 +827,7 @@ function vPainel(){
     ...[...S.agenda.values()].filter(e=>e.data&&dias(e.data)>=0&&dias(e.data)<=7).map(e=>({d:e.data,txt:(e.hora?e.hora+' · ':'')+e.titulo,sub:e.tipo||'agenda',ab:`a:${e.id}`}))].sort((a,b)=>a.d.localeCompare(b.d));
   const nArq=[...S.metas.values()].filter(m=>m.arquivada).length;
   $('#main').innerHTML=`<div class="dash">
+   ${S.nivel==='admin'&&pendentes().length?`<section class="card wide aviso-pend"><b>${pendentes().length} pessoa(s) aguardando aprovação para entrar no SELIC-15:</b> ${pendentes().map(u=>esc(u.nome||u.email)).join(', ')}. <a href="#config">Aprovar em Configurações</a></section>`:''}
    <section class="card saude ${nivelCls}"><h2>Índice de Saúde do SELIC</h2>
     <div class="saude-row">${gauge(P.saude)}<div class="saude-txt"><span class="lvl">${nivelTxt}</span>
       <p>Mede, de 0 a 100, se contratos, prazos, pendências e designações estão em ordem.</p>${spark(P.historico)}</div>
@@ -1045,7 +1071,7 @@ function abrirParceria(id,novo){
 }
 
 /* ---------- configurações ---------- */
-const NIVEL_NOME={admin:'Administrador',editor:'Editor',leitor:'Leitor'};
+const NIVEL_NOME={admin:'Administrador',editor:'Editor',leitor:'Leitor',pendente:'Aguardando aprovação',bloqueado:'Acesso recusado'};
 const FUNCOES=['Servidor(a) da SELIC','Gestor(a) de contrato','Fiscal de contrato','Estagiário(a)','Outro setor'];
 let cfgCols=null;
 async function vConfig(){
@@ -1069,7 +1095,7 @@ async function vConfig(){
      <span id="colmsg" class="muted small" style="margin-right:auto"></span><button class="btn" type="button" id="resetCol">Descartar mudanças</button><button class="btn pri" type="button" id="saveCol">Salvar colunas</button></div></section>
 
    <section class="card" id="cfg-usuarios"><h2>Usuários e níveis de acesso</h2>
-    <div class="aviso small"><b>Como funciona o acesso:</b> para entrar no SELIC-15, o e-mail precisa estar liberado no login da Cloudflare (Zero Trust → Access → Applications → SELIC-15 → política da equipe). O nível abaixo define o que a pessoa pode fazer depois de entrar. Quem entra pela primeira vez sem estar nesta lista vira <b>Editor</b> automaticamente.</div>
+    <div class="aviso small"><b>Como funciona o acesso:</b> para entrar no SELIC-15, o e-mail precisa estar liberado no login da Cloudflare (Zero Trust → Access → Applications → SELIC-15 → política da equipe). O nível abaixo define o que a pessoa pode fazer depois de entrar. Quem entra pela primeira vez sem estar nesta lista fica <b>aguardando aprovação</b> e não vê nenhum dado até você aprovar. Se preferir, cadastre o e-mail antes, já com o nível certo, e a pessoa entra direto.</div>
     <ul class="niveis small"><li><b>Administrador:</b> tudo, inclusive configurações, usuários e colunas.</li><li><b>Editor:</b> cria e altera processos, contratos, tarefas, agenda, metas e parcerias.</li><li><b>Leitor:</b> só consulta (indicado para gestores e fiscais).</li></ul>
     <div class="tbl"><table class="cfgt"><thead><tr><th>Nome</th><th>E-mail</th><th>Nível</th><th></th></tr></thead><tbody id="usrBody"><tr><td colspan="4" class="muted">Carregando…</td></tr></tbody></table></div>
     <form id="fusr" class="form" style="margin-top:12px;grid-template-columns:1fr 1fr 160px auto;align-items:end">
@@ -1114,11 +1140,17 @@ async function vConfig(){
     catch(er){$('#colmsg').textContent='Não foi possível salvar ('+(er.message||er.code)+').'}};
   // usuários
   const carregarUsr=async()=>{try{S.usuarios=await API('GET','/usuarios')}catch{return}
-    $('#usrBody').innerHTML=S.usuarios.map(u=>`<tr data-em="${esc(u.email)}"><td><input data-k="nome" value="${esc(u.nome||'')}" aria-label="Nome" placeholder="(sem nome)"></td><td>${esc(u.email)}${u.email===S.me?' <span class="chip acc">você</span>':''}</td>
+    marcarPendentes();const ord={pendente:0,admin:1,editor:2,leitor:3,bloqueado:4};
+    $('#usrBody').innerHTML=[...S.usuarios].sort((a,b)=>(ord[a.nivel]??5)-(ord[b.nivel]??5)||(a.nome||a.email).localeCompare(b.nome||b.email)).map(u=>u.nivel==='pendente'
+     ?`<tr data-em="${esc(u.email)}" class="pend"><td><b>${esc(u.nome||'(não informou o nome)')}</b><br><span class="small muted">pediu acesso em ${u.criado_em?new Date(u.criado_em).toLocaleDateString('pt-BR'):'—'}</span></td><td>${esc(u.email)}</td>
+       <td><span class="chip warn">Aguardando aprovação</span></td><td style="white-space:nowrap"><button class="btn sm pri" type="button" data-apr="editor">Aprovar como Editor</button> <button class="btn sm" type="button" data-apr="leitor">Aprovar como Leitor</button> <button class="btn sm" type="button" data-apr="bloqueado">Recusar</button></td></tr>`
+     :`<tr data-em="${esc(u.email)}"><td><input data-k="nome" value="${esc(u.nome||'')}" aria-label="Nome" placeholder="(sem nome)"></td><td>${esc(u.email)}${u.email===S.me?' <span class="chip acc">você</span>':''}</td>
       <td><select data-k="nivel" aria-label="Nível">${Object.entries(NIVEL_NOME).map(([k,n])=>`<option value="${k}" ${k===u.nivel?'selected':''}>${n}</option>`).join('')}</select></td>
       <td style="white-space:nowrap"><button class="btn sm" type="button" data-save>Salvar</button> ${u.email===S.me?'':'<button class="btn sm" type="button" data-del>Remover</button>'}</td></tr>`).join('')};
   carregarUsr();
   $('#usrBody').onclick=async e=>{const tr=e.target.closest('tr[data-em]');if(!tr)return;const em=tr.dataset.em;
+    const apr=e.target.closest('[data-apr]');if(apr){const u=S.usuarios.find(x=>x.email===em);
+      try{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:u?.nome||'',nivel:apr.dataset.apr});toast(apr.dataset.apr==='bloqueado'?'Acesso recusado':'Acesso aprovado');carregarUsr();carregarPainel()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível salvar.'}return}
     if(e.target.matches('[data-save]')){try{await API('PUT','/usuarios/'+encodeURIComponent(em),{nome:tr.querySelector('[data-k=nome]').value.trim(),nivel:tr.querySelector('[data-k=nivel]').value});toast('Usuário atualizado');carregarUsr()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível salvar.'}}
     if(e.target.matches('[data-del]')){const b=e.target;if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Confirmar';return}
       try{await API('DELETE','/usuarios/'+encodeURIComponent(em));toast('Usuário removido do sistema');carregarUsr()}catch(er){$('#usrmsg').textContent=er.message||'Não foi possível remover.'}}};

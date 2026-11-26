@@ -38,7 +38,9 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 | Editor | Cria e altera processos, contratos, tarefas, agenda, metas e parcerias |
 | Leitor | Só consulta |
 
-As permissões são conferidas no servidor. Quem passa pelo login da Cloudflare sem estar cadastrado entra como Editor.
+As permissões são conferidas no servidor.
+
+**Novos usuários:** o login da Cloudflare libera o domínio institucional inteiro (e-mails terminados em `@<domínio do CREFITO>`). Quem entra pela primeira vez fica **aguardando aprovação** e não vê nenhum dado. O administrador aprova como Editor ou Leitor, ou recusa, em Configurações → Usuários e acesso. O Painel avisa quando há alguém esperando. Também dá para cadastrar o e-mail antes, já com o nível, para a pessoa entrar direto.
 
 ## Painel e metas da equipe
 

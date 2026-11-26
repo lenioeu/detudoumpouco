@@ -20,7 +20,8 @@ const ESTATICOS = {
 const PUBLICOS = new Set(['/img/crefito15-horizontal.png', '/img/globo-32.png']);
 const seguranca = { 'x-content-type-options': 'nosniff', 'referrer-policy': 'same-origin', 'x-frame-options': 'DENY' };
 const COLECOES = new Set(['processos', 'contratos', 'tarefas', 'agenda', 'metas', 'parcerias', 'pessoas', 'config']);
-const NIVEIS = new Set(['admin', 'editor', 'leitor']);
+const NIVEIS = new Set(['admin', 'editor', 'leitor', 'pendente', 'bloqueado']);
+const COM_ACESSO = new Set(['admin', 'editor', 'leitor']);
 const COM_HISTORICO = new Set(['processos', 'tarefas']);
 const ORDEM_FASE = ['previsto', 'planejamento', 'juridico', 'selecao', 'contratacao', 'execucao', 'finalizado'];
 // Colunas que exigem gestor e fiscal, quando o quadro ainda não foi configurado.
@@ -54,7 +55,8 @@ async function autenticar(req, env) {
   const team = (env.ACCESS_TEAM_DOMAIN || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
   const aud = env.ACCESS_AUD || '';
   if (!team || !aud) {
-    if (env.DEV_SEM_LOGIN === '1') return { ok: true, email: 'dev@local' };
+    // Só no ambiente local de desenvolvimento (nunca configurado na versão publicada).
+    if (env.DEV_SEM_LOGIN === '1') return { ok: true, email: (req.headers.get('X-Dev-Email') || 'dev@local').toLowerCase() };
     return { ok: false, resp: bloqueado() };
   }
   const token = req.headers.get('Cf-Access-Jwt-Assertion') || cookie(req, 'CF_Authorization');
@@ -110,6 +112,8 @@ async function api(req, env, url, email) {
     }
     return json(eu);
   }
+  // Quem ainda não foi aprovado (ou foi recusado) só consegue ver o próprio cadastro.
+  if (!COM_ACESSO.has(eu.nivel)) return json({ erro: eu.nivel === 'bloqueado' ? 'Acesso não autorizado.' : 'Seu acesso está aguardando aprovação.', nivel: eu.nivel }, 403);
   if (p[0] === 'usuarios') {
     if (m === 'GET') return json((await env.DB.prepare('SELECT email,nome,nivel,criado_em FROM usuarios ORDER BY nome,email').all()).results);
     if (eu.nivel !== 'admin') return json({ erro: 'Só administradores podem gerenciar usuários.' }, 403);
@@ -122,7 +126,7 @@ async function api(req, env, url, email) {
     const b = await req.json().catch(() => ({}));
     const em = (alvo || String(b.email || '')).toLowerCase().trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return json({ erro: 'E-mail inválido.' }, 400);
-    const nivel = NIVEIS.has(b.nivel) ? b.nivel : 'editor';
+    const nivel = NIVEIS.has(b.nivel) ? b.nivel : 'leitor';
     if (em === email && nivel !== 'admin') {
       const n = (await env.DB.prepare("SELECT COUNT(*) n FROM usuarios WHERE nivel='admin' AND email<>?").bind(email).first()).n;
       if (!n) return json({ erro: 'O sistema precisa de pelo menos um administrador.' }, 400);
@@ -143,7 +147,7 @@ async function api(req, env, url, email) {
   }
   const col = p[1];
   if (!COLECOES.has(col)) return json({ erro: 'Coleção inválida' }, 400);
-  if (eu.nivel === 'leitor') return json({ erro: 'Seu acesso é só de leitura.' }, 403);
+  if (eu.nivel !== 'admin' && eu.nivel !== 'editor') return json({ erro: 'Seu acesso é só de leitura.' }, 403);
   if (col === 'config' && eu.nivel !== 'admin') return json({ erro: 'Só administradores alteram as configurações.' }, 403);
   const corpo = m === 'DELETE' ? {} : await req.json().catch(() => ({}));
   if (JSON.stringify(corpo).length > 200000) return json({ erro: 'Conteúdo grande demais' }, 413);
@@ -199,11 +203,11 @@ const evento = (env, em, email, col, doc, tipo, texto) =>
 async function usuario(env, email) {
   let u = await env.DB.prepare('SELECT email,nome,nivel FROM usuarios WHERE email=?').bind(email).first();
   if (!u) {
-    // Quem passa pelo login da Cloudflare e ainda não está cadastrado entra como editor; o administrador ajusta depois.
-    await env.DB.prepare('INSERT OR IGNORE INTO usuarios(email,nome,nivel,criado_em) VALUES(?,?,?,?)').bind(email, '', 'editor', agoraISO()).run();
-    u = { email, nome: '', nivel: 'editor' };
+    // Quem passa pelo login da Cloudflare e ainda não está cadastrado fica aguardando aprovação de um administrador.
+    await env.DB.prepare('INSERT OR IGNORE INTO usuarios(email,nome,nivel,criado_em) VALUES(?,?,?,?)').bind(email, '', 'pendente', agoraISO()).run();
+    u = { email, nome: '', nivel: 'pendente' };
   }
-  if (!NIVEIS.has(u.nivel)) u.nivel = 'editor';
+  if (!NIVEIS.has(u.nivel)) u.nivel = 'pendente';
   return u;
 }
 
