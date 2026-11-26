@@ -174,6 +174,11 @@ async function api(req, env, url, email) {
   if (JSON.stringify(corpo).length > 200000) return json({ erro: 'Conteúdo grande demais' }, 413);
   const t = agoraISO();
 
+  if (col === 'contratos' && (m === 'POST' || m === 'PATCH') && !p[3]) {
+    const proc = m === 'POST' ? corpo.data?.processo : corpo.patch?.processo;
+    if ((m === 'POST' || proc !== undefined) && !(await processoExiste(env, proc)))
+      return json({ erro: 'Todo contrato precisa estar vinculado a um processo.' }, 400);
+  }
   if (m === 'POST' && !p[2]) {
     const id = crypto.randomUUID().slice(0, 13);
     const data = { ...(corpo.data || {}) };
@@ -182,7 +187,9 @@ async function api(req, env, url, email) {
     await env.DB.prepare('INSERT INTO docs(col,id,data,version,updated_at,updated_by) VALUES(?,?,?,?,?,?)').bind(col, id, JSON.stringify(data), 1, t, email).run();
     const tipo = { processos: 'novo_processo', tarefas: 'nova_tarefa', agenda: 'agenda', metas: 'nova_meta', parcerias: 'nova_parceria', pessoas: 'nova_pessoa' }[col] || 'novo_registro';
     await evento(env, t, email, col, id, tipo, String(data.titulo || data.objeto || data.nome || '').slice(0, 140));
-    return json({ doc: { col, id, data, version: 1, updated_at: t, deleted: false } });
+    const extras = [];
+    if (col === 'processos' && (await emExecucao(env, data.fase))) { const c = await contratoAutomatico(env, id, data, email, t); if (c) extras.push(c); }
+    return json({ doc: { col, id, data, version: 1, updated_at: t, deleted: false }, extras });
   }
   const id = decodeURIComponent(p[2] || '');
   if (m === 'PUT' && id) {
@@ -218,7 +225,12 @@ async function api(req, env, url, email) {
     if (corpo.removerHistorico && COM_HISTORICO.has(col)) depois.historico = (depois.historico || []).filter(h => !(h.em === corpo.removerHistorico && h.por === email));
     await env.DB.prepare('UPDATE docs SET data=?, version=version+1, updated_at=?, updated_by=? WHERE col=? AND id=?').bind(JSON.stringify(depois), t, email, col, id).run();
     if (corpo.acao) await evento(env, t, email, col, id, tipoAcao(corpo.acao, antes, depois), String(corpo.texto || '').slice(0, 300));
-    return json({ doc: { col, id, data: depois, version: atual.version + 1, updated_at: t, deleted: false } });
+    // Processo que passa a estar em execução ganha o contrato na aba Contratos, se ainda não tiver.
+    const extras = [];
+    if (col === 'processos' && antes.fase !== depois.fase && (await emExecucao(env, depois.fase)) && !(await emExecucao(env, antes.fase))) {
+      const c = await contratoAutomatico(env, id, depois, email, t); if (c) extras.push(c);
+    }
+    return json({ doc: { col, id, data: depois, version: atual.version + 1, updated_at: t, deleted: false }, extras });
   }
   return json({ erro: 'Método não suportado' }, 405);
 }
@@ -230,6 +242,27 @@ function tipoAcao(acao, antes, depois) {
 }
 const evento = (env, em, email, col, doc, tipo, texto) =>
   env.DB.prepare('INSERT INTO eventos(em,email,col,doc,tipo,pontos,texto) VALUES(?,?,?,?,?,0,?)').bind(em, email, col, doc, tipo, texto).run();
+
+async function processoExiste(env, id) {
+  if (!id) return false;
+  return !!(await env.DB.prepare("SELECT 1 FROM docs WHERE col='processos' AND id=? AND deleted=0").bind(String(id)).first());
+}
+async function emExecucao(env, fase) {
+  const cfg = await env.DB.prepare("SELECT data FROM docs WHERE col='config' AND id='quadro' AND deleted=0").first();
+  const cols = cfg ? JSON.parse(cfg.data).colunas : null;
+  if (cols?.length) return cols.some(c => c.id === fase && c.etapa === 'execucao');
+  return fase === 'execucao';
+}
+async function contratoAutomatico(env, procId, proc, email, t) {
+  const ja = await env.DB.prepare("SELECT 1 FROM docs WHERE col='contratos' AND deleted=0 AND json_extract(data,'$.processo')=?").bind(procId).first();
+  if (ja) return null;
+  const id = 'ct-' + crypto.randomUUID().slice(0, 10);
+  const data = { processo: procId, sei: proc.sei || '', objeto: proc.objeto || '', empresa: '', vigencia: null, continuidade: 'Em execução',
+    situacao: 'Contrato criado automaticamente quando o processo entrou em execução. Complete a empresa contratada e a vigência.', automatico: true };
+  await env.DB.prepare('INSERT INTO docs(col,id,data,version,updated_at,updated_by) VALUES(?,?,?,?,?,?)').bind('contratos', id, JSON.stringify(data), 1, t, email).run();
+  await evento(env, t, email, 'contratos', id, 'contrato_auto', String(data.objeto).slice(0, 140));
+  return { col: 'contratos', id, data, version: 1, updated_at: t, deleted: false };
+}
 
 async function rodarRelatorio(env, quem, automatico) {
   const cfg = ((await env.DB.prepare("SELECT data FROM docs WHERE col='config' AND id='relatorio' AND deleted=0").first()) || {}).data;

@@ -12,7 +12,7 @@ Endereço: `https://selic-15.leniogoularte.workers.dev` (protegido por login).
 | Indicadores | Indicadores do setor com faixas e variação e gráficos por coluna, urgência, responsável e vigência |
 | Fluxo de processos | Kanban com colunas configuráveis, arrastar para mudar de coluna, urgência por cor (baixa verde, média amarela, urgente vermelha) e ficha completa |
 | Tabela | Todos os processos em linhas, com filtros, ordenação e exportação dos processos filtrados |
-| Contratos | Contratos ordenados pela vigência mais próxima |
+| Contratos | Contratos ordenados pela vigência mais próxima. Todo contrato pertence a um processo; o contrato aparece sozinho quando o processo entra em execução, para completar empresa e vigência |
 | Linha do tempo | Vigência restante de cada contrato assinado e a janela de 120 dias para renovar |
 | Calendário | Prazos de tarefas, fins de vigência, início das janelas de renovação e agenda do setor |
 | Tarefas da equipe | Tarefas por responsável, com histórico de mudanças de prazo |

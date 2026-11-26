@@ -311,6 +311,9 @@ tr.pend td{background:var(--warn-soft)}
 @media (max-width:560px){.pizza{grid-template-columns:1fr}.pz{margin:0 auto 10px}}
 .setores{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px}
 .setores li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}.setores li:last-child{border-bottom:0}
+/* ---- contratos ---- */
+.semc{list-style:none;margin:8px 0 0;padding:0;max-height:320px;overflow:auto}.semc li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid #f0d49a}
+details.card summary{cursor:pointer}
 /* ---- avisos e confirmações ---- */
 .toast .tbtn{margin-left:6px;background:transparent;border:1px solid var(--brand-light);color:#fff;border-radius:99px;padding:4px 12px;font-weight:700;cursor:pointer}
 .toast .tbtn:hover,.toast .tbtn:focus-visible{background:var(--brand);color:var(--brand-dark);outline:none}.toast .tbtn:disabled{opacity:.7;cursor:default}
@@ -436,8 +439,8 @@ let raf=0;function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFram
 const quem=e=>!e?'alguém da equipe':S.names[e]||(String(e).includes('@')?String(e).split('@')[0]:e);
 const MSG_SALVO={processos:'Processo salvo',contratos:'Contrato salvo',tarefas:'Tarefa salva',agenda:'Evento salvo',metas:'Meta salva',parcerias:'Parceria salva',pessoas:'Dados da pessoa salvos'};
 const MSG_ACAO={tarefa_concluida:'Tarefa concluída',reabrir:'Tarefa reaberta',pendencia:'Pendência marcada como resolvida',andamento:'Andamento registrado no histórico',contrato:'Contrato salvo'};
-const MSG_CRIADO={processos:'Processo cadastrado',tarefas:'Tarefa criada',agenda:'Evento adicionado à agenda',metas:'Meta criada',parcerias:'Parceria cadastrada',pessoas:'Pessoa adicionada à equipe'};
-const MSG_EXCLUIDO={processos:'Processo excluído',agenda:'Evento excluído',metas:'Meta excluída',parcerias:'Parceria excluída',pessoas:'Pessoa excluída da equipe'};
+const MSG_CRIADO={contratos:'Contrato cadastrado',processos:'Processo cadastrado',tarefas:'Tarefa criada',agenda:'Evento adicionado à agenda',metas:'Meta criada',parcerias:'Parceria cadastrada',pessoas:'Pessoa adicionada à equipe'};
+const MSG_EXCLUIDO={contratos:'Contrato excluído',processos:'Processo excluído',agenda:'Evento excluído',metas:'Meta excluída',parcerias:'Parceria excluída',pessoas:'Pessoa excluída da equipe'};
 const copia=v=>v===undefined?null:JSON.parse(JSON.stringify(v));
 // Depois de desfazer, a ficha aberta daquele item é redesenhada (ou fechada, se o item deixou de existir).
 function reabrirSeAberta(col,id){const F=S.ficha;if(!F||F.id!==id)return;const m=MAPAS[col];
@@ -446,17 +449,21 @@ function reabrirSeAberta(col,id){const F=S.ficha;if(!F||F.id!==id)return;const m
 async function upd(col,id,patch,texto,acao,silencio){
   const cur=MAPAS[col]?.get(id)||{},antes={};for(const k of Object.keys(patch))antes[k]=copia(cur[k]);
   try{const r=await API('PATCH',`/docs/${col}/${encodeURIComponent(id)}`,{patch,texto:texto||'',acao:acao||'edicao'});
-    aplicar(r.doc);schedule();carregarPainel();
+    aplicar(r.doc);(r.extras||[]).forEach(aplicar);schedule();carregarPainel();
+    const extra=(r.extras||[]).length?' · contrato criado na aba Contratos':'';
     if(!silencio&&acao!=='registro'&&acao!=='desfazer'){
       const novo=texto?(r.doc.data.historico||[]).slice(-1)[0]:null;
-      toast(acao==='fase'&&patch.fase?`Processo movido para "${FNOME[patch.fase]||''}"`:MSG_ACAO[acao]||MSG_SALVO[col]||'Alterações salvas',async()=>{
+      toast((acao==='fase'&&patch.fase?`Processo movido para "${FNOME[patch.fase]||''}"`:MSG_ACAO[acao]||MSG_SALVO[col]||'Alterações salvas')+extra,async()=>{
         const d=await API('PATCH',`/docs/${col}/${encodeURIComponent(id)}`,{patch:antes,texto:'',removerHistorico:novo?.em||'',acao:'desfazer'});
-        aplicar(d.doc);schedule();carregarPainel();reabrirSeAberta(col,id)})}
+        aplicar(d.doc);for(const x of r.extras||[]){const y=await API('DELETE',`/docs/${x.col}/${encodeURIComponent(x.id)}`);aplicar(y.doc)}
+        schedule();carregarPainel();reabrirSeAberta(col,id)})}
+    else if(extra)toast('Contrato criado na aba Contratos');
     return true}
   catch(e){if(e.code!=='sessao')note('Não foi possível salvar ('+(e.message||e.code)+'). Tente de novo.');return false}
 }
-async function criar(col,data,silencio){const r=await API('POST','/docs/'+col,{data});aplicar(r.doc);schedule();carregarPainel();const id=r.doc.id;
-  if(!silencio)toast(MSG_CRIADO[col]||'Salvo',async()=>{const d=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(d.doc);schedule();carregarPainel();reabrirSeAberta(col,id)});
+async function criar(col,data,silencio){const r=await API('POST','/docs/'+col,{data});aplicar(r.doc);(r.extras||[]).forEach(aplicar);schedule();carregarPainel();const id=r.doc.id;
+  if(!silencio)toast((MSG_CRIADO[col]||'Salvo')+((r.extras||[]).length?' · contrato criado na aba Contratos':''),async()=>{const d=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(d.doc);
+    for(const x of r.extras||[]){const y=await API('DELETE',`/docs/${x.col}/${encodeURIComponent(x.id)}`);aplicar(y.doc)}schedule();carregarPainel();reabrirSeAberta(col,id)});
   return id}
 async function apagar(col,id){const r=await API('DELETE',`/docs/${col}/${encodeURIComponent(id)}`);aplicar(r.doc);schedule();carregarPainel();
   toast(MSG_EXCLUIDO[col]||'Excluído',async()=>{const d=await API('POST',`/docs/${col}/${encodeURIComponent(id)}/restaurar`);aplicar(d.doc);schedule();carregarPainel()})}
@@ -591,19 +598,30 @@ function vQuadro(){
 async function moverFase(id,fase){const p=S.proc.get(id);if(!p||p.fase===fase)return;
   await upd('processos',id,{fase},`Fase: ${FNOME[faseDe(p)]||p.fase} → ${FNOME[fase]}`,'fase')}
 
+const incompleto=c=>!c.empresa||!c.vigencia;
+const semContrato=()=>[...S.proc.values()].filter(p=>etapa(faseDe(p))==='execucao'&&!contratosDe(p).length).sort((a,b)=>(a.objeto||'').localeCompare(b.objeto||'','pt-BR'));
 function vContratos(){
-  const cs=[...S.contr.values()].map(c=>({c,st:contrStatus(c)})).filter(({c})=>!S.q||norm(c.objeto+' '+c.empresa+' '+c.sei).includes(norm(S.q)))
-    .sort((a,b)=>a.st[2]-b.st[2]);
-  $('#main').innerHTML=`<div class="bar"><input type="search" id="q" placeholder="Buscar objeto, empresa ou SEI" value="${esc(S.q)}" aria-label="Buscar"></div>
-  <div class="tbl"><table><thead><tr><th>Vigência</th><th>Objeto</th><th>Empresa</th><th>Continuidade</th><th>Situação</th></tr></thead><tbody>
-  ${cs.map(({c,st})=>`<tr class="click" data-id="${esc(c.id)}"><td class="num"><span class="chip ${st[1]}">${esc(st[0])}</span><br><span class="sei">${br(c.vigencia)}</span></td>
-   <td><b>${esc(c.objeto)}</b><br><span class="sei">${esc(c.sei)}</span></td><td>${esc(c.empresa||'—')}</td><td>${esc(c.continuidade)}</td>
-   <td><span class="clamp">${esc(c.situacao)}</span></td></tr>`).join('')}</tbody></table></div>
+  const cs=[...S.contr.values()].map(c=>({c,st:contrStatus(c)})).filter(({c})=>!S.q||norm(c.objeto+' '+c.empresa+' '+c.sei+' '+(S.proc.get(c.processo)?.objeto||'')).includes(norm(S.q)))
+    .sort((a,b)=>incompleto(b.c)-incompleto(a.c)||a.st[2]-b.st[2]);
+  const sem=semContrato(),nInc=[...S.contr.values()].filter(incompleto).length;
+  $('#main').innerHTML=`<div class="bar"><input type="search" id="q" placeholder="Buscar objeto, empresa, SEI ou processo" value="${esc(S.q)}" aria-label="Buscar">
+    <button class="btn pri" type="button" id="novoContr" ${S.write?'':'disabled'}>+ Novo contrato</button></div>
+  <p class="muted small" style="margin:-4px 0 10px">Todo contrato pertence a um processo. Quando um processo entra em execução no fluxo, o contrato aparece aqui sozinho, para completar empresa e vigência.${nInc?` <b>${nInc} contrato(s) com dados a completar</b> estão no topo da lista.`:''}</p>
+  ${sem.length?`<details class="card aviso-pend" style="margin-bottom:12px"><summary><b>${sem.length} processo(s) em execução ainda sem contrato</b> · decida para quais criar</summary>
+    <p class="muted small">Compras de entrega única, eventos e cursos nem sempre têm contrato formal. Crie só para os que têm.</p>
+    <ul class="semc">${sem.map(p=>`<li><span>${esc(p.objeto)} <span class="sei">${esc(p.sei||'sem SEI')}</span></span><button class="btn sm" type="button" data-criar="${esc(p.id)}" ${S.write?'':'disabled'}>Criar contrato</button></li>`).join('')}</ul></details>`:''}
+  <div class="tbl"><table><thead><tr><th>Vigência</th><th>Objeto e processo</th><th>Empresa</th><th>Continuidade</th><th>Situação</th></tr></thead><tbody>
+  ${cs.map(({c,st})=>{const pr=S.proc.get(c.processo);return `<tr class="click" data-id="${esc(c.id)}"><td class="num">${incompleto(c)?'<span class="chip warn">⚠ completar dados</span>':`<span class="chip ${st[1]}">${esc(st[0])}</span>`}<br><span class="sei">${br(c.vigencia)}</span></td>
+   <td><b>${esc(c.objeto)}</b><br><span class="sei">${esc(c.sei)}</span>${pr?`<br><a href="#" data-proc="${esc(pr.id)}" class="small">Processo: ${esc(pr.objeto.slice(0,60))}</a>`:''}</td><td>${esc(c.empresa||'—')}</td><td>${esc(c.continuidade)}</td>
+   <td><span class="clamp">${esc(c.situacao)}</span></td></tr>`}).join('')||'<tr><td colspan="5" class="muted">Nenhum contrato.</td></tr>'}</tbody></table></div>
   <p class="muted" style="font-size:12px">Ordenado pela vigência mais próxima. Faixas: até 30 dias em vermelho, até ${JANELA()} dias em laranja. Clique para editar.</p>`;
   const q=$('#q');q.oninput=()=>{S.q=q.value;const p=q.selectionStart;vContratos();const n=$('#q');n.focus();n.setSelectionRange(p,p)};
-  $('#main tbody').onclick=e=>{const r=e.target.closest('tr');if(r)abrirContrato(r.dataset.id)};
+  $('#novoContr').onclick=()=>abrirContrato(null,novoContrato(''));
+  const M=$('#main');M.onclick=e=>{const pr=e.target.closest('[data-proc]');if(pr){e.preventDefault();return abrirFicha(pr.dataset.proc)}
+    const cr=e.target.closest('[data-criar]');if(cr)return abrirContrato(null,novoContrato(cr.dataset.criar));
+    const r=e.target.closest('tr[data-id]');if(r)abrirContrato(r.dataset.id)};
 }
-
+const novoContrato=procId=>{const p=S.proc.get(procId);return{processo:procId||'',sei:p?.sei||'',objeto:p?.objeto||'',empresa:'',vigencia:null,continuidade:'Em execução',situacao:''}};
 function vTarefas(){
   const ts=[...S.tar.values()].filter(t=>(S.feitas||t.status==='andamento')&&(!S.q||norm(t.titulo+' '+t.acao+' '+t.notas+' '+t.sei).includes(norm(S.q))));
   const g=new Map();for(const t of ts){const r=t.responsavel||'Sem responsável';if(!g.has(r))g.set(r,[]);g.get(r).push(t)}
@@ -855,7 +873,7 @@ function carregarPainel(){clearTimeout(painelT);painelT=setTimeout(async()=>{
 const NIVEL_SAUDE=s=>s>=90?['Exemplar','ex']:s>=75?['Bom','bom']:s>=50?['Em evolução','evo']:['Atenção','aten'];
 const TIPO_EV={tarefa_no_prazo:'concluiu uma tarefa no prazo',tarefa_atrasada:'concluiu uma tarefa atrasada',tarefa_concluida:'concluiu uma tarefa',pendencia:'resolveu uma pendência',andamento:'registrou um andamento',
   fase:'mudou a fase de um processo',contrato:'atualizou um contrato',agenda:'marcou um evento na agenda',novo_processo:'cadastrou um processo',nova_tarefa:'criou uma tarefa',
-  nova_meta:'criou uma meta',meta:'atualizou uma meta',nova_parceria:'cadastrou uma parceria',nova_pessoa:'cadastrou uma pessoa na equipe',novo_registro:'cadastrou um registro',configuracao:'alterou as configurações',backup:'baixou o backup completo',relatorio:'enviou o relatório diário',relatorio_erro:'tentou enviar o relatório diário (falhou)',edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
+  nova_meta:'criou uma meta',meta:'atualizou uma meta',nova_parceria:'cadastrou uma parceria',nova_pessoa:'cadastrou uma pessoa na equipe',novo_registro:'cadastrou um registro',configuracao:'alterou as configurações',backup:'baixou o backup completo',contrato_auto:'teve contrato criado automaticamente (processo em execução)',restauracao:'restaurou um item excluído',relatorio:'enviou o relatório diário',relatorio_erro:'tentou enviar o relatório diário (falhou)',edicao:'atualizou uma ficha',registro:'registrou no histórico',exclusao:'excluiu um item',reabrir:'reabriu uma tarefa'};
 function gauge(v){const r=52,c=2*Math.PI*r,f=Math.max(0,Math.min(100,v))/100;
   return `<svg viewBox="0 0 128 128" class="gauge" role="img" aria-label="Índice de saúde ${v} de 100"><circle cx="64" cy="64" r="${r}" class="g-bg"/>
    <circle cx="64" cy="64" r="${r}" class="g-fg" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 64 64)"/>
@@ -1388,7 +1406,7 @@ function renderFichaDyn(){
   $('#fdyn-top').innerHTML=`<div class="chips"><span class="chip acc">${esc(FNOME[faseDe(p)]||p.fase)}</span>${p.setor?`<span class="chip">${esc(p.setor)}</span>`:''}</div>`;
   $('#fdyn').innerHTML=`
    ${(p.alertas||[]).length?`<section><h4>Pendências a conferir</h4><ul class="list">${p.alertas.map((a,i)=>`<li><span>⚠ ${esc(a)}</span><button class="btn sm" type="button" data-res="${i}" ${S.write?'':'disabled'}>Resolvido</button></li>`).join('')}</ul></section>`:''}
-   <section><h4>Contratos</h4>${cs.length?`<ul class="list">${cs.map(c=>{const st=contrStatus(c);return `<li><span><b>${esc(c.empresa||'Empresa a definir')}</b><br><span class="muted">${esc(c.objeto)} · vigência ${br(c.vigencia)}</span></span><span class="chip ${st[1]}">${esc(st[0])}</span></li>`}).join('')}</ul>`:'<span class="muted">Nenhum contrato vinculado.</span>'}</section>
+   <section><h4>Contratos</h4>${S.write?`<button class="btn sm" type="button" id="cNovo" style="float:right;margin-top:-30px">+ Cadastrar contrato</button>`:''}${cs.length?`<ul class="list">${cs.map(c=>{const st=contrStatus(c);return `<li data-contr="${esc(c.id)}" style="cursor:pointer"><span><b>${esc(c.empresa||'Empresa a definir')}</b><br><span class="muted">${esc(c.objeto)} · vigência ${br(c.vigencia)}</span></span><span class="chip ${incompleto(c)?'warn':st[1]}">${incompleto(c)?'completar dados':esc(st[0])}</span></li>`}).join('')}</ul>`:'<span class="muted">Nenhum contrato vinculado.</span>'}</section>
    <section><h4>Tarefas</h4>${ts.map(taskHTML).join('')||'<span class="muted">Nenhuma tarefa.</span>'}
     <div style="margin-top:8px"><button class="btn sm" type="button" id="tNova">+ Tarefa para este processo</button></div></section>
    <section><h4>Histórico</h4>
@@ -1399,26 +1417,39 @@ function renderFichaDyn(){
   d.onclick=e=>{const r=e.target.closest('[data-res]');
     if(r){const al=[...p.alertas];const [a]=al.splice(+r.dataset.res,1);upd('processos',p.id,{alertas:al},'Pendência resolvida: '+a,'pendencia');return}
     if(e.target.id==='tNova'){novaTarefa(p.id);return}
+    if(e.target.id==='cNovo'){abrirContrato(null,novoContrato(p.id));return}
+    const lc=e.target.closest('[data-contr]');if(lc){abrirContrato(lc.dataset.contr);return}
     taskClick(e)};
   $('#fn').onsubmit=async e=>{e.preventDefault();const t=$('#nota').value.trim();if(!t)return;if(await upd('processos',p.id,{},t,'andamento'))$('#nota').value=''};
 }
 
 /* ---------- contrato e tarefa ---------- */
-function abrirContrato(id){
-  const c=S.contr.get(id);if(!c)return;S.ficha={tipo:'contr',id};const p=S.proc.get(c.processo);
-  shell(`<button class="btn sm close" type="button">Fechar</button><span class="sei">${esc(c.sei)}</span><h2>${esc(c.objeto)}</h2>
+function abrirContrato(id,novo){
+  const c=id?S.contr.get(id):novo;if(!c)return;S.ficha={tipo:'contr',id:id||null};const p=S.proc.get(c.processo);
+  const procs=[...S.proc.values()].sort((a,b)=>(a.objeto||'').localeCompare(b.objeto||'','pt-BR'));
+  shell(`<button class="btn sm close" type="button">Fechar</button><span class="sei">${id?esc(c.sei):'Novo contrato'}</span><h2>${id?esc(c.objeto):'Cadastrar contrato'}</h2>
+   ${id&&c.automatico&&incompleto(c)?'<div class="aviso small">Este contrato foi criado automaticamente quando o processo entrou em execução. Complete a empresa contratada e a vigência.</div>':''}
    <section><h4>Contrato</h4><form class="form" id="fc">
-    <label class="full">Empresa contratada<input id="c-empresa" value="${esc(c.empresa)}"></label>
+    <label class="full">Processo vinculado (obrigatório)<select id="c-processo" required><option value="">Escolha o processo…</option>${procs.map(x=>`<option value="${esc(x.id)}" ${x.id===c.processo?'selected':''}>${esc((x.objeto||'').slice(0,80))}${x.sei?' · '+esc(x.sei):''}</option>`).join('')}</select></label>
+    <label class="full">Objeto do contrato<input id="c-objeto" value="${esc(c.objeto)}" required></label>
+    <label>Número SEI<input id="c-sei" value="${esc(c.sei)}" style="font-family:var(--mono)"></label>
+    <label>Empresa contratada<input id="c-empresa" value="${esc(c.empresa)}"></label>
     <label>Vigência (data final)<input type="date" id="c-vigencia" value="${esc(c.vigencia||'')}"></label>
     <label>Continuidade<select id="c-continuidade">${['Em execução','Renovação Contratual','Novo Contrato','Em Processo','ATENÇÃO','Encerrado'].map(v=>`<option ${v===c.continuidade?'selected':''}>${v}</option>`).join('')}</select></label>
     <label class="full">Situação e próximos passos<textarea id="c-situacao">${esc(c.situacao)}</textarea></label>
-    <div class="full" style="display:flex;gap:8px;align-items:center"><span id="cmsg" class="muted" style="margin-right:auto"></span>
-     ${p?`<button class="btn" type="button" id="verP">Abrir processo</button>`:''}<button class="btn pri" ${S.write?'':'disabled'}>Salvar</button></div></form></section>`);
+    <div class="full" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">${id&&S.write?'<button class="btn perigo" type="button" id="delContr">Excluir contrato</button>':''}<span id="cmsg" class="muted" style="margin-right:auto"></span>
+     ${p?`<button class="btn" type="button" id="verP">Abrir processo</button>`:''}<button class="btn pri" ${S.write?'':'disabled'}>${id?'Salvar':'Cadastrar contrato'}</button></div></form></section>`);
   if(p)$('#verP').onclick=()=>abrirFicha(p.id);
+  $('#c-processo').onchange=e=>{const x=S.proc.get(e.target.value);if(!x)return;if(!$('#c-objeto').value.trim())$('#c-objeto').value=x.objeto||'';if(!$('#c-sei').value.trim())$('#c-sei').value=x.sei||''};
   $('#fc').onsubmit=async e=>{e.preventDefault();const v=k=>$('#c-'+k).value.trim();
-    const patch={empresa:v('empresa'),vigencia:v('vigencia')||null,continuidade:v('continuidade'),situacao:v('situacao')};
-    if(await upd('contratos',id,patch,'Contrato atualizado: '+(c.objeto||''),'contrato')){$('#cmsg').textContent='Salvo.';
-      if(p&&c.vigencia!==patch.vigencia)upd('processos',p.id,{},`Vigência do contrato (${c.empresa||c.objeto}): ${br(c.vigencia)} → ${br(patch.vigencia)}`,'registro')}};
+    const patch={processo:v('processo'),objeto:v('objeto'),sei:v('sei'),empresa:v('empresa'),vigencia:v('vigencia')||null,continuidade:v('continuidade'),situacao:v('situacao')};
+    if(!patch.processo)return $('#cmsg').textContent='Escolha o processo deste contrato.';
+    if(!id){try{const nid=await criar('contratos',patch);abrirContrato(nid)}catch(er){$('#cmsg').textContent='Não foi possível cadastrar ('+(er.message||er.code)+').'}return}
+    if(await upd('contratos',id,patch,'Contrato atualizado: '+(patch.objeto||''),'contrato')){$('#cmsg').textContent='Salvo.';
+      const pp=S.proc.get(patch.processo);if(pp&&c.vigencia!==patch.vigencia)upd('processos',pp.id,{},`Vigência do contrato (${patch.empresa||patch.objeto}): ${br(c.vigencia)} → ${br(patch.vigencia)}`,'registro');abrirContrato(id)}};
+  if($('#delContr'))$('#delContr').onclick=async()=>{
+    if(!await confirmar({titulo:'Tem certeza que quer excluir este contrato?',texto:`"${c.objeto}" sai da aba Contratos, da linha do tempo e dos alertas de vigência. O processo continua no fluxo.`,botao:'Sim, excluir contrato'}))return;
+    try{await apagar('contratos',id);fechar()}catch(er){$('#cmsg').textContent='Não foi possível excluir.'}};
 }
 function abrirTarefa(id,novo){
   const t=id?S.tar.get(id):novo;if(!t)return;S.ficha={tipo:'tar',id:id||null};
